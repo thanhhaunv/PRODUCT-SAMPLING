@@ -1,3 +1,4 @@
+```
 docs/
 │
 ├── 🧭 00-vision/
@@ -68,3 +69,5 @@ docs/
 │   └── 0003-kubernetes-deployment.md     ✅
 │
 └── 📚 README.md                          ✅ (Tổng quan toàn bộ project)
+
+```
