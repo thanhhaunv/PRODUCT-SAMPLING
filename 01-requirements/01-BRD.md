@@ -121,6 +121,14 @@ Dựa trên System_Feature_Tree.md, phân loại MoSCoW:
 - **Usability**: PWA responsive; multi-language (VN/Thái/Indo); accessibility WCAG 2.1.
 - **Reliability**: Offline sync (IndexedDB); backup daily.
 
+### 5.3 Mô hình mở rộng vận hành (Operational Model Extension)
+
+Để giải quyết vấn đề chi phí phát quà thấp (~1 USD/sample), hệ thống mở rộng thêm mô hình **Sampling Network-as-a-Service**:
+- Kết nối sẵn với các điểm phát (retailer, cửa hàng, đối tác logistic).
+- Cho phép brand gửi hàng mẫu tập trung, hệ thống tự phân phối qua các “verified retail nodes”.
+- Tự động tracking & reconciliation giữa brand ↔ retailer ↔ hệ thống, giúp giảm chi phí logistics >70%.
+- KPI: Cost per verified user <0.4 USD.
+
 ---
 
 ## 6. Các bên liên quan (Stakeholders)
