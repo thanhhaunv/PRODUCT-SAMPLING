@@ -1,60 +1,138 @@
-# 📋 Requirements Layer — Overview & Workflow
+# 📋 REQUIREMENTS LAYER — OVERVIEW & TRACEABILITY MAP
 
 > **Purpose:**  
-> Thư mục `01-requirements/` tập trung toàn bộ tài liệu mô tả yêu cầu nghiệp vụ (Business Requirements), yêu cầu hệ thống (System Requirements), và các User Stories chi tiết cho toàn bộ dự án **Product Sampling System**.  
-> Đây là nền tảng để đội ngũ BA, Product, UX, Dev, QA và Stakeholder hiểu thống nhất về **“What to build”** trước khi bàn đến **“How to build”**.
+> Thư mục `01-requirements/` là **nền tảng cốt lõi** của toàn bộ dự án **Product Sampling System**.  
+> Đây là nơi chuyển hóa **tầm nhìn và chiến lược (Vision & Strategy)** thành **yêu cầu cụ thể có thể triển khai được** cho đội phát triển, QA, thiết kế và vận hành.  
 
 ---
 
-## 🗂️ File Structure & Responsibilities
+## 🧭 Relationship with Previous Layers (00-vision/)
 
-| File Name | Description | Owner | Output / Action Items |
-|------------|--------------|--------|------------------------|
-| **01-BRD.md** | 📘 **Business Requirements Document** – mô tả bức tranh tổng thể của dự án, lý do tồn tại, mục tiêu kinh doanh, đối tượng người dùng, quy trình nghiệp vụ chính, và phạm vi (scope). | Product Owner / BA Lead | - Xác định vấn đề & cơ hội thị trường.<br>- Ghi rõ business goal & success metrics.<br>- Duyệt bởi CEO/Stakeholder trước khi sang giai đoạn phân tích kỹ thuật. |
-| **02-SRS.md** | ⚙️ **System Requirements Specification** – dịch BRD thành các yêu cầu hệ thống, mô tả chức năng chi tiết, nghiệp vụ từng module, ràng buộc kỹ thuật, luồng dữ liệu, luồng giao tiếp giữa các thành phần. | Solution Architect / System Analyst | - Làm cơ sở cho đội dev & QA.<br>- Đảm bảo tính khả thi kỹ thuật của BRD.<br>- Chuẩn hóa với format IEEE 830. |
-| **03-User-Stories.md** | 🧩 **Agile User Stories** – mô tả chi tiết hành vi người dùng dưới dạng “As a [role], I want [goal] so that [benefit]”. Phân chia theo nhóm: Brand, End-User, Admin, và System Owner. | Product Manager / BA Team | - Cụ thể hóa từng chức năng trong SRS thành backlog items.<br>- Gắn nhãn priority (P0/P1/P2).<br>- Đưa vào công cụ quản lý sprint (Jira/Trello). |
+Các tài liệu trong `01-requirements/` **không tồn tại độc lập**, mà kế thừa và chiếu xạ từ các tài liệu chiến lược cấp cao ở thư mục `00-vision/`:
 
----
+| Vision Layer File | Mối quan hệ / Dữ liệu được kế thừa | Cách sử dụng trong Requirements |
+|--------------------|------------------------------------|--------------------------------|
+| **00-vision/Vision_Strategy_Document.md** | Cung cấp tầm nhìn, sứ mệnh, thị trường mục tiêu, lợi thế cạnh tranh, định hướng sản phẩm. | Trích xuất phần *Product Vision Statement* và *Strategic Goals* để đưa vào phần *Executive Summary* của BRD. |
+| **00-vision/Investor_Summary_Deck.pptx** | Định hướng kỳ vọng của nhà đầu tư, các KPI tài chính, thị trường đích. | Sử dụng để xác định *Business Objective* và *Success Metrics* trong BRD. |
+| **00-vision/KPI_Financials.md** & **.xlsx** | Cung cấp mô hình KPI, forecast doanh thu và chi phí. | Dùng để lập bảng *Business Metrics & KPIs* trong BRD, và xác định các *Non-Functional Requirements (NFRs)* trong SRS (ví dụ: uptime, performance, scalability). |
 
-## ✅ Checklist for Requirement Phase
-
-| Step | Task | Responsible | Output |
-|------|------|--------------|---------|
-| 1️⃣ | Thu thập yêu cầu nghiệp vụ từ stakeholder (Brand, Admin, User) | BA | Bản nháp BRD v0.1 |
-| 2️⃣ | Xác định mục tiêu, phạm vi, KPI, và các quy trình chính | PO / CEO | BRD v1.0 hoàn chỉnh |
-| 3️⃣ | Phân tích hệ thống: xác định entity, data flow, API cần có | System Analyst | Draft SRS |
-| 4️⃣ | Viết chi tiết yêu cầu hệ thống (functional & non-functional) | BA / Architect | SRS v1.0 |
-| 5️⃣ | Xây dựng danh sách User Stories, Acceptance Criteria | Product Manager / BA | User Stories v1.0 |
-| 6️⃣ | Review chéo giữa đội Dev - QA - Product | PM / QA Lead | Approved Requirements |
-| 7️⃣ | Import toàn bộ User Stories vào Jira / Trello / Notion | PM | Sprint Backlog Ready |
+→ **Kết luận:** Mỗi tài liệu trong thư mục `01-requirements/` phải **tham chiếu ngược (back-reference)** đến các nguồn ở `00-vision/` để đảm bảo mọi yêu cầu đều “traceable lên chiến lược cấp cao”.
 
 ---
 
-## 🧭 Best Practices
+## 🗂️ File Overview & Detailed Responsibilities
 
-- ✅ **BRD trước – SRS sau – User Stories cuối:** đảm bảo đi đúng hướng từ chiến lược đến chi tiết.  
-- ✅ **Traceability Matrix:** mỗi yêu cầu trong BRD phải có ít nhất một liên kết đến yêu cầu kỹ thuật (SRS) hoặc User Story tương ứng.  
-- ✅ **Versioning:** duy trì version trong header từng file (`v1.0`, `v1.1`, …) để dễ tracking thay đổi.  
-- ✅ **Stakeholder Review:** sau mỗi lần cập nhật BRD hoặc SRS, cần có biên bản xác nhận từ Product Owner/CEO.  
-- ✅ **Lưu ý ngôn ngữ:** sử dụng song ngữ (Anh – Việt) cho phần mô tả chính nếu tài liệu dùng cho nhiều đối tác quốc tế.
+### 1️⃣ **01-BRD.md — Business Requirements Document**
+**Owner:** Product Owner / BA Lead  
+**Purpose:** Mô tả bức tranh tổng thể “vì sao hệ thống này cần tồn tại”.  
+Đây là tài liệu **nói ngôn ngữ kinh doanh**, không đi sâu kỹ thuật.
 
----
+**Phần nội dung chính:**
+1. Executive Summary (mục tiêu & bối cảnh)
+2. Business Goals & Objectives (đồng bộ với `Vision_Strategy_Document.md`)
+3. Market Pain Points & Opportunity Analysis
+4. Stakeholders & Roles
+5. Business Scope / Out of Scope
+6. Business Process Flows (mô tả nghiệp vụ: phát quà, thu thập data, xác thực, báo cáo)
+7. Success Metrics & KPIs (liên kết với `KPI_Financials.md`)
+8. Dependencies (ví dụ: cần API CRM, SMS gateway)
+9. Risks & Mitigation
 
-## 📌 Output of This Phase
-
-Khi hoàn tất `01-requirements/`, bạn cần có:
-1. ✅ **BRD được duyệt** (v1.0 hoặc cao hơn)  
-2. ✅ **SRS được Technical Team phê duyệt**  
-3. ✅ **Danh sách User Stories đầy đủ và được nhập vào công cụ quản lý dự án**  
-4. ✅ **Checklist Review** hoàn thành 100%
-
----
-
-## 🧠 Notes for New Members
-- Tất cả tài liệu trong thư mục này **phải hoàn thiện trước khi bắt đầu sprint đầu tiên.**
-- Nếu có bất kỳ thay đổi nào từ phía khách hàng hoặc stakeholder, hãy ghi lại trong **Change Log** ở cuối mỗi file.
-- Nếu bạn là **developer hoặc tester mới**, đọc file **User-Stories.md** trước, rồi quay lại **SRS.md** để hiểu logic hệ thống.
+**Deliverable:** BRD v1.0 được duyệt trước khi chuyển sang phân tích kỹ thuật (SRS).  
+**References:** `Vision_Strategy_Document.md`, `KPI_Financials.xlsx`, `Market_Analysis.md`.
 
 ---
 
-**→ Next step:** Khi thư mục này được hoàn tất và duyệt, nhóm kiến trúc sẽ bắt đầu soạn thảo thư mục `02-architecture/`.
+### 2️⃣ **02-SRS.md — System Requirements Specification**
+**Owner:** Solution Architect / System Analyst  
+**Purpose:** Biến các yêu cầu kinh doanh trong BRD thành **yêu cầu hệ thống cụ thể và có thể code được**.  
+Tài liệu theo chuẩn IEEE 830.
+
+**Phần nội dung chính:**
+1. Introduction (mục đích, phạm vi)
+2. Overall Description (context diagram, actor overview)
+3. Functional Requirements  
+   - Module: Campaign Management  
+   - Module: Barcode Management  
+   - Module: User Verification (OTP)  
+   - Module: CRM/Ad Integration  
+   - Module: Reporting Dashboard
+4. Non-Functional Requirements  
+   - Performance, Scalability, Uptime  
+   - Data Security, Compliance (refer → `07-security/`)
+5. System Interfaces  
+   - API endpoints (refer → `02-architecture/05-API-Specification.yaml`)  
+   - External Systems (POS, CRM)
+6. Data Requirements (refer → `02-architecture/02-Database-Design-ERD.md`)
+7. Use Case Diagram, Sequence Diagrams (refer → `02-architecture/03-System-Diagrams.md`)
+
+**Deliverable:** SRS v1.0 approved by technical team.  
+**References:** BRD, Vision files, early architecture drafts.
+
+---
+
+### 3️⃣ **03-User-Stories.md — Agile User Stories**
+**Owner:** Product Manager / BA Team  
+**Purpose:** Diễn tả hành vi người dùng cụ thể, dùng làm input trực tiếp cho Sprint Planning.
+
+**Phần nội dung chính:**
+1. **Grouping by Role:**  
+   - End User (người nhận quà)  
+   - Brand Owner (nhãn hàng)  
+   - Admin (quản lý hệ thống)  
+   - Super Admin (toàn quyền hệ thống)  
+2. **Format:**  
+   `As a [role], I want [action/goal] so that [business value]`
+3. **Acceptance Criteria:** cụ thể và testable.  
+4. **Priority:** P0 (Critical), P1 (High), P2 (Medium).  
+5. **Linking:** Mỗi User Story phải link về:
+   - 1 requirement trong SRS (`REQ-###`)  
+   - 1 mục tiêu trong BRD (`OBJ-###`)
+6. **Output:** File `.csv` hoặc `.json` importable sang Jira / Trello.
+
+**Deliverable:** Full backlog (100+ stories) được duyệt và sẵn sàng triển khai.  
+**References:** BRD, SRS, Vision documents.
+
+---
+
+## ✅ CHECKLIST — Requirement Phase Deliverables
+
+| Milestone | Task | Input | Output | Responsible |
+|------------|------|--------|---------|--------------|
+| **M1** | Soạn thảo & duyệt BRD | Vision Layer | BRD v1.0 | Product Owner |
+| **M2** | Phân tích hệ thống, soạn SRS | BRD | SRS v1.0 | System Analyst |
+| **M3** | Viết User Stories & Acceptance Criteria | SRS | User-Stories v1.0 | Product Manager |
+| **M4** | Review chéo Dev/QA/Product | BRD + SRS + Stories | Approval | PM / QA Lead |
+| **M5** | Import backlog vào Jira / Trello | User-Stories | Sprint backlog | PM |
+| **M6** | Freeze Requirements (baseline) | Approved docs | Locked BRD/SRS | Product Owner |
+
+---
+
+## 🧭 Traceability Matrix (BRD ↔ SRS ↔ Stories)
+
+| BRD Objective | SRS Module | User Story Ref | Status |
+|----------------|-------------|----------------|--------|
+| OBJ-01 Collect verified user data | REQ-01 OTP Verification | US-01, US-02 | Approved |
+| OBJ-02 Manage campaign efficiently | REQ-02 Campaign CRUD | US-10 → US-25 | In Review |
+| OBJ-03 Provide brand reporting | REQ-05 Reporting Module | US-60 → US-70 | Draft |
+| OBJ-04 Integrate CRM/Ad APIs | REQ-07 External Integrations | US-90 → US-100 | Planned |
+
+---
+
+## 🧠 Best Practices & Notes
+
+- Luôn cập nhật **header version** trong mỗi file (`Version`, `Last Updated`, `Author`).
+- Khi có thay đổi business logic → cập nhật BRD → liên kết cascade xuống SRS & User Stories.
+- Sử dụng **Notion / Confluence / GitHub Wiki** để đồng bộ tài liệu.
+- Sau khi phase này hoàn tất, toàn bộ thông tin sẽ được sử dụng để xây dựng:
+  - `02-architecture/` (System Design, API)
+  - `03-project-management/` (Sprint Planning)
+  - `04-development/` (Coding Conventions, Environment)
+  - `05-testing/` (QA Plan)
+
+---
+
+**👉 Next Step:** Sau khi hoàn thành toàn bộ tài liệu `01-requirements/`, hãy tổ chức một buổi **Requirement Review Meeting** với các nhóm (Product, Dev, QA, Marketing, CRM Integration).  
+Buổi họp này nhằm thống nhất **“We build the right thing”** trước khi chuyển sang phase **Architecture Design**.
+
+---
