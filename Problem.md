@@ -1,4 +1,5 @@
 # QUẢN LÝ PHÂN PHỐI PRODUCT SAMPLING
+“Hệ thống khắc phục chi phí logistics cao của quà giá thấp bằng cách triển khai mô hình Sampling Network-as-a-Service, giúp brand phân phối qua các retailer đã được xác minh.”
 
 #### 1. Phân loại mục tiêu:
 - **Must-have (Core)**: Các tính năng thiết yếu cho MVP, giữ nguyên từ gốc và ý kiến, để hệ thống chạy cơ bản và thu thập dữ liệu hiệu quả.
