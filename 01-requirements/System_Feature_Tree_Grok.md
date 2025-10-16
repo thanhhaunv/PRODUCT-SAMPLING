@@ -253,6 +253,17 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
   - KPI: 3 markets by 2026.
 - **Roadmap**: Phase 2–3.
 
+### 2.8. Sampling Network Management (Partner Distribution)
+- **Mô tả**: Quản lý mạng lưới retailer/đối tác phát hàng (Circle K, GS25, booth).
+- **User Stories**:
+  - Là Admin, tôi thêm/cập nhật danh sách retail node.
+  - Là Brand, tôi chọn khu vực/điểm phát phù hợp để gửi hàng.
+  - Là Retail Partner, tôi xác nhận stock & redemption tại chỗ.
+- **Yêu cầu kỹ thuật**:
+  - Input: Retail node metadata (tên, vị trí, capacity, partner SLA).
+  - Output: Network dashboard (status, redemption, cost/verified user).
+  - KPI: Chi phí phát <0.4 USD/lead, stock accuracy >95%.
+
 ---
 
 ## 3. Nice-to-Have (Future-Proof - Phase 3, 2026–2027)
@@ -291,6 +302,16 @@ Chức năng để trở thành "Sampling Intelligence Platform", dẫn đầu S
   - Output: Programmatic bundle offers.
   - KPI: Bundle adoption 30%.
 - **Roadmap**: Phase 3.
+
+### 3.4. Cost & ROI Optimizer (AI Module)
+- **Mô tả**: Phân tích chi phí phát quà theo khu vực, retail node, và đề xuất tối ưu route & campaign mix.
+- **User Stories**:
+  - Là Admin, tôi muốn hệ thống gợi ý kênh phát có ROI cao nhất.
+  - Là Brand, tôi xem so sánh chi phí/verified lead theo vùng.
+- **Yêu cầu kỹ thuật**:
+  - Input: Redemption logs, geo-data, cost model.
+  - Output: ROI dashboard & optimization suggestions.
+  - KPI: ROI uplift >20% so với baseline.
 
 ---
 
