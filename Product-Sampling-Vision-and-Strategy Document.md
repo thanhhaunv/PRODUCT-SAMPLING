@@ -70,6 +70,7 @@ Chúng tôi tin rằng:
 ---
 
 ## 4. **Strategic Positioning — Định vị chiến lược**
+Tận dụng mạng lưới retail nodes được xác thực (verified sampling network) để giảm chi phí phát quà xuống dưới 0.4 USD/lead và đảm bảo dữ liệu thu được 100% xác thực.
 
 | Thành phần               | Cách tiếp cận của ProductSamplingSystem                                                   |
 | ------------------------ | ----------------------------------------------------------------------------------------- |
