@@ -13198,3 +13198,3531 @@ interface CampaignCreationMetrics {
 **Document Status**: ✅ Complete  
 **Last Updated**: 2025-10-17  
 **Next Review**: 2025-11-01
+
+# Part10A2-3 - Ads Format Management
+
+**Version**: 1.0  
+**Date**: 2025-10-17  
+**Author**: UX Design Team  
+**Reference**: `System_Feature_Tree.md`, `Access_Control_Tree.md`
+
+---
+
+## 10A2-3.1 Overview
+
+Mô tả quy trình tạo và quản lý các định dạng quảng cáo (Ads Format) cho chiến dịch, bao gồm upload design, cấu hình QR code, và tracking.
+
+**Goals**:
+- Upload design file thành công > 95%
+- QR placement accuracy 100%
+- Test scan success rate > 98%
+- Design validation time < 3 seconds
+
+**Key Features**:
+- 13 predefined format types
+- Visual QR editor with drag & drop
+- Design file validation (DPI, size, format)
+- Dynamic QR code generation
+- UTM tracking configuration
+
+---
+
+## 10A2-3.2 Ads Format Creation Flow
+
+```mermaid
+flowchart TD
+    Start([🎨 Create Ads Format]) --> SelectCampaign{Campaign selected?}
+    
+    SelectCampaign -->|Không| ChooseCampaign[📋 Select Campaign]
+    SelectCampaign -->|Có| SelectType
+    
+    ChooseCampaign --> SelectType[📐 Select Format Type]
+    
+    SelectType --> TypeOptions{Chọn loại?}
+    
+    TypeOptions -->|Print| PrintFormats[📄 Print Formats:<br/>- Flyer A5/A4<br/>- Poster A3/A2/A1<br/>- Standee<br/>- Table Tent<br/>- Wobbler]
+    TypeOptions -->|Digital| DigitalFormats[💻 Digital Formats:<br/>- Banner 1920x1080<br/>- Social 1080x1080<br/>- Story 1080x1920]
+    TypeOptions -->|POS| POSFormats[🏪 POS Materials:<br/>- Shelf Talker<br/>- Window Cling<br/>- Roll-up Banner]
+    
+    PrintFormats --> SetDimensions[📏 Set Dimensions]
+    DigitalFormats --> SetDimensions
+    POSFormats --> SetDimensions
+    
+    SetDimensions --> InputBasicInfo[📝 Basic Info:<br/>- Format name *<br/>- Print quantity<br/>- Notes]
+    
+    InputBasicInfo --> UploadDesign[📤 Upload Design File]
+    
+    UploadDesign --> ValidateFile{✓ File valid?}
+    
+    ValidateFile -->|Không| FileErrors[❌ Validation errors:<br/>- Wrong format<br/>- DPI < 300<br/>- Wrong size<br/>- File too large]
+    FileErrors --> UploadDesign
+    
+    ValidateFile -->|Có| ShowPreview[👁️ Preview Design]
+    
+    ShowPreview --> ConfigQR[⚙️ Configure QR Zone]
+    
+    ConfigQR --> QREditor[🎯 Visual QR Editor:<br/>- Drag to position<br/>- Resize zone<br/>- Set safe margins]
+    
+    QREditor --> ValidateQR{✓ QR valid?}
+    
+    ValidateQR -->|Không| QRErrors[❌ QR errors:<br/>- Too small<br/>- Outside safe zone<br/>- Overlaps text]
+    QRErrors --> QREditor
+    
+    ValidateQR -->|Có| SetTracking[🏷️ Set Tracking]
+    
+    SetTracking --> ConfigUTM[Configure UTM:<br/>- Source *<br/>- Medium *<br/>- Campaign *<br/>- Custom params]
+    
+    ConfigUTM --> GenerateQR[🔗 Generate Dynamic QR]
+    
+    GenerateQR --> ShowQRPreview[👁️ Preview with QR]
+    
+    ShowQRPreview --> TestOptions{Test QR?}
+    
+    TestOptions -->|Có| TestScan[📱 Scan Test]
+    TestScan --> TestResult{Landing loads?}
+    
+    TestResult -->|Không| DebugQR[🔧 Debug:<br/>- Check URL<br/>- Check tracking<br/>- Test again]
+    DebugQR --> TestScan
+    
+    TestResult -->|Có| TestSuccess[✅ Test passed]
+    TestOptions -->|Không| SkipTest[⏭️ Skip test]
+    
+    TestSuccess --> SaveFormat[💾 Save Ads Format]
+    SkipTest --> SaveFormat
+    
+    SaveFormat --> FormatSaved[✅ Format saved]
+    
+    FormatSaved --> NextAction{Next action?}
+    NextAction -->|Create more| SelectType
+    NextAction -->|Download files| DownloadAssets[📥 Download:<br/>- Design with QR<br/>- QR code only<br/>- Print specs]
+    NextAction -->|Done| ViewList[📋 View All Formats]
+    
+    DownloadAssets --> ViewList
+    ViewList --> End([End])
+    
+    style Start fill:#e1f5ff
+    style FormatSaved fill:#d4edda
+    style TestSuccess fill:#d4edda
+    style FileErrors fill:#f8d7da
+    style QRErrors fill:#f8d7da
+```
+
+---
+
+## 10A2-3.3 Format Types & Specifications
+
+### 10A2-3.3.1 Format Type Definitions
+
+```typescript
+enum AdsFormatType {
+  // Print Formats
+  FLYER_A5 = 'FLYER_A5',
+  FLYER_A4 = 'FLYER_A4',
+  POSTER_A3 = 'POSTER_A3',
+  POSTER_A2 = 'POSTER_A2',
+  POSTER_A1 = 'POSTER_A1',
+  STANDEE = 'STANDEE',
+  TABLE_TENT = 'TABLE_TENT',
+  WOBBLER = 'WOBBLER',
+  
+  // Digital Formats
+  DIGITAL_BANNER = 'DIGITAL_BANNER',
+  SOCIAL_MEDIA = 'SOCIAL_MEDIA',
+  SOCIAL_STORY = 'SOCIAL_STORY',
+  
+  // POS Materials
+  SHELF_TALKER = 'SHELF_TALKER',
+  WINDOW_CLING = 'WINDOW_CLING',
+  ROLL_UP_BANNER = 'ROLL_UP_BANNER',
+}
+
+interface FormatSpecification {
+  type: AdsFormatType;
+  name: string;
+  category: 'PRINT' | 'DIGITAL' | 'POS';
+  dimensions: Dimensions;
+  requirements: FormatRequirements;
+  qrConstraints: QRConstraints;
+  useCases: string[];
+}
+
+interface Dimensions {
+  width: number;
+  height: number;
+  unit: 'mm' | 'cm' | 'px';
+  aspectRatio?: string;
+}
+
+interface FormatRequirements {
+  minDPI?: number;              // For print formats
+  maxFileSize: number;          // Bytes
+  allowedFormats: FileFormat[];
+  colorMode?: 'RGB' | 'CMYK';   // CMYK for print
+  bleed?: number;               // mm for print
+}
+
+enum FileFormat {
+  PNG = 'PNG',
+  JPG = 'JPG',
+  JPEG = 'JPEG',
+  PDF = 'PDF',
+  WEBP = 'WEBP',
+  SVG = 'SVG',
+}
+
+interface QRConstraints {
+  minSize: Dimensions;          // Minimum QR size
+  maxSize: Dimensions;          // Maximum QR size
+  safeZone: number;             // Margin around QR (mm or px)
+  allowedPositions?: QRPosition[];
+  recommended: QRRecommendation;
+}
+
+enum QRPosition {
+  TOP_LEFT = 'TOP_LEFT',
+  TOP_RIGHT = 'TOP_RIGHT',
+  BOTTOM_LEFT = 'BOTTOM_LEFT',
+  BOTTOM_RIGHT = 'BOTTOM_RIGHT',
+  CENTER = 'CENTER',
+}
+
+interface QRRecommendation {
+  position: QRPosition;
+  size: Dimensions;
+  reasoning: string;
+}
+```
+
+### 10A2-3.3.2 Predefined Specifications
+
+```typescript
+const formatSpecifications: Record<AdsFormatType, FormatSpecification> = {
+  FLYER_A5: {
+    type: AdsFormatType.FLYER_A5,
+    name: 'Flyer A5',
+    category: 'PRINT',
+    dimensions: { width: 148, height: 210, unit: 'mm' },
+    requirements: {
+      minDPI: 300,
+      maxFileSize: 50 * 1024 * 1024,  // 50MB
+      allowedFormats: [FileFormat.PDF, FileFormat.PNG, FileFormat.JPG],
+      colorMode: 'CMYK',
+      bleed: 3,  // 3mm bleed
+    },
+    qrConstraints: {
+      minSize: { width: 20, height: 20, unit: 'mm' },
+      maxSize: { width: 50, height: 50, unit: 'mm' },
+      safeZone: 5,  // 5mm margin
+      recommended: {
+        position: QRPosition.BOTTOM_RIGHT,
+        size: { width: 30, height: 30, unit: 'mm' },
+        reasoning: 'Bottom-right is easiest to scan without obscuring main visual',
+      },
+    },
+    useCases: ['Hand-out at stores', 'Direct mail', 'Event distribution'],
+  },
+  
+  DIGITAL_BANNER: {
+    type: AdsFormatType.DIGITAL_BANNER,
+    name: 'Digital Banner',
+    category: 'DIGITAL',
+    dimensions: { width: 1920, height: 1080, unit: 'px' },
+    requirements: {
+      maxFileSize: 10 * 1024 * 1024,  // 10MB
+      allowedFormats: [FileFormat.PNG, FileFormat.JPG, FileFormat.WEBP],
+      colorMode: 'RGB',
+    },
+    qrConstraints: {
+      minSize: { width: 150, height: 150, unit: 'px' },
+      maxSize: { width: 400, height: 400, unit: 'px' },
+      safeZone: 30,  // 30px margin
+      recommended: {
+        position: QRPosition.BOTTOM_RIGHT,
+        size: { width: 250, height: 250, unit: 'px' },
+        reasoning: 'Visible on screens but not dominating the design',
+      },
+    },
+    useCases: ['In-store digital screens', 'Website banners', 'Email campaigns'],
+  },
+  
+  // ... other format specs
+};
+```
+
+---
+
+## 10A2-3.4 Design File Validation
+
+### 10A2-3.4.1 Validation Interface
+
+```typescript
+interface DesignFileValidation {
+  checkFormat(file: File): ValidationResult;
+  checkSize(file: File, maxSize: number): ValidationResult;
+  checkDimensions(file: File, expected: Dimensions): ValidationResult;
+  checkDPI(file: File, minDPI: number): ValidationResult;
+  checkColorMode(file: File, required: 'RGB' | 'CMYK'): ValidationResult;
+  checkBleed(file: File, required: number): ValidationResult;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+  metadata: FileMetadata;
+}
+
+interface ValidationError {
+  field: string;
+  code: ErrorCode;
+  message: string;
+  expected: any;
+  actual: any;
+}
+
+enum ErrorCode {
+  INVALID_FORMAT = 'INVALID_FORMAT',
+  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
+  WRONG_DIMENSIONS = 'WRONG_DIMENSIONS',
+  DPI_TOO_LOW = 'DPI_TOO_LOW',
+  WRONG_COLOR_MODE = 'WRONG_COLOR_MODE',
+  MISSING_BLEED = 'MISSING_BLEED',
+}
+
+interface ValidationWarning {
+  field: string;
+  code: WarningCode;
+  message: string;
+  recommendation: string;
+}
+
+enum WarningCode {
+  DPI_HIGHER_THAN_NEEDED = 'DPI_HIGHER_THAN_NEEDED',
+  FILE_COULD_BE_SMALLER = 'FILE_COULD_BE_SMALLER',
+  ASPECT_RATIO_SLIGHTLY_OFF = 'ASPECT_RATIO_SLIGHTLY_OFF',
+}
+
+interface FileMetadata {
+  filename: string;
+  size: number;
+  mimeType: string;
+  dimensions: { width: number; height: number };
+  dpi?: number;
+  colorMode?: string;
+  hasBleed?: boolean;
+  format: string;
+}
+```
+
+### 10A2-3.4.2 Validation Rules
+
+```typescript
+const validationRules = {
+  flyer: {
+    dpiMin: 300,
+    dpiRecommended: 300,
+    dpiMax: 600,
+    colorMode: 'CMYK',
+    bleedRequired: true,
+    bleedSize: 3,  // mm
+  },
+  digital: {
+    colorMode: 'RGB',
+    maxFileSize: 10 * 1024 * 1024,
+    compressionRecommended: true,
+  },
+};
+
+const errorMessages = {
+  INVALID_FORMAT: "File format không được hỗ trợ. Chỉ chấp nhận: {allowedFormats}",
+  FILE_TOO_LARGE: "File quá lớn ({actualSize}). Kích thước tối đa: {maxSize}",
+  WRONG_DIMENSIONS: "Kích thước sai. Expected: {expected}, Actual: {actual}",
+  DPI_TOO_LOW: "DPI quá thấp ({actualDPI}). Tối thiểu: {minDPI} cho in ấn chất lượng cao",
+  WRONG_COLOR_MODE: "Color mode sai ({actualMode}). Yêu cầu: {requiredMode} cho in ấn",
+  MISSING_BLEED: "Thiếu bleed margin. Cần thêm {requiredBleed}mm để tránh cắt mép trắng",
+};
+```
+
+---
+
+## 10A2-3.5 QR Code Configuration
+
+### 10A2-3.5.1 QR Zone Interface
+
+```typescript
+interface QRZoneConfig {
+  position: QRPosition;
+  coordinates: Coordinates;      // Top-left corner
+  size: Dimensions;
+  rotation?: number;             // Degrees (0, 90, 180, 270)
+  safeZone: number;
+  background?: QRBackground;
+  style: QRStyle;
+}
+
+interface Coordinates {
+  x: number;
+  y: number;
+  unit: 'mm' | 'px' | '%';
+}
+
+interface QRBackground {
+  enabled: boolean;
+  color: string;                 // Hex color
+  padding: number;
+  borderRadius?: number;
+}
+
+interface QRStyle {
+  foregroundColor: string;       // Default: black
+  backgroundColor: string;       // Default: white
+  logo?: QRLogo;
+  errorCorrection: 'LOW' | 'MEDIUM' | 'QUARTILE' | 'HIGH';
+}
+
+interface QRLogo {
+  enabled: boolean;
+  imageUrl: string;
+  size: number;                  // % of QR size (10-30%)
+  shape: 'SQUARE' | 'CIRCLE';
+}
+```
+
+### 10A2-3.5.2 QR Editor Interface
+
+```typescript
+interface QREditor {
+  canvas: EditorCanvas;
+  tools: EditorTools;
+  constraints: QRConstraints;
+  previewMode: 'DESIGN' | 'PRINT' | 'SCAN';
+}
+
+interface EditorCanvas {
+  width: number;
+  height: number;
+  zoom: number;                  // 50%, 100%, 200%
+  showGrid: boolean;
+  showRulers: boolean;
+  showSafeZones: boolean;
+  showBleed: boolean;
+}
+
+interface EditorTools {
+  selection: boolean;
+  dragAndDrop: boolean;
+  resize: boolean;
+  rotate: boolean;
+  align: AlignmentTools;
+  snap: SnapSettings;
+}
+
+interface AlignmentTools {
+  alignLeft: boolean;
+  alignCenter: boolean;
+  alignRight: boolean;
+  alignTop: boolean;
+  alignMiddle: boolean;
+  alignBottom: boolean;
+}
+
+interface SnapSettings {
+  enabled: boolean;
+  snapToGrid: boolean;
+  snapToGuides: boolean;
+  snapToEdges: boolean;
+  tolerance: number;             // Pixels
+}
+```
+
+### 10A2-3.5.3 QR Validation
+
+```typescript
+interface QRValidation {
+  checkSize(qr: QRZoneConfig, constraints: QRConstraints): ValidationResult;
+  checkPosition(qr: QRZoneConfig, design: Dimensions): ValidationResult;
+  checkSafeZone(qr: QRZoneConfig): ValidationResult;
+  checkContrast(qr: QRStyle, background: string): ValidationResult;
+  checkScannability(qr: QRZoneConfig): ValidationResult;
+}
+
+const qrValidationRules = {
+  minSize: {
+    print: { width: 20, height: 20, unit: 'mm' },
+    digital: { width: 150, height: 150, unit: 'px' },
+  },
+  safeZone: {
+    print: 5,      // mm
+    digital: 20,   // px
+  },
+  contrast: {
+    minRatio: 3.5,  // WCAG AA for large graphics
+  },
+  position: {
+    minDistanceFromEdge: {
+      print: 10,    // mm
+      digital: 30,  // px
+    },
+  },
+};
+
+const qrErrorMessages = {
+  TOO_SMALL: "QR code quá nhỏ ({actual}). Tối thiểu: {min} để đảm bảo scan được",
+  TOO_LARGE: "QR code quá lớn ({actual}). Tối đa: {max}",
+  OUTSIDE_SAFE_ZONE: "QR code nằm ngoài vùng an toàn. Di chuyển vào trong ít nhất {safeZone}mm",
+  LOW_CONTRAST: "Độ tương phản thấp ({contrast}). Tối thiểu: {minContrast} để scan dễ dàng",
+  TOO_CLOSE_TO_EDGE: "QR code quá gần mép ({distance}mm). Cần cách mép ít nhất {minDistance}mm",
+  OVERLAPS_TEXT: "QR code đè lên text/hình quan trọng. Di chuyển sang vị trí khác",
+};
+```
+
+---
+
+## 10A2-3.6 Dynamic QR Generation
+
+### 10A2-3.6.1 QR Data Structure
+
+```typescript
+interface DynamicQRData {
+  baseUrl: string;
+  campaignId: string;
+  adsFormatId: string;
+  locationId?: string;
+  tracking: TrackingParams;
+  shortUrl?: string;
+  qrImage: QRImage;
+}
+
+interface TrackingParams {
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  utmContent?: string;
+  utmTerm?: string;
+  customParams?: Record<string, string>;
+}
+
+interface QRImage {
+  url: string;
+  data: string;                  // Base64 encoded
+  format: 'PNG' | 'SVG';
+  size: number;                  // Pixels
+  errorCorrection: 'LOW' | 'MEDIUM' | 'QUARTILE' | 'HIGH';
+}
+```
+
+### 10A2-3.6.2 URL Generation
+
+```typescript
+interface URLGenerator {
+  generateLandingURL(params: URLParams): string;
+  generateShortURL(longUrl: string): Promise<string>;
+  generateQRCode(url: string, options: QROptions): Promise<QRImage>;
+}
+
+interface URLParams {
+  campaignId: string;
+  adsFormatId: string;
+  locationId?: string;
+  tracking: TrackingParams;
+}
+
+interface QROptions {
+  size: number;
+  errorCorrection: 'LOW' | 'MEDIUM' | 'QUARTILE' | 'HIGH';
+  foregroundColor: string;
+  backgroundColor: string;
+  logo?: string;
+  format: 'PNG' | 'SVG';
+}
+```
+
+**Example URL Structure**:
+```
+Landing URL:
+https://sampling.example.com/c/{campaignId}
+  ?af={adsFormatId}
+  &l={locationId}
+  &utm_source=flyer_a5
+  &utm_medium=print
+  &utm_campaign=summer_2025
+  
+Short URL:
+https://smpl.ng/abc123
+
+QR Code Data:
+smpl.ng/abc123
+```
+
+---
+
+## 10A2-3.7 Testing & Preview
+
+### 10A2-3.7.1 Test Interface
+
+```typescript
+interface TestScenario {
+  testQRScan(): Promise<TestResult>;
+  testLandingPageLoad(): Promise<TestResult>;
+  testTracking(): Promise<TestResult>;
+  testPrintQuality(): Promise<TestResult>;
+}
+
+interface TestResult {
+  testName: string;
+  success: boolean;
+  duration: number;              // milliseconds
+  details: TestDetails;
+  errors: TestError[];
+  warnings: TestWarning[];
+}
+
+interface TestDetails {
+  qrScanned?: boolean;
+  landingLoaded?: boolean;
+  trackingFired?: boolean;
+  printQuality?: QualityCheck;
+}
+
+interface QualityCheck {
+  dpi: number;
+  colorAccuracy: number;         // 0-100%
+  bleedCheck: boolean;
+  qrReadability: number;         // 0-100%
+}
+
+interface TestError {
+  code: string;
+  message: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+interface TestWarning {
+  code: string;
+  message: string;
+  recommendation: string;
+}
+```
+
+### 10A2-3.7.2 Preview Modes
+
+```typescript
+interface PreviewConfig {
+  mode: PreviewMode;
+  scale: number;                 // 25%, 50%, 100%, 200%
+  showAnnotations: boolean;
+  showQRZone: boolean;
+  showSafeZones: boolean;
+  showBleed: boolean;
+  showDimensions: boolean;
+}
+
+enum PreviewMode {
+  DESIGN = 'DESIGN',             // Show design as-is
+  PRINT = 'PRINT',               // Show with print marks
+  MOCKUP = 'MOCKUP',             // Show in context (hand holding flyer, etc.)
+  SCAN = 'SCAN',                 // Show how QR appears when scanning
+}
+
+interface PreviewAnnotation {
+  type: 'DIMENSION' | 'QR_SIZE' | 'SAFE_ZONE' | 'BLEED' | 'DPI';
+  position: Coordinates;
+  label: string;
+  value: string;
+  visible: boolean;
+}
+```
+
+---
+
+## 10A2-3.8 Format Management
+
+### 10A2-3.8.1 Format List Interface
+
+```typescript
+interface AdsFormatList {
+  formats: AdsFormatSummary[];
+  filters: FormatFilters;
+  sorting: FormatSorting;
+  pagination: Pagination;
+}
+
+interface AdsFormatSummary {
+  id: string;
+  name: string;
+  type: AdsFormatType;
+  campaignId: string;
+  campaignName: string;
+  thumbnail: string;
+  status: FormatStatus;
+  stats: FormatStats;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+enum FormatStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  ARCHIVED = 'ARCHIVED',
+}
+
+interface FormatStats {
+  totalScans: number;
+  scanRate: number;              // % of impressions
+  conversionRate: number;
+  lastScannedAt?: Date;
+}
+
+interface FormatFilters {
+  campaignIds?: string[];
+  types?: AdsFormatType[];
+  status?: FormatStatus[];
+  dateRange?: DateRange;
+}
+
+interface FormatSorting {
+  field: 'name' | 'type' | 'scans' | 'createdAt';
+  order: 'ASC' | 'DESC';
+}
+```
+
+### 10A2-3.8.2 Format Operations
+
+```typescript
+interface FormatOperations {
+  create(data: CreateFormatDTO): Promise<AdsFormat>;
+  update(id: string, data: UpdateFormatDTO): Promise<AdsFormat>;
+  delete(id: string): Promise<void>;
+  duplicate(id: string): Promise<AdsFormat>;
+  archive(id: string): Promise<void>;
+  download(id: string, options: DownloadOptions): Promise<Blob>;
+}
+
+interface CreateFormatDTO {
+  campaignId: string;
+  name: string;
+  type: AdsFormatType;
+  designFile: File;
+  qrConfig: QRZoneConfig;
+  tracking: TrackingParams;
+  printQuantity?: number;
+}
+
+interface UpdateFormatDTO {
+  name?: string;
+  qrConfig?: QRZoneConfig;
+  tracking?: TrackingParams;
+  status?: FormatStatus;
+}
+
+interface DownloadOptions {
+  includeQR: boolean;
+  format: 'PDF' | 'PNG' | 'JPG' | 'SVG';
+  dpi?: number;
+  colorMode?: 'RGB' | 'CMYK';
+}
+```
+
+---
+
+## 10A2-3.9 Success Metrics
+
+```typescript
+interface AdsFormatMetrics {
+  creation: {
+    totalFormats: number;
+    successRate: number;          // Target: > 95%
+    avgCreationTime: number;      // Target: < 10 minutes
+  };
+  validation: {
+    fileValidationSuccess: number;  // Target: > 98%
+    qrValidationSuccess: number;    // Target: 100%
+    avgValidationTime: number;      // Target: < 3s
+  };
+  quality: {
+    avgDPI: number;
+    colorAccuracy: number;
+    qrReadability: number;          // Target: > 98%
+  };
+  usage: {
+    formatsPerCampaign: number;
+    mostUsedType: AdsFormatType;
+    avgScansPerFormat: number;
+  };
+}
+```
+
+---
+
+## 10A2-3.10 Next Steps
+
+**Related Documents**:
+- `Part10A2-2_Campaign_Creation.md` - Link from campaign creation
+- `Part10A2-4_Campaign_Lifecycle.md` - Using formats in active campaigns
+- `Part10A2-5_Analytics_Reporting.md` - Format performance tracking
+- `Part10B_Wireframes` - Ads format editor wireframes
+
+**Implementation Priority**:
+1. ✅ Format type selection (MVP)
+2. ✅ Design file upload & validation (MVP)
+3. ✅ QR zone configuration (MVP)
+4. ✅ Dynamic QR generation (MVP)
+5. ⏳ Visual QR editor (Phase 2)
+6. ⏳ Test scenarios (Phase 2)
+7. ⏳ Advanced QR styling (Phase 3)
+
+---
+
+**Document Status**: ✅ Complete  
+**Last Updated**: 2025-10-17  
+**Next Review**: 2025-11-01
+# Part10A2-4 - Campaign Lifecycle Management
+
+**Version**: 1.0  
+**Date**: 2025-10-17  
+**Author**: UX Design Team  
+**Reference**: `System_Feature_Tree.md`, `Access_Control_Tree.md`
+
+---
+
+## 10A2-4.1 Overview
+
+Mô tả quản lý vòng đời chiến dịch từ Draft → Active → Paused → Completed → Archived, bao gồm các thao tác edit, pause/resume, và complete.
+
+**Campaign States**:
+- **DRAFT**: Campaign đang được tạo, chưa publish
+- **ACTIVE**: Campaign đang chạy, có thể nhận scan/redeem
+- **PAUSED**: Campaign tạm dừng, không nhận scan mới
+- **COMPLETED**: Campaign đã kết thúc (theo schedule hoặc manual)
+- **ARCHIVED**: Campaign đã archive, chỉ xem được
+
+**Goals**:
+- State transition success rate > 99%
+- Edit while active without downtime
+- Pause/resume response time < 2 seconds
+- Campaign completion accuracy 100%
+
+---
+
+## 10A2-4.2 Campaign Lifecycle Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: Create Campaign
+    
+    DRAFT --> DRAFT: Edit/Update
+    DRAFT --> ACTIVE: Publish
+    DRAFT --> [*]: Delete
+    
+    ACTIVE --> ACTIVE: Edit Info
+    ACTIVE --> PAUSED: Pause
+    ACTIVE --> COMPLETED: End Date Reached
+    ACTIVE --> COMPLETED: Manual Complete
+    
+    PAUSED --> ACTIVE: Resume
+    PAUSED --> COMPLETED: Manual Complete
+    PAUSED --> [*]: Delete
+    
+    COMPLETED --> ARCHIVED: Archive
+    COMPLETED --> [*]: Delete
+    
+    ARCHIVED --> [*]: Permanent Delete
+    
+    note right of DRAFT
+        - Can edit freely
+        - No restrictions
+        - Not visible to users
+    end note
+    
+    note right of ACTIVE
+        - Limited edits
+        - Visible to users
+        - Accepts scans
+    end note
+    
+    note right of PAUSED
+        - No new scans
+        - Can still redeem existing
+        - Can resume anytime
+    end note
+    
+    note right of COMPLETED
+        - No new actions
+        - Data locked
+        - Generate final report
+    end note
+    
+    note right of ARCHIVED
+        - Read-only
+        - Historical data
+        - Can restore if needed
+    end note
+```
+
+---
+
+## 10A2-4.3 State Management
+
+### 10A2-4.3.1 Campaign State Interface
+
+```typescript
+interface CampaignState {
+  id: string;
+  status: CampaignStatus;
+  previousStatus?: CampaignStatus;
+  statusHistory: StatusHistoryEntry[];
+  canTransitionTo: CampaignStatus[];
+  restrictions: StateRestrictions;
+  metadata: StateMetadata;
+}
+
+enum CampaignStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  COMPLETED = 'COMPLETED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+interface StatusHistoryEntry {
+  from: CampaignStatus;
+  to: CampaignStatus;
+  timestamp: Date;
+  userId: string;
+  userName: string;
+  reason?: string;
+  metadata?: Record<string, any>;
+}
+
+interface StateRestrictions {
+  canEdit: EditableFields;
+  canDelete: boolean;
+  canPause: boolean;
+  canResume: boolean;
+  canComplete: boolean;
+  canArchive: boolean;
+}
+
+interface EditableFields {
+  basicInfo: boolean;
+  schedule: boolean;
+  locations: boolean;
+  barcodes: boolean;
+  adsFormats: boolean;
+  settings: boolean;
+}
+
+interface StateMetadata {
+  activatedAt?: Date;
+  pausedAt?: Date;
+  completedAt?: Date;
+  archivedAt?: Date;
+  autoCompletedBy?: 'SCHEDULE' | 'SYSTEM' | 'USER';
+}
+```
+
+---
+
+### 10A2-4.3.2 State Transitions
+
+```typescript
+interface StateTransition {
+  from: CampaignStatus;
+  to: CampaignStatus;
+  allowed: boolean;
+  requiredPermissions: string[];
+  validations: TransitionValidation[];
+  actions: TransitionAction[];
+}
+
+interface TransitionValidation {
+  check: string;
+  errorMessage: string;
+  required: boolean;
+}
+
+interface TransitionAction {
+  type: 'NOTIFICATION' | 'WEBHOOK' | 'LOG' | 'UPDATE' | 'ARCHIVE';
+  target: string;
+  payload?: Record<string, any>;
+  async: boolean;
+}
+```
+
+**Transition Rules**:
+```typescript
+const transitionRules: Record<string, StateTransition> = {
+  'DRAFT_TO_ACTIVE': {
+    from: CampaignStatus.DRAFT,
+    to: CampaignStatus.ACTIVE,
+    allowed: true,
+    requiredPermissions: ['PUBLISH_CAMPAIGN'],
+    validations: [
+      {
+        check: 'hasBasicInfo',
+        errorMessage: 'Campaign info incomplete',
+        required: true,
+      },
+      {
+        check: 'hasValidDates',
+        errorMessage: 'Invalid date range',
+        required: true,
+      },
+      {
+        check: 'hasLocations',
+        errorMessage: 'No locations selected',
+        required: true,
+      },
+      {
+        check: 'hasBarcodes',
+        errorMessage: 'No barcodes imported (min 100)',
+        required: true,
+      },
+    ],
+    actions: [
+      {
+        type: 'NOTIFICATION',
+        target: 'team',
+        payload: { message: 'Campaign {name} is now active' },
+        async: true,
+      },
+      {
+        type: 'WEBHOOK',
+        target: 'partners',
+        payload: { event: 'campaign.activated' },
+        async: true,
+      },
+    ],
+  },
+  
+  'ACTIVE_TO_PAUSED': {
+    from: CampaignStatus.ACTIVE,
+    to: CampaignStatus.PAUSED,
+    allowed: true,
+    requiredPermissions: ['PAUSE_CAMPAIGN'],
+    validations: [],
+    actions: [
+      {
+        type: 'LOG',
+        target: 'audit',
+        payload: { action: 'campaign_paused' },
+        async: false,
+      },
+    ],
+  },
+  
+  'PAUSED_TO_ACTIVE': {
+    from: CampaignStatus.PAUSED,
+    to: CampaignStatus.ACTIVE,
+    allowed: true,
+    requiredPermissions: ['RESUME_CAMPAIGN'],
+    validations: [
+      {
+        check: 'notExpired',
+        errorMessage: 'Campaign end date has passed',
+        required: true,
+      },
+    ],
+    actions: [],
+  },
+  
+  'ACTIVE_TO_COMPLETED': {
+    from: CampaignStatus.ACTIVE,
+    to: CampaignStatus.COMPLETED,
+    allowed: true,
+    requiredPermissions: ['COMPLETE_CAMPAIGN'],
+    validations: [],
+    actions: [
+      {
+        type: 'UPDATE',
+        target: 'finalStats',
+        async: false,
+      },
+      {
+        type: 'NOTIFICATION',
+        target: 'team',
+        payload: { message: 'Campaign {name} completed' },
+        async: true,
+      },
+    ],
+  },
+};
+```
+
+---
+
+## 10A2-4.4 Publishing Workflow
+
+### 10A2-4.4.1 Pre-Publish Validation
+
+```mermaid
+flowchart TD
+    Start([🚀 Click Publish]) --> CheckPerm{✓ Permission?}
+    
+    CheckPerm -->|Không| NoPerm[❌ No permission]
+    CheckPerm -->|Có| RunChecks[🔍 Run Pre-Publish Checks]
+    
+    RunChecks --> Check1{✓ Basic info?}
+    Check1 -->|Không| Error1[❌ Missing required fields]
+    Check1 -->|Có| Check2
+    
+    Check2{✓ Valid dates?} -->|Không| Error2[❌ Invalid date range]
+    Check2 -->|Có| Check3
+    
+    Check3{✓ Locations ≥ 1?} -->|Không| Error3[❌ No locations]
+    Check3 -->|Có| Check4
+    
+    Check4{✓ Barcodes ≥ 100?} -->|Không| Error4[❌ Not enough barcodes]
+    Check4 -->|Có| Check5
+    
+    Check5{✓ Ads Format ≥ 1?} -->|Không| Warn1[⚠️ No Ads Format yet]
+    Check5 -->|Có| AllPass
+    
+    Warn1 --> CanProceed{Proceed anyway?}
+    CanProceed -->|Không| Cancel[Cancel publish]
+    CanProceed -->|Có| AllPass
+    
+    AllPass[✅ All checks passed] --> ConfirmDialog[Confirm Publish Dialog]
+    
+    ConfirmDialog --> ShowSummary[Show summary:<br/>- X locations<br/>- Y barcodes<br/>- Start: date<br/>- End: date]
+    
+    ShowSummary --> ConfirmAction{Confirm?}
+    ConfirmAction -->|Không| Cancel
+    ConfirmAction -->|Có| ProcessPublish[⚙️ Process Publish]
+    
+    ProcessPublish --> UpdateStatus[Update Status = ACTIVE]
+    UpdateStatus --> SetTimestamp[Set activatedAt]
+    SetTimestamp --> SendNotifs[📧 Send Notifications]
+    
+    SendNotifs --> NotifyTeam[Notify internal team]
+    NotifyTeam --> NotifyPartners[Notify retail partners]
+    NotifyPartners --> TriggerWebhooks[Trigger webhooks]
+    
+    TriggerWebhooks --> LogActivity[📝 Log to audit trail]
+    LogActivity --> Success[✅ Published Successfully]
+    
+    Success --> ShowConfirm[Show success message<br/>+ Campaign URL]
+    ShowConfirm --> NextAction{Next action?}
+    
+    NextAction -->|View Campaign| ViewCampaign[📊 View Campaign Details]
+    NextAction -->|Monitor| Dashboard[📈 Go to Dashboard]
+    NextAction -->|Create Ads| CreateAds[🎨 Create Ads Format]
+    
+    Error1 --> ShowErrors[Show checklist<br/>with failed items]
+    Error2 --> ShowErrors
+    Error3 --> ShowErrors
+    Error4 --> ShowErrors
+    
+    ShowErrors --> FixIssues{Fix issues?}
+    FixIssues -->|Có| EditCampaign[✏️ Edit Campaign]
+    FixIssues -->|Không| Cancel
+    
+    EditCampaign --> Start
+    Cancel --> End([End])
+    NoPerm --> End
+    ViewCampaign --> End
+    Dashboard --> End
+    CreateAds --> End
+    
+    style Start fill:#e1f5ff
+    style Success fill:#d4edda
+    style ShowConfirm fill:#d4edda
+    style Error1 fill:#f8d7da
+    style Error2 fill:#f8d7da
+    style Error3 fill:#f8d7da
+    style Error4 fill:#f8d7da
+    style NoPerm fill:#f8d7da
+```
+
+---
+
+### 10A2-4.4.2 Publish Interface
+
+```typescript
+interface PublishRequest {
+  campaignId: string;
+  publishedBy: string;
+  scheduledPublish?: Date;        // Optional: Schedule for future
+  notificationSettings?: PublishNotifications;
+}
+
+interface PublishNotifications {
+  notifyTeam: boolean;
+  notifyPartners: boolean;
+  notifyStaff: boolean;
+  customMessage?: string;
+}
+
+interface PublishResult {
+  success: boolean;
+  campaignId: string;
+  newStatus: CampaignStatus;
+  activatedAt: Date;
+  url: string;
+  errors?: PublishError[];
+  warnings?: PublishWarning[];
+}
+
+interface PublishError {
+  code: PublishErrorCode;
+  message: string;
+  field?: string;
+  action?: string;
+}
+
+enum PublishErrorCode {
+  MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
+  INVALID_DATE_RANGE = 'INVALID_DATE_RANGE',
+  NO_LOCATIONS = 'NO_LOCATIONS',
+  INSUFFICIENT_BARCODES = 'INSUFFICIENT_BARCODES',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  SYSTEM_ERROR = 'SYSTEM_ERROR',
+}
+
+interface PublishWarning {
+  code: PublishWarningCode;
+  message: string;
+  canIgnore: boolean;
+}
+
+enum PublishWarningCode {
+  NO_ADS_FORMAT = 'NO_ADS_FORMAT',
+  NEAR_EXPIRY_BARCODES = 'NEAR_EXPIRY_BARCODES',
+  LOCATION_CONFLICT = 'LOCATION_CONFLICT',
+  LOW_BARCODE_COUNT = 'LOW_BARCODE_COUNT',
+}
+```
+
+---
+
+## 10A2-4.5 Active Campaign Management
+
+### 10A2-4.5.1 Editable Fields While Active
+
+```typescript
+interface ActiveCampaignEdits {
+  allowed: {
+    name: boolean;                      // ✅ Can change
+    description: boolean;               // ✅ Can change
+    productImage: boolean;              // ✅ Can change
+    extendEndDate: boolean;             // ✅ Can extend (not shorten)
+    addLocations: boolean;              // ✅ Can add more
+    removeLocations: boolean;           // ⚠️ Warning if has activity
+    importMoreBarcodes: boolean;        // ✅ Can add more
+    editAdsFormats: boolean;            // ✅ Can edit/add
+    updateTracking: boolean;            // ✅ Can update UTM
+    editSettings: boolean;              // ✅ Can change settings
+  };
+  restricted: {
+    startDate: string;                  // ❌ Cannot change once started
+    shortenEndDate: string;             // ❌ Cannot shorten
+    changeCampaignType: string;         // ❌ Cannot change type
+    deleteBarcodes: string;             // ❌ Cannot delete issued codes
+  };
+}
+
+interface EditWhileActiveRequest {
+  campaignId: string;
+  field: string;
+  oldValue: any;
+  newValue: any;
+  reason?: string;
+}
+
+interface EditWhileActiveValidation {
+  allowed: boolean;
+  requiresConfirmation: boolean;
+  confirmationMessage?: string;
+  warnings: EditWarning[];
+  impact: EditImpact;
+}
+
+interface EditWarning {
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  message: string;
+  affectedUsers?: number;
+}
+
+interface EditImpact {
+  affectedScans: number;
+  affectedUsers: number;
+  affectedLocations: number;
+  requiresNotification: boolean;
+}
+```
+
+---
+
+### 10A2-4.5.2 Pause/Resume Operations
+
+```typescript
+interface PauseRequest {
+  campaignId: string;
+  pausedBy: string;
+  reason: PauseReason;
+  customReason?: string;
+  notifyUsers: boolean;
+}
+
+enum PauseReason {
+  TEMPORARY_STOCK_OUT = 'TEMPORARY_STOCK_OUT',
+  ISSUE_FOUND = 'ISSUE_FOUND',
+  PLANNED_MAINTENANCE = 'PLANNED_MAINTENANCE',
+  BUDGET_EXHAUSTED = 'BUDGET_EXHAUSTED',
+  OTHER = 'OTHER',
+}
+
+interface PauseResult {
+  success: boolean;
+  campaignId: string;
+  pausedAt: Date;
+  newStatus: CampaignStatus.PAUSED;
+  affectedOperations: AffectedOperations;
+}
+
+interface AffectedOperations {
+  pendingScans: number;           // Scans in progress
+  activeSessions: number;         // Users on landing page
+  action: 'COMPLETE' | 'CANCEL' | 'QUEUE';
+}
+
+interface ResumeRequest {
+  campaignId: string;
+  resumedBy: string;
+  notifyUsers: boolean;
+}
+
+interface ResumeValidation {
+  canResume: boolean;
+  checks: ResumeCheck[];
+  warnings: string[];
+}
+
+interface ResumeCheck {
+  name: string;
+  passed: boolean;
+  message?: string;
+}
+```
+
+**Resume Checks**:
+```typescript
+const resumeChecks: ResumeCheck[] = [
+  {
+    name: 'notExpired',
+    passed: true,
+  },
+  {
+    name: 'hasAvailableBarcodes',
+    passed: true,
+  },
+  {
+    name: 'locationsActive',
+    passed: false,
+    message: '2 locations temporarily closed',
+  },
+  {
+    name: 'systemHealthy',
+    passed: true,
+  },
+];
+```
+
+---
+
+## 10A2-4.6 Campaign Completion
+
+### 10A2-4.6.1 Completion Triggers
+
+```mermaid
+flowchart TD
+    Active[Campaign ACTIVE] --> Triggers{Completion Trigger?}
+    
+    Triggers -->|End date reached| AutoComplete[⏰ Auto Complete<br/>by Schedule]
+    Triggers -->|Manual action| ManualComplete[👤 Manual Complete<br/>by Admin]
+    Triggers -->|All barcodes used| FullyRedeemed[✅ All barcodes<br/>redeemed]
+    Triggers -->|Budget exhausted| BudgetLimit[💰 Budget limit<br/>reached]
+    
+    AutoComplete --> PreComplete[🔍 Pre-Complete Checks]
+    ManualComplete --> ConfirmManual{Confirm?}
+    FullyRedeemed --> PreComplete
+    BudgetLimit --> PreComplete
+    
+    ConfirmManual -->|Không| Cancel[Cancel]
+    ConfirmManual -->|Có| PreComplete
+    
+    PreComplete --> CheckPending{Pending operations?}
+    
+    CheckPending -->|Có| HandlePending[⏳ Wait for:<br/>- Pending OTPs<br/>- Active sessions<br/>- Processing redemptions]
+    CheckPending -->|Không| ProcessComplete
+    
+    HandlePending --> Timeout{Timeout 5 min?}
+    Timeout -->|Không| HandlePending
+    Timeout -->|Có| ForceComplete{Force complete?}
+    
+    ForceComplete -->|Không| Revert[↩️ Revert to ACTIVE]
+    ForceComplete -->|Có| ProcessComplete[⚙️ Process Completion]
+    
+    ProcessComplete --> UpdateStatus[Update Status = COMPLETED]
+    UpdateStatus --> SetTimestamp[Set completedAt]
+    SetTimestamp --> LockData[🔒 Lock campaign data]
+    
+    LockData --> GenerateReport[📊 Generate Final Report]
+    GenerateReport --> CalculateStats[📈 Calculate final stats:<br/>- Total scans<br/>- Redemption rate<br/>- ROI<br/>- Cost metrics]
+    
+    CalculateStats --> Reconcile[💰 Reconciliation:<br/>- Issued vs redeemed<br/>- Remaining inventory<br/>- Final costs]
+    
+    Reconcile --> NotifyStakeholders[📧 Notify stakeholders:<br/>- Admin<br/>- Brand<br/>- Partners]
+    
+    NotifyStakeholders --> ArchiveOption[Archive campaign?]
+    ArchiveOption --> Complete[✅ Completion Done]
+    
+    Cancel --> End([End])
+    Revert --> End
+    Complete --> End
+    
+    style Active fill:#e1f5ff
+    style Complete fill:#d4edda
+    style Cancel fill:#f8d7da
+```
+
+---
+
+### 10A2-4.6.2 Completion Interface
+
+```typescript
+interface CompletionRequest {
+  campaignId: string;
+  completedBy: string;
+  reason: CompletionReason;
+  forceComplete?: boolean;        // Skip waiting for pending ops
+  generateReport?: boolean;
+}
+
+enum CompletionReason {
+  END_DATE_REACHED = 'END_DATE_REACHED',
+  MANUAL = 'MANUAL',
+  ALL_BARCODES_USED = 'ALL_BARCODES_USED',
+  BUDGET_EXHAUSTED = 'BUDGET_EXHAUSTED',
+  CANCELLED = 'CANCELLED',
+}
+
+interface CompletionResult {
+  success: boolean;
+  campaignId: string;
+  completedAt: Date;
+  finalStats: FinalStats;
+  finalReport?: FinalReport;
+  reconciliation: Reconciliation;
+}
+
+interface FinalStats {
+  duration: {
+    plannedDays: number;
+    actualDays: number;
+  };
+  performance: {
+    totalScans: number;
+    uniqueUsers: number;
+    verifiedUsers: number;
+    barcodesIssued: number;
+    barcodesRedeemed: number;
+    redemptionRate: number;
+  };
+  conversion: {
+    scanToSubmit: number;
+    submitToVerify: number;
+    verifyToIssue: number;
+    issueToRedeem: number;
+    overall: number;
+  };
+  costs: {
+    totalCost: number;
+    costPerScan: number;
+    costPerLead: number;
+    costPerRedemption: number;
+    roi: number;
+  };
+}
+
+interface FinalReport {
+  id: string;
+  campaignId: string;
+  generatedAt: Date;
+  format: 'PDF' | 'EXCEL' | 'JSON';
+  url: string;
+  sections: ReportSection[];
+}
+
+interface ReportSection {
+  title: string;
+  type: 'SUMMARY' | 'CHARTS' | 'TABLE' | 'ANALYSIS';
+  data: any;
+}
+
+interface Reconciliation {
+  inventory: {
+    totalBarcodes: number;
+    issued: number;
+    redeemed: number;
+    expired: number;
+    remaining: number;
+  };
+  financial: {
+    budgetAllocated: number;
+    actualSpent: number;
+    variance: number;
+    variancePercent: number;
+  };
+  discrepancies: Discrepancy[];
+}
+
+interface Discrepancy {
+  type: 'INVENTORY' | 'FINANCIAL' | 'DATA';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  description: string;
+  affectedRecords: number;
+  resolution?: string;
+}
+```
+
+---
+
+## 10A2-4.7 Campaign Archival
+
+### 10A2-4.7.1 Archive Interface
+
+```typescript
+interface ArchiveRequest {
+  campaignId: string;
+  archivedBy: string;
+  reason?: string;
+  retentionPeriod?: number;       // Days to keep before permanent delete
+}
+
+interface ArchiveResult {
+  success: boolean;
+  campaignId: string;
+  archivedAt: Date;
+  status: CampaignStatus.ARCHIVED;
+  dataRetained: ArchivedData;
+  canRestore: boolean;
+  permanentDeleteAt?: Date;
+}
+
+interface ArchivedData {
+  campaignInfo: boolean;
+  userData: boolean;
+  analytics: boolean;
+  reports: boolean;
+  adsFormats: boolean;
+  auditLogs: boolean;
+}
+
+interface RestoreRequest {
+  campaignId: string;
+  restoredBy: string;
+  restoreToStatus: CampaignStatus.DRAFT | CampaignStatus.COMPLETED;
+}
+
+interface RestoreValidation {
+  canRestore: boolean;
+  dataAvailable: ArchivedData;
+  warnings: string[];
+}
+```
+
+---
+
+## 10A2-4.8 Rollback Mechanism
+
+### 10A2-4.8.1 Rollback Interface
+
+```typescript
+interface RollbackRequest {
+  campaignId: string;
+  rollbackTo: CampaignVersion;
+  rollbackBy: string;
+  reason: string;
+}
+
+interface CampaignVersion {
+  versionId: string;
+  timestamp: Date;
+  status: CampaignStatus;
+  snapshot: CampaignSnapshot;
+  canRollback: boolean;
+}
+
+interface CampaignSnapshot {
+  basicInfo: any;
+  schedule: any;
+  locations: any;
+  barcodes: {
+    count: number;
+    checksum: string;
+  };
+  adsFormats: any;
+  settings: any;
+}
+
+interface RollbackValidation {
+  allowed: boolean;
+  risks: RollbackRisk[];
+  affectedData: AffectedData;
+  requiresConfirmation: boolean;
+}
+
+interface RollbackRisk {
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  description: string;
+  mitigation?: string;
+}
+
+interface AffectedData {
+  scansLost: number;
+  usersAffected: number;
+  redemptionsReverted: number;
+  dataInconsistency: string[];
+}
+```
+
+---
+
+## 10A2-4.9 Notifications & Alerts
+
+### 10A2-4.9.1 Lifecycle Notifications
+
+```typescript
+interface LifecycleNotification {
+  event: LifecycleEvent;
+  campaignId: string;
+  campaignName: string;
+  timestamp: Date;
+  recipients: NotificationRecipient[];
+  channels: NotificationChannel[];
+  template: string;
+  data: Record<string, any>;
+}
+
+enum LifecycleEvent {
+  CAMPAIGN_PUBLISHED = 'CAMPAIGN_PUBLISHED',
+  CAMPAIGN_PAUSED = 'CAMPAIGN_PAUSED',
+  CAMPAIGN_RESUMED = 'CAMPAIGN_RESUMED',
+  CAMPAIGN_COMPLETED = 'CAMPAIGN_COMPLETED',
+  CAMPAIGN_ARCHIVED = 'CAMPAIGN_ARCHIVED',
+  MILESTONE_REACHED = 'MILESTONE_REACHED',
+  WARNING_TRIGGERED = 'WARNING_TRIGGERED',
+}
+
+interface NotificationRecipient {
+  type: 'USER' | 'ROLE' | 'GROUP' | 'EMAIL';
+  identifier: string;
+  preferences?: NotificationPreferences;
+}
+
+interface NotificationChannel {
+  type: 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP' | 'SLACK' | 'WEBHOOK';
+  enabled: boolean;
+  config?: Record<string, any>;
+}
+
+interface NotificationPreferences {
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+  inApp: boolean;
+  frequency: 'REALTIME' | 'HOURLY' | 'DAILY';
+}
+```
+
+---
+
+## 10A2-4.10 Success Metrics
+
+```typescript
+interface LifecycleMetrics {
+  transitions: {
+    draftToActive: {
+      count: number;
+      avgTimeInDraft: number;       // Days
+      successRate: number;           // Target: > 99%
+    };
+    activeToPaused: {
+      count: number;
+      avgPauseDuration: number;      // Hours
+    };
+    pausedToActive: {
+      count: number;
+      resumeSuccessRate: number;     // Target: > 99%
+    };
+    activeToCompleted: {
+      count: number;
+      autoVsManual: {
+        auto: number;
+        manual: number;
+      };
+    };
+  };
+  edits: {
+    editWhileActive: number;
+    editSuccessRate: number;         // Target: 100%
+    avgEditsPerCampaign: number;
+  };
+  completion: {
+    avgCompletionTime: number;       // Seconds
+    reportGenerationTime: number;    // Seconds
+    reconciliationAccuracy: number;  // Target: 100%
+  };
+}
+```
+
+---
+
+## 10A2-4.11 Next Steps
+
+**Related Documents**:
+- `Part10A2-2_Campaign_Creation.md` - Initial campaign creation
+- `Part10A2-5_Analytics_Reporting.md` - Campaign analytics
+- `Part10A2-6_Collaboration_Approvals.md` - Approval workflows
+- `Part10A2-9_RBAC_Permissions.md` - State-based permissions
+
+**Implementation Priority**:
+1. ✅ State management (MVP)
+2. ✅ Publish workflow (MVP)
+3. ✅ Pause/Resume (MVP)
+4. ✅ Campaign completion (MVP)
+5. ⏳ Edit while active (Phase 2)
+6. ⏳ Rollback mechanism (Phase 2)
+7. ⏳ Advanced notifications (Phase 2)
+
+---
+
+**Document Status**: ✅ Complete  
+**Last Updated**: 2025-10-17  
+**Next Review**: 2025-11-01
+
+# Part10A2-5 - Analytics & Reporting
+
+**Version**: 1.0  
+**Date**: 2025-10-17  
+**Author**: UX Design Team  
+**Reference**: `System_Feature_Tree.md`, `Access_Control_Tree.md`
+
+---
+
+## 10A2-5.1 Overview
+
+Mô tả hệ thống phân tích và báo cáo chiến dịch, bao gồm conversion funnel, location performance, time-based analytics, và data export.
+
+**Goals**:
+- Dashboard load time: ≤ 3 seconds
+- Data refresh rate: Every 30 seconds (realtime)
+- Export time: ≤ 10 seconds (100K records)
+- Report accuracy: 100%
+
+**Key Features**:
+- Realtime conversion funnel
+- Location-based breakdown
+- Time-series analysis
+- Multi-format export (CSV, Excel, PDF, API)
+- Custom date ranges
+- Comparative analytics
+
+---
+
+## 10A2-5.2 Analytics Dashboard Flow
+
+```mermaid
+flowchart TD
+    Start([📈 Open Analytics]) --> SelectCampaign{Select campaign?}
+    
+    SelectCampaign -->|All Campaigns| AllView[📊 All Campaigns View]
+    SelectCampaign -->|Single Campaign| SingleView[🎯 Single Campaign View]
+    
+    AllView --> SetDateRange[📅 Set Date Range]
+    SingleView --> SetDateRange
+    
+    SetDateRange --> SelectRange{Range type?}
+    SelectRange -->|Preset| PresetRange[Quick select:<br/>- Today<br/>- Last 7 days<br/>- Last 30 days<br/>- This month]
+    SelectRange -->|Custom| CustomRange[📆 Custom range picker]
+    
+    PresetRange --> LoadData[⏳ Load Analytics Data]
+    CustomRange --> LoadData
+    
+    LoadData --> ShowDashboard[📊 Show Dashboard]
+    
+    ShowDashboard --> ViewOptions{View what?}
+    
+    ViewOptions -->|Funnel| FunnelView[📉 Conversion Funnel]
+    ViewOptions -->|Location| LocationView[📍 Location Performance]
+    ViewOptions -->|Time| TimeView[⏰ Time-based Analytics]
+    ViewOptions -->|Ads Format| AdsFormatView[🎨 Ads Format Performance]
+    ViewOptions -->|Demographics| DemoView[👥 Demographics]
+    
+    FunnelView --> FunnelDetails[Show stages:<br/>- Scan → Landing<br/>- Landing → Submit<br/>- Submit → OTP<br/>- OTP → Barcode<br/>- Barcode → Redeem]
+    
+    LocationView --> LocationDetails[Show breakdown:<br/>- By store<br/>- By region<br/>- Heatmap<br/>- Top/bottom performers]
+    
+    TimeView --> TimeDetails[Show trends:<br/>- Hourly patterns<br/>- Daily trends<br/>- Day of week<br/>- Peak hours]
+    
+    AdsFormatView --> AdsDetails[Show metrics:<br/>- Scans per format<br/>- Conversion by format<br/>- ROI per format]
+    
+    DemoView --> DemoDetails[Show segments:<br/>- Age groups<br/>- Gender split<br/>- Location types]
+    
+    FunnelDetails --> ActionMenu{Action?}
+    LocationDetails --> ActionMenu
+    TimeDetails --> ActionMenu
+    AdsDetails --> ActionMenu
+    DemoDetails --> ActionMenu
+    
+    ActionMenu -->|Export| ExportFlow[📥 Export Data]
+    ActionMenu -->|Compare| CompareFlow[📊 Compare Campaigns]
+    ActionMenu -->|Share| ShareFlow[🔗 Share Report]
+    ActionMenu -->|Schedule| ScheduleFlow[⏰ Schedule Report]
+    
+    ExportFlow --> SelectFormat{Format?}
+    SelectFormat -->|CSV| ExportCSV[📄 Export CSV]
+    SelectFormat -->|Excel| ExportExcel[📊 Export Excel]
+    SelectFormat -->|PDF| ExportPDF[📕 Export PDF]
+    SelectFormat -->|API| ExportAPI[🔗 API Export]
+    
+    ExportCSV --> Download[⬇️ Download File]
+    ExportExcel --> Download
+    ExportPDF --> Download
+    ExportAPI --> ShowAPILink[🔗 Show API Link]
+    
+    CompareFlow --> SelectCampaigns[Select 2-5 campaigns]
+    SelectCampaigns --> ShowComparison[📊 Show Comparison Chart]
+    
+    ShareFlow --> GenerateLink[🔗 Generate Share Link]
+    GenerateLink --> CopyLink[📋 Copy to Clipboard]
+    
+    ScheduleFlow --> ConfigSchedule[⚙️ Configure:<br/>- Frequency<br/>- Recipients<br/>- Format]
+    ConfigSchedule --> SaveSchedule[💾 Save Schedule]
+    
+    Download --> End([End])
+    ShowAPILink --> End
+    ShowComparison --> End
+    CopyLink --> End
+    SaveSchedule --> End
+    
+    style Start fill:#e1f5ff
+    style Download fill:#d4edda
+    style SaveSchedule fill:#d4edda
+```
+
+---
+
+## 10A2-5.3 Conversion Funnel Analytics
+
+### 10A2-5.3.1 Funnel Interface
+
+```typescript
+interface ConversionFunnel {
+  campaignId: string;
+  dateRange: DateRange;
+  stages: FunnelStage[];
+  overall: FunnelMetrics;
+  breakdown: FunnelBreakdown;
+}
+
+interface FunnelStage {
+  name: string;
+  order: number;
+  count: number;
+  percentage: number;
+  dropOff: number;
+  dropOffPercentage: number;
+  avgTimeToNext?: number;        // Seconds to next stage
+  bottleneck: boolean;           // True if drop-off > threshold
+}
+
+interface FunnelMetrics {
+  totalScans: number;
+  totalSubmissions: number;
+  totalVerified: number;
+  totalIssued: number;
+  totalRedeemed: number;
+  overallConversion: number;     // Scan → Redeem %
+  avgTimeToConvert: number;      // Seconds from scan to redeem
+}
+
+interface FunnelBreakdown {
+  byLocation: Record<string, FunnelMetrics>;
+  byAdsFormat: Record<string, FunnelMetrics>;
+  byTimeOfDay: Record<string, FunnelMetrics>;
+  byDayOfWeek: Record<string, FunnelMetrics>;
+}
+```
+
+**Example Data**:
+```typescript
+const exampleFunnel: ConversionFunnel = {
+  campaignId: 'camp-123',
+  dateRange: { startDate: new Date('2025-10-01'), endDate: new Date('2025-10-17') },
+  stages: [
+    {
+      name: 'QR Scan',
+      order: 1,
+      count: 10245,
+      percentage: 100,
+      dropOff: 0,
+      dropOffPercentage: 0,
+      bottleneck: false,
+    },
+    {
+      name: 'Landing Page Load',
+      order: 2,
+      count: 9733,
+      percentage: 95,
+      dropOff: 512,
+      dropOffPercentage: 5,
+      avgTimeToNext: 25,
+      bottleneck: false,
+    },
+    {
+      name: 'Form Submit',
+      order: 3,
+      count: 8759,
+      percentage: 85,
+      dropOff: 974,
+      dropOffPercentage: 10,
+      avgTimeToNext: 45,
+      bottleneck: true,          // High drop-off detected
+    },
+    {
+      name: 'OTP Verified',
+      order: 4,
+      count: 8321,
+      percentage: 81,
+      dropOff: 438,
+      dropOffPercentage: 5,
+      avgTimeToNext: 15,
+      bottleneck: false,
+    },
+    {
+      name: 'Barcode Issued',
+      order: 5,
+      count: 7655,
+      percentage: 75,
+      dropOff: 666,
+      dropOffPercentage: 8,
+      avgTimeToNext: 172800,    // 2 days avg to redeem
+      bottleneck: false,
+    },
+    {
+      name: 'Redeemed',
+      order: 6,
+      count: 6507,
+      percentage: 64,
+      dropOff: 1148,
+      dropOffPercentage: 15,
+      bottleneck: false,
+    },
+  ],
+  overall: {
+    totalScans: 10245,
+    totalSubmissions: 8759,
+    totalVerified: 8321,
+    totalIssued: 7655,
+    totalRedeemed: 6507,
+    overallConversion: 63.5,
+    avgTimeToConvert: 173000,
+  },
+  breakdown: {
+    byLocation: {}, // ... location-specific data
+    byAdsFormat: {},
+    byTimeOfDay: {},
+    byDayOfWeek: {},
+  },
+};
+```
+
+---
+
+### 10A2-5.3.2 Funnel Visualization
+
+```typescript
+interface FunnelVisualization {
+  type: 'BAR' | 'STEPS' | 'SANKEY';
+  data: FunnelStage[];
+  options: FunnelChartOptions;
+}
+
+interface FunnelChartOptions {
+  showPercentages: boolean;
+  showDropOff: boolean;
+  showTimings: boolean;
+  highlightBottlenecks: boolean;
+  colorScheme: ColorScheme;
+  annotations: FunnelAnnotation[];
+}
+
+interface ColorScheme {
+  primary: string;
+  success: string;
+  warning: string;
+  danger: string;
+  gradient: string[];
+}
+
+interface FunnelAnnotation {
+  stage: string;
+  type: 'INFO' | 'WARNING' | 'SUCCESS';
+  message: string;
+  action?: AnnotationAction;
+}
+
+interface AnnotationAction {
+  label: string;
+  handler: string;
+}
+```
+
+---
+
+## 10A2-5.4 Location Performance Analytics
+
+### 10A2-5.4.1 Location Metrics
+
+```typescript
+interface LocationPerformance {
+  locationId: string;
+  locationName: string;
+  address: string;
+  coordinates: Coordinates;
+  metrics: LocationMetrics;
+  ranking: LocationRanking;
+  trends: LocationTrends;
+}
+
+interface LocationMetrics {
+  totalScans: number;
+  uniqueUsers: number;
+  verifiedUsers: number;
+  barcodesIssued: number;
+  barcodesRedeemed: number;
+  conversionRate: number;
+  redemptionRate: number;
+  avgTimeToRedeem: number;      // Hours
+  costPerLead: number;
+  roi: number;
+}
+
+interface LocationRanking {
+  overall: number;               // 1 = best
+  byScans: number;
+  byConversion: number;
+  byRedemption: number;
+  byCPL: number;
+  category: 'TOP' | 'ABOVE_AVG' | 'BELOW_AVG' | 'BOTTOM';
+}
+
+interface LocationTrends {
+  scanTrend: Trend;
+  conversionTrend: Trend;
+  redemptionTrend: Trend;
+  peakHours: number[];           // Hours of day (0-23)
+  peakDays: number[];            // Days of week (0-6)
+}
+
+interface Trend {
+  direction: 'UP' | 'DOWN' | 'STABLE';
+  change: number;                // Percentage change
+  comparisonPeriod: string;
+}
+
+interface Coordinates {
+  lat: number;
+  lng: number;
+}
+```
+
+---
+
+### 10A2-5.4.2 Geographic Heatmap
+
+```typescript
+interface HeatmapData {
+  locations: HeatmapPoint[];
+  bounds: GeoBounds;
+  layers: HeatmapLayer[];
+  config: HeatmapConfig;
+}
+
+interface HeatmapPoint {
+  locationId: string;
+  position: Coordinates;
+  value: number;
+  intensity: number;             // 0-1 scale
+  color: string;
+  tooltip: HeatmapTooltip;
+}
+
+interface HeatmapTooltip {
+  title: string;
+  metrics: TooltipMetric[];
+  action?: string;
+}
+
+interface TooltipMetric {
+  label: string;
+  value: string | number;
+  format?: 'number' | 'percent' | 'currency' | 'duration';
+}
+
+interface GeoBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
+interface HeatmapLayer {
+  id: string;
+  name: string;
+  metric: 'SCANS' | 'CONVERSION' | 'REDEMPTION' | 'CPL' | 'ROI';
+  visible: boolean;
+  gradient: string[];
+}
+
+interface HeatmapConfig {
+  radius: number;                // Pixels
+  maxIntensity: number;
+  gradient: Record<number, string>;  // 0.0: blue, 0.5: yellow, 1.0: red
+  opacity: number;               // 0-1
+}
+```
+
+---
+
+### 10A2-5.4.3 Location Comparison
+
+```typescript
+interface LocationComparison {
+  locations: string[];           // locationIds to compare
+  metrics: ComparisonMetric[];
+  visualization: 'TABLE' | 'BAR_CHART' | 'RADAR_CHART';
+}
+
+interface ComparisonMetric {
+  metric: string;
+  label: string;
+  values: Record<string, number>;  // locationId -> value
+  average: number;
+  best: {
+    locationId: string;
+    value: number;
+  };
+  worst: {
+    locationId: string;
+    value: number;
+  };
+}
+```
+
+---
+
+## 10A2-5.5 Time-Based Analytics
+
+### 10A2-5.5.1 Time Series Data
+
+```typescript
+interface TimeSeriesData {
+  granularity: 'HOUR' | 'DAY' | 'WEEK' | 'MONTH';
+  dateRange: DateRange;
+  series: TimeSeries[];
+  aggregations: TimeAggregations;
+}
+
+interface TimeSeries {
+  metric: string;
+  label: string;
+  data: TimeDataPoint[];
+  color: string;
+  chartType: 'LINE' | 'BAR' | 'AREA';
+}
+
+interface TimeDataPoint {
+  timestamp: Date;
+  value: number;
+  trend?: 'UP' | 'DOWN' | 'STABLE';
+  anomaly?: boolean;
+}
+
+interface TimeAggregations {
+  hourly: HourlyPattern;
+  daily: DailyPattern;
+  weekly: WeeklyPattern;
+}
+
+interface HourlyPattern {
+  data: Record<number, number>;  // Hour (0-23) -> average value
+  peakHour: number;
+  lowHour: number;
+}
+
+interface DailyPattern {
+  data: Record<string, number>;  // Date string -> value
+  peakDay: string;
+  lowDay: string;
+  movingAverage: number[];       // 7-day moving average
+}
+
+interface WeeklyPattern {
+  data: Record<number, number>;  // Day of week (0-6) -> average
+  peakDay: number;               // 0=Sunday, 6=Saturday
+  lowDay: number;
+  weekendVsWeekday: {
+    weekend: number;
+    weekday: number;
+    ratio: number;
+  };
+}
+```
+
+---
+
+### 10A2-5.5.2 Anomaly Detection
+
+```typescript
+interface AnomalyDetection {
+  enabled: boolean;
+  sensitivity: 'LOW' | 'MEDIUM' | 'HIGH';
+  anomalies: Anomaly[];
+}
+
+interface Anomaly {
+  timestamp: Date;
+  metric: string;
+  expectedValue: number;
+  actualValue: number;
+  deviation: number;             // Percentage deviation
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  reason?: string;
+  investigated: boolean;
+}
+```
+
+---
+
+### 10A2-5.5.3 Predictive Analytics
+
+```typescript
+interface PredictiveAnalytics {
+  enabled: boolean;
+  model: 'LINEAR' | 'EXPONENTIAL' | 'ARIMA' | 'ML';
+  predictions: Prediction[];
+  confidence: number;            // 0-100%
+}
+
+interface Prediction {
+  date: Date;
+  metric: string;
+  predictedValue: number;
+  confidenceInterval: {
+    lower: number;
+    upper: number;
+  };
+  accuracy?: number;             // If comparing to actual
+}
+```
+
+---
+
+## 10A2-5.6 Ads Format Performance
+
+### 10A2-5.6.1 Format Metrics
+
+```typescript
+interface AdsFormatPerformance {
+  formatId: string;
+  formatName: string;
+  type: AdsFormatType;
+  metrics: FormatMetrics;
+  comparison: FormatComparison;
+}
+
+interface FormatMetrics {
+  totalScans: number;
+  scanRate: number;              // Scans / impressions
+  conversionRate: number;
+  redemptionRate: number;
+  avgTimeToScan: number;         // Hours from print to first scan
+  costs: {
+    productionCost: number;
+    distributionCost: number;
+    totalCost: number;
+    costPerScan: number;
+    costPerLead: number;
+  };
+  roi: number;
+}
+
+interface FormatComparison {
+  vsAverage: {
+    scans: number;               // Percentage difference
+    conversion: number;
+    redemption: number;
+    cpl: number;
+  };
+  ranking: number;               // 1 = best performing
+  recommendation: string;
+}
+```
+
+---
+
+## 10A2-5.7 Demographics Analytics
+
+### 10A2-5.7.1 Demographic Breakdown
+
+```typescript
+interface DemographicsData {
+  age: AgeDistribution;
+  gender: GenderDistribution;
+  location: LocationTypeDistribution;
+  behavior: BehaviorSegments;
+}
+
+interface AgeDistribution {
+  segments: AgeSegment[];
+  dominantAge: string;
+  averageAge?: number;
+}
+
+interface AgeSegment {
+  range: string;                 // "18-24", "25-34", etc.
+  count: number;
+  percentage: number;
+  metrics: SegmentMetrics;
+}
+
+interface GenderDistribution {
+  male: number;
+  female: number;
+  other: number;
+  notSpecified: number;
+  malePercentage: number;
+  femalePercentage: number;
+}
+
+interface LocationTypeDistribution {
+  types: Record<StoreType, number>;
+  preferences: StoreType[];      // Ordered by preference
+}
+
+interface BehaviorSegments {
+  quickRedeemers: number;        // Redeem within 24h
+  planners: number;              // Redeem 3-7 days later
+  forgetters: number;            // Never redeem
+  enthusiasts: number;           // Participate multiple times
+}
+
+interface SegmentMetrics {
+  conversionRate: number;
+  redemptionRate: number;
+  avgTimeToRedeem: number;
+  repeatRate: number;
+}
+```
+
+---
+
+## 10A2-5.8 Data Export
+
+### 10A2-5.8.1 Export Configuration
+
+```typescript
+interface ExportConfig {
+  format: ExportFormat;
+  dataType: ExportDataType;
+  dateRange: DateRange;
+  filters: ExportFilters;
+  columns?: string[];            // Specific columns to export
+  options: ExportOptions;
+}
+
+enum ExportFormat {
+  CSV = 'CSV',
+  EXCEL = 'EXCEL',
+  PDF = 'PDF',
+  JSON = 'JSON',
+  API = 'API',
+}
+
+enum ExportDataType {
+  SUMMARY = 'SUMMARY',           // High-level summary
+  DETAILED = 'DETAILED',         // All metrics
+  RAW = 'RAW',                   // Raw event data
+  CUSTOM = 'CUSTOM',             // User-defined
+}
+
+interface ExportFilters {
+  campaignIds?: string[];
+  locationIds?: string[];
+  adsFormatIds?: string[];
+  status?: string[];
+  minConversion?: number;
+  maxCPL?: number;
+}
+
+interface ExportOptions {
+  includeCharts?: boolean;       // For PDF
+  includeComparisons?: boolean;
+  includeRecommendations?: boolean;
+  compression?: boolean;         // For CSV/JSON
+  password?: string;             // For protected files
+  splitByDate?: boolean;         // Split into multiple files
+}
+```
+
+---
+
+### 10A2-5.8.2 Export Process
+
+```typescript
+interface ExportRequest {
+  userId: string;
+  config: ExportConfig;
+  async: boolean;                // True for large exports
+  notifyOnComplete: boolean;
+}
+
+interface ExportResult {
+  exportId: string;
+  status: ExportStatus;
+  progress: number;              // 0-100
+  result?: ExportFile;
+  error?: ExportError;
+}
+
+enum ExportStatus {
+  QUEUED = 'QUEUED',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+}
+
+interface ExportFile {
+  filename: string;
+  url: string;
+  size: number;
+  format: ExportFormat;
+  expiresAt: Date;               // Download link expires
+  checksum: string;
+}
+
+interface ExportError {
+  code: string;
+  message: string;
+  details?: any;
+}
+```
+
+---
+
+### 10A2-5.8.3 Scheduled Reports
+
+```typescript
+interface ScheduledReport {
+  id: string;
+  name: string;
+  config: ExportConfig;
+  schedule: ReportSchedule;
+  recipients: ReportRecipient[];
+  enabled: boolean;
+  lastRun?: Date;
+  nextRun: Date;
+}
+
+interface ReportSchedule {
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  dayOfWeek?: number;            // For weekly (0-6)
+  dayOfMonth?: number;           // For monthly (1-31)
+  time: string;                  // "09:00" in user's timezone
+  timezone: string;
+}
+
+interface ReportRecipient {
+  type: 'EMAIL' | 'SLACK' | 'WEBHOOK';
+  destination: string;
+  format: ExportFormat;
+}
+```
+
+---
+
+## 10A2-5.9 Comparative Analytics
+
+### 10A2-5.9.1 Campaign Comparison
+
+```typescript
+interface CampaignComparison {
+  campaigns: string[];           // 2-5 campaign IDs
+  dateRange: DateRange;
+  metrics: ComparisonMetric[];
+  insights: ComparisonInsight[];
+}
+
+interface ComparisonMetric {
+  metric: string;
+  label: string;
+  unit?: string;
+  values: Record<string, number>;  // campaignId -> value
+  average: number;
+  best: {
+    campaignId: string;
+    campaignName: string;
+    value: number;
+  };
+  worst: {
+    campaignId: string;
+    campaignName: string;
+    value: number;
+  };
+  variance: number;
+}
+
+interface ComparisonInsight {
+  type: 'BEST_PRACTICE' | 'OPPORTUNITY' | 'WARNING';
+  title: string;
+  description: string;
+  campaigns: string[];           // Affected campaigns
+  recommendation?: string;
+  impact?: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+```
+
+---
+
+### 10A2-5.9.2 Benchmarking
+
+```typescript
+interface BenchmarkData {
+  campaign: string;
+  industry: string;
+  benchmarks: Benchmark[];
+}
+
+interface Benchmark {
+  metric: string;
+  yourValue: number;
+  industryAverage: number;
+  top10Percent: number;
+  top25Percent: number;
+  variance: number;
+  performance: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'BELOW_AVERAGE' | 'POOR';
+}
+```
+
+---
+
+## 10A2-5.10 Real-time Dashboard
+
+### 10A2-5.10.1 Real-time Updates
+
+```typescript
+interface RealtimeConfig {
+  enabled: boolean;
+  refreshInterval: number;       // Seconds (default: 30)
+  transport: 'WEBSOCKET' | 'SSE' | 'POLLING';
+  metrics: RealtimeMetric[];
+}
+
+interface RealtimeMetric {
+  metric: string;
+  currentValue: number;
+  previousValue: number;
+  change: number;
+  trend: 'UP' | 'DOWN' | 'STABLE';
+  updatedAt: Date;
+  sparkline?: number[];          // Last 10 values for mini chart
+}
+
+interface RealtimeEvent {
+  type: 'METRIC_UPDATE' | 'THRESHOLD_EXCEEDED' | 'ANOMALY_DETECTED' | 'MILESTONE_REACHED';
+  timestamp: Date;
+  data: any;
+  severity?: 'INFO' | 'WARNING' | 'ERROR';
+}
+```
+
+---
+
+## 10A2-5.11 Success Metrics
+
+```typescript
+interface AnalyticsMetrics {
+  performance: {
+    dashboardLoadTime: number;     // Target: < 3s
+    dataRefreshTime: number;       // Target: < 1s
+    exportTime: number;            // Target: < 10s for 100K
+    queryResponseTime: number;     // Target: < 500ms
+  };
+  accuracy: {
+    dataAccuracy: number;          // Target: 100%
+    calculationAccuracy: number;   // Target: 100%
+    reconciliationAccuracy: number; // Target: 100%
+  };
+  usage: {
+    dailyActiveUsers: number;
+    avgSessionDuration: number;
+    chartsViewed: number;
+    exportsPerDay: number;
+    scheduledReports: number;
+  };
+  satisfaction: {
+    insightValue: number;          // User rating 1-5
+    easeOfUse: number;            // User rating 1-5
+    reportQuality: number;         // User rating 1-5
+  };
+}
+```
+
+---
+
+## 10A2-5.12 Next Steps
+
+**Related Documents**:
+- `Part10A2-1_Overview_Dashboard.md` - Dashboard layout
+- `Part10A2-4_Campaign_Lifecycle.md` - Campaign completion reports
+- `Part10A2-8_Integrations.md` - Analytics integrations (GA4, Meta)
+- `Part10E1_Performance_Metrics.md` - Detailed KPIs
+
+**Implementation Priority**:
+1. ✅ Conversion funnel (MVP)
+2. ✅ Location performance (MVP)
+3. ✅ Basic export (CSV) (MVP)
+4. ⏳ Time-series analytics (Phase 2)
+5. ⏳ Realtime updates (Phase 2)
+6. ⏳ Predictive analytics (Phase 3)
+7. ⏳ AI-powered insights (Phase 3)
+
+---
+
+**Document Status**: ✅ Complete  
+**Last Updated**: 2025-10-17  
+**Next Review**: 2025-11-01
+
+# Part10A2-6 - Collaboration & Approvals
+
+**Version**: 1.0  
+**Date**: 2025-10-17  
+**Author**: UX Design Team  
+**Reference**: `System_Feature_Tree.md`, `Access_Control_Tree.md`
+
+---
+
+## 10A2-6.1 Overview
+
+Mô tả tính năng collaboration cho team members, bao gồm comments/discussions, version history, và approval workflows.
+
+**Goals**:
+- Comment response time: < 2 seconds
+- Version history accuracy: 100%
+- Approval workflow completion: < 24 hours
+- Collaboration satisfaction: CSAT ≥ 4.5/5
+
+**Key Features**:
+- Threaded comments with mentions
+- Real-time collaboration
+- Complete version history with diff view
+- Multi-level approval workflows
+- Activity feeds
+
+---
+
+## 10A2-6.2 Comments & Discussions
+
+### 10A2-6.2.1 Comment System Flow
+
+```mermaid
+flowchart TD
+    Start([💬 Click Comment]) --> SelectContext{Comment on?}
+    
+    SelectContext -->|Campaign| CampaignComment[Campaign-level comment]
+    SelectContext -->|Section| SectionComment[Section-specific comment]
+    SelectContext -->|Field| FieldComment[Field-level comment]
+    
+    CampaignComment --> WriteComment[✍️ Write Comment]
+    SectionComment --> WriteComment
+    FieldComment --> WriteComment
+    
+    WriteComment --> AddMentions{Add mentions?}
+    AddMentions -->|Có| TypeMention[Type @ to mention:<br/>@username<br/>@team<br/>@role]
+    AddMentions -->|Không| AddAttachments
+    
+    TypeMention --> SearchUsers[🔍 Search users]
+    SearchUsers --> SelectUser[Select user]
+    SelectUser --> AddAttachments
+    
+    AddAttachments{Add attachments?}
+    AddAttachments -->|Có| UploadFiles[📎 Upload files:<br/>- Images<br/>- Documents<br/>- Screenshots]
+    AddAttachments -->|Không| PreviewComment
+    
+    UploadFiles --> ValidateFiles{✓ Valid?}
+    ValidateFiles -->|Không| FileError[❌ File error:<br/>- Too large<br/>- Wrong type]
+    FileError --> UploadFiles
+    ValidateFiles -->|Có| PreviewComment
+    
+    PreviewComment[👁️ Preview Comment] --> PostComment[📤 Post Comment]
+    
+    PostComment --> SaveComment[💾 Save to DB]
+    SaveComment --> NotifyMentioned[📧 Notify mentioned users]
+    NotifyMentioned --> UpdateFeed[📰 Update activity feed]
+    
+    UpdateFeed --> ShowComment[✅ Comment posted]
+    ShowComment --> Actions{Actions?}
+    
+    Actions -->|Reply| ReplyThread[💬 Reply to thread]
+    Actions -->|Edit| EditComment[✏️ Edit comment]
+    Actions -->|Delete| DeleteComment[🗑️ Delete comment]
+    Actions -->|Resolve| ResolveComment[✅ Resolve thread]
+    Actions -->|React| AddReaction[👍 Add reaction]
+    
+    ReplyThread --> WriteComment
+    EditComment --> WriteComment
+    
+    DeleteComment --> ConfirmDelete{Confirm delete?}
+    ConfirmDelete -->|Có| SoftDelete[🗑️ Soft delete]
+    ConfirmDelete -->|Không| ShowComment
+    
+    ResolveComment --> MarkResolved[✅ Mark as resolved]
+    MarkResolved --> HideThread{Hide thread?}
+    HideThread -->|Có| Archive[📦 Archive thread]
+    HideThread -->|Không| ShowResolved[Show as resolved]
+    
+    AddReaction --> SelectEmoji[Select emoji]
+    SelectEmoji --> SaveReaction[💾 Save reaction]
+    
+    SoftDelete --> End([End])
+    Archive --> End
+    ShowResolved --> End
+    SaveReaction --> End
+    
+    style Start fill:#e1f5ff
+    style ShowComment fill:#d4edda
+    style FileError fill:#f8d7da
+```
+
+---
+
+### 10A2-6.2.2 Comment Interface
+
+```typescript
+interface Comment {
+  id: string;
+  campaignId: string;
+  context: CommentContext;
+  content: string;
+  author: CommentAuthor;
+  mentions: Mention[];
+  attachments: Attachment[];
+  reactions: Reaction[];
+  replies: Comment[];
+  status: CommentStatus;
+  createdAt: Date;
+  updatedAt?: Date;
+  editHistory: CommentEdit[];
+  resolved: boolean;
+  resolvedBy?: string;
+  resolvedAt?: Date;
+}
+
+interface CommentContext {
+  type: 'CAMPAIGN' | 'SECTION' | 'FIELD';
+  target: string;              // ID of the target element
+  label?: string;              // Display label (e.g., "Basic Info", "Start Date")
+  position?: CommentPosition;  // For inline comments
+}
+
+interface CommentPosition {
+  x: number;
+  y: number;
+  highlighted?: boolean;
+}
+
+interface CommentAuthor {
+  userId: string;
+  userName: string;
+  userRole: string;
+  avatar?: string;
+}
+
+interface Mention {
+  type: 'USER' | 'TEAM' | 'ROLE';
+  id: string;
+  name: string;
+  notified: boolean;
+}
+
+interface Attachment {
+  id: string;
+  filename: string;
+  url: string;
+  size: number;
+  mimeType: string;
+  thumbnail?: string;
+  uploadedAt: Date;
+}
+
+interface Reaction {
+  emoji: string;
+  userId: string;
+  userName: string;
+  timestamp: Date;
+}
+
+enum CommentStatus {
+  ACTIVE = 'ACTIVE',
+  EDITED = 'EDITED',
+  DELETED = 'DELETED',
+  RESOLVED = 'RESOLVED',
+}
+
+interface CommentEdit {
+  editedBy: string;
+  editedAt: Date;
+  previousContent: string;
+  reason?: string;
+}
+```
+
+---
+
+### 10A2-6.2.3 Mention System
+
+```typescript
+interface MentionSystem {
+  searchUsers(query: string, context: MentionContext): Promise<MentionSuggestion[]>;
+  notifyMentioned(mention: Mention, comment: Comment): Promise<void>;
+  getMentionPermissions(userId: string): MentionPermissions;
+}
+
+interface MentionContext {
+  campaignId: string;
+  currentUserId: string;
+  scope: 'CAMPAIGN' | 'GROUP' | 'ALL';
+}
+
+interface MentionSuggestion {
+  type: 'USER' | 'TEAM' | 'ROLE';
+  id: string;
+  name: string;
+  avatar?: string;
+  email?: string;
+  role?: string;
+  relevance: number;           // 0-1 score
+}
+
+interface MentionPermissions {
+  canMentionUsers: boolean;
+  canMentionTeams: boolean;
+  canMentionRoles: boolean;
+  mentionableUsers: string[];
+  mentionableTeams: string[];
+  mentionableRoles: string[];
+}
+
+interface MentionNotification {
+  commentId: string;
+  commentContent: string;
+  commentAuthor: string;
+  campaignId: string;
+  campaignName: string;
+  context: CommentContext;
+  url: string;
+  channels: ('EMAIL' | 'IN_APP' | 'SLACK')[];
+}
+```
+
+---
+
+### 10A2-6.2.4 Threading & Replies
+
+```typescript
+interface CommentThread {
+  rootComment: Comment;
+  replies: Comment[];
+  totalReplies: number;
+  collapsed: boolean;
+  resolved: boolean;
+  participants: Participant[];
+  lastActivity: Date;
+}
+
+interface Participant {
+  userId: string;
+  userName: string;
+  avatar?: string;
+  commentCount: number;
+  lastCommentAt: Date;
+}
+
+interface ThreadOperations {
+  reply(parentId: string, content: string): Promise<Comment>;
+  resolve(threadId: string, userId: string): Promise<void>;
+  unresolve(threadId: string, userId: string): Promise<void>;
+  collapse(threadId: string): void;
+  expand(threadId: string): void;
+}
+```
+
+---
+
+## 10A2-6.3 Version History
+
+### 10A2-6.3.1 Version Tracking
+
+```typescript
+interface VersionHistory {
+  campaignId: string;
+  versions: CampaignVersion[];
+  currentVersion: number;
+  totalVersions: number;
+}
+
+interface CampaignVersion {
+  versionId: string;
+  version: number;
+  timestamp: Date;
+  changedBy: string;
+  changedByName: string;
+  changeType: ChangeType;
+  changeSummary: string;
+  changes: FieldChange[];
+  snapshot: CampaignSnapshot;
+  tags: string[];
+  canRestore: boolean;
+  canCompare: boolean;
+}
+
+enum ChangeType {
+  CREATED = 'CREATED',
+  UPDATED = 'UPDATED',
+  PUBLISHED = 'PUBLISHED',
+  PAUSED = 'PAUSED',
+  RESUMED = 'RESUMED',
+  COMPLETED = 'COMPLETED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+interface FieldChange {
+  field: string;
+  fieldLabel: string;
+  oldValue: any;
+  newValue: any;
+  changeDescription: string;
+  impact?: ChangeImpact;
+}
+
+interface ChangeImpact {
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  affectedUsers?: number;
+  affectedLocations?: number;
+  requiresNotification: boolean;
+}
+
+interface CampaignSnapshot {
+  basicInfo: any;
+  schedule: any;
+  locations: any;
+  barcodes: {
+    count: number;
+    checksum: string;
+  };
+  adsFormats: any;
+  status: CampaignStatus;
+}
+```
+
+---
+
+### 10A2-6.3.2 Version Comparison
+
+```mermaid
+flowchart TD
+    Start([🔍 View History]) --> LoadVersions[📜 Load version list]
+    
+    LoadVersions --> ShowList[Show version timeline]
+    ShowList --> SelectAction{Action?}
+    
+    SelectAction -->|View| ViewVersion[👁️ View version details]
+    SelectAction -->|Compare| SelectVersions[Select 2 versions]
+    SelectAction -->|Restore| SelectRestore[Select version to restore]
+    
+    ViewVersion --> ShowSnapshot[Show full snapshot:<br/>- All fields<br/>- Change summary<br/>- Author & time]
+    ShowSnapshot --> ShowDiff[Show diff from previous]
+    
+    SelectVersions --> CompareSide[📊 Side-by-side comparison]
+    CompareSide --> HighlightDiff[Highlight differences:<br/>- Added (green)<br/>- Removed (red)<br/>- Changed (yellow)]
+    
+    HighlightDiff --> ShowImpact[Show impact:<br/>- Users affected<br/>- Data changes<br/>- Breaking changes]
+    
+    SelectRestore --> ConfirmRestore{Confirm restore?}
+    ConfirmRestore -->|Không| ShowList
+    
+    ConfirmRestore -->|Có| ValidateRestore[✓ Validate restore]
+    ValidateRestore --> CheckConflicts{Conflicts?}
+    
+    CheckConflicts -->|Có| ShowConflicts[⚠️ Show conflicts:<br/>- Data loss warnings<br/>- Active user impacts<br/>- Irreversible changes]
+    ShowConflicts --> ResolveConflicts{Resolve?}
+    ResolveConflicts -->|Không| ShowList
+    ResolveConflicts -->|Có| ProcessRestore
+    
+    CheckConflicts -->|Không| ProcessRestore[⚙️ Process restore]
+    
+    ProcessRestore --> CreateBackup[💾 Backup current state]
+    CreateBackup --> ApplyRestore[📥 Apply restored version]
+    ApplyRestore --> NotifyUsers[📧 Notify affected users]
+    NotifyUsers --> LogAction[📝 Log restore action]
+    LogAction --> Success[✅ Restore complete]
+    
+    ShowDiff --> End([End])
+    ShowImpact --> End
+    Success --> End
+    
+    style Start fill:#e1f5ff
+    style Success fill:#d4edda
+    style ShowConflicts fill:#fff3cd
+```
+
+---
+
+### 10A2-6.3.3 Diff Visualization
+
+```typescript
+interface VersionDiff {
+  versionA: CampaignVersion;
+  versionB: CampaignVersion;
+  differences: FieldDifference[];
+  summary: DiffSummary;
+}
+
+interface FieldDifference {
+  field: string;
+  fieldLabel: string;
+  type: DiffType;
+  oldValue: any;
+  newValue: any;
+  displayOld: string;
+  displayNew: string;
+  context?: string;
+}
+
+enum DiffType {
+  ADDED = 'ADDED',
+  REMOVED = 'REMOVED',
+  MODIFIED = 'MODIFIED',
+  UNCHANGED = 'UNCHANGED',
+}
+
+interface DiffSummary {
+  totalChanges: number;
+  added: number;
+  removed: number;
+  modified: number;
+  unchanged: number;
+  majorChanges: string[];
+  minorChanges: string[];
+}
+
+interface DiffVisualization {
+  mode: 'INLINE' | 'SIDE_BY_SIDE' | 'UNIFIED';
+  showUnchanged: boolean;
+  highlightSyntax: boolean;
+  colorScheme: {
+    added: string;
+    removed: string;
+    modified: string;
+    unchanged: string;
+  };
+}
+```
+
+---
+
+## 10A2-6.4 Approval Workflows
+
+### 10A2-6.4.1 Approval Flow
+
+```mermaid
+flowchart TD
+    Start([📝 Submit for Approval]) --> CheckWorkflow{Workflow exists?}
+    
+    CheckWorkflow -->|Không| DirectPublish[✅ Direct publish<br/>No approval needed]
+    CheckWorkflow -->|Có| CreateRequest[📋 Create approval request]
+    
+    CreateRequest --> SetDetails[Set details:<br/>- Approvers<br/>- Priority<br/>- Deadline<br/>- Comments]
+    
+    SetDetails --> NotifyApprovers[📧 Notify approvers]
+    NotifyApprovers --> WaitApproval[⏳ Wait for approval]
+    
+    WaitApproval --> ApproverAction{Approver action?}
+    
+    ApproverAction -->|Approve| ApproverApprove[✅ Approver approves]
+    ApproverAction -->|Reject| ApproverReject[❌ Approver rejects]
+    ApproverAction -->|Request Changes| RequestChanges[📝 Request changes]
+    ApproverAction -->|Timeout| Timeout[⏰ Approval timeout]
+    
+    ApproverApprove --> CheckLevel{All levels approved?}
+    
+    CheckLevel -->|Không| NextLevel[➡️ Next approval level]
+    NextLevel --> NotifyApprovers
+    
+    CheckLevel -->|Có| AllApproved[✅ All approved]
+    AllApproved --> AutoPublish{Auto-publish?}
+    
+    AutoPublish -->|Có| Publish[🚀 Auto-publish campaign]
+    AutoPublish -->|Không| NotifyRequester[📧 Notify requester<br/>Ready to publish]
+    
+    ApproverReject --> RejectReason[📝 Add rejection reason]
+    RejectReason --> NotifyRejection[📧 Notify requester]
+    NotifyRejection --> RequesterAction{Requester action?}
+    
+    RequesterAction -->|Revise| ReviseRequest[✏️ Revise & resubmit]
+    RequesterAction -->|Cancel| CancelRequest[❌ Cancel request]
+    
+    ReviseRequest --> CreateRequest
+    
+    RequestChanges --> ChangeDetails[📝 Detail changes needed]
+    ChangeDetails --> NotifyChanges[📧 Notify requester]
+    NotifyChanges --> RequesterRevise{Requester revises?}
+    
+    RequesterRevise -->|Có| MakeChanges[✏️ Make changes]
+    MakeChanges --> Resubmit[📤 Resubmit for approval]
+    Resubmit --> NotifyApprovers
+    
+    RequesterRevise -->|Không| CancelRequest
+    
+    Timeout --> EscalateTimeout[⚠️ Escalate timeout]
+    EscalateTimeout --> NotifyManager[📧 Notify manager]
+    NotifyManager --> ManagerOverride{Manager override?}
+    
+    ManagerOverride -->|Approve| AllApproved
+    ManagerOverride -->|Reject| ApproverReject
+    ManagerOverride -->|Reassign| ReassignApprover[👤 Reassign approver]
+    
+    ReassignApprover --> NotifyApprovers
+    
+    DirectPublish --> End([End])
+    Publish --> End
+    NotifyRequester --> End
+    CancelRequest --> End
+    
+    style Start fill:#e1f5ff
+    style AllApproved fill:#d4edda
+    style Publish fill:#d4edda
+    style ApproverReject fill:#f8d7da
+    style Timeout fill:#fff3cd
+```
+
+---
+
+### 10A2-6.4.2 Approval Workflow Configuration
+
+```typescript
+interface ApprovalWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  trigger: WorkflowTrigger;
+  levels: ApprovalLevel[];
+  rules: ApprovalRule[];
+  notifications: WorkflowNotifications;
+  enabled: boolean;
+}
+
+interface WorkflowTrigger {
+  event: 'PUBLISH' | 'UPDATE' | 'COMPLETE' | 'DELETE';
+  conditions: TriggerCondition[];
+}
+
+interface TriggerCondition {
+  field: string;
+  operator: 'EQUALS' | 'GREATER_THAN' | 'LESS_THAN' | 'CONTAINS';
+  value: any;
+}
+
+interface ApprovalLevel {
+  level: number;
+  name: string;
+  approvers: Approver[];
+  requiredApprovals: number;  // How many approvers must approve
+  parallel: boolean;          // All approve simultaneously or sequential
+  timeout: number;            // Hours before escalation
+  autoApprove?: AutoApproveCondition;
+}
+
+interface Approver {
+  type: 'USER' | 'ROLE' | 'GROUP';
+  id: string;
+  name: string;
+  canDelegate: boolean;
+  weight?: number;            // Approval weight (for weighted approvals)
+}
+
+interface ApprovalRule {
+  name: string;
+  condition: RuleCondition;
+  action: RuleAction;
+}
+
+interface RuleCondition {
+  field: string;
+  operator: string;
+  value: any;
+}
+
+interface RuleAction {
+  type: 'SKIP_LEVEL' | 'ADD_APPROVER' | 'REQUIRE_MANAGER' | 'AUTO_APPROVE';
+  parameters: any;
+}
+
+interface WorkflowNotifications {
+  onSubmit: boolean;
+  onApproved: boolean;
+  onRejected: boolean;
+  onTimeout: boolean;
+  onComplete: boolean;
+  channels: ('EMAIL' | 'SLACK' | 'IN_APP')[];
+}
+
+interface AutoApproveCondition {
+  enabled: boolean;
+  rules: AutoApproveRule[];
+}
+
+interface AutoApproveRule {
+  condition: string;
+  description: string;
+}
+```
+
+---
+
+### 10A2-6.4.3 Approval Request
+
+```typescript
+interface ApprovalRequest {
+  id: string;
+  workflowId: string;
+  campaignId: string;
+  campaignName: string;
+  requestedBy: string;
+  requestedAt: Date;
+  status: ApprovalStatus;
+  currentLevel: number;
+  totalLevels: number;
+  approvals: ApprovalDecision[];
+  deadline?: Date;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  notes?: string;
+  metadata: RequestMetadata;
+}
+
+enum ApprovalStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
+  CANCELLED = 'CANCELLED',
+  TIMEOUT = 'TIMEOUT',
+}
+
+interface ApprovalDecision {
+  level: number;
+  approverId: string;
+  approverName: string;
+  decision: 'APPROVED' | 'REJECTED' | 'CHANGES_REQUESTED';
+  decidedAt: Date;
+  comments?: string;
+  attachments?: Attachment[];
+  timeToDecide: number;       // Seconds from notification
+}
+
+interface RequestMetadata {
+  changes: FieldChange[];
+  impact: ChangeImpact;
+  previousVersion?: string;
+  estimatedImpact: {
+    affectedUsers: number;
+    affectedLocations: number;
+    costImplication: number;
+  };
+}
+```
+
+---
+
+### 10A2-6.4.4 Approval Operations
+
+```typescript
+interface ApprovalOperations {
+  submitForApproval(request: SubmitApprovalRequest): Promise<ApprovalRequest>;
+  approve(requestId: string, decision: ApprovalDecision): Promise<ApprovalRequest>;
+  reject(requestId: string, decision: ApprovalDecision): Promise<ApprovalRequest>;
+  requestChanges(requestId: string, changes: ChangeRequest[]): Promise<ApprovalRequest>;
+  cancel(requestId: string, reason: string): Promise<void>;
+  delegate(requestId: string, fromUserId: string, toUserId: string): Promise<void>;
+  escalate(requestId: string, reason: string): Promise<void>;
+}
+
+interface SubmitApprovalRequest {
+  campaignId: string;
+  workflowId: string;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  deadline?: Date;
+  notes?: string;
+  notifyImmediately: boolean;
+}
+
+interface ChangeRequest {
+  field: string;
+  currentValue: any;
+  reason: string;
+  suggestion?: any;
+  priority: 'MUST_FIX' | 'SHOULD_FIX' | 'NICE_TO_HAVE';
+}
+```
+
+---
+
+## 10A2-6.5 Activity Feed
+
+### 10A2-6.5.1 Activity Stream
+
+```typescript
+interface ActivityFeed {
+  campaignId?: string;        // If campaign-specific
+  activities: Activity[];
+  filters: ActivityFilters;
+  pagination: Pagination;
+}
+
+interface Activity {
+  id: string;
+  type: ActivityType;
+  timestamp: Date;
+  actor: ActivityActor;
+  target: ActivityTarget;
+  action: string;
+  description: string;
+  metadata: ActivityMetadata;
+  read: boolean;
+}
+
+enum ActivityType {
+  CAMPAIGN_CREATED = 'CAMPAIGN_CREATED',
+  CAMPAIGN_UPDATED = 'CAMPAIGN_UPDATED',
+  CAMPAIGN_PUBLISHED = 'CAMPAIGN_PUBLISHED',
+  CAMPAIGN_PAUSED = 'CAMPAIGN_PAUSED',
+  CAMPAIGN_COMPLETED = 'CAMPAIGN_COMPLETED',
+  COMMENT_ADDED = 'COMMENT_ADDED',
+  COMMENT_REPLIED = 'COMMENT_REPLIED',
+  APPROVAL_REQUESTED = 'APPROVAL_REQUESTED',
+  APPROVAL_GRANTED = 'APPROVAL_GRANTED',
+  APPROVAL_REJECTED = 'APPROVAL_REJECTED',
+  USER_MENTIONED = 'USER_MENTIONED',
+  FILE_UPLOADED = 'FILE_UPLOADED',
+  VERSION_RESTORED = 'VERSION_RESTORED',
+}
+
+interface ActivityActor {
+  userId: string;
+  userName: string;
+  userRole: string;
+  avatar?: string;
+}
+
+interface ActivityTarget {
+  type: 'CAMPAIGN' | 'COMMENT' | 'APPROVAL' | 'USER';
+  id: string;
+  name: string;
+  url?: string;
+}
+
+interface ActivityMetadata {
+  changes?: FieldChange[];
+  mentions?: Mention[];
+  attachments?: Attachment[];
+  oldValue?: any;
+  newValue?: any;
+}
+
+interface ActivityFilters {
+  types?: ActivityType[];
+  actors?: string[];
+  dateRange?: DateRange;
+  read?: boolean;
+}
+```
+
+---
+
+### 10A2-6.5.2 Activity Notifications
+
+```typescript
+interface ActivityNotification {
+  activityId: string;
+  recipientId: string;
+  channels: NotificationChannel[];
+  priority: 'LOW' | 'NORMAL' | 'HIGH';
+  grouping: NotificationGrouping;
+  sent: boolean;
+  sentAt?: Date;
+}
+
+interface NotificationChannel {
+  type: 'EMAIL' | 'IN_APP' | 'SLACK' | 'SMS';
+  enabled: boolean;
+  template: string;
+  config?: Record<string, any>;
+}
+
+interface NotificationGrouping {
+  enabled: boolean;
+  window: number;              // Minutes to group similar notifications
+  maxCount: number;            // Max notifications to group
+}
+```
+
+---
+
+## 10A2-6.6 Real-time Collaboration
+
+### 10A2-6.6.1 Presence System
+
+```typescript
+interface PresenceSystem {
+  activeUsers: ActiveUser[];
+  updateInterval: number;      // Seconds
+  showCursors: boolean;
+  showActivity: boolean;
+}
+
+interface ActiveUser {
+  userId: string;
+  userName: string;
+  avatar?: string;
+  status: 'VIEWING' | 'EDITING' | 'COMMENTING';
+  location: UserLocation;
+  lastSeen: Date;
+  color: string;               // For cursor/highlight
+}
+
+interface UserLocation {
+  section?: string;
+  field?: string;
+  scrollPosition?: number;
+}
+
+interface CollaborationEvent {
+  type: 'USER_JOINED' | 'USER_LEFT' | 'USER_MOVED' | 'FIELD_LOCKED' | 'FIELD_UNLOCKED';
+  userId: string;
+  timestamp: Date;
+  data: any;
+}
+```
+
+---
+
+### 10A2-6.6.2 Concurrent Editing
+
+```typescript
+interface ConcurrentEditControl {
+  lockingStrategy: 'OPTIMISTIC' | 'PESSIMISTIC';
+  conflictResolution: 'LAST_WRITE_WINS' | 'MANUAL_MERGE' | 'AUTO_MERGE';
+  fieldLocks: FieldLock[];
+}
+
+interface FieldLock {
+  field: string;
+  lockedBy: string;
+  lockedAt: Date;
+  expiresAt: Date;
+  canOverride: boolean;
+}
+
+interface EditConflict {
+  field: string;
+  userA: string;
+  userB: string;
+  valueA: any;
+  valueB: any;
+  timestamp: Date;
+  resolution?: ConflictResolution;
+}
+
+interface ConflictResolution {
+  strategy: 'ACCEPT_A' | 'ACCEPT_B' | 'MERGE' | 'MANUAL';
+  resolvedBy: string;
+  resolvedAt: Date;
+  finalValue: any;
+}
+```
+
+---
+
+## 10A2-6.7 Success Metrics
+
+```typescript
+interface CollaborationMetrics {
+  comments: {
+    totalComments: number;
+    avgCommentsPerCampaign: number;
+    avgResponseTime: number;      // Target: < 2 hours
+    resolutionRate: number;       // Target: > 90%
+  };
+  mentions: {
+    totalMentions: number;
+    avgMentionsPerComment: number;
+    notificationDeliveryRate: number;  // Target: 100%
+  };
+  versions: {
+    totalVersions: number;
+    avgVersionsPerCampaign: number;
+    restoreRate: number;
+    comparisonUsage: number;
+  };
+  approvals: {
+    totalRequests: number;
+    approvalRate: number;         // Target: > 80%
+    avgApprovalTime: number;      // Target: < 24 hours
+    timeoutRate: number;          // Target: < 5%
+  };
+  realtime: {
+    concurrentUsers: number;
+    avgCollaboration: number;     // Users per campaign
+    conflictRate: number;         // Target: < 1%
+  };
+}
+```
+
+---
+
+## 10A2-6.8 Next Steps
+
+**Related Documents**:
+- `Part10A2-4_Campaign_Lifecycle.md` - Approval before publish
+- `Part10A2-9_RBAC_Permissions.md` - Comment & approval permissions
+- `Part10A2-10_UX_Features_Metrics.md` - Notification settings
+
+**Implementation Priority**:
+1. ✅ Comments system (MVP)
+2. ✅ Version history (MVP)
+3. ⏳ Approval workflows (Phase 2)
+4. ⏳ Activity feed (Phase 2)
+5. ⏳ Real-time presence (Phase 2)
+6. ⏳ Concurrent editing (Phase 3)
+
+---
+
+**Document Status**: ✅ Complete  
+**Last Updated**: 2025-10-17  
+**Next Review**: 2025-11-01
