@@ -30,25 +30,25 @@
 ---
 
 ### 🗂 Index chi tiết — 02-SRS-Full.md
-| **Mục** | **Tên phần**                             | **Ghi chú**                                                           |
-| :------ | :--------------------------------------- | :-------------------------------------------------------------------- |
-| **0**   | Change Log                               | Phiên bản, ngày, mô tả thay đổi                                       |
-| **1**   | Giới thiệu & Phạm vi                     | Mục đích, phạm vi, actor, chuẩn áp dụng                               |
-| **2**   | Tài liệu tham khảo                       | Liệt kê tài liệu nguồn & tiêu chuẩn                                   |
-| **3**   | Tổng quan hệ thống                       | Actor, context diagram, assumptions                                   |
-| **4**   | Yêu cầu chức năng (FR)                   | FR-001 → FR-013 (Campaign → Admin)                                    |
-| **5**   | Yêu cầu phi chức năng (NFR)              | NFR-001 → NFR-007 + Business KPI                                      |
-| **6**   | Kiến trúc hệ thống & Thành phần kỹ thuật | Kiến trúc logic, physical, Redis fallback                             |
-| **7**   | Giao diện hệ thống & API Contracts       | API mẫu cho Auth, Campaign, Voucher, Retail Node, CRM                 |
-| **8**   | Data Model & Schema                      | Entities, Mongo/PostgreSQL schema, ETL flow                           |
-| **9**   | Use Cases (Chi tiết)                     | UC-01 → UC-03 (online/offline)                                        |
-| **10**  | Acceptance Criteria & Test Cases         | TC-OTP-01, TC-VOUCHER-01, TC-OFFLINE-01                               |
-| **11**  | Traceability Matrix                      | BRD ↔ SRS ↔ Test                                                      |
-| **12**  | Triển khai (Deployment & CI/CD)          | Option 1: GitHub Actions / Docker Compose; Option 2: Jenkins Pipeline |
-| **13**  | Security & Privacy                       | OWASP, PII, Encryption, Logging                                       |
-| **14**  | Operation & Runbook                      | Redis fallback, Node reconciliation, incident handling                |
-| **15**  | Phụ lục                                  | Thuật ngữ, liên hệ, repo link                                         |
-| **16**  | Summary - Kiểm tra hoàn tất              | Xác nhận nội dung đầy đủ & sẵn sàng triển khai                        |
+| Part       | Tên phần                                                    | Tình trạng   | Ghi chú                                            |
+| :--------- | :---------------------------------------------------------- | :----------- | :------------------------------------------------- |
+| **Part01** | Giới thiệu (Introduction)                                   | ✅ Hoàn thành | Mục tiêu, phạm vi, định nghĩa, tài liệu tham chiếu |
+| **Part02** | Tổng quan hệ thống (Overall Description)                    | ✅ Hoàn thành | Actors, Use Context, Assumptions                   |
+| **Part03** | Phạm vi & Mục tiêu sản phẩm (Scope and Objectives)          | ✅ Hoàn thành | Business goals & feature mapping                   |
+| **Part04** | Yêu cầu chức năng (Functional Requirements)                 | ✅ Hoàn thành | FR-001 → FR-013                                    |
+| **Part05** | Yêu cầu phi chức năng (Non-Functional Requirements)         | ✅ Hoàn thành | Hiệu năng, bảo mật, độ tin cậy, KPI                |
+| **Part06** | Kiến trúc hệ thống (System Architecture & Components)       | ✅ Hoàn thành | Sơ đồ logic, vật lý, CI/CD                         |
+| **Part07** | Thiết kế dữ liệu & CSDL (Data Design & Database Schema)     | ✅ Hoàn thành | ERD, MongoDB, PostgreSQL, Redis                    |
+| **Part08** | Thiết kế API & Tích hợp (API Design & Integration)          | ✅ Hoàn thành | REST endpoints, webhook, error codes               |
+| **Part09** | Use Case chi tiết (Detailed Use Cases)                      | ✅ Hoàn thành | 8 Use Cases chính                                  |
+| **Part10** | Giao diện & Wireframes (UI/UX Design)                       | ✅ Hoàn thành | Flow UX, màu sắc, accessibility, KPI UX            |
+| **Part11** | Bảo mật & Tuân thủ (System Security & Compliance)           | ✅ Hoàn thành | OAuth2, RBAC, GDPR/PDPA, DRP                       |
+| **Part12** | Kiểm thử hiệu năng & tải (Performance & Load Testing Plan)  | ⏳ Sắp tạo    | JMeter/K6/Locust scenarios                         |
+| **Part13** | Kế hoạch kiểm thử tổng thể (System & UAT Testing Plan)      | ⏳ Sắp tạo    | Test types, case design, UAT matrix                |
+| **Part14** | Quản lý cấu hình & triển khai (Configuration & Deployment)  | ⏳ Sắp tạo    | Version control, CI/CD environments                |
+| **Part15** | Kế hoạch bảo trì & vận hành (Maintenance & Monitoring Plan) | ⏳ Sắp tạo    | Logging, monitoring, incident response             |
+| **Part16** | Phụ lục & Tài liệu tham chiếu (Appendices)                  | ⏳ Cuối cùng  | Glossary, diagrams, traceability matrix            |
+
 
 
 
@@ -1518,3 +1518,126 @@ graph LR
 **Tình trạng:**
 
 > Hoàn tất phần 10 – UI/UX & Wireframes. Bao gồm flow, layout, màu sắc, nguyên tắc responsive và KPI UX.
+
+# 02-SRS-Part11-SystemSecurity-and-Compliance.md
+
+## 11. Bảo mật hệ thống & Tuân thủ (System Security & Compliance)
+
+### 11.1 Mục tiêu
+
+Đảm bảo hệ thống Product Sampling System (PSS) vận hành an toàn, bảo vệ dữ liệu người dùng và đáp ứng các tiêu chuẩn tuân thủ pháp lý quốc tế (GDPR, PDPA, ISO 27001).
+
+---
+
+### 11.2 Phạm vi bảo mật
+
+| Thành phần                             | Mục tiêu bảo mật                                     | Cơ chế chính                                       |
+| :------------------------------------- | :--------------------------------------------------- | :------------------------------------------------- |
+| **API Layer**                          | Ngăn chặn truy cập trái phép, injection, brute-force | JWT, OAuth2, WAF, rate-limit, schema validation    |
+| **Database Layer**                     | Bảo vệ dữ liệu người dùng (PII)                      | AES-256 encryption, field-level encryption         |
+| **Redis Cache**                        | Tránh lộ OTP / session                               | TTL 300s, access control via ACL                   |
+| **File Storage (S3 hoặc tương đương)** | Bảo vệ tài nguyên brand upload                       | Pre-signed URL, limited scope access               |
+| **CI/CD & DevOps**                     | Đảm bảo pipeline an toàn                             | Secrets vault, least privilege tokens, 2FA         |
+| **Logs & Monitoring**                  | Theo dõi và cảnh báo hoạt động bất thường            | Centralized logging, audit trail retention 90 ngày |
+
+---
+
+### 11.3 Xác thực & Phân quyền
+
+* **JWT-based authentication** cho user và device token, ký RS256.
+* **OAuth2 scopes:** `campaign:read`, `campaign:write`, `voucher:redeem`.
+* **RBAC (Role-Based Access Control):**
+
+  * **Admin:** Toàn quyền truy cập hệ thống.
+  * **Brand Admin:** Quản lý campaign, xem dữ liệu của brand riêng.
+  * **Retail Node:** Chỉ truy cập endpoint `/redeem`.
+  * **End User:** Chỉ thao tác trên landing page & OTP.
+* **Session timeout:** 15 phút không hoạt động → tự động đăng xuất.
+
+---
+
+### 11.4 Mã hóa & Quản lý dữ liệu nhạy cảm
+
+| Dữ liệu       | Trạng thái           | Phương pháp mã hóa   | Lưu ý                       |
+| :------------ | :------------------- | :------------------- | :-------------------------- |
+| Số điện thoại | At-rest & in-transit | AES-256 / TLS 1.2+   | Chỉ hiển thị dạng `***1122` |
+| Email         | At-rest              | AES-256              | Hash index để tra cứu nhanh |
+| OTP           | In-memory (Redis)    | SHA-256 hash         | Không ghi log               |
+| JWT Token     | In-transit           | RS256 signature      | Expire 1h                   |
+| Logs chứa PII | At-rest              | Redact trước khi lưu | Chỉ admin mới truy cập      |
+
+---
+
+### 11.5 Quản lý truy cập hệ thống (Access Management)
+
+* **IAM (Identity and Access Management):** cấp quyền dựa trên role.
+* **2FA bắt buộc** với Admin & DevOps accounts.
+* **IP whitelisting** cho các môi trường production.
+* **Key rotation:** định kỳ 90 ngày cho API key & JWT secret.
+* **Secrets Vault:** lưu credentials trong Vault hoặc AWS Secrets Manager.
+
+---
+
+### 11.6 Giám sát & Phát hiện bất thường
+
+* **Audit log**: lưu toàn bộ hành động thay đổi cấu hình / dữ liệu quan trọng.
+* **SIEM**: tích hợp với hệ thống giám sát bảo mật (Elastic SIEM / Wazuh).
+* **Alert Rules:**
+
+  * > 5 lần OTP sai trong 10 phút → block user.
+  * > 10 login thất bại / IP → alert security channel.
+  * Bất kỳ request đến API admin từ IP ngoài whitelist → reject & log.
+
+---
+
+### 11.7 Tuân thủ & Chính sách dữ liệu
+
+| Chuẩn / Luật                   | Nội dung áp dụng                                         | Trạng thái                        |
+| :----------------------------- | :------------------------------------------------------- | :-------------------------------- |
+| **GDPR (EU)**                  | Quyền xóa dữ liệu, yêu cầu truy cập, lưu trữ có thời hạn | ✅ Đáp ứng                         |
+| **PDPA (Singapore / Vietnam)** | Thu thập, xử lý thông tin cá nhân có đồng ý người dùng   | ✅ Đáp ứng                         |
+| **ISO 27001**                  | Quy trình quản lý bảo mật thông tin                      | ⏳ Đang triển khai                 |
+| **OWASP ASVS**                 | Kiểm thử ứng dụng an toàn                                | ✅ Được áp dụng trong quy trình QA |
+
+---
+
+### 11.8 Sao lưu, phục hồi & DRP (Disaster Recovery Plan)
+
+| Thành phần   | Tần suất backup            | Mục tiêu khôi phục (RTO/RPO)  |
+| :----------- | :------------------------- | :---------------------------- |
+| MongoDB      | 6 giờ / lần                | RTO ≤ 15 phút / RPO ≤ 10 phút |
+| PostgreSQL   | Realtime WAL + snapshot 6h | RTO ≤ 10 phút / RPO ≤ 5 phút  |
+| Redis        | Không backup (cache only)  | Auto rebuild từ PostgreSQL    |
+| File Storage | Daily incremental          | RTO ≤ 30 phút                 |
+
+---
+
+### 11.9 Kiểm thử bảo mật (Security Testing)
+
+* **Penetration Test:** thực hiện hàng quý.
+* **OWASP ZAP / BurpSuite** để phát hiện XSS, CSRF, SQLi.
+* **Static Code Analysis:** SonarQube trong CI/CD.
+* **Dependency Audit:** kiểm tra CVE hàng ngày bằng `npm audit`.
+
+---
+
+### 11.10 Tuân thủ log & bảo mật vận hành
+
+* **Log rotation:** mỗi 7 ngày, lưu tối đa 30 ngày.
+* **Encryption in logs:** bật cho file chứa trace ID, PII masked.
+* **Centralized logging:** ElasticSearch với access control.
+* **Anonymization:** mọi truy cập dữ liệu người dùng dùng hash key.
+
+---
+
+### 11.11 Tổng kết
+
+* Hệ thống tuân thủ chuẩn bảo mật hiện đại (OAuth2, AES-256, TLS 1.2+).
+* Có cơ chế RBAC, audit, alert, và backup phục hồi đầy đủ.
+* Đảm bảo tuân thủ GDPR/PDPA, bảo vệ dữ liệu người dùng và phòng chống gian lận.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 11 – System Security & Compliance. Bao gồm bảo mật tầng API, dữ liệu, phân quyền, giám sát, tuân thủ và kế hoạch phục hồi thảm họa.
