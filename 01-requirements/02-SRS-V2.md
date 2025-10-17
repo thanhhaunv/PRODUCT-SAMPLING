@@ -1379,3 +1379,497 @@ function hasPermission(user, action, resource, context) {
 **Tình trạng**: Part04 hoàn thành ✅  
 **Tiếp theo**: Part05 - Yêu cầu phi chức năng  
 **Người đánh giá**: Kiến trúc sư hệ thống, Trưởng nhóm phát triển, Trưởng nhóm QA
+# 📋 SRS Part05 - Yêu cầu phi chức năng (Non-Functional Requirements)
+**Hệ thống Product Sampling Platform**
+
+**Phiên bản**: 1.0  
+**Ngày**: 2025-10-17  
+**Tác giả**: Đội phân tích hệ thống  
+
+---
+
+## 5.1 Tổng quan yêu cầu phi chức năng
+
+### 5.1.1 Phân loại yêu cầu phi chức năng
+Dựa trên **01-BRD.md v3.0** và **System_Feature_Tree_Grok.md v4.0**, các yêu cầu phi chức năng được chia thành 8 nhóm chính:
+
+| Mã NFR | Tên nhóm | Mô tả | Nguồn tham chiếu |
+|--------|----------|-------|------------------|
+| NFR-001 | Hiệu năng | Thời gian phản hồi, lưu lượng, độ trễ | BRD 1.4, Cây chức năng KPI |
+| NFR-002 | Khả năng mở rộng | Người dùng đồng thời, khối lượng dữ liệu, địa lý | BRD 2.2, Tài liệu chiến lược |
+| NFR-003 | Độ tin cậy | Thời gian hoạt động, chịu lỗi, phục hồi | BRD 1.4, Cây chức năng |
+| NFR-004 | Bảo mật | Xác thực, ủy quyền, mã hóa | Cây kiểm soát truy cập v2.2 |
+| NFR-005 | Khả năng sử dụng | Trải nghiệm người dùng, khả năng tiếp cận, di động | BRD 4.4, Cây chức năng UX |
+| NFR-006 | Tương thích | Trình duyệt, thiết bị, tích hợp | Problem.md, BRD |
+| NFR-007 | Bảo trì | Chất lượng code, triển khai, giám sát | BRD 6.1, Cây chức năng |
+| NFR-008 | Tuân thủ | GDPR, PDPA, tiêu chuẩn ISO | BRD 1.4, Kiểm soát truy cập |
+
+---
+
+## 5.2 NFR-001: Yêu cầu hiệu năng
+
+### 5.2.1 Mục tiêu hiệu năng (từ 01-BRD.md 1.5)
+- **Chi phí trên người dùng đã xác minh**: ≤ 0.4 USD
+- **Độ trễ bảng điều khiển thời gian thực**: ≤ 3 giây
+- **Tải đỉnh cổng API**: 100,000 yêu cầu/phút
+- **Tỷ lệ hoàn thành biểu mẫu**: ≥ 90%
+
+### 5.2.2 Yêu cầu thời gian phản hồi
+
+| Thao tác | Mục tiêu thời gian | Điều kiện đo | Nguồn tham chiếu |
+|----------|-------------------|--------------|------------------|
+| **Tải trang đích** | < 2 giây | 95% yêu cầu, di động 3G | Cây chức năng 1.3 KPI |
+| **Gửi OTP** | < 30 giây | Gửi SMS/Email | Cây chức năng 1.4 KPI |
+| **Xác thực OTP** | < 3 giây | 95% yêu cầu | Cây chức năng 1.4 KPI |
+| **Tạo mã vạch** | < 5 giây | Sau xác minh thành công | Cây chức năng 1.5 KPI |
+| **Quét đổi quà** | < 3 giây | Quét POS/di động | Cây chức năng 1.5 KPI |
+| **Tải bảng điều khiển** | < 3 giây | Cổng quản trị/thương hiệu | Cây chức năng 1.6 KPI |
+| **Xuất báo cáo** | < 30 giây | 100K bản ghi CSV/Excel | Cây chức năng 1.6 KPI |
+
+### 5.2.3 Yêu cầu lưu lượng
+
+**Điểm cuối API:**
+- **Trang đích**: 50,000 yêu cầu/phút (đỉnh khởi chạy chiến dịch)
+- **Xác thực OTP**: 20,000 yêu cầu/phút
+- **Tạo mã vạch**: 10,000 yêu cầu/phút  
+- **API đổi quà**: 5,000 yêu cầu/phút
+- **Truy vấn phân tích**: 1,000 yêu cầu/phút
+
+**Hiệu năng cơ sở dữ liệu:**
+- **Thao tác đọc**: < 100ms cho 95% truy vấn
+- **Thao tác ghi**: < 200ms cho giao dịch
+- **Kết nối đồng thời**: 1,000 kết nối cùng lúc
+- **Lưu lượng truy vấn**: 10,000 truy vấn/giây
+
+### 5.2.4 Tiêu chí chấp nhận hiệu năng
+- [ ] Kiểm thử tải với JMeter/K6 đạt 100K RPM
+- [ ] Thời gian phản hồi phần trăm thứ 95 < mục tiêu
+- [ ] Không có lỗi hết thời gian trong tải bình thường
+- [ ] Tối ưu truy vấn cơ sở dữ liệu < 100ms trung bình
+
+---
+
+## 5.3 NFR-002: Yêu cầu khả năng mở rộng
+
+### 5.3.1 Mục tiêu mở rộng (từ Product-Sampling-Vision-and-Strategy Document.md)
+- **Năm 1**: 50K người dùng đã xác minh, 25 thương hiệu
+- **Năm 2**: 200K người dùng đã xác minh, 80 thương hiệu  
+- **Năm 3**: 500K người dùng đã xác minh, 200 thương hiệu
+- **Dài hạn**: 10M người dùng, toàn khu vực ASEAN
+
+### 5.3.2 Khả năng mở rộng người dùng
+
+| Giai đoạn | Người dùng đồng thời | Tải đỉnh | Khối lượng dữ liệu | Yêu cầu hạ tầng |
+|-----------|----------------------|----------|---------------------|-----------------|
+| **MVP (Q1-Q2 2025)** | 10,000 | 50K RPM | 100 GB | Triển khai 2-AZ |
+| **Mở rộng (Q3 2025-Q4 2026)** | 100,000 | 500K RPM | 1 TB | Đa vùng |
+| **Khu vực (2027+)** | 1,000,000 | 5M RPM | 10 TB | Triển khai ASEAN |
+
+### 5.3.3 Khả năng mở rộng địa lý
+**Giai đoạn 1 (Việt Nam):**
+- Hồ Chí Minh và Hà Nội làm vùng chính
+- 99.9% thời gian hoạt động trong giờ cao điểm (9-18h)
+- Hỗ trợ tiếng Việt
+
+**Giai đoạn 2 (ASEAN):**
+- Thái Lan, Indonesia, Philippines
+- Hỗ trợ đa ngôn ngữ (Thái, Bahasa, tiếng Anh)
+- Tuân thủ địa phương (lưu trữ dữ liệu, nhà cung cấp viễn thông)
+- Tổng hợp phân tích xuyên biên giới
+
+### 5.3.4 Khả năng mở rộng dữ liệu
+**Chiến lược phân vùng cơ sở dữ liệu:**
+- **Khóa phân vùng**: mã_quốc_gia + mã_chiến_dịch
+- **Mở rộng ngang**: Phân vùng MongoDB, phân chia PostgreSQL
+- **Lưu trữ dữ liệu**: 2 năm dữ liệu nóng, 5 năm lưu trữ lạnh
+- **Chiến lược sao lưu**: Gia tăng hàng ngày, sao lưu đầy đủ hàng tuần
+
+**Tiêu chí chấp nhận:**
+- [ ] Thời gian phản hồi tự động mở rộng < 5 phút
+- [ ] Không mất dữ liệu trong sự kiện mở rộng
+- [ ] Độ trễ xuyên vùng < 200ms
+- [ ] Mở rộng cơ sở dữ liệu minh bạch cho người dùng
+
+---
+
+## 5.4 NFR-003: Yêu cầu độ tin cậy
+
+### 5.4.1 Mục tiêu độ tin cậy (từ 01-BRD.md 1.4)
+- **Thời gian hoạt động nền tảng**: 99.9% SLA
+- **Tính khả dụng API**: 99.95% cho điểm cuối quan trọng
+- **Tính nhất quán dữ liệu**: 100% cho giao dịch tài chính
+- **Mục tiêu phục hồi**: RTO < 4 giờ, RPO < 1 giờ
+
+### 5.4.2 Khả năng chịu lỗi
+
+**Loại bỏ điểm lỗi đơn:**
+- **Bộ cân bằng tải**: Đa AZ với kiểm tra sức khỏe
+- **Máy chủ ứng dụng**: Nhóm tự động mở rộng
+- **Cơ sở dữ liệu**: Sao chép chính-phụ, chuyển đổi dự phòng tự động
+- **Bộ nhớ đệm**: Cụm Redis với tính bền vững
+- **Lưu trữ tệp**: S3 với sao chép xuyên vùng
+
+**Mô hình ngắt mạch:**
+- **API bên thứ ba**: Hết thời gian 30s, thử lại 3 lần
+- **Kết nối cơ sở dữ liệu**: Quản lý pool với kết nối lại
+- **Nhà cung cấp SMS/Email**: Nhà cung cấp dự phòng tự động
+
+### 5.4.3 Sao lưu và phục hồi
+**Chiến lược sao lưu:**
+- **Cơ sở dữ liệu**: Sao lưu liên tục với phục hồi điểm thời gian
+- **Tải lên tệp**: Sao chép xuyên vùng
+- **Cấu hình**: Hạ tầng dưới dạng code (Terraform)
+- **Code ứng dụng**: Triển khai dựa trên Git với rollback
+
+**Khôi phục thảm họa:**
+- **RTO (Mục tiêu thời gian phục hồi)**: 4 giờ
+- **RPO (Mục tiêu điểm phục hồi)**: 1 giờ
+- **Kiểm thử chuyển đổi dự phòng**: Bài tập drill hàng tháng
+- **Dự phòng trung tâm dữ liệu**: Trang web chính + DR
+
+### 5.4.4 Giám sát và cảnh báo
+**Giám sát hệ thống:**
+- **Chỉ số ứng dụng**: Thời gian phản hồi, tỷ lệ lỗi, lưu lượng
+- **Chỉ số hạ tầng**: CPU, bộ nhớ, đĩa, mạng
+- **Chỉ số kinh doanh**: Tỷ lệ chuyển đổi, doanh thu, hoạt động người dùng
+- **Chỉ số bảo mật**: Đăng nhập thất bại, hoạt động đáng ngờ
+
+**Quy tắc cảnh báo:**
+- **Quan trọng**: Thời gian phản hồi > 5s, Tỷ lệ lỗi > 1%, Ngừng hoạt động
+- **Cảnh báo**: Thời gian phản hồi > 3s, Tỷ lệ lỗi > 0.5%
+- **Thông tin**: Hoàn thành triển khai, sự kiện mở rộng
+
+**Tiêu chí chấp nhận:**
+- [ ] Đo lường 99.9% thời gian hoạt động qua 3 tháng
+- [ ] Drill khôi phục thảm họa thành công
+- [ ] Thời gian trung bình để phục hồi (MTTR) < 30 phút
+- [ ] Không có sự cố hỏng dữ liệu
+
+---
+
+## 5.5 NFR-004: Yêu cầu bảo mật
+
+### 5.5.1 Mục tiêu bảo mật (từ Access_Control_Tree_Grok.md v2.2)
+- **Xác thực**: OAuth 2.0/OpenID Connect
+- **Ủy quyền**: RBAC với quyền động 6 vai trò
+- **Bảo vệ dữ liệu**: Mã hóa PII AES-256
+- **Tuân thủ**: ISO 27001, GDPR/PDPA
+
+### 5.5.2 Bảo mật xác thực và ủy quyền
+
+**Yêu cầu xác thực:**
+- **Chính sách mật khẩu**: Tối thiểu 8 ký tự, quy tắc phức tạp
+- **Xác thực đa yếu tố**: SMS/Email OTP cho vai trò quản trị
+- **Quản lý phiên**: JWT với hết hạn trượt
+- **Khóa tài khoản**: 5 lần thử thất bại → khóa 15 phút
+
+**Khung ủy quyền:**
+- **Quyền dựa trên vai trò**: Gán động theo chức năng
+- **Bảo mật cấp tài nguyên**: Cách ly tenant, lọc dữ liệu
+- **Bảo mật API**: Giới hạn tỷ lệ, quản lý khóa API
+- **Tăng cấp đặc quyền**: Nâng cao vai trò tạm thời với phê duyệt
+
+### 5.5.3 Bảo mật dữ liệu
+
+**Mã hóa dữ liệu:**
+- **Khi nghỉ**: AES-256 cho PII trong cơ sở dữ liệu
+- **Khi truyền**: TLS 1.3 cho tất cả giao tiếp API
+- **Mã hóa sao lưu**: Tệp sao lưu được mã hóa
+- **Quản lý khóa**: AWS KMS hoặc HashiCorp Vault
+
+**Quyền riêng tư dữ liệu:**
+- **Xử lý PII**: Lưu trữ băm, thu thập tối thiểu
+- **Lưu giữ dữ liệu**: 7 năm cho kiểm toán, 2 năm cho tiếp thị
+- **Quyền bị lãng quên**: Quy trình xóa tự động
+- **Quản lý đồng ý**: Kiểm soát đăng ký/hủy đăng ký chi tiết
+
+### 5.5.4 Bảo mật ứng dụng
+
+**Bảo vệ OWASP Top 10:**
+- **Tiêm**: Truy vấn tham số, xác thực đầu vào
+- **Xác thực bị hỏng**: Quản lý phiên an toàn
+- **Tiết lộ dữ liệu nhạy cảm**: Mã hóa, tiêu đề bảo mật
+- **XXE**: Vô hiệu hóa xử lý thực thể bên ngoài
+- **Kiểm soát truy cập bị hỏng**: Ủy quyền cấp tài nguyên
+- **Cấu hình sai bảo mật**: Quét bảo mật tự động
+- **XSS**: Chính sách bảo mật nội dung, mã hóa đầu ra
+- **Deserialization không an toàn**: API chỉ JSON
+- **Thành phần có lỗ hổng**: Quét phụ thuộc
+- **Ghi nhật ký không đủ**: Dấu vết kiểm tra toàn diện
+
+**Kiểm thử bảo mật:**
+- **Phân tích tĩnh**: SonarQube, CodeQL
+- **Phân tích động**: OWASP ZAP, Burp Suite
+- **Kiểm thử thâm nhập**: Đánh giá bên ngoài hàng quý
+- **Quản lý lỗ hổng**: Quét tự động, quản lý bản vá
+
+**Tiêu chí chấp nhận:**
+- [ ] Không có lỗ hổng quan trọng trong sản xuất
+- [ ] Kiểm thử thâm nhập passed với no high-risk findings
+- [ ] Kiểm toán tuân thủ GDPR passed
+- [ ] Thời gian phản hồi sự cố bảo mật < 2 giờ
+
+---
+
+## 5.6 NFR-005: Yêu cầu khả năng sử dụng
+
+### 5.6.1 Mục tiêu trải nghiệm người dùng (từ System_Feature_Tree_Grok.md UX KPIs)
+- **Tỷ lệ hoàn thành biểu mẫu**: > 90%
+- **Tỷ lệ tương tác người dùng**: > 70% (Cổng người dùng)
+- **Phản hồi di động**: > 95% điểm
+- **Khả năng tiếp cận**: Tuân thủ WCAG 2.1 AA
+
+### 5.6.2 Giao diện người dùng
+
+**Nguyên tắc thiết kế:**
+- **Ưu tiên di động**: PWA với thiết kế phản hồi
+- **UI tối giản**: Tập trung vào hành động cốt lõi
+- **Tiết lộ tiến bộ**: Hiển thị thông tin theo mức độ cần thiết
+- **Thương hiệu nhất quán**: Khả năng white-label cho thương hiệu
+
+**Luồng trải nghiệm người dùng:**
+- **Trang đích**: Hoàn thành biểu mẫu một trang < 30 giây
+- **Xác thực OTP**: Hướng dẫn rõ ràng, cơ chế thử lại
+- **Hiển thị mã vạch**: Nhiều định dạng (QR, Apple Wallet, PDF)
+- **Cổng người dùng**: Điều hướng trực quan, chức năng tìm kiếm
+
+### 5.6.3 Tiêu chuẩn khả năng tiếp cận
+
+**Tuân thủ WCAG 2.1 AA:**
+- **Có thể nhận thức**: Văn bản thay thế cho hình ảnh, tỷ lệ tương phản màu
+- **Có thể vận hành**: Điều hướng bàn phím, chỉ báo focus
+- **Có thể hiểu**: Ngôn ngữ rõ ràng, điều hướng nhất quán
+- **Mạnh mẽ**: HTML ngữ nghĩa, khả năng tương thích trình đọc màn hình
+
+**Hỗ trợ đa ngôn ngữ:**
+- **Bản địa hóa**: Tiếng Việt, tiếng Anh, tiếng Thái, Bahasa Indonesia
+- **Hỗ trợ RTL**: Thị trường Ả Rập/Hebrew (tương lai)
+- **Định dạng số/ngày**: Định dạng theo địa phương
+- **Tiền tệ**: Hiển thị tiền tệ địa phương
+
+### 5.6.4 Hiệu năng UX
+
+**Core Web Vitals:**
+- **Largest Contentful Paint (LCP)**: < 2.5 giây
+- **First Input Delay (FID)**: < 100ms
+- **Cumulative Layout Shift (CLS)**: < 0.1
+
+**Yêu cầu PWA:**
+- **Chức năng ngoại tuyến**: Bộ nhớ đệm service worker
+- **Lời nhắc cài đặt**: Khả năng thêm vào màn hình chính
+- **Thông báo đẩy**: Tương tác và giữ chân
+- **Trải nghiệm giống ứng dụng**: Chế độ toàn màn hình, màn hình khởi động
+
+**Tiêu chí chấp nhận:**
+- [ ] Điểm Google PageSpeed Insights > 90
+- [ ] Điểm Lighthouse PWA > 90
+- [ ] Kiểm thử tự động WCAG 2.1 AA passed
+- [ ] Kiểm thử chấp nhận người dùng > 85% hài lòng
+
+---
+
+## 5.7 NFR-006: Yêu cầu tương thích
+
+### 5.7.1 Tương thích trình duyệt và thiết bị
+
+**Hỗ trợ trình duyệt:**
+- **Desktop**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- **Di động**: Chrome Mobile 90+, Safari iOS 14+, Samsung Internet 14+
+- **Cải tiến tiến bộ**: Suy giảm graceful cho trình duyệt cũ
+
+**Tương thích thiết bị:**
+- **Điện thoại thông minh**: iOS 12+, Android 8+ (API level 26+)
+- **Máy tính bảng**: iPad iOS 14+, máy tính bảng Android 10"+
+- **Desktop**: Windows 10+, macOS 10.15+, Ubuntu 18.04+
+- **Kích thước màn hình**: Thiết kế phản hồi 320px đến 4K
+
+### 5.7.2 Tương thích tích hợp
+
+**Tích hợp CRM (từ System_Feature_Tree_Grok.md 1.7):**
+- **HubSpot**: REST API v3, hỗ trợ webhook
+- **Salesforce**: REST API v52, OAuth 2.0
+- **Pipedrive**: REST API v1, đồng bộ thời gian thực
+- **API tùy chỉnh**: Đặc tả OpenAPI 3.0
+
+**Tích hợp POS (từ System_Feature_Tree_Grok.md 1.5):**
+- **Circle K**: Tích hợp API tùy chỉnh
+- **GS25**: Giao thức quét mã vạch
+- **Mini Stop**: Khả năng đồng bộ ngoại tuyến
+- **POS chung**: Scandit SDK, định dạng mã vạch tiêu chuẩn
+
+**Dịch vụ bên thứ ba:**
+- **Nhà cung cấp SMS**: Twilio, MessageBird với dự phòng
+- **Dịch vụ email**: SendGrid, AWS SES
+- **Phân tích**: GA4, Meta Pixel, theo dõi tùy chỉnh
+- **Hỗ trợ**: Tích hợp Zendesk, Freshdesk
+
+### 5.7.3 Tương thích API
+
+**Tiêu chuẩn REST API:**
+- **OpenAPI 3.0**: Tài liệu API đầy đủ
+- **Phương thức HTTP**: GET, POST, PUT, DELETE, PATCH
+- **Mã trạng thái**: Mã phản hồi HTTP tiêu chuẩn
+- **Giới hạn tỷ lệ**: 1000 yêu cầu/giờ mỗi khóa API
+- **Phiên bản**: Cấu trúc URL /api/v1/
+
+**Hỗ trợ webhook:**
+- **Loại sự kiện**: Sự kiện chiến dịch, đổi quà, hành động người dùng
+- **Định dạng payload**: JSON với xác minh chữ ký
+- **Logic thử lại**: Backoff theo cấp số nhân, hàng đợi dead letter
+- **Bảo mật**: Chữ ký HMAC, danh sách trắng IP
+
+**Tiêu chí chấp nhận:**
+- [ ] Kiểm thử cross-browser passed trên tất cả trình duyệt được hỗ trợ
+- [ ] Kiểm thử tương thích API với hệ thống CRM chính
+- [ ] Kiểm thử thiết bị di động trên iOS và Android
+- [ ] Kiểm thử tích hợp bên thứ ba hoàn thành
+
+---
+
+## 5.8 NFR-007: Yêu cầu bảo trì
+
+### 5.8.1 Khả năng bảo trì code
+
+**Tiêu chuẩn chất lượng code:**
+- **Code coverage**: > 80% unit test coverage
+- **Chỉ số phức tạp**: Phức tạp cyclomatic < 10
+- **Tài liệu**: Bình luận inline, tài liệu API
+- **Phong cách code**: Định dạng nhất quán, quy tắc linting
+
+**Khả năng bảo trì kiến trúc:**
+- **Microservices**: Kết nối lỏng lẻo, triển khai độc lập
+- **Thiết kế API-first**: Ranh giới dịch vụ rõ ràng
+- **Quản lý cấu hình**: Cấu hình theo môi trường
+- **Quản lý phụ thuộc**: Cập nhật thường xuyên, bản vá bảo mật
+
+### 5.8.2 Triển khai và CI/CD
+
+**Tích hợp liên tục:**
+- **Kiểm thử tự động**: Unit, tích hợp, end-to-end tests
+- **Cổng chất lượng code**: Phân tích SonarQube, quét bảo mật
+- **Tự động hóa build**: Container hóa Docker
+- **Quản lý artifact**: Triển khai có phiên bản
+
+**Triển khai liên tục:**
+- **Triển khai blue-green**: Phát hành không downtime
+- **Khả năng rollback**: Hoàn nguyên ngay lập tức trong < 5 phút
+- **Thăng tiến môi trường**: Dev → Staging → Production
+- **Feature flags**: Triển khai tính năng từ từ
+
+### 5.8.3 Giám sát và observability
+
+**Giám sát ứng dụng:**
+- **Thu thập chỉ số**: Prometheus, CloudWatch
+- **Tổng hợp nhật ký**: ELK stack, ghi nhật ký tập trung
+- **Tracing phân tán**: Jaeger, tương quan yêu cầu
+- **Theo dõi lỗi**: Sentry, tổng hợp ngoại lệ
+
+**Trí tuệ kinh doanh:**
+- **Bảng điều khiển KPI**: Chỉ số kinh doanh thời gian thực
+- **Phân tích sử dụng**: Theo dõi hành vi người dùng
+- **Xu hướng hiệu năng**: Phân tích lịch sử
+- **Lập kế hoạch năng lực**: Xu hướng sử dụng tài nguyên
+
+**Tiêu chí chấp nhận:**
+- [ ] Cổng chất lượng code passed trong pipeline CI
+- [ ] Kiểm thử tự động hóa triển khai hoàn thành
+- [ ] Cảnh báo giám sát được cấu hình đúng
+- [ ] Tài liệu được cập nhật và có thể truy cập
+
+---
+
+## 5.9 NFR-008: Yêu cầu tuân thủ
+
+### 5.9.1 Tuân thủ quy định dữ liệu (từ Access_Control_Tree_Grok.md Tuân thủ)
+
+**Tuân thủ GDPR (Liên minh châu Âu):**
+- **Cơ sở pháp lý**: Đồng ý cho tiếp thị, lợi ích hợp pháp cho dịch vụ
+- **Giảm thiểu dữ liệu**: Chỉ thu thập dữ liệu cần thiết
+- **Quyền truy cập**: Cổng người dùng với tải xuống dữ liệu
+- **Quyền chỉnh sửa**: Chức năng cập nhật hồ sơ
+- **Quyền xóa**: Xóa tài khoản với tẩy dữ liệu
+- **Tính di động dữ liệu**: Xuất dữ liệu người dùng trong định dạng machine-readable
+- **Quyền riêng tư theo thiết kế**: Cài đặt quyền riêng tư mặc định
+
+**Tuân thủ PDPA (ASEAN):**
+- **Bản địa hóa dữ liệu**: Yêu cầu lưu trữ dữ liệu trong nước
+- **Quản lý đồng ý**: Đăng ký rõ ràng cho xử lý dữ liệu
+- **Thông báo vi phạm dữ liệu**: Yêu cầu thông báo 72 giờ
+- **Chuyển giao xuyên biên giới**: Quyết định đầy đủ, điều khoản hợp đồng tiêu chuẩn
+
+### 5.9.2 Tuân thủ bảo mật
+
+**Phù hợp ISO 27001:**
+- **Chính sách bảo mật thông tin**: Chính sách và quy trình được tài liệu hóa
+- **Đánh giá rủi ro**: Đánh giá bảo mật thường xuyên
+- **Kiểm soát truy cập**: Quyền dựa trên vai trò, đặc quyền tối thiểu
+- **Quản lý sự cố**: Kế hoạch phản hồi sự cố bảo mật
+- **Liên tục kinh doanh**: Quy trình khôi phục thảm họa
+- **Quản lý nhà cung cấp**: Đánh giá bảo mật bên thứ ba
+
+**SOC 2 Type II (Tương lai):**
+- **Bảo mật**: Kiểm soát truy cập logic và vật lý
+- **Tính khả dụng**: Giám sát uptime và hiệu năng hệ thống
+- **Tính toàn vẹn xử lý**: Cơ chế bảo vệ độ chính xác và đầy đủ dữ liệu
+- **Bảo mật**: Cơ chế bảo vệ dữ liệu
+- **Quyền riêng tư**: Xử lý thông tin cá nhân
+
+### 5.9.3 Tuân thủ tài chính
+
+**Chống rửa tiền (AML):**
+- **Nhận dạng khách hàng**: Quy trình KYC cho chiến dịch giá trị cao
+- **Giám sát giao dịch**: Phát hiện hoạt động đáng ngờ
+- **Lưu giữ hồ sơ**: Lưu giữ lịch sử giao dịch 5 năm
+
+**Tuân thủ thuế:**
+- **Tính toán VAT/GST**: Tính thuế tự động
+- **Báo cáo**: Khả năng báo cáo cơ quan thuế
+- **Dấu vết kiểm tra**: Nhật ký giao dịch tài chính đầy đủ
+
+### 5.9.4 Kiểm toán và báo cáo tuân thủ
+
+**Yêu cầu kiểm toán:**
+- **Nhật ký kiểm toán**: Ghi nhật ký sự kiện bất biến
+- **Dòng dữ liệu**: Theo dõi luồng dữ liệu đầy đủ
+- **Báo cáo tuân thủ**: Báo cáo trạng thái tuân thủ tự động
+- **Kiểm toán bên ngoài**: Kiểm toán tuân thủ bên thứ ba hàng năm
+
+**Khả năng báo cáo:**
+- **Báo cáo quyền riêng tư**: Hoạt động xử lý dữ liệu
+- **Báo cáo bảo mật**: Tóm tắt sự cố, trạng thái lỗ hổng
+- **Báo cáo tài chính**: Tóm tắt giao dịch, tính toán thuế
+- **Báo cáo vận hành**: Tuân thủ SLA, chỉ số hiệu năng
+
+**Tiêu chí chấp nhận:**
+- [ ] Kiểm toán tuân thủ GDPR passed
+- [ ] Xác minh tuân thủ PDPA hoàn thành
+- [ ] Phân tích khoảng cách ISO 27001 hoàn thành
+- [ ] Xác minh tính toàn vẹn nhật ký kiểm toán passed
+
+---
+
+## 5.10 Ma trận ưu tiên NFR
+
+| NFR | Mức độ quan trọng | Giai đoạn triển khai | Ước tính công sức | Phụ thuộc |
+|-----|-------------------|---------------------|-------------------|-----------|
+| **NFR-001 Hiệu năng** | Cao | MVP | Trung bình | Tối ưu cơ sở dữ liệu |
+| **NFR-002 Khả năng mở rộng** | Cao | Giai đoạn 2 | Cao | Hạ tầng đám mây |
+| **NFR-003 Độ tin cậy** | Cao | MVP | Trung bình | Thiết lập giám sát |
+| **NFR-004 Bảo mật** | Rất cao | MVP | Cao | Khung tuân thủ |
+| **NFR-005 Khả năng sử dụng** | Cao | MVP | Trung bình | Thiết kế UX hoàn thành |
+| **NFR-006 Tương thích** | Trung bình | MVP | Thấp | API bên thứ ba |
+| **NFR-007 Bảo trì** | Trung bình | Liên tục | Trung bình | Thiết lập DevOps |
+| **NFR-008 Tuân thủ** | Rất cao | MVP | Cao | Đánh giá pháp lý |
+
+---
+
+**Nguồn tham khảo chính:**
+- Tài liệu yêu cầu kinh doanh (01-BRD.md v3.0) - Mục tiêu KPI, ràng buộc kinh doanh, mô hình tài chính
+- Cây chức năng hệ thống (System_Feature_Tree_Grok.md v4.0) - KPI hiệu năng, yêu cầu UX
+- Cây kiểm soát truy cập (Access_Control_Tree_Grok.md v2.2) - Yêu cầu bảo mật, khung tuân thủ
+- Định nghĩa vấn đề (Problem.md v1.0) - Ràng buộc kỹ thuật, yêu cầu mở rộng
+- Tài liệu tầm nhìn và chiến lược (Product-Sampling-Vision-and-Strategy Document.md v1.0) - Mục tiêu khả năng mở rộng, mở rộng thị trường
+
+**Tình trạng**: Part05 hoàn thành ✅  
+**Tiếp theo**: Part06 - Kiến trúc hệ thống và thành phần  
+**Người đánh giá**: Kiến trúc sư hệ thống, Kỹ sư bảo mật, Kỹ sư hiệu năng
