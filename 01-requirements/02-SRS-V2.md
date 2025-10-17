@@ -11167,960 +11167,2034 @@ graph TB
 **Trạng thái**: ✅ Hoàn thành  
 
 ---
+```
+Part10_UI_UX_Architecture/
+├── Part10A_User_Flows/
+│   ├── Part10A1_End_User_Journey.md                    ✅ Done
+│   ├── Part10A2_Brand_Admin_Journey/
+│   │   ├── Part10A2-1_Overview_Dashboard.md            (Overview + Dashboard)
+│   │   ├── Part10A2-2_Campaign_Creation.md             (Create flow: Basic → Locations → Barcodes)
+│   │   ├── Part10A2-3_Ads_Format_Management.md         (Ads Format design + QR config)
+│   │   ├── Part10A2-4_Campaign_Lifecycle.md            (Draft → Publish → Active → Complete)
+│   │   ├── Part10A2-5_Analytics_Reporting.md           (Funnel + Location + Time-based + Export)
+│   │   ├── Part10A2-6_Collaboration_Approvals.md       (Comments + Version + Approvals)
+│   │   ├── Part10A2-7_AB_Testing_Optimization.md       (A/B test + Recommendations)
+│   │   ├── Part10A2-8_Integrations.md                  (CRM + Analytics + POS + Email/SMS)
+│   │   ├── Part10A2-9_RBAC_Permissions.md              (Roles + Permissions + Scoping)
+│   │   └── Part10A2-10_UX_Features_Metrics.md          (Shortcuts + Notifications + KPIs)
+│   ├── Part10A3_Serving_Account_Journey.md
+│   └── Part10A4_User_Portal_Journey.md
+```
 
-## 10.1 Tổng quan thiết kế UI/UX
+# Part10A1 - End User Journey (Scan to Redeem)
 
-### 10.1.1 Nguyên tắc thiết kế
-
-**Design Philosophy:**
-- 🎯 **Mobile-First**: Thiết kế cho mobile trước, scale up cho desktop
-- ⚡ **Performance-Oriented**: Tối ưu loading time và responsiveness
-- 🔍 **Accessibility-Compliant**: WCAG 2.1 AA standards
-- 🎨 **Brand-Consistent**: Consistent visual identity across platforms
-- 📱 **Progressive Web App**: Native app experience trên web
-
-**Core Design Principles:**
-
-| Nguyên tắc | Mô tả | Implementation |
-|------------|-------|----------------|
-| **Simplicity** | Interface đơn giản, clear navigation | Minimal design, clear CTAs |
-| **Consistency** | Consistent components across apps | Design system với reusable components |
-| **Feedback** | Clear feedback cho user actions | Loading states, success/error messages |
-| **Accessibility** | Usable by all users | Color contrast, keyboard navigation, screen readers |
-| **Performance** | Fast loading và smooth interactions | Optimized images, lazy loading, caching |
-
-### 10.1.2 Target Devices & Platforms
-
-**Device Support Matrix:**
-
-| Device Type | Screen Sizes | Primary Use Case | Design Priority |
-|-------------|--------------|------------------|-----------------|
-| **Mobile** | 375px - 414px | End user sampling journey | 🔴 Critical |
-| **Tablet** | 768px - 1024px | POS staff operations | 🟡 High |
-| **Desktop** | 1280px+ | Brand dashboard & admin | 🟡 High |
-| **Large Screen** | 1920px+ | Analytics & reporting | 🟠 Medium |
-
-**Browser Support:**
-- Chrome 90+ (65% market share)
-- Safari 14+ (20% market share)  
-- Firefox 88+ (8% market share)
-- Edge 90+ (5% market share)
+**Version**: 1.0  
+**Date**: 2025-10-17  
+**Author**: UX Design Team  
+**Reference**: `System_Feature_Tree.md`, `Access_Control_Tree.md`
 
 ---
 
-## 10.2 Design System Foundation
+## 10A1.1 Overview
 
-### 10.2.1 Color Palette
+Mô tả hành trình của **User Role (Khách hàng cuối)** từ khi scan QR code đến khi đổi quà thành công tại cửa hàng.
 
-**Primary Colors:**
-```css
-:root {
-  /* Brand Colors */
-  --primary-blue: #2563EB;      /* CTAs, links, brand elements */
-  --primary-dark: #1E40AF;      /* Hover states, emphasis */
-  --primary-light: #DBEAFE;     /* Backgrounds, subtle highlights */
-  
-  /* Semantic Colors */
-  --success-green: #059669;     /* Success messages, completed states */
-  --warning-orange: #D97706;    /* Warnings, pending states */
-  --error-red: #DC2626;         /* Errors, failed states */
-  --info-blue: #0284C7;         /* Information, neutral actions */
-  
-  /* Neutral Colors */
-  --gray-900: #111827;          /* Primary text */
-  --gray-700: #374151;          /* Secondary text */
-  --gray-500: #6B7280;          /* Placeholder text */
-  --gray-300: #D1D5DB;          /* Borders, dividers */
-  --gray-100: #F3F4F6;          /* Background, disabled states */
-  --white: #FFFFFF;             /* Backgrounds, cards */
+**Personas**: 
+- Khách hàng 18-45 tuổi
+- Sử dụng smartphone
+- Muốn nhận sản phẩm mẫu miễn phí
+
+**Success Criteria**:
+- Time to barcode: ≤ 60 seconds
+- Form completion rate: ≥ 90%
+- OTP success rate: ≥ 95%
+- Redemption rate: ≥ 85% (within 30 days)
+
+---
+
+## 10A1.2 Complete User Journey
+
+```mermaid
+flowchart TD
+    Start([👤 Khách hàng thấy QR<br/>tại cửa hàng/poster]) --> Scan[📱 Scan QR Code<br/>bằng camera điện thoại]
+    
+    Scan --> LoadLanding[⏳ Landing Page Loading<br/>Campaign ID từ QR]
+    LoadLanding --> CheckCampaign{✓ Campaign Active?}
+    
+    CheckCampaign -->|Không| Error1[❌ Campaign hết hạn<br/>hoặc không tồn tại]
+    CheckCampaign -->|Có| ViewProduct[👁️ Xem thông tin SP<br/>- Hình ảnh<br/>- Mô tả<br/>- Quyền lợi]
+    
+    ViewProduct --> HasQuiz{📋 Có Quick Quiz?}
+    
+    HasQuiz -->|Có| ShowQuiz[Hiển thị 2-3 câu hỏi<br/>- Preferences<br/>- Demographics]
+    HasQuiz -->|Không| ShowForm[📝 Form đăng ký]
+    
+    ShowQuiz --> AnswerQuiz[Khách trả lời quiz]
+    AnswerQuiz --> ShowForm
+    
+    ShowForm --> FillForm[Nhập thông tin:<br/>- Họ tên *<br/>- Email *<br/>- SĐT *]
+    FillForm --> CheckConsent[☑️ Đồng ý:<br/>- Marketing opt-in<br/>- Privacy policy]
+    
+    CheckConsent --> Captcha[🤖 reCAPTCHA v3<br/>Auto-verify]
+    Captcha --> CaptchaCheck{Score > 0.5?}
+    
+    CaptchaCheck -->|Không| Error2[❌ Suspected bot<br/>Manual verify]
+    CaptchaCheck -->|Có| Submit[📤 Submit Form]
+    
+    Submit --> Validate{✓ Validation?}
+    Validate -->|Lỗi| ShowError[❌ Hiển thị lỗi inline<br/>- Email sai format<br/>- SĐT không hợp lệ]
+    ShowError --> FillForm
+    
+    Validate -->|OK| SendOTP[📨 Gửi OTP<br/>SMS hoặc Email]
+    SendOTP --> OTPSent[✓ OTP đã gửi<br/>Hiển thị countdown 5min]
+    
+    OTPSent --> EnterOTP[🔢 Nhập mã OTP<br/>6 chữ số]
+    EnterOTP --> VerifyOTP{✓ OTP đúng?}
+    
+    VerifyOTP -->|Sai| CheckRetry{Còn retry?<br/>Max 3 lần}
+    CheckRetry -->|Có| RetryOTP[⚠️ Mã sai<br/>Thử lại]
+    RetryOTP --> EnterOTP
+    
+    CheckRetry -->|Hết| Error3[❌ Hết lượt thử<br/>Yêu cầu resend OTP]
+    Error3 --> ResendOption{Resend OTP?}
+    ResendOption -->|Có| SendOTP
+    ResendOption -->|Không| ContactSupport
+    
+    VerifyOTP -->|Đúng| CreateProfile[✅ Tạo User Profile<br/>Lưu vào DB]
+    CreateProfile --> IssueBarcode[🎟️ Cấp Barcode<br/>từ Campaign Pool]
+    
+    IssueBarcode --> GenerateQR[📲 Generate QR Code<br/>+ Barcode Number]
+    GenerateQR --> ShowBarcode[💳 Hiển thị Barcode<br/>Full screen]
+    
+    ShowBarcode --> SendNotif[📧📱 Gửi thông báo<br/>- Email với barcode<br/>- SMS với link]
+    SendNotif --> ShowPortalLink[🔗 Link User Portal<br/>Xem lịch sử & status]
+    
+    ShowPortalLink --> UserChoice{Khách chọn?}
+    UserChoice -->|Xem Portal| OpenPortal[🌐 Mở User Portal]
+    UserChoice -->|Đóng| SaveBarcode[💾 Lưu barcode<br/>vào Email/SMS]
+    
+    OpenPortal --> PortalHome[🏠 Portal Home<br/>Danh sách SP]
+    PortalHome --> ViewHistory[📜 Xem chi tiết SP<br/>- Product name<br/>- Expiry date<br/>- Status]
+    
+    ViewHistory --> CheckStatus{Trạng thái?}
+    CheckStatus -->|Chưa đổi| ShowRedeemInfo[ℹ️ Hướng dẫn đổi quà<br/>- Địa chỉ stores<br/>- Thời hạn]
+    CheckStatus -->|Đã đổi| ShowRedeemHistory[✅ Lịch sử đổi<br/>- Ngày đổi<br/>- Địa điểm]
+    
+    ShowRedeemInfo --> WaitRedeem[⏰ Chờ đến store đổi]
+    SaveBarcode --> WaitRedeem
+    
+    WaitRedeem --> GoToStore[🏪 Đến cửa hàng<br/>Mang barcode]
+    GoToStore --> ShowBarcodeStaff[👤 Đưa barcode<br/>cho nhân viên]
+    
+    ShowBarcodeStaff --> StaffScan[🔍 Staff scan code<br/>Serving Account]
+    StaffScan --> ValidateCode{✓ Code hợp lệ?}
+    
+    ValidateCode -->|Không hợp lệ| Error4[❌ Mã không tồn tại]
+    ValidateCode -->|Đã đổi rồi| Error5[❌ Đã redeem trước đó]
+    ValidateCode -->|Hết hạn| Error6[❌ Barcode hết hạn]
+    
+    Error4 --> ContactSupport[📞 Liên hệ Support<br/>Tạo ticket]
+    Error5 --> ContactSupport
+    Error6 --> ContactSupport
+    
+    ValidateCode -->|Hợp lệ| ConfirmRedeem[✅ Xác nhận đổi quà<br/>Staff confirm]
+    ConfirmRedeem --> UpdateStatus[🔄 Update Status<br/>REDEEMED]
+    
+    UpdateStatus --> GiveProduct[🎁 Trao sản phẩm<br/>cho khách hàng]
+    GiveProduct --> LogRedeem[📝 Log redemption<br/>- Timestamp<br/>- Location<br/>- Staff ID]
+    
+    LogRedeem --> SyncPortal[🔄 Sync User Portal<br/>Status update]
+    SyncPortal --> PortalNotif[📬 Push notification<br/>Bạn đã đổi quà thành công]
+    
+    PortalNotif --> RequestReview[⭐ Yêu cầu review<br/>Post-sampling survey]
+    RequestReview --> UserReview{Khách review?}
+    
+    UserReview -->|Có| SubmitReview[📝 Submit feedback<br/>NPS, Comments]
+    UserReview -->|Không| Skip
+    
+    SubmitReview --> Completed[✅ Hoàn thành Journey]
+    Skip --> Completed
+    ShowRedeemHistory --> Completed
+    
+    ContactSupport --> CreateTicket[🎫 Tạo support ticket<br/>Upload ảnh minh chứng]
+    CreateTicket --> TicketCreated[✅ Ticket đã tạo<br/>Chờ xử lý <48h]
+    TicketCreated --> Completed
+    
+    Error1 --> End([Kết thúc])
+    Error2 --> End
+    Completed --> End
+    
+    style Start fill:#e1f5ff
+    style ShowBarcode fill:#d4edda
+    style GiveProduct fill:#d4edda
+    style Completed fill:#d4edda
+    style Error1 fill:#f8d7da
+    style Error2 fill:#f8d7da
+    style Error3 fill:#f8d7da
+    style Error4 fill:#f8d7da
+    style Error5 fill:#f8d7da
+    style Error6 fill:#f8d7da
+```
+
+---
+
+## 10A1.3. Key Touchpoints
+
+### 10A1.3.1 Landing Page (First Impression)
+
+**Inputs**:
+- `campaign_id`: From QR code URL parameter
+- `utm_source`, `utm_medium`, `utm_campaign`: Tracking params
+- `location_id`: Store/booth location
+- `ads_format_id`: Which ads format used
+
+**Validation**:
+```typescript
+interface LandingPageValidation {
+  checkCampaignActive(campaignId: string): Promise<boolean>;
+  checkBarcodeAvailable(campaignId: string): Promise<boolean>;
+  checkLocationValid(locationId: string): Promise<boolean>;
 }
 ```
 
-**Color Usage Guidelines:**
-- **Accessibility**: Minimum 4.5:1 contrast ratio cho text
-- **Brand Recognition**: Primary blue cho all CTAs và brand elements
-- **Status Indication**: Consistent semantic colors cho system states
-- **Cultural Sensitivity**: Colors appropriate cho SEA markets
+**Exit Conditions**:
+- ❌ Campaign not active → Show error message
+- ❌ No barcodes left → Show "Hết mã" message
+- ✅ Valid → Proceed to form
 
-### 10.2.2 Typography Scale
+---
 
-**Font Hierarchy:**
-```css
-/* Font Family */
-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+### 10A1.3.2 Form Submission
 
-/* Type Scale */
---text-xs: 0.75rem;    /* 12px - Captions, labels */
---text-sm: 0.875rem;   /* 14px - Body text, secondary info */
---text-base: 1rem;     /* 16px - Primary body text */
---text-lg: 1.125rem;   /* 18px - Emphasized text */
---text-xl: 1.25rem;    /* 20px - Section headings */
---text-2xl: 1.5rem;    /* 24px - Page headings */
---text-3xl: 1.875rem;  /* 30px - Main headings */
---text-4xl: 2.25rem;   /* 36px - Hero text */
-
-/* Font Weights */
---font-normal: 400;
---font-medium: 500;
---font-semibold: 600;
---font-bold: 700;
-```
-
-### 10.2.3 Spacing System
-
-**8-Point Grid System:**
-```css
---space-1: 0.25rem;   /* 4px */
---space-2: 0.5rem;    /* 8px */
---space-3: 0.75rem;   /* 12px */
---space-4: 1rem;      /* 16px */
---space-5: 1.25rem;   /* 20px */
---space-6: 1.5rem;    /* 24px */
---space-8: 2rem;      /* 32px */
---space-10: 2.5rem;   /* 40px */
---space-12: 3rem;     /* 48px */
---space-16: 4rem;     /* 64px */
-```
-
-### 10.2.4 Component Library Specifications
-
-#### **Button Component Interface**
+**Data Collection**:
 ```typescript
-interface ButtonProps {
-  variant: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size: 'sm' | 'md' | 'lg';
-  state: 'default' | 'loading' | 'disabled';
-  icon?: IconName;
-  iconPosition?: 'left' | 'right';
-  fullWidth?: boolean;
-  onClick: () => void;
-  ariaLabel?: string;
+interface LandingFormData {
+  name: string;           // Min 2 chars, max 100
+  email: string;          // Valid email format
+  phone: string;          // Vietnamese phone (+84 or 0)
+  optInMarketing: boolean;
+  optInPrivacy: boolean;  // Required = true
+  quizAnswers?: Record<string, string>;
+  metadata: {
+    campaignId: string;
+    locationId: string;
+    adsFormatId: string;
+    deviceInfo: string;
+    timestamp: Date;
+  };
 }
 ```
 
-#### **Input Component Interface**
+**Validation Rules**:
 ```typescript
-interface InputProps {
-  type: 'text' | 'email' | 'tel' | 'password' | 'number';
+interface FormValidationRules {
+  name: {
+    required: true;
+    minLength: 2;
+    maxLength: 100;
+    pattern: /^[\p{L}\s]+$/u; // Unicode letters + spaces
+  };
+  email: {
+    required: true;
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    blacklist: ['tempmail.com', 'guerrillamail.com']; // Disposable emails
+  };
+  phone: {
+    required: true;
+    pattern: /^(0|\+84)[0-9]{9,10}$/;
+  };
+}
+```
+
+**Error Messages**:
+- `name.required`: "Vui lòng nhập họ và tên"
+- `email.invalid`: "Email không hợp lệ (ví dụ: name@example.com)"
+- `phone.invalid`: "Số điện thoại không hợp lệ (ví dụ: 0901234567)"
+- `optInPrivacy.required`: "Bạn cần đồng ý với chính sách bảo mật"
+
+---
+
+### 10A1.3.3 OTP Verification
+
+**Flow**:
+```typescript
+interface OTPVerification {
+  sendOTP(phone: string, email: string): Promise<OTPResponse>;
+  verifyOTP(userId: string, code: string): Promise<VerifyResult>;
+  resendOTP(userId: string): Promise<OTPResponse>;
+}
+
+interface OTPResponse {
+  success: boolean;
+  otpId: string;
+  expiresAt: Date;      // 5 minutes from now
+  retriesLeft: number;  // Max 3
+}
+
+interface VerifyResult {
+  success: boolean;
+  verified: boolean;
+  retriesLeft: number;
+  error?: 'INVALID_CODE' | 'EXPIRED' | 'MAX_RETRIES';
+}
+```
+
+**Security Rules**:
+- Max 3 OTP requests per phone/email per 15 minutes (rate limiting)
+- OTP expires after 5 minutes
+- Max 3 retry attempts per OTP
+- Lock user for 15 minutes after max retries exceeded
+
+---
+
+### 10A1.3.4 Barcode Issuance
+
+**Process**:
+```typescript
+interface BarcodeIssuance {
+  issueBarcode(userId: string, campaignId: string): Promise<Barcode>;
+  generateQRCode(barcode: Barcode): Promise<QRCodeData>;
+  sendNotification(user: User, barcode: Barcode): Promise<void>;
+}
+
+interface Barcode {
+  id: string;
+  code: string;           // 12-char alphanumeric
+  campaignId: string;
+  productName: string;
+  expiryDate: Date;
+  status: 'ISSUED' | 'REDEEMED' | 'EXPIRED';
+  issuedTo: string;       // userId
+  issuedAt: Date;
+  qrCodeUrl: string;
+}
+```
+
+**Barcode Display Requirements**:
+- QR code size: Min 200x200px, max 400x400px
+- Barcode number: Large font (24px), monospace
+- Clear contrast: Black on white background
+- Downloadable as PNG
+- Copy-to-clipboard functionality
+
+---
+
+### 10A1.3.5 User Portal Access
+
+**Portal Entry Points**:
+1. Link from barcode issue confirmation
+2. SMS/Email notification link
+3. Direct URL (requires login)
+
+**Authentication**:
+```typescript
+interface PortalAuth {
+  loginWithPhone(phone: string): Promise<OTPResponse>;
+  loginWithEmail(email: string): Promise<OTPResponse>;
+  verifyLogin(identifier: string, otp: string): Promise<AuthToken>;
+}
+
+interface AuthToken {
+  token: string;
+  userId: string;
+  expiresAt: Date;
+}
+```
+
+**Portal Features**:
+- View product history
+- Check barcode status
+- Download barcode QR
+- Set expiry reminders
+- Submit support tickets
+- Manage consent preferences
+
+---
+
+## 10A1.4. Error Handling & Recovery
+
+### 10A1.4.1 Common Errors
+
+```mermaid
+graph TD
+    Error[❌ Error Occurred] --> Type{Error Type?}
+    
+    Type -->|Network| NetworkError[Network Error<br/>- Offline mode<br/>- Retry logic]
+    Type -->|Validation| ValidationError[Validation Error<br/>- Inline messages<br/>- Field highlight]
+    Type -->|OTP| OTPError[OTP Error<br/>- Wrong code<br/>- Expired]
+    Type -->|Barcode| BarcodeError[Barcode Error<br/>- Already redeemed<br/>- Invalid]
+    
+    NetworkError --> Retry{Auto retry?}
+    Retry -->|Yes| Queue[Queue for sync]
+    Retry -->|No| ShowOffline[Show offline message]
+    
+    ValidationError --> Highlight[Highlight field]
+    Highlight --> ShowMessage[Show error message]
+    ShowMessage --> FocusField[Focus on field]
+    
+    OTPError --> CheckRetries{Retries left?}
+    CheckRetries -->|Yes| AllowRetry[Allow retry]
+    CheckRetries -->|No| OfferResend[Offer resend OTP]
+    
+    BarcodeError --> CheckType{Error type?}
+    CheckType -->|Redeemed| ShowHistory[Show redemption history]
+    CheckType -->|Invalid| CreateTicket[Create support ticket]
+    CheckType -->|Expired| ShowExpiry[Show expiry info]
+```
+
+### 10A1.4.2 Error Messages
+
+```typescript
+interface ErrorMessages {
+  network: {
+    offline: "Không có kết nối internet. Vui lòng kiểm tra và thử lại.";
+    timeout: "Yêu cầu quá thời gian. Vui lòng thử lại.";
+    serverError: "Lỗi hệ thống. Vui lòng thử lại sau vài phút.";
+  };
+  validation: {
+    nameRequired: "Vui lòng nhập họ và tên";
+    emailInvalid: "Email không hợp lệ (ví dụ: name@example.com)";
+    phoneInvalid: "Số điện thoại không hợp lệ (ví dụ: 0901234567)";
+    consentRequired: "Bạn cần đồng ý với chính sách bảo mật";
+  };
+  otp: {
+    invalid: "Mã OTP không đúng. Vui lòng kiểm tra lại.";
+    expired: "Mã OTP đã hết hạn. Vui lòng gửi mã mới.";
+    maxRetries: "Bạn đã nhập sai quá 3 lần. Vui lòng gửi mã mới.";
+  };
+  barcode: {
+    notFound: "Mã không tồn tại trong hệ thống.";
+    alreadyRedeemed: "Mã này đã được đổi quà lúc {date} tại {location}.";
+    expired: "Mã đã hết hạn vào {date}.";
+    campaignEnded: "Chiến dịch đã kết thúc.";
+  };
+}
+```
+
+---
+
+## 10A1.5. Success Metrics & KPIs
+
+### 10A1.5.1 Funnel Conversion
+
+```mermaid
+graph LR
+    Scan[QR Scan<br/>100%] -->|95%| Landing[Landing<br/>Load]
+    Landing -->|90%| Form[Form<br/>View]
+    Form -->|85%| Submit[Form<br/>Submit]
+    Submit -->|95%| OTP[OTP<br/>Success]
+    OTP -->|92%| Barcode[Barcode<br/>Issued]
+    Barcode -->|85%| Redeem[Redeemed<br/>in 30 days]
+    
+    style Scan fill:#e1f5ff
+    style Redeem fill:#d4edda
+```
+
+**Target Metrics**:
+```typescript
+interface FunnelMetrics {
+  scanToLanding: 95%;      // Technical issues
+  landingToForm: 90%;      // Bounce rate
+  formToSubmit: 85%;       // Form abandonment
+  submitToOTP: 95%;        // OTP delivery
+  otpToBarcode: 92%;       // OTP verification
+  barcodeToRedeem: 85%;    // Actual redemption
+  
+  overall: 60-65%;         // Scan to Redeem
+}
+```
+
+### 10A1.5.2 Time Metrics
+
+```typescript
+interface TimeMetrics {
+  scanToLanding: 2;        // seconds - Page load
+  landingToSubmit: 45;     // seconds - Fill form
+  submitToOTP: 5;          // seconds - OTP sent
+  otpToBarcode: 10;        // seconds - Verify + issue
+  
+  totalTimeToBarcode: 60;  // seconds - Target
+}
+```
+
+### 10A1.5.3 Quality Metrics
+
+```typescript
+interface QualityMetrics {
+  formCompletionRate: 90%; // Fill → Submit
+  otpSuccessRate: 95%;     // OTP → Verified
+  barcodeValidRate: 98%;   // Valid barcodes issued
+  redemptionRate: 85%;     // Issued → Redeemed
+  supportTicketRate: 5%;   // Issues reported
+}
+```
+
+---
+
+## 10A1.6. User Experience Principles
+
+### 10A1.6.1 Speed & Performance
+- Landing page load: < 2 seconds
+- Form interaction: < 100ms response
+- OTP delivery: < 5 seconds
+- Barcode generation: < 3 seconds
+
+### 10A1.6.2 Simplicity
+- Minimal required fields (Name, Email, Phone only)
+- Single-page form (no multi-step)
+- Clear visual hierarchy
+- Progressive disclosure (show quiz only if needed)
+
+### 10A1.6.3 Trust & Security
+- HTTPS everywhere
+- Clear privacy policy link
+- Visible security indicators (reCAPTCHA badge)
+- Transparent data usage
+
+### 10A1.6.4 Accessibility
+- WCAG 2.1 AA compliant
+- Screen reader friendly
+- Keyboard navigable
+- Touch-friendly (44px targets)
+
+### 10A1.6.5 Mobile-First
+- Responsive design
+- Touch gestures
+- Camera integration for QR scan
+- PWA capabilities
+
+---
+
+**Implementation Priority**:
+1. ✅ Landing page with form (MVP)
+2. ✅ OTP verification
+3. ✅ Barcode issuance
+4. ⏳ User Portal (Phase 2)
+5. ⏳ Post-redemption survey (Phase 2)
+
+---
+# Part10A2-1 - Overview & Dashboard
+
+**Version**: 1.0  
+**Date**: 2025-10-17  
+**Author**: UX Design Team  
+**Reference**: `System_Feature_Tree.md`, `Access_Control_Tree.md`
+
+---
+
+## 10A2-1.1 Overview
+
+Mô tả hành trình tổng quan của **Admin / Group Admin / Customer Account** khi truy cập hệ thống và tương tác với Dashboard.
+
+**Personas**:
+- Brand Marketing Manager (25-45 tuổi)
+- Agency Account Manager  
+- FMCG Product Manager
+
+**Roles Covered**:
+- **Admin**: Full system access, manage all campaigns globally
+- **Group Admin**: Manage campaigns within assigned group only
+- **Customer Account**: Manage own brand campaigns only
+
+**Key Objectives**:
+- Quick access to important metrics
+- Monitor campaign performance realtime
+- Navigate to key functions efficiently
+- Stay informed with notifications
+
+**Success Criteria**:
+- Dashboard load time: ≤ 3 seconds
+- Time to find key metric: ≤ 5 seconds
+- Navigation to any function: ≤ 2 clicks
+- Notification response time: < 1 second
+
+---
+
+## 10A2-1.2 Authentication Flow
+
+```mermaid
+flowchart TD
+    Start([🌐 Access Admin URL]) --> CheckSession{Session valid?}
+    
+    CheckSession -->|Có| Dashboard[📊 Dashboard Home]
+    CheckSession -->|Không| LoginPage[🔐 Login Page]
+    
+    LoginPage --> SelectMethod{Chọn phương thức}
+    
+    SelectMethod -->|Email/Pass| EmailLogin[📧 Email Login Form]
+    SelectMethod -->|SSO| SSOLogin[🔗 SSO Provider]
+    SelectMethod -->|OAuth| OAuthLogin[🔐 OAuth 2.0]
+    
+    EmailLogin --> EnterCreds[Nhập credentials]
+    EnterCreds --> ValidateCreds{✓ Valid?}
+    
+    ValidateCreds -->|Không| ShowError[❌ Invalid credentials]
+    ShowError --> EmailLogin
+    
+    ValidateCreds -->|Có| Check2FA{2FA enabled?}
+    
+    SSOLogin --> SSOAuth[SSO Authentication]
+    OAuthLogin --> OAuthAuth[OAuth Flow]
+    
+    SSOAuth --> Check2FA
+    OAuthAuth --> Check2FA
+    
+    Check2FA -->|Không| CreateSession[✅ Create Session]
+    Check2FA -->|Có| Send2FA[📱 Send 2FA Code]
+    
+    Send2FA --> Enter2FA[Nhập 2FA code]
+    Enter2FA --> Verify2FA{✓ Verify?}
+    
+    Verify2FA -->|Không| Retry2FA{Retries left?}
+    Retry2FA -->|Có| Enter2FA
+    Retry2FA -->|Không| Lock[🔒 Account locked]
+    Lock --> ContactSupport[📞 Contact Support]
+    
+    Verify2FA -->|Có| CreateSession
+    CreateSession --> CheckRole[🔍 Check User Role]
+    
+    CheckRole --> LoadPermissions[📋 Load Permissions]
+    LoadPermissions --> Dashboard
+    
+    Dashboard --> LogActivity[📝 Log login activity]
+    
+    ContactSupport --> End([End])
+    LogActivity --> End
+    
+    style Start fill:#e1f5ff
+    style Dashboard fill:#d4edda
+    style ShowError fill:#f8d7da
+    style Lock fill:#f8d7da
+```
+
+---
+
+## 10A2-1.3 Authentication Interfaces
+
+### 10A2-1.3.1 Login Credentials
+
+```typescript
+interface LoginCredentials {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+interface LoginValidation {
+  email: {
+    required: true;
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  };
+  password: {
+    required: true;
+    minLength: 8;
+    requireUppercase: true;
+    requireLowercase: true;
+    requireNumber: true;
+    requireSpecialChar: true;
+  };
+}
+```
+
+### 10A2-1.3.2 Two-Factor Authentication
+
+```typescript
+interface TwoFactorAuth {
+  method: 'SMS' | 'EMAIL' | 'AUTHENTICATOR_APP';
+  code: string;
+  maxRetries: 3;
+  expiryMinutes: 5;
+}
+
+interface TwoFactorSetup {
+  enabled: boolean;
+  method: 'SMS' | 'EMAIL' | 'AUTHENTICATOR_APP';
+  backupCodes: string[];
+  lastVerified: Date;
+}
+```
+
+### 10A2-1.3.3 Session Management
+
+```typescript
+interface UserSession {
+  sessionId: string;
+  userId: string;
+  role: 'ADMIN' | 'GROUP_ADMIN' | 'CUSTOMER_ACCOUNT';
+  groupId?: string;
+  permissions: Permission[];
+  createdAt: Date;
+  expiresAt: Date;
+  lastActivity: Date;
+  ipAddress: string;
+  userAgent: string;
+}
+
+interface SessionConfig {
+  timeout: number;              // 30 minutes idle timeout
+  maxDuration: number;          // 8 hours absolute timeout
+  renewOnActivity: boolean;     // Auto-renew on user activity
+  allowConcurrent: boolean;     // Allow multiple sessions
+  maxConcurrent: number;        // Max 3 concurrent sessions
+}
+```
+
+---
+
+## 10A2-1.4 Dashboard Home Layout
+
+```mermaid
+graph TD
+    subgraph "Dashboard Layout 1440px"
+        Sidebar[Sidebar 240px<br/>Collapsible]
+        Topbar[Topbar 64px<br/>User + Notifications]
+        Content[Main Content 1200px]
+    end
+    
+    subgraph "Content Area"
+        Header[Page Header<br/>Title + Actions]
+        Metrics[Metric Cards Row<br/>4 columns]
+        Funnel[Conversion Funnel<br/>Chart]
+        Table[Campaigns Table<br/>Sortable + Filterable]
+    end
+    
+    Sidebar --> Content
+    Topbar --> Content
+    Content --> Header
+    Header --> Metrics
+    Metrics --> Funnel
+    Funnel --> Table
+```
+
+---
+
+## 10A2-1.5 Dashboard Data Interfaces
+
+### 10A2-1.5.1 Overview Metrics
+
+```typescript
+interface DashboardOverview {
+  user: UserInfo;
+  timeRange: DateRange;
+  metrics: OverviewMetrics;
+  campaigns: CampaignSummary[];
+  recentActivity: ActivityLog[];
+  notifications: Notification[];
+}
+
+interface UserInfo {
+  id: string;
+  name: string;
+  email: string;
+  role: 'ADMIN' | 'GROUP_ADMIN' | 'CUSTOMER_ACCOUNT';
+  avatar?: string;
+  groupId?: string;
+  groupName?: string;
+  lastLogin: Date;
+}
+
+interface DateRange {
+  startDate: Date;
+  endDate: Date;
+  preset: 'TODAY' | 'LAST_7_DAYS' | 'LAST_30_DAYS' | 'LAST_90_DAYS' | 'CUSTOM';
+}
+
+interface OverviewMetrics {
+  activeCampaigns: MetricCard;
+  totalScans: MetricCard;
+  verifiedUsers: MetricCard;
+  redemptionRate: MetricCard;
+}
+
+interface MetricCard {
   label: string;
-  placeholder?: string;
-  helperText?: string;
-  error?: string;
-  required?: boolean;
-  disabled?: boolean;
-  maxLength?: number;
-  pattern?: string;
-  autoComplete?: string;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
-}
-```
-
----
-
-## 10.3 User Journey Flows
-
-### 10.3.1 End User Sampling Journey
-
-```mermaid
-graph TB
-    A[QR Code Scan] --> B[Landing Page]
-    B --> C[Product Information]
-    C --> D[Registration Form]
-    D --> E[OTP Verification]
-    E --> F[Barcode Display]
-    F --> G[User Portal Access]
-    
-    D --> D1[Form Validation]
-    E --> E1[OTP Retry]
-    F --> F1[Save to Wallet]
-    
-    style A fill:#e8f5e8
-    style F fill:#fff3e0
-    style G fill:#e3f2fd
-```
-
-**Key Screens trong User Journey:**
-1. **QR Scan Result** - Immediate product recognition
-2. **Landing Page** - Product showcase với clear value prop
-3. **Registration Form** - Minimal fields, smart validation
-4. **OTP Verification** - Clear instructions, retry options
-5. **Success Page** - Barcode display với next steps
-6. **User Portal** - Self-service dashboard
-
-### 10.3.2 Brand Dashboard Flow
-
-```mermaid
-graph TB
-    A[Login] --> B[Dashboard Overview]
-    B --> C[Campaign Management]
-    B --> D[Analytics & Reports]
-    B --> E[User Management]
-    
-    C --> C1[Create Campaign]
-    C --> C2[Upload Ads Format]
-    C --> C3[Manage Barcodes]
-    
-    D --> D1[Real-time Dashboard]
-    D --> D2[Export Data]
-    
-    style B fill:#e3f2fd
-    style D1 fill:#fff3e0
-```
-
-### 10.3.3 POS Staff Workflow
-
-```mermaid
-graph TB
-    A[Staff Login] --> B[Scan Mode]
-    B --> C[Barcode Validation]
-    C --> D[Product Confirmation]
-    D --> E[Redemption Complete]
-    
-    C --> C1[Invalid Barcode]
-    C1 --> C2[Manual Override]
-    
-    B --> B1[Offline Mode]
-    B1 --> B2[Queue for Sync]
-    
-    style B fill:#e8f5e8
-    style E fill:#fff3e0
-```
-
----
-
-## 10.4 Mobile Landing Page Design
-
-### 10.4.1 Landing Page Wireframe
-
-```mermaid
-graph TB
-    subgraph "Mobile Landing Page (375px)"
-        A[Header với Brand Logo]
-        B[Hero Product Image - 200px height]
-        C[Product Title - text-2xl bold]
-        D[Value Proposition - 2-3 lines]
-        E[Trust Indicators - security badges]
-        F[CTA Button - Nhận mẫu miễn phí]
-        G[Footer - Privacy policy links]
-    end
-    
-    A --> B --> C --> D --> E --> F --> G
-    
-    style B fill:#e8f5e8
-    style F fill:#fff3e0
-```
-
-**Landing Page Specifications:**
-
-| Element | Specifications | Notes |
-|---------|---------------|-------|
-| **Header Height** | 64px | Fixed height, brand logo centered |
-| **Hero Image** | 375x200px, 2x retina | WebP format, fallback to JPG |
-| **CTA Button** | 48px height, full width | Primary color, prominent placement |
-| **Loading Time** | <3 seconds on 3G | Image optimization critical |
-| **Conversion Goal** | >90% form completion | A/B test different layouts |
-
-### 10.4.2 Registration Form Design
-
-**Form Layout Specifications:**
-```css
-.registration-form {
-  max-width: 400px;
-  padding: var(--space-6);
-  gap: var(--space-4);
-}
-
-.form-field {
-  margin-bottom: var(--space-4);
-}
-
-.input-field {
-  height: 48px;           /* Touch-friendly */
-  border-radius: 8px;     /* Modern appearance */
-  border: 1px solid var(--gray-300);
-  padding: 0 var(--space-4);
-  font-size: var(--text-base);
-}
-
-.cta-button {
-  height: 48px;
-  border-radius: 8px;
-  background: var(--primary-blue);
-  color: var(--white);
-  font-weight: var(--font-semibold);
-  width: 100%;
-}
-```
-
-**Form Fields Interface:**
-```typescript
-interface RegistrationForm {
-  personalInfo: {
-    fullName: string;        // Required, max 100 chars
-    email: string;           // Required, email validation
-    phoneNumber: string;     // Required, Vietnam format (+84)
-    dateOfBirth?: Date;      // Optional, age verification
-    gender?: 'M' | 'F' | 'Other';
-  };
-  
-  preferences: {
-    interests?: string[];    // Multi-select from predefined list
-    dietaryRestrictions?: string[];
-    marketingConsent: boolean;    // Required
-    dataProcessingConsent: boolean; // Required
-  };
-  
-  quiz?: {
-    questions: QuizQuestion[];     // Campaign-specific
-    responses: string[];
-  };
-}
-```
-
----
-
-## 10.5 Brand Dashboard Interface
-
-### 10.5.1 Dashboard Layout Structure
-
-```mermaid
-graph TB
-    subgraph "Desktop Dashboard (1280px+)"
-        A[Top Navigation Bar - 64px]
-        B[Sidebar Navigation - 240px width]
-        C[Main Content Area]
-        D[Right Panel - 320px]
-    end
-    
-    subgraph "Main Content"
-        C1[Page Header với breadcrumbs]
-        C2[KPI Cards Row]
-        C3[Charts và Analytics]
-        C4[Data Tables]
-    end
-    
-    A --> C1
-    B --> C2
-    C --> C2 --> C3 --> C4
-    D --> C3
-    
-    style C2 fill:#e3f2fd
-    style C3 fill:#fff3e0
-```
-
-**Layout Specifications:**
-```css
-.dashboard-layout {
-  display: grid;
-  grid-template-areas: 
-    "sidebar header header"
-    "sidebar main right-panel";
-  grid-template-columns: 240px 1fr 320px;
-  grid-template-rows: 64px 1fr;
-  min-height: 100vh;
-}
-
-.sidebar {
-  grid-area: sidebar;
-  background: var(--white);
-  border-right: 1px solid var(--gray-200);
-}
-
-.main-content {
-  grid-area: main;
-  padding: var(--space-6);
-  overflow-y: auto;
-}
-```
-
-### 10.5.2 KPI Cards Interface
-
-```typescript
-interface KPICard {
-  title: string;
-  value: number | string;
-  format: 'number' | 'currency' | 'percentage';
-  trend?: {
-    direction: 'up' | 'down' | 'neutral';
+  value: number;
+  unit?: string;
+  change: {
     value: number;
-    period: string;
+    percentage: number;
+    trend: 'UP' | 'DOWN' | 'STABLE';
   };
-  status: 'success' | 'warning' | 'error' | 'neutral';
-  icon?: IconName;
-  clickable?: boolean;
-  loading?: boolean;
+  comparisonPeriod: string;    // "vs last 7 days"
+  icon: string;
+  color: string;
 }
-
-// Example KPI Cards
-const campaignKPIs: KPICard[] = [
-  {
-    title: "Total Scans",
-    value: 15420,
-    format: "number",
-    trend: { direction: "up", value: 12.5, period: "vs last week" },
-    status: "success",
-    icon: "qr-code"
-  },
-  {
-    title: "Conversion Rate", 
-    value: 64.03,
-    format: "percentage",
-    trend: { direction: "down", value: 2.1, period: "vs last week" },
-    status: "warning",
-    icon: "trending-up"
-  }
-];
 ```
 
-### 10.5.3 Navigation Menu Structure
+**Example Data**:
+```typescript
+const exampleMetrics: OverviewMetrics = {
+  activeCampaigns: {
+    label: "Active Campaigns",
+    value: 12,
+    change: { value: 2, percentage: 20, trend: "UP" },
+    comparisonPeriod: "vs last 7 days",
+    icon: "campaign",
+    color: "#4F46E5",
+  },
+  totalScans: {
+    label: "Total Scans",
+    value: 10245,
+    change: { value: 1230, percentage: 12, trend: "UP" },
+    comparisonPeriod: "vs last 7 days",
+    icon: "qr_code",
+    color: "#10B981",
+  },
+  verifiedUsers: {
+    label: "Verified Users",
+    value: 9220,
+    unit: "users",
+    change: { value: 738, percentage: 8, trend: "UP" },
+    comparisonPeriod: "vs last 7 days",
+    icon: "verified_user",
+    color: "#F59E0B",
+  },
+  redemptionRate: {
+    label: "Redemption Rate",
+    value: 85,
+    unit: "%",
+    change: { value: 3, percentage: 5, trend: "UP" },
+    comparisonPeriod: "vs last 7 days",
+    icon: "redeem",
+    color: "#EF4444",
+  },
+};
+```
+
+---
+
+### 10A2-1.5.2 Campaign Summary Table
 
 ```typescript
+interface CampaignSummary {
+  id: string;
+  name: string;
+  status: CampaignStatus;
+  startDate: Date;
+  endDate: Date;
+  progress: CampaignProgress;
+  performance: CampaignPerformance;
+  locations: number;
+  createdBy: string;
+  lastUpdated: Date;
+}
+
+enum CampaignStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  COMPLETED = 'COMPLETED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+interface CampaignProgress {
+  totalBarcodes: number;
+  issued: number;
+  redeemed: number;
+  percentIssued: number;
+  percentRedeemed: number;
+  daysRemaining: number;
+}
+
+interface CampaignPerformance {
+  scans: number;
+  conversionRate: number;      // % scan → verified
+  redemptionRate: number;       // % issued → redeemed
+  costPerLead: number;          // VND
+  roi: number;                  // %
+}
+```
+
+---
+
+### 10A2-1.5.3 Recent Activity Feed
+
+```typescript
+interface ActivityLog {
+  id: string;
+  type: ActivityType;
+  timestamp: Date;
+  userId: string;
+  userName: string;
+  action: string;
+  target?: ActivityTarget;
+  details?: string;
+  metadata?: Record<string, any>;
+}
+
+enum ActivityType {
+  CAMPAIGN_CREATED = 'CAMPAIGN_CREATED',
+  CAMPAIGN_PUBLISHED = 'CAMPAIGN_PUBLISHED',
+  CAMPAIGN_PAUSED = 'CAMPAIGN_PAUSED',
+  CAMPAIGN_COMPLETED = 'CAMPAIGN_COMPLETED',
+  BARCODE_IMPORTED = 'BARCODE_IMPORTED',
+  ADS_FORMAT_CREATED = 'ADS_FORMAT_CREATED',
+  USER_CREATED = 'USER_CREATED',
+  PERMISSION_CHANGED = 'PERMISSION_CHANGED',
+  REPORT_EXPORTED = 'REPORT_EXPORTED',
+  INTEGRATION_CONFIGURED = 'INTEGRATION_CONFIGURED',
+}
+
+interface ActivityTarget {
+  type: 'CAMPAIGN' | 'BARCODE' | 'USER' | 'REPORT' | 'INTEGRATION';
+  id: string;
+  name: string;
+  url?: string;
+}
+```
+
+---
+
+## 10A2-1.6 Sidebar Navigation
+
+```typescript
+interface NavigationMenu {
+  items: NavigationItem[];
+  collapsed: boolean;
+  width: number;              // 240px expanded, 60px collapsed
+}
+
 interface NavigationItem {
   id: string;
   label: string;
-  icon: IconName;
-  href?: string;
+  icon: string;
+  path: string;
+  badge?: NavigationBadge;
   children?: NavigationItem[];
-  permissions?: string[];
-  badge?: {
-    text: string;
-    variant: 'default' | 'success' | 'warning' | 'error';
-  };
+  requiredPermissions?: string[];
+  visible: boolean;
 }
 
+interface NavigationBadge {
+  value: number | string;
+  color: 'primary' | 'success' | 'warning' | 'error';
+  pulse?: boolean;           // Animated pulse effect
+}
+```
+
+**Menu Structure**:
+```typescript
 const navigationMenu: NavigationItem[] = [
   {
     id: 'dashboard',
-    label: 'Tổng quan',
-    icon: 'home',
-    href: '/dashboard'
+    label: 'Dashboard',
+    icon: 'dashboard',
+    path: '/dashboard',
+    visible: true,
   },
   {
     id: 'campaigns',
-    label: 'Quản lý Campaign',
-    icon: 'megaphone',
+    label: 'Campaigns',
+    icon: 'campaign',
+    path: '/campaigns',
+    badge: { value: 12, color: 'primary' },
     children: [
-      { id: 'campaigns-list', label: 'Danh sách Campaign', href: '/campaigns' },
-      { id: 'campaigns-create', label: 'Tạo Campaign mới', href: '/campaigns/create' },
-      { id: 'ads-formats', label: 'Ads Formats', href: '/campaigns/ads-formats' }
+      { id: 'all', label: 'All Campaigns', path: '/campaigns' },
+      { id: 'active', label: 'Active', path: '/campaigns?status=active' },
+      { id: 'draft', label: 'Drafts', path: '/campaigns?status=draft' },
     ],
-    permissions: ['campaign:read']
+    visible: true,
+  },
+  {
+    id: 'barcodes',
+    label: 'Barcodes',
+    icon: 'qr_code',
+    path: '/barcodes',
+    visible: true,
+  },
+  {
+    id: 'ads-formats',
+    label: 'Ads Formats',
+    icon: 'palette',
+    path: '/ads-formats',
+    visible: true,
+  },
+  {
+    id: 'locations',
+    label: 'Locations',
+    icon: 'location_on',
+    path: '/locations',
+    visible: true,
   },
   {
     id: 'analytics',
-    label: 'Báo cáo & Analytics',
-    icon: 'chart-bar',
-    href: '/analytics',
-    permissions: ['analytics:read']
-  }
+    label: 'Analytics',
+    icon: 'analytics',
+    path: '/analytics',
+    visible: true,
+  },
+  {
+    id: 'users',
+    label: 'Users',
+    icon: 'people',
+    path: '/users',
+    requiredPermissions: ['MANAGE_USERS'],
+    visible: false,           // Dynamic based on role
+  },
+  {
+    id: 'integrations',
+    label: 'Integrations',
+    icon: 'integration_instructions',
+    path: '/integrations',
+    requiredPermissions: ['CONFIGURE_INTEGRATIONS'],
+    visible: false,
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: 'settings',
+    path: '/settings',
+    visible: true,
+  },
 ];
 ```
 
 ---
 
-## 10.6 POS Interface Design
+## 10A2-1.7 Top Bar Components
 
-### 10.6.1 Mobile POS App Layout
-
-```mermaid
-graph TB
-    subgraph "Tablet POS (768px)"
-        A[Header với Location Info - 56px]
-        B[Scanner View Area - 400px]
-        C[Product Display Section]
-        D[Action Buttons Row]
-        E[Status Bar - 40px]
-    end
-    
-    B --> B1[Camera Feed]
-    B --> B2[Scan Overlay]
-    C --> C1[Product Details]
-    C --> C2[Customer Info]
-    D --> D1[Confirm Button]
-    D --> D2[Cancel Button]
-    
-    style B fill:#e8f5e8
-    style D1 fill:#fff3e0
-```
-
-**POS Component Interface:**
 ```typescript
-interface POSInterface {
-  scanner: {
-    startScan(): void;
-    stopScan(): void;
-    onScanResult: (barcode: string) => void;
-    onScanError: (error: Error) => void;
-  };
-  
-  display: {
-    showProduct(product: ProductInfo): void;
-    showCustomer(customer: CustomerInfo): void;
-    showStatus(status: ScanStatus): void;
-    showError(error: string): void;
-  };
-  
-  actions: {
-    confirmRedemption(): Promise<RedemptionResult>;
-    cancelRedemption(): void;
-    manualOverride(): void;
-    contactSupport(): void;
-  };
-  
-  offline: {
-    isOnline: boolean;
-    queueRedemption(data: OfflineRedemption): void;
-    syncPending(): Promise<SyncResult>;
-  };
+interface TopBar {
+  breadcrumbs: Breadcrumb[];
+  search: SearchConfig;
+  notifications: NotificationCenter;
+  userMenu: UserMenu;
+}
+
+interface Breadcrumb {
+  label: string;
+  path?: string;
+  active: boolean;
+}
+
+interface SearchConfig {
+  placeholder: string;
+  scope: 'ALL' | 'CAMPAIGNS' | 'USERS' | 'LOCATIONS';
+  shortcuts: SearchShortcut[];
+  recentSearches: string[];
+}
+
+interface SearchShortcut {
+  key: string;              // "Ctrl+K", "Cmd+K"
+  label: string;
+  action: string;
+}
+
+interface NotificationCenter {
+  unreadCount: number;
+  notifications: Notification[];
+  preferences: NotificationPreferences;
+}
+
+interface Notification {
+  id: string;
+  type: 'SUCCESS' | 'WARNING' | 'ERROR' | 'INFO';
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  actionUrl?: string;
+  actionLabel?: string;
+  metadata?: Record<string, any>;
+}
+
+interface UserMenu {
+  user: UserInfo;
+  items: UserMenuItem[];
+}
+
+interface UserMenuItem {
+  id: string;
+  label: string;
+  icon: string;
+  action: string;
+  divider?: boolean;
 }
 ```
 
-### 10.6.2 Scan Interface States
-
-**Scanner State Machine:**
+**User Menu Items**:
 ```typescript
-type ScannerState = 
-  | 'idle'           // Waiting for scan
-  | 'scanning'       // Camera active
-  | 'validating'     // Checking barcode
-  | 'success'        // Valid barcode found
-  | 'error'          // Invalid barcode
-  | 'offline';       // Network unavailable
+const userMenuItems: UserMenuItem[] = [
+  { id: 'profile', label: 'Profile', icon: 'person', action: '/profile' },
+  { id: 'settings', label: 'Settings', icon: 'settings', action: '/settings' },
+  { id: 'help', label: 'Help Center', icon: 'help', action: '/help' },
+  { id: 'divider1', divider: true },
+  { id: 'logout', label: 'Logout', icon: 'logout', action: 'LOGOUT' },
+];
+```
 
-interface ScannerStateConfig {
-  idle: {
-    message: "Hướng camera vào barcode";
-    actions: ['startScan'];
+---
+
+## 10A2-1.8 Quick Actions
+
+```typescript
+interface QuickActions {
+  visible: boolean;
+  position: 'FLOATING' | 'SIDEBAR' | 'TOPBAR';
+  actions: QuickAction[];
+}
+
+interface QuickAction {
+  id: string;
+  label: string;
+  icon: string;
+  action: string;
+  shortcut?: string;
+  requiredPermissions?: string[];
+}
+```
+
+**Default Quick Actions**:
+```typescript
+const quickActions: QuickAction[] = [
+  {
+    id: 'create-campaign',
+    label: 'Create Campaign',
+    icon: 'add_circle',
+    action: '/campaigns/create',
+    shortcut: 'C',
+    requiredPermissions: ['CREATE_CAMPAIGN'],
+  },
+  {
+    id: 'import-barcodes',
+    label: 'Import Barcodes',
+    icon: 'upload_file',
+    action: '/barcodes/import',
+    shortcut: 'I',
+    requiredPermissions: ['IMPORT_BARCODES'],
+  },
+  {
+    id: 'view-analytics',
+    label: 'View Analytics',
+    icon: 'analytics',
+    action: '/analytics',
+    shortcut: 'A',
+  },
+  {
+    id: 'export-data',
+    label: 'Export Data',
+    icon: 'download',
+    action: '/export',
+    shortcut: 'E',
+    requiredPermissions: ['EXPORT_DATA'],
+  },
+];
+```
+
+---
+
+## 10A2-1.9 Dashboard Refresh & Realtime Updates
+
+```typescript
+interface DashboardRefresh {
+  mode: 'MANUAL' | 'AUTO' | 'REALTIME';
+  interval?: number;          // Seconds for AUTO mode
+  lastRefresh: Date;
+  nextRefresh?: Date;
+}
+
+interface RealtimeConfig {
+  enabled: boolean;
+  transport: 'WEBSOCKET' | 'SSE' | 'POLLING';
+  reconnect: boolean;
+  reconnectInterval: number;
+  events: RealtimeEvent[];
+}
+
+interface RealtimeEvent {
+  type: string;
+  handler: string;
+  priority: 'HIGH' | 'NORMAL' | 'LOW';
+}
+```
+
+**Realtime Events**:
+```typescript
+const realtimeEvents: RealtimeEvent[] = [
+  {
+    type: 'CAMPAIGN_STATUS_CHANGED',
+    handler: 'updateCampaignStatus',
+    priority: 'HIGH',
+  },
+  {
+    type: 'NEW_SCAN',
+    handler: 'incrementScanCount',
+    priority: 'NORMAL',
+  },
+  {
+    type: 'NEW_REDEMPTION',
+    handler: 'incrementRedemptionCount',
+    priority: 'NORMAL',
+  },
+  {
+    type: 'BARCODE_POOL_LOW',
+    handler: 'showLowInventoryAlert',
+    priority: 'HIGH',
+  },
+  {
+    type: 'EXPORT_READY',
+    handler: 'showExportNotification',
+    priority: 'NORMAL',
+  },
+];
+```
+
+---
+
+## 10A2-1.10 Success Metrics
+
+```typescript
+interface DashboardMetrics {
+  performance: {
+    loadTime: number;              // Target: < 3s
+    timeToInteractive: number;     // Target: < 5s
+    apiResponseTime: number;       // Target: < 500ms
   };
-  scanning: {
-    message: "Đang quét barcode...";
-    actions: ['stopScan'];
+  usability: {
+    timeToFindMetric: number;      // Target: < 5s
+    navigationClicks: number;      // Target: < 2 clicks
+    errorRate: number;             // Target: < 1%
   };
-  validating: {
-    message: "Đang kiểm tra...";
-    actions: [];
-  };
-  success: {
-    message: "Barcode hợp lệ";
-    actions: ['confirm', 'cancel'];
-  };
-  error: {
-    message: "Barcode không hợp lệ";
-    actions: ['retry', 'manualEntry'];
-  };
-  offline: {
-    message: "Chế độ offline";
-    actions: ['offlineRedeem', 'retry'];
+  engagement: {
+    avgSessionDuration: number;    // Minutes
+    pagesPerSession: number;
+    returnRate: number;            // %
   };
 }
 ```
 
 ---
 
-## 10.7 User Portal PWA Design
+## 10A2-1.11 Next Steps
 
-### 10.7.1 Portal Navigation Structure
+**Related Documents**:
+- `Part10A2-2_Campaign_Creation.md` - Campaign creation workflow
+- `Part10A2-5_Analytics_Reporting.md` - Analytics dashboard details
+- `Part10A2-9_RBAC_Permissions.md` - Permission system
+- `Part10B2_Admin_Dashboard_Desktop.md` - Dashboard wireframes
+
+**Implementation Priority**:
+1. ✅ Authentication flow (MVP)
+2. ✅ Dashboard layout (MVP)
+3. ✅ Metric cards (MVP)
+4. ✅ Navigation menu (MVP)
+5. ⏳ Realtime updates (Phase 2)
+6. ⏳ Quick actions (Phase 2)
+
+---
+
+**Document Status**: ✅ Complete  
+**Last Updated**: 2025-10-17  
+**Next Review**: 2025-11-01
+**Next Review**: 2025-11-01
+
+# Part10A2-2 - Campaign Creation
+
+**Version**: 1.0  
+**Date**: 2025-10-17  
+**Author**: UX Design Team  
+**Reference**: `System_Feature_Tree.md`, `Access_Control_Tree.md`
+
+---
+
+## 10A2-2.1 Overview
+
+Mô tả quy trình tạo chiến dịch sampling từ đầu, bao gồm các bước: Basic Info → Duration → Locations → Barcodes.
+
+**Goals**:
+- Tạo campaign trong < 2 ngày
+- Form completion rate > 95%
+- Validation error rate < 5%
+- Draft save success rate 100%
+
+**Key Features**:
+- Multi-step wizard với progress indicator
+- Auto-save drafts every 30 seconds
+- Validation at each step
+- Preview before publish
+
+---
+
+## 10A2-2.2 Campaign Creation Flow
 
 ```mermaid
-graph TB
-    subgraph "User Portal PWA"
-        A[Bottom Tab Navigation]
-        B[Home Dashboard]
-        C[My Samples]
-        D[Notifications] 
-        E[Profile Settings]
-    end
+flowchart TD
+    Start([➕ Click Create Campaign]) --> CheckPerm{✓ Permission?}
     
-    A --> B
-    A --> C
-    A --> D
-    A --> E
+    CheckPerm -->|Không| NoPermission[❌ No permission<br/>Contact Admin]
+    CheckPerm -->|Có| InitForm[📝 Initialize Form<br/>Load Draft if exists]
     
-    C --> C1[Active Samples]
-    C --> C2[Redeemed History]
-    C --> C3[Expired Samples]
+    InitForm --> Step1[Step 1: Basic Info]
     
-    style B fill:#e3f2fd
-    style C fill:#e8f5e8
+    Step1 --> FillBasic[Nhập thông tin cơ bản:<br/>- Campaign name *<br/>- Description<br/>- Product name *<br/>- Product image *<br/>- Category *]
+    
+    FillBasic --> ValidateBasic{✓ Valid?}
+    ValidateBasic -->|Không| ShowBasicErrors[❌ Show errors inline]
+    ShowBasicErrors --> FillBasic
+    
+    ValidateBasic -->|Có| AutoSave1[💾 Auto-save draft]
+    AutoSave1 --> Step2[Step 2: Duration]
+    
+    Step2 --> FillDuration[Chọn thời gian:<br/>- Start date *<br/>- End date *<br/>- Timezone<br/>- Auto-expire toggle]
+    
+    FillDuration --> ValidateDuration{✓ Valid?}
+    ValidateDuration -->|Không| ShowDurationErrors[❌ Date range invalid<br/>End must be > Start]
+    ShowDurationErrors --> FillDuration
+    
+    ValidateDuration -->|Có| AutoSave2[💾 Auto-save draft]
+    AutoSave2 --> Step3[Step 3: Locations]
+    
+    Step3 --> SelectMode{Chọn mode?}
+    
+    SelectMode -->|Manual| ManualSelect[🗺️ Map view<br/>Click to select stores]
+    SelectMode -->|CSV| ImportCSV[📤 Upload CSV<br/>location_ids]
+    SelectMode -->|Filter| FilterSelect[🔍 Filter by:<br/>- Region<br/>- Store type<br/>- Footfall]
+    
+    ManualSelect --> SelectedLocations[📍 Selected: X locations]
+    ImportCSV --> ValidateLocationCSV{✓ CSV valid?}
+    FilterSelect --> SelectedLocations
+    
+    ValidateLocationCSV -->|Không| CSVError[❌ CSV errors<br/>Download error report]
+    CSVError --> ImportCSV
+    ValidateLocationCSV -->|Có| SelectedLocations
+    
+    SelectedLocations --> CheckMinLoc{≥ 1 location?}
+    CheckMinLoc -->|Không| NoLocation[⚠️ Select at least 1]
+    NoLocation --> Step3
+    
+    CheckMinLoc -->|Có| AutoSave3[💾 Auto-save draft]
+    AutoSave3 --> Step4[Step 4: Barcodes]
+    
+    Step4 --> BarcodeMode{Có barcode CSV?}
+    
+    BarcodeMode -->|Có| UploadBarcode[📤 Upload CSV]
+    BarcodeMode -->|Chưa| SkipBarcode[⏭️ Skip for now<br/>Import later]
+    
+    UploadBarcode --> ParseCSV[🔍 Parse & Validate CSV]
+    ParseCSV --> ValidateBarcode{✓ Valid?}
+    
+    ValidateBarcode -->|Không| BarcodeErrors[❌ Show errors:<br/>- Missing columns<br/>- Duplicate codes<br/>- Invalid format<br/>- Expired dates]
+    BarcodeErrors --> FixOption{Fix errors?}
+    
+    FixOption -->|Download report| DownloadErrors[📥 Download error CSV]
+    DownloadErrors --> UploadBarcode
+    FixOption -->|Import valid only| ImportPartial[⚠️ Import X valid rows<br/>Skip Y errors]
+    FixOption -->|Cancel| UploadBarcode
+    
+    ValidateBarcode -->|Có| PreviewBarcode[👁️ Preview first 10 rows]
+    PreviewBarcode --> ConfirmImport{Confirm import?}
+    
+    ConfirmImport -->|Không| UploadBarcode
+    ConfirmImport -->|Có| ProcessImport[⚙️ Process import<br/>Progress bar]
+    ImportPartial --> ProcessImport
+    
+    ProcessImport --> ImportComplete[✅ Import complete<br/>X barcodes added]
+    SkipBarcode --> ImportComplete
+    
+    ImportComplete --> AutoSave4[💾 Auto-save draft]
+    AutoSave4 --> ReviewCampaign[📋 Review Summary]
+    
+    ReviewCampaign --> ShowSummary[Hiển thị tổng hợp:<br/>✓ Basic info<br/>✓ Duration<br/>✓ X locations<br/>✓ Y barcodes]
+    
+    ShowSummary --> FinalAction{Chọn action?}
+    
+    FinalAction -->|Edit| EditWhat{Edit gì?}
+    EditWhat -->|Basic| Step1
+    EditWhat -->|Duration| Step2
+    EditWhat -->|Locations| Step3
+    EditWhat -->|Barcodes| Step4
+    
+    FinalAction -->|Save Draft| SaveDraft[💾 Save as Draft]
+    SaveDraft --> DraftSaved[✅ Draft saved<br/>Status: DRAFT]
+    
+    FinalAction -->|Publish| PrePublishCheck[🔍 Pre-publish validation]
+    
+    PrePublishCheck --> CheckAll{All required?}
+    CheckAll -->|Không| MissingFields[❌ Missing required:<br/>List missing items]
+    MissingFields --> ReviewCampaign
+    
+    CheckAll -->|Có| ConfirmPublish{Confirm publish?}
+    ConfirmPublish -->|Không| ReviewCampaign
+    ConfirmPublish -->|Có| PublishCampaign[🚀 Publish Campaign]
+    
+    PublishCampaign --> SetActive[✅ Status = ACTIVE]
+    SetActive --> SendNotifs[📧 Send notifications]
+    SendNotifs --> ShowSuccess[✅ Campaign published!<br/>View campaign →]
+    
+    DraftSaved --> End([End])
+    ShowSuccess --> End
+    NoPermission --> End
+    
+    style Start fill:#e1f5ff
+    style ShowSuccess fill:#d4edda
+    style DraftSaved fill:#d4edda
+    style NoPermission fill:#f8d7da
+    style ShowBasicErrors fill:#f8d7da
+    style ShowDurationErrors fill:#f8d7da
+    style CSVError fill:#f8d7da
+    style BarcodeErrors fill:#f8d7da
+    style MissingFields fill:#f8d7da
 ```
 
-**PWA Features Interface:**
+---
+
+## 10A2-2.3 Step 1: Basic Information
+
+### 10A2-2.3.1 Form Interface
+
 ```typescript
-interface PWAFeatures {
-  install: {
-    isInstallable: boolean;
-    promptInstall(): void;
-    onInstallPrompt: (event: InstallPromptEvent) => void;
+interface CampaignBasicInfo {
+  name: string;
+  description?: string;
+  productName: string;
+  productImage: File;
+  category: string;
+  tags?: string[];
+  brand?: string;              // Auto-filled from account
+}
+
+interface BasicInfoValidation {
+  name: {
+    required: true;
+    minLength: 3;
+    maxLength: 100;
+    pattern: /^[\p{L}\p{N}\s\-_]+$/u;  // Letters, numbers, spaces, dash, underscore
+    unique: true;                       // Unique within group/account
   };
-  
-  notifications: {
-    requestPermission(): Promise<NotificationPermission>;
-    subscribe(): Promise<PushSubscription>;
-    showNotification(data: NotificationData): void;
+  productName: {
+    required: true;
+    minLength: 2;
+    maxLength: 200;
   };
-  
-  offline: {
-    isOnline: boolean;
-    cacheStrategy: 'cache-first' | 'network-first';
-    syncWhenOnline(): Promise<void>;
+  productImage: {
+    required: true;
+    maxSize: 5 * 1024 * 1024;          // 5MB
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'];
+    aspectRatio: '16:9';
+    minWidth: 1280;
+    minHeight: 720;
   };
-  
-  storage: {
-    saveUserData(data: UserData): void;
-    getUserData(): UserData | null;
-    clearData(): void;
+  category: {
+    required: true;
+    enum: ProductCategory[];
+  };
+}
+
+enum ProductCategory {
+  FOOD = 'FOOD',
+  BEVERAGE = 'BEVERAGE',
+  PERSONAL_CARE = 'PERSONAL_CARE',
+  HOUSEHOLD = 'HOUSEHOLD',
+  HEALTH = 'HEALTH',
+  BEAUTY = 'BEAUTY',
+  BABY = 'BABY',
+  PET = 'PET',
+  OTHER = 'OTHER',
+}
+```
+
+### 10A2-2.3.2 Error Messages
+
+```typescript
+interface BasicInfoErrors {
+  name: {
+    required: "Vui lòng nhập tên chiến dịch";
+    minLength: "Tên phải có ít nhất 3 ký tự";
+    maxLength: "Tên không được quá 100 ký tự";
+    pattern: "Tên chỉ được chứa chữ, số, khoảng trắng và dấu gạch ngang";
+    unique: "Tên chiến dịch đã tồn tại. Vui lòng chọn tên khác";
+  };
+  productImage: {
+    required: "Vui lòng tải lên hình ảnh sản phẩm";
+    maxSize: "Kích thước file không được vượt quá 5MB";
+    allowedTypes: "Chỉ chấp nhận file JPG, PNG hoặc WebP";
+    aspectRatio: "Hình ảnh phải có tỷ lệ 16:9";
+    minDimensions: "Kích thước tối thiểu: 1280x720 pixels";
+  };
+  category: {
+    required: "Vui lòng chọn danh mục sản phẩm";
   };
 }
 ```
 
-### 10.7.2 Sample Card Component
+---
+
+## 10A2-2.4 Step 2: Duration & Schedule
+
+### 10A2-2.4.1 Schedule Interface
 
 ```typescript
-interface SampleCardProps {
-  sample: {
-    id: string;
+interface CampaignSchedule {
+  startDate: Date;
+  endDate: Date;
+  timezone: string;
+  autoExpireBarcodes: boolean;
+  reminderSchedule?: ReminderConfig;
+  advancedSchedule?: AdvancedSchedule;
+}
+
+interface ReminderConfig {
+  enabled: boolean;
+  daysBefore: number;          // Send reminder N days before expiry
+  channels: ('EMAIL' | 'SMS' | 'PUSH')[];
+  customMessage?: string;
+}
+
+interface AdvancedSchedule {
+  activeDaysOfWeek?: number[];     // 0-6 (Sunday-Saturday)
+  activeHoursStart?: string;       // "09:00"
+  activeHoursEnd?: string;         // "21:00"
+  excludeDates?: Date[];           // Holidays, etc.
+}
+
+interface ScheduleValidation {
+  startDate: {
+    required: true;
+    minDate: 'today';                // Must be >= today
+  };
+  endDate: {
+    required: true;
+    minDate: 'startDate';            // Must be > startDate
+    minDuration: 1;                  // At least 1 day
+    maxDuration: 365;                // Max 1 year
+  };
+  timezone: {
+    required: true;
+    enum: TimezoneList[];
+  };
+}
+```
+
+### 10A2-2.4.2 Date Validation
+
+```typescript
+interface DateValidationRules {
+  checkStartDate(date: Date): ValidationResult;
+  checkEndDate(startDate: Date, endDate: Date): ValidationResult;
+  checkDuration(startDate: Date, endDate: Date): ValidationResult;
+  checkConflicts(campaignId: string, dates: DateRange): ValidationResult;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
+  warning?: string;
+}
+```
+
+**Example Validations**:
+```typescript
+const dateValidations = {
+  startDateInPast: {
+    valid: false,
+    error: "Ngày bắt đầu không được là ngày trong quá khứ"
+  },
+  endDateBeforeStart: {
+    valid: false,
+    error: "Ngày kết thúc phải sau ngày bắt đầu"
+  },
+  durationTooShort: {
+    valid: false,
+    error: "Chiến dịch phải kéo dài ít nhất 1 ngày"
+  },
+  durationTooLong: {
+    valid: false,
+    error: "Chiến dịch không được dài quá 365 ngày",
+    warning: "Chiến dịch dài hạn có thể ảnh hưởng đến hiệu quả"
+  },
+  dateConflict: {
+    valid: true,
+    warning: "Có 2 chiến dịch khác đang chạy cùng thời gian tại các địa điểm trùng lặp"
+  }
+};
+```
+
+---
+
+## 10A2-2.5 Step 3: Location Selection
+
+### 10A2-2.5.1 Location Interfaces
+
+```typescript
+interface LocationSelection {
+  mode: 'MANUAL' | 'CSV_IMPORT' | 'FILTER' | 'ALL';
+  selectedLocations: string[];
+  filters?: LocationFilters;
+  totalSelected: number;
+}
+
+interface Location {
+  id: string;
+  name: string;
+  address: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  storeType: StoreType;
+  region: string;
+  estimatedFootfall: number;
+  capacity: number;            // Max samples this location can handle
+  status: 'ACTIVE' | 'INACTIVE' | 'TEMPORARILY_CLOSED';
+}
+
+enum StoreType {
+  CONVENIENCE_STORE = 'CONVENIENCE_STORE',    // Circle K, GS25
+  SUPERMARKET = 'SUPERMARKET',                // VinMart, Co.op
+  HYPERMARKET = 'HYPERMARKET',                // Big C, Lotte
+  BOOTH = 'BOOTH',                            // Event booth
+  PHARMACY = 'PHARMACY',
+  CAFE = 'CAFE',
+  OTHER = 'OTHER',
+}
+
+interface LocationFilters {
+  regions?: string[];
+  storeTypes?: StoreType[];
+  minFootfall?: number;
+  maxFootfall?: number;
+  capacity?: {
+    min?: number;
+    max?: number;
+  };
+  status?: ('ACTIVE' | 'INACTIVE')[];
+}
+```
+
+### 10A2-2.5.2 Selection Methods
+
+**Manual Selection (Map View)**:
+```typescript
+interface MapSelection {
+  center: Coordinates;
+  zoom: number;
+  markers: LocationMarker[];
+  selectedMarkerIds: string[];
+  clustered: boolean;
+}
+
+interface LocationMarker {
+  id: string;
+  position: Coordinates;
+  selected: boolean;
+  icon: string;
+  label?: string;
+  popup?: LocationPopup;
+}
+
+interface LocationPopup {
+  name: string;
+  address: string;
+  storeType: string;
+  footfall: number;
+  actions: MarkerAction[];
+}
+
+interface MarkerAction {
+  label: string;
+  action: 'SELECT' | 'DESELECT' | 'VIEW_DETAILS';
+}
+```
+
+**CSV Import**:
+```typescript
+interface LocationCSVImport {
+  file: File;
+  format: 'LOCATION_ID' | 'LOCATION_NAME' | 'ADDRESS';
+  mapping?: CSVMapping;
+}
+
+interface CSVMapping {
+  idColumn?: string;
+  nameColumn?: string;
+  addressColumn?: string;
+}
+
+interface LocationCSVValidation {
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  errors: LocationCSVError[];
+  matchedLocations: Location[];
+  unmatchedRows: number[];
+}
+
+interface LocationCSVError {
+  row: number;
+  column: string;
+  value: any;
+  error: 'NOT_FOUND' | 'INACTIVE' | 'DUPLICATE' | 'INVALID_FORMAT';
+  message: string;
+}
+```
+
+**Filter Selection**:
+```typescript
+interface FilterSelection {
+  activeFilters: LocationFilters;
+  matchedCount: number;
+  previewLocations: Location[];      // First 20 matches
+  totalPages: number;
+}
+```
+
+---
+
+## 10A2-2.6 Step 4: Barcode Import
+
+### 10A2-2.6.1 Barcode CSV Interface
+
+```typescript
+interface BarcodeCSVImport {
+  file: File;
+  encoding: 'UTF-8' | 'UTF-16' | 'ISO-8859-1';
+  delimiter: ',' | ';' | '\t' | '|';
+  hasHeader: boolean;
+  columns: BarcodeCSVColumns;
+}
+
+interface BarcodeCSVColumns {
+  barcode: string;              // Required column name
+  product_name: string;         // Required
+  expiry_date: string;          // Required
+  value?: string;               // Optional
+  batch_code?: string;          // Optional
+  notes?: string;               // Optional
+}
+
+interface BarcodeCSVRow {
+  barcode: string;              // 12-char alphanumeric, unique
+  product_name: string;
+  expiry_date: string;          // ISO format: YYYY-MM-DD
+  value?: number;               // VND
+  batch_code?: string;
+  notes?: string;
+}
+```
+
+### 10A2-2.6.2 Barcode Validation
+
+```typescript
+interface BarcodeValidation {
+  checkFormat(barcode: string): ValidationResult;
+  checkDuplicates(barcodes: string[]): string[];
+  checkExpiryDate(date: string): ValidationResult;
+  checkExistingCodes(barcodes: string[]): string[];
+}
+
+interface BarcodeValidationRules {
+  barcode: {
+    required: true;
+    length: 12;
+    pattern: /^[A-Z0-9]{12}$/;      // Uppercase letters and numbers only
+    unique: true;
+  };
+  product_name: {
+    required: true;
+    maxLength: 200;
+  };
+  expiry_date: {
+    required: true;
+    format: 'YYYY-MM-DD';
+    minDate: 'today';               // Must be in future
+  };
+  value: {
+    required: false;
+    min: 0;
+    max: 1000000;                   // 1M VND
+  };
+}
+```
+
+### 10A2-2.6.3 Import Process
+
+```typescript
+interface BarcodeImportProcess {
+  step: 'UPLOAD' | 'PARSE' | 'VALIDATE' | 'PREVIEW' | 'IMPORT' | 'COMPLETE';
+  progress: number;                  // 0-100
+  status: 'IDLE' | 'PROCESSING' | 'SUCCESS' | 'ERROR';
+  result?: BarcodeImportResult;
+}
+
+interface BarcodeImportResult {
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  duplicateRows: number;
+  expiredRows: number;
+  existingCodes: number;
+  imported: number;
+  errors: BarcodeImportError[];
+  warnings: BarcodeImportWarning[];
+}
+
+interface BarcodeImportError {
+  row: number;
+  column: string;
+  value: any;
+  error: ErrorType;
+  message: string;
+}
+
+enum ErrorType {
+  MISSING_REQUIRED = 'MISSING_REQUIRED',
+  INVALID_FORMAT = 'INVALID_FORMAT',
+  DUPLICATE = 'DUPLICATE',
+  ALREADY_EXISTS = 'ALREADY_EXISTS',
+  EXPIRED = 'EXPIRED',
+  INVALID_VALUE = 'INVALID_VALUE',
+}
+
+interface BarcodeImportWarning {
+  row: number;
+  column: string;
+  value: any;
+  warning: WarningType;
+  message: string;
+}
+
+enum WarningType {
+  NEAR_EXPIRY = 'NEAR_EXPIRY',        // Expires in < 30 days
+  HIGH_VALUE = 'HIGH_VALUE',          // Value > 100K VND
+  MISSING_OPTIONAL = 'MISSING_OPTIONAL',
+}
+```
+
+---
+
+## 10A2-2.7 Auto-Save & Draft Management
+
+### 10A2-2.7.1 Auto-Save Configuration
+
+```typescript
+interface AutoSaveConfig {
+  enabled: boolean;
+  interval: number;              // Seconds (default: 30)
+  saveOnChange: boolean;         // Save immediately on field change
+  saveOnNavigate: boolean;       // Save before leaving page
+  showIndicator: boolean;        // Show "Saving..." indicator
+}
+
+interface DraftState {
+  campaignId: string;
+  lastSaved: Date;
+  version: number;
+  data: Partial<CampaignDraft>;
+  status: 'SAVING' | 'SAVED' | 'ERROR';
+}
+
+interface CampaignDraft {
+  basicInfo?: CampaignBasicInfo;
+  schedule?: CampaignSchedule;
+  locations?: LocationSelection;
+  barcodes?: {
+    imported: boolean;
+    count: number;
+    fileMetadata?: FileMetadata;
+  };
+  step: number;                  // Current step (1-4)
+  completedSteps: number[];      // Steps that passed validation
+}
+
+interface FileMetadata {
+  filename: string;
+  size: number;
+  uploadedAt: Date;
+  checksum: string;
+}
+```
+
+### 10A2-2.7.2 Draft Operations
+
+```typescript
+interface DraftOperations {
+  saveDraft(data: Partial<CampaignDraft>): Promise<DraftState>;
+  loadDraft(campaignId: string): Promise<CampaignDraft | null>;
+  deleteDraft(campaignId: string): Promise<void>;
+  listDrafts(userId: string): Promise<DraftSummary[]>;
+}
+
+interface DraftSummary {
+  campaignId: string;
+  name: string;
+  lastSaved: Date;
+  progress: number;              // % completion (0-100)
+  step: number;
+  canResume: boolean;
+}
+```
+
+---
+
+## 10A2-2.8 Review & Summary
+
+### 10A2-2.8.1 Summary Interface
+
+```typescript
+interface CampaignSummary {
+  basicInfo: {
+    name: string;
     productName: string;
-    productImage: string;
-    campaignName: string;
-    status: 'active' | 'redeemed' | 'expired';
-    issuedAt: Date;
-    expiryDate: Date;
-    qrCodeUrl?: string;
-    redemptionDetails?: {
-      redeemedAt: Date;
-      location: string;
+    category: string;
+    imageUrl: string;
+  };
+  schedule: {
+    startDate: Date;
+    endDate: Date;
+    duration: number;            // Days
+    timezone: string;
+  };
+  locations: {
+    count: number;
+    regions: string[];
+    storeTypes: string[];
+    preview: Location[];         // First 5 locations
+  };
+  barcodes: {
+    count: number;
+    nearExpiry: number;         // Expire in < 30 days
+    status: 'IMPORTED' | 'PENDING' | 'NONE';
+  };
+  estimated: {
+    reach: number;              // Estimated users
+    cost: number;               // Estimated total cost
+    costPerLead: number;        // Estimated CPL
+  };
+}
+```
+
+### 10A2-2.8.2 Pre-Publish Checklist
+
+```typescript
+interface PrePublishChecklist {
+  items: ChecklistItem[];
+  allPassed: boolean;
+  canPublish: boolean;
+}
+
+interface ChecklistItem {
+  id: string;
+  label: string;
+  status: 'PASS' | 'FAIL' | 'WARNING' | 'PENDING';
+  required: boolean;
+  message?: string;
+  action?: ChecklistAction;
+}
+
+interface ChecklistAction {
+  label: string;
+  handler: string;
+}
+```
+
+**Example Checklist**:
+```typescript
+const prePublishChecklist: ChecklistItem[] = [
+  {
+    id: 'basic-info',
+    label: 'Campaign information complete',
+    status: 'PASS',
+    required: true,
+  },
+  {
+    id: 'dates',
+    label: 'Valid start and end dates',
+    status: 'PASS',
+    required: true,
+  },
+  {
+    id: 'locations',
+    label: 'At least 1 location selected',
+    status: 'PASS',
+    required: true,
+  },
+  {
+    id: 'barcodes',
+    label: 'Barcodes imported (minimum 100)',
+    status: 'FAIL',
+    required: true,
+    message: 'Only 50 barcodes imported. Minimum 100 required.',
+    action: {
+      label: 'Import More',
+      handler: 'goToStep4',
+    },
+  },
+  {
+    id: 'near-expiry',
+    label: 'No barcodes expiring soon',
+    status: 'WARNING',
+    required: false,
+    message: '25 barcodes expire in < 30 days',
+  },
+  {
+    id: 'ads-format',
+    label: 'At least 1 Ads Format created',
+    status: 'PENDING',
+    required: false,
+    message: 'Create Ads Format to start distributing',
+    action: {
+      label: 'Create Ads Format',
+      handler: 'goToAdsFormat',
+    },
+  },
+];
+```
+
+---
+
+## 10A2-2.9 Success Metrics
+
+```typescript
+interface CampaignCreationMetrics {
+  completion: {
+    startedCampaigns: number;
+    completedCampaigns: number;
+    completionRate: number;         // Target: > 95%
+  };
+  timing: {
+    avgTimeToComplete: number;      // Target: < 2 days
+    avgTimePerStep: {
+      step1: number;                // Basic info
+      step2: number;                // Duration
+      step3: number;                // Locations
+      step4: number;                // Barcodes
     };
   };
-  
-  actions: {
-    onViewQR?: () => void;
-    onSaveToWallet?: () => void;
-    onFindStore?: () => void;
-    onReportIssue?: () => void;
+  errors: {
+    totalErrors: number;
+    errorsByType: Record<ErrorType, number>;
+    errorRate: number;              // Target: < 5%
+  };
+  drafts: {
+    totalDrafts: number;
+    resumedDrafts: number;
+    abandonedDrafts: number;
+    draftConversionRate: number;
   };
 }
 ```
 
 ---
 
-## 10.8 Responsive Design Specifications
+## 10A2-2.10 Next Steps
 
-### 10.8.1 Breakpoint System
+**Related Documents**:
+- `Part10A2-3_Ads_Format_Management.md` - Create ads formats
+- `Part10A2-4_Campaign_Lifecycle.md` - Publish & manage campaigns
+- `Part10A2-9_RBAC_Permissions.md` - Permission checks
+- `Part10B2_Admin_Dashboard_Desktop.md` - Campaign creation wireframes
 
-```css
-/* Breakpoint Definitions */
-:root {
-  --breakpoint-sm: 640px;   /* Small tablets */
-  --breakpoint-md: 768px;   /* Large tablets */
-  --breakpoint-lg: 1024px;  /* Small desktops */
-  --breakpoint-xl: 1280px;  /* Large desktops */
-  --breakpoint-2xl: 1536px; /* Extra large screens */
-}
-
-/* Media Query Mixins */
-@media (min-width: 640px) { /* sm */ }
-@media (min-width: 768px) { /* md */ }
-@media (min-width: 1024px) { /* lg */ }
-@media (min-width: 1280px) { /* xl */ }
-```
-
-### 10.8.2 Component Responsive Behavior
-
-| Component | Mobile (375px) | Tablet (768px) | Desktop (1280px) |
-|-----------|----------------|----------------|------------------|
-| **Navigation** | Bottom tabs | Side drawer | Top nav + sidebar |
-| **KPI Cards** | Stacked | 2x2 grid | 4x1 row |
-| **Data Tables** | Horizontal scroll | Responsive columns | Full table |
-| **Forms** | Single column | Single column | Two columns |
-| **Modals** | Full screen | Centered overlay | Centered overlay |
+**Implementation Priority**:
+1. ✅ Basic info form (MVP)
+2. ✅ Duration selection (MVP)
+3. ✅ Location selection (MVP)
+4. ✅ Barcode import (MVP)
+5. ✅ Auto-save (MVP)
+6. ⏳ Advanced scheduling (Phase 2)
+7. ⏳ Conflict detection (Phase 2)
 
 ---
 
-## 10.9 Accessibility Specifications
-
-### 10.9.1 WCAG 2.1 AA Compliance
-
-**Color Contrast Requirements:**
-```css
-/* Text Contrast Ratios */
-.text-primary { color: var(--gray-900); }    /* 16.75:1 ratio */
-.text-secondary { color: var(--gray-700); }  /* 8.67:1 ratio */
-.text-muted { color: var(--gray-500); }      /* 4.54:1 ratio */
-
-/* Button Contrast */
-.btn-primary { 
-  background: var(--primary-blue);   /* 7.12:1 ratio */
-  color: var(--white);
-}
-
-.btn-secondary {
-  background: var(--gray-100);       /* 12.63:1 ratio */
-  color: var(--gray-900);
-}
-```
-
-**Keyboard Navigation Interface:**
-```typescript
-interface AccessibilityFeatures {
-  keyboard: {
-    focusManagement: {
-      trapFocus(element: HTMLElement): void;
-      restoreFocus(): void;
-      skipToContent(): void;
-    };
-    shortcuts: {
-      'Ctrl+K': 'openSearch';
-      'Esc': 'closeModal';
-      'Tab': 'nextElement';
-      'Shift+Tab': 'previousElement';
-    };
-  };
-  
-  screenReader: {
-    ariaLabels: Record<string, string>;
-    announcements: {
-      announce(message: string, priority: 'polite' | 'assertive'): void;
-      announcePageChange(title: string): void;
-    };
-  };
-  
-  reduced_motion: {
-    respectsPreference: boolean;
-    disableAnimations(): void;
-    enableAnimations(): void;
-  };
-}
-```
-
-### 10.9.2 Screen Reader Support
-
-**ARIA Labels Interface:**
-```typescript
-interface ARIALabels {
-  buttons: {
-    scan_barcode: "Quét mã barcode";
-    confirm_redemption: "Xác nhận đổi hàng";
-    cancel_action: "Hủy thao tác";
-  };
-  
-  form_fields: {
-    full_name: "Họ và tên đầy đủ";
-    email_address: "Địa chỉ email";
-    phone_number: "Số điện thoại";
-  };
-  
-  status_messages: {
-    loading: "Đang tải dữ liệu";
-    success: "Thao tác thành công";
-    error: "Có lỗi xảy ra";
-  };
-  
-  navigation: {
-    main_menu: "Menu chính";
-    breadcrumb: "Đường dẫn trang";
-    pagination: "Phân trang";
-  };
-}
-```
-
----
-
-## 10.10 Performance Optimization
-
-### 10.10.1 Loading Performance Targets
-
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| **First Contentful Paint** | <1.5s | Lighthouse audit |
-| **Largest Contentful Paint** | <2.5s | Core Web Vitals |
-| **Cumulative Layout Shift** | <0.1 | Layout stability |
-| **First Input Delay** | <100ms | User interaction |
-| **Time to Interactive** | <3s | Full page load |
-
-### 10.10.2 Optimization Strategies
-
-**Image Optimization Interface:**
-```typescript
-interface ImageOptimization {
-  formats: {
-    modern: 'webp' | 'avif';
-    fallback: 'jpg' | 'png';
-  };
-  
-  responsive: {
-    breakpoints: number[];
-    sizes: string;
-    srcSet: string;
-  };
-  
-  lazy_loading: {
-    enabled: boolean;
-    threshold: number;      // Pixels before loading
-    placeholder: 'blur' | 'color';
-  };
-  
-  compression: {
-    quality: number;        // 0-100
-    progressive: boolean;
-    optimize: boolean;
-  };
-}
-```
-
-**Bundle Optimization:**
-```typescript
-interface BundleOptimization {
-  code_splitting: {
-    route_based: boolean;   // Split by pages
-    component_based: boolean; // Split large components
-    vendor_chunks: boolean; // Separate vendor libraries
-  };
-  
-  tree_shaking: {
-    enabled: boolean;
-    side_effects: false;
-  };
-  
-  compression: {
-    gzip: boolean;
-    brotli: boolean;
-  };
-  
-  caching: {
-    strategy: 'cache-first' | 'network-first';
-    duration: number;       // Cache TTL in seconds
-  };
-}
-```
-
----
-
-## 10.11 Design System Implementation
-
-### 10.11.1 Component Architecture
-
-```typescript
-interface DesignSystemAPI {
-  components: {
-    Button: ComponentInterface<ButtonProps>;
-    Input: ComponentInterface<InputProps>;
-    Card: ComponentInterface<CardProps>;
-    Modal: ComponentInterface<ModalProps>;
-    Table: ComponentInterface<TableProps>;
-  };
-  
-  tokens: {
-    colors: ColorTokens;
-    typography: TypographyTokens;
-    spacing: SpacingTokens;
-    shadows: ShadowTokens;
-  };
-  
-  themes: {
-    light: Theme;
-    dark: Theme;
-    high_contrast: Theme;
-  };
-  
-  utilities: {
-    responsive: ResponsiveUtilities;
-    accessibility: AccessibilityUtilities;
-    animations: AnimationUtilities;
-  };
-}
-```
-
-### 10.11.2 Theme Configuration
-
-```typescript
-interface ThemeConfig {
-  brand: {
-    primary_color: string;
-    secondary_color: string;
-    logo_url: string;
-    favicon_url: string;
-  };
-  
-  layout: {
-    max_width: string;
-    sidebar_width: string;
-    header_height: string;
-    footer_height: string;
-  };
-  
-  typography: {
-    font_family_primary: string;
-    font_family_secondary: string;
-    base_font_size: string;
-    line_height: number;
-  };
-  
-  animation: {
-    duration_fast: string;     // 150ms
-    duration_normal: string;   // 300ms
-    duration_slow: string;     // 500ms
-    easing: string;           // ease-in-out
-  };
-}
-```
-
----
-
-## 10.12 Testing & Quality Assurance
-
-### 10.12.1 UI Testing Requirements
-
-**Visual Regression Testing Interface:**
-```typescript
-interface VisualTesting {
-  screenshot_comparison: {
-    browsers: ['chrome', 'firefox', 'safari'];
-    viewports: [375, 768, 1280, 1920];
-    threshold: number;      // Pixel difference tolerance
-  };
-  
-  component_testing: {
-    isolated_tests: boolean;  // Test components in isolation
-    interaction_tests: boolean; // Test user interactions
-    accessibility_tests: boolean; // Automated a11y testing
-  };
-  
-  performance_testing: {
-    lighthouse_audits: boolean;
-    bundle_size_tracking: boolean;
-    runtime_performance: boolean;
-  };
-}
-```
-
-### 10.12.2 Usability Testing Plan
-
-**User Testing Scenarios:**
-```typescript
-interface UsabilityTest {
-  target_users: {
-    end_users: {
-      demographics: 'ages 18-45, mobile-first users';
-      scenarios: ['first-time sampling', 'return user'];
-      success_criteria: '>90% task completion';
-    };
-    
-    brand_managers: {
-      demographics: 'marketing professionals';
-      scenarios: ['campaign creation', 'analytics review'];
-      success_criteria: '<5 min task completion';
-    };
-    
-    store_staff: {
-      demographics: 'retail workers, varying tech skills';
-      scenarios: ['redemption processing', 'offline operations'];
-      success_criteria: '<30s redemption processing';
-    };
-  };
-  
-  testing_methods: {
-    moderated_sessions: boolean;
-    unmoderated_testing: boolean;
-    a_b_testing: boolean;
-    heatmap_
+**Document Status**: ✅ Complete  
+**Last Updated**: 2025-10-17  
+**Next Review**: 2025-11-01
