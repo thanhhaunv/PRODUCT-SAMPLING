@@ -897,3 +897,624 @@ pipeline {
 **Tình trạng:**
 
 > Hoàn tất phần 06 – Kiến trúc hệ thống & Thành phần kỹ thuật. Bao gồm sơ đồ logic, vật lý, cơ chế đồng bộ, CI/CD và giám sát.
+# 02-SRS-Part07-DataDesign-and-DatabaseSchema.md
+
+## 7. Thiết kế dữ liệu & Cấu trúc cơ sở dữ liệu (Data Design & Database Schema)
+
+### 7.1 Mục tiêu
+
+Phần này định nghĩa mô hình dữ liệu, cấu trúc bảng, quan hệ, chỉ mục và cơ chế đồng bộ giữa các hệ thống cơ sở dữ liệu (**MongoDB**, **PostgreSQL**, **Redis**) trong hệ thống **Product Sampling System (PSS)**.
+
+---
+
+### 7.2 Tổng quan mô hình dữ liệu
+
+```mermaid
+erDiagram
+    BRAND ||--o{ CAMPAIGN : owns
+    CAMPAIGN ||--o{ VOUCHER : issues
+    CAMPAIGN ||--o{ USER_REGISTRATION : collects
+    USER_REGISTRATION ||--o{ REDEEM_TRANSACTION : performs
+    RETAIL_NODE ||--o{ REDEEM_TRANSACTION : processes
+    USER_REGISTRATION ||--o{ OTP_LOG : verifies
+```
+
+---
+
+### 7.3 Mô tả chi tiết các thực thể chính
+
+| Entity                 | Mô tả                                             | Trường dữ liệu chính                                                                                          | Ghi chú                                      |
+| :--------------------- | :------------------------------------------------ | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------- |
+| **Brand**              | Đại diện nhãn hàng / khách hàng sử dụng hệ thống. | `brand_id`, `brand_name`, `contact_email`, `api_key`, `status`                                                | Quản lý bởi admin.                           |
+| **Campaign**           | Chiến dịch sampling của nhãn hàng.                | `campaign_id`, `brand_id`, `title`, `start_date`, `end_date`, `quota`, `reward_type`, `form_fields`, `status` | Mỗi campaign thuộc 1 brand.                  |
+| **User_Registration**  | Người dùng đăng ký nhận sample.                   | `user_id`, `campaign_id`, `name`, `phone`, `email`, `otp_verified`, `created_at`                              | Dữ liệu chính trong MongoDB.                 |
+| **Voucher**            | Mã nhận sample.                                   | `voucher_id`, `campaign_id`, `code`, `status`, `issued_at`, `redeemed_at`                                     | Mã unique, có TTL cache trong Redis.         |
+| **Retail_Node**        | Điểm phát hàng hoặc POS.                          | `node_id`, `brand_id`, `name`, `address`, `region`, `status`                                                  | Có thể hoạt động offline.                    |
+| **Redeem_Transaction** | Giao dịch đổi quà.                                | `txn_id`, `user_id`, `node_id`, `voucher_id`, `timestamp`, `status`                                           | Sync từ Redis → PostgreSQL mỗi 10 phút.      |
+| **OTP_Log**            | Lịch sử OTP gửi cho người dùng.                   | `otp_id`, `user_id`, `phone`, `otp_code`, `expired_at`, `status`                                              | Dùng Redis cache tạm, ghi log về PostgreSQL. |
+
+---
+
+### 7.4 Lược đồ cơ sở dữ liệu MongoDB
+
+```javascript
+// Collection: campaigns
+{
+  _id: ObjectId(),
+  brand_id: ObjectId(),
+  title: "Summer Trial 2025",
+  start_date: ISODate("2025-06-01"),
+  end_date: ISODate("2025-07-01"),
+  quota: 100000,
+  reward_type: "voucher",
+  form_fields: ["name", "phone", "email"],
+  status: "active"
+}
+
+// Collection: user_registrations
+{
+  _id: ObjectId(),
+  campaign_id: ObjectId(),
+  name: "Nguyen Van A",
+  phone: "+84901111222",
+  email: "a@gmail.com",
+  otp_verified: true,
+  created_at: ISODate()
+}
+```
+
+---
+
+### 7.5 Lược đồ cơ sở dữ liệu PostgreSQL
+
+```sql
+CREATE TABLE campaigns (
+  campaign_id SERIAL PRIMARY KEY,
+  brand_id INT REFERENCES brands(brand_id),
+  title VARCHAR(255),
+  start_date DATE,
+  end_date DATE,
+  quota INT,
+  reward_type VARCHAR(50),
+  status VARCHAR(20)
+);
+
+CREATE TABLE vouchers (
+  voucher_id SERIAL PRIMARY KEY,
+  campaign_id INT REFERENCES campaigns(campaign_id),
+  code VARCHAR(50) UNIQUE,
+  status VARCHAR(20),
+  issued_at TIMESTAMP,
+  redeemed_at TIMESTAMP
+);
+
+CREATE INDEX idx_voucher_code ON vouchers(code);
+```
+
+---
+
+### 7.6 Cấu trúc Redis
+
+| Key Pattern             | Giá trị                            | TTL  | Mục đích                   |
+| :---------------------- | :--------------------------------- | :--- | :------------------------- |
+| `otp:{phone}`           | `{ code, expireAt }`               | 300s | Lưu OTP tạm thời           |
+| `voucher:{code}`        | `{ status, user_id, campaign_id }` | 24h  | Kiểm tra nhanh khi redeem  |
+| `queue:redeem`          | JSON string (txn info)             | N/A  | Hàng đợi giao dịch offline |
+| `fraud:score:{user_id}` | float                              | 1h   | Điểm nghi ngờ fraud        |
+
+---
+
+### 7.7 Quan hệ và ràng buộc (Constraints)
+
+* `campaign_id` bắt buộc tồn tại trong bảng `campaigns` trước khi thêm `vouchers` hoặc `user_registrations`.
+* `voucher_id` chỉ được redeem 1 lần duy nhất (constraint unique).
+* `otp_verified = true` là điều kiện bắt buộc trước khi sinh voucher.
+* Redis key tự động xoá khi TTL hết hạn để tránh trùng lặp OTP.
+
+---
+
+### 7.8 Đồng bộ dữ liệu
+
+* Worker process đồng bộ dữ liệu MongoDB → PostgreSQL định kỳ 10 phút.
+* Redis queue chứa log redeem, nếu mạng yếu thì POS lưu offline, gửi lại khi online.
+* PostgreSQL là nguồn dữ liệu cuối cùng (source of truth cho BI & reporting).
+
+```mermaid
+sequenceDiagram
+Retail Node->>Redis: Push redeem event
+Redis->>SyncWorker: Consume event queue
+SyncWorker->>MongoDB: Update voucher status
+SyncWorker->>PostgreSQL: Insert transaction record
+PostgreSQL-->>Analytics: Generate report
+```
+
+---
+
+### 7.9 Quản lý index & tối ưu hiệu năng
+
+* MongoDB: index trên `phone`, `campaign_id`, `otp_verified`.
+* PostgreSQL: composite index `(campaign_id, status)`, `(voucher_code)`.
+* Redis: hash key cho OTP và voucher để tối ưu lookup O(1).
+
+---
+
+### 7.10 Tổng kết
+
+* Cấu trúc dữ liệu kết hợp **MongoDB (Master)**, **PostgreSQL (Backup/BI)** và **Redis (Cache/Queue)**.
+* Đảm bảo tính toàn vẹn, hiệu năng cao và dễ dàng mở rộng.
+* Phù hợp với yêu cầu NFR về tốc độ, tính sẵn sàng và khả năng phục hồi.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 07 – Thiết kế dữ liệu & Cấu trúc cơ sở dữ liệu. Bao gồm ERD, schema chi tiết, Redis cache design và cơ chế đồng bộ.
+# 02-SRS-Part08-APIDesign-and-Integration.md
+
+## 8. Giao diện hệ thống & Thiết kế API (API Design & Integration)
+
+### 8.1 Mục tiêu
+
+Phần này mô tả chi tiết các API RESTful chính của hệ thống PSS, payload mẫu, cơ chế xác thực, mã lỗi chuẩn và chính sách retry/webhook để tích hợp với hệ thống bên thứ ba (CRM, SMS gateway, POS).
+
+---
+
+### 8.2 Quy ước thiết kế API
+
+* Base URL: `https://api.productsampling.example.com/v1`
+* Giao thức: HTTPS/TLS 1.2+
+* Định dạng: JSON (UTF-8)
+* Authentication: OAuth2 Bearer token (JWT) cho partners & services; API key cho Brand dashboard (scoped).
+* Tracing: `X-Request-ID` header bắt buộc cho transaction tracing.
+* Rate limit: 100 req/min cho public endpoints, 1000 req/min cho partner endpoints (configurable).
+* Error response: `{ "code": "ERR_XXX", "message": "...", "details": {...} }`.
+
+---
+
+### 8.3 Authentication & Authorization
+
+* **Service-to-Service:** JWT signed with RS256, scopes: `campaign:read`, `campaign:write`, `voucher:redeem`, etc.
+* **Brand Users:** OAuth2 Authorization Code flow; token lifetime 1h, refresh token supported.
+* **Retail Node Devices:** Device Token (long-lived) with mTLS optional.
+
+Header sample:
+
+```
+Authorization: Bearer <JWT>
+X-Request-ID: <uuid>
+Content-Type: application/json
+```
+
+---
+
+### 8.4 API Endpoints chính (mẫu)
+
+#### 8.4.1 Campaign APIs
+
+**POST /v1/brands/{brand_id}/campaigns** - Tạo campaign
+
+* Body sample:
+
+```json
+{
+  "title": "Summer Sampling",
+  "start_date": "2025-06-01",
+  "end_date": "2025-06-30",
+  "quota": 10000,
+  "form_fields": ["name","phone","email"],
+  "nodes": ["node_1","node_2"]
+}
+```
+
+* Response: `201 Created` `{ "campaign_id": "c_123" }`
+* Errors: `400` (validation), `401` (unauthorized), `409` (duplicate)
+
+**GET /v1/brands/{brand_id}/campaigns/{campaign_id}/metrics** - Lấy metrics
+
+* Response sample:
+
+```json
+{
+  "scan_count": 12000,
+  "submit_count": 9000,
+  "verify_count": 8000,
+  "issued_count": 7950,
+  "redeemed_count": 4000,
+  "cpl": 0.35
+}
+```
+
+---
+
+#### 8.4.2 OTP APIs
+
+**POST /v1/otp/send**
+
+* Input: `{ "contact": "+8490....", "channel": "sms", "temp_user_id": "t_123" }`
+* Response: `{ "otp_sent_id": "otp_abc", "expires_in": 120 }`
+* Rate-limit & throttling applied.
+
+**POST /v1/otp/verify**
+
+* Input: `{ "temp_user_id": "t_123", "otp_code": "123456" }`
+* Response: `{ "verified_user_id": "u_456" }`
+* Errors: `401` invalid/expired, `429` too many attempts
+
+---
+
+#### 8.4.3 Voucher APIs
+
+**POST /v1/vouchers/issue**
+
+* Input: `{ "verified_user_id": "u_1", "campaign_id": "c_1" }`
+* Response: `{ "voucher_id": "v_1", "code": "ABC123", "qr_url": "https://..." }`
+* Constraints: enforce velocity rules on server side.
+
+**POST /v1/vouchers/redeem**
+
+* Input (Node): `{ "voucher_code": "ABC123", "node_id": "node_1", "staff_id": "s_1", "device_info": {...} }`
+* Response: `{ "redeem_status": "success", "timestamp": "2025-10-17T08:00:00Z" }`
+* Errors: `409` already redeemed, `404` not found, `403` node unauthorized.
+
+---
+
+#### 8.4.4 Retail Node Gateway
+
+**POST /v1/nodes/{node_id}/sync**
+
+* Input: `{ "events": [ { "type": "redeem", "voucher_code": "ABC123", "staff_id": "s1", "timestamp": "...", "signature": "..." } ] }`
+* Response: `{ "ack": true, "processed": 10 }`
+* Security: JWT device token + optional mTLS.
+
+---
+
+#### 8.4.5 Webhook (CRM Delivery)
+
+* Events: `user_verified`, `voucher_issued`, `voucher_redeemed`.
+* Delivery guarantee: at-least-once with deduplication by `event_id`.
+* Retry policy: exponential backoff, attempts: 5, then move to DLQ & alert.
+* Sample payload (redeem):
+
+```json
+{
+  "event_id": "evt_123",
+  "event": "voucher_redeemed",
+  "data": {
+    "voucher_id": "v_1",
+    "campaign_id": "c_1",
+    "user": { "user_id": "u_1", "name": "Nguyen" },
+    "redeem": { "node_id": "node_1", "timestamp": "..." }
+  }
+}
+```
+
+---
+
+### 8.5 Error Codes (tham khảo)
+
+| Code                 | HTTP | Mô tả                    |
+| :------------------- | :--: | :----------------------- |
+| ERR_INVALID_INPUT    |  400 | Dữ liệu gửi không hợp lệ |
+| ERR_UNAUTHORIZED     |  401 | Token không hợp lệ       |
+| ERR_FORBIDDEN        |  403 | Không có quyền           |
+| ERR_NOT_FOUND        |  404 | Tài nguyên không tồn tại |
+| ERR_ALREADY_REDEEMED |  409 | Voucher đã được redeem   |
+| ERR_RATE_LIMIT       |  429 | Quá ngưỡng request       |
+| ERR_INTERNAL         |  500 | Lỗi server               |
+
+---
+
+### 8.6 Idempotency & Transaction Patterns
+
+* All write endpoints accept `Idempotency-Key` header to ensure safe retries.
+* Voucher redeem uses optimistic locking and idempotency to prevent double-claim.
+
+---
+
+### 8.7 Security headers & Best Practices
+
+* Enforce `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`.
+* HSTS enabled.
+* Input validation & schema validation at API gateway.
+
+---
+
+### 8.8 Integration notes
+
+* CRM: mapping config per brand; provide sample mapping UI.
+* SMS Provider: throughput limits and regional provider fallback.
+* POS Integration: provide SDK (lightweight JS/REST client) and offline queue sample code.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 08 – API Design & Integration. Bao gồm endpoint mẫu, security, error codes, webhook delivery và integration notes.
+# 02-SRS-Part09-UseCases.md
+
+## 9. Use Case chi tiết (Detailed Use Cases)
+
+### 9.1 Mục tiêu
+
+Phần này mô tả chi tiết các kịch bản sử dụng chính của hệ thống Product Sampling System (PSS), giúp hiểu rõ cách người dùng, nhãn hàng, và các điểm bán tương tác với hệ thống trong từng tình huống nghiệp vụ cụ thể.
+
+---
+
+### 9.2 Danh sách các Use Case chính
+
+| ID    | Tên Use Case                | Actor chính                | Mô tả ngắn                                          |
+| :---- | :-------------------------- | :------------------------- | :-------------------------------------------------- |
+| UC-01 | Đăng ký nhận sample         | End User                   | Người dùng điền form đăng ký để nhận sample.        |
+| UC-02 | Xác thực OTP                | End User                   | Người dùng xác thực OTP để xác minh danh tính.      |
+| UC-03 | Sinh mã voucher             | System / Brand             | Hệ thống cấp mã voucher cho người dùng đã xác minh. |
+| UC-04 | Redeem tại điểm bán         | End User / Retail Node     | Người dùng đổi quà tại điểm bán bằng mã voucher.    |
+| UC-05 | Quản lý chiến dịch sampling | Brand Admin                | Tạo, cấu hình và theo dõi chiến dịch.               |
+| UC-06 | Xem dashboard và báo cáo    | Brand Admin / System Admin | Theo dõi số liệu tổng quan.                         |
+| UC-07 | Đồng bộ dữ liệu sang CRM    | System / CRM               | Gửi dữ liệu verified user về CRM.                   |
+| UC-08 | Phát hiện và chặn gian lận  | System                     | Kiểm tra pattern gian lận, tự động block.           |
+
+---
+
+### 9.3 Use Case chi tiết
+
+#### UC-01: Đăng ký nhận sample
+
+| Mục                      | Mô tả                                                                                                                                                                          |
+| :----------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                   | UC-01                                                                                                                                                                          |
+| **Actor**                | End User                                                                                                                                                                       |
+| **Trigger**              | Người dùng truy cập landing page của chiến dịch                                                                                                                                |
+| **Mô tả**                | Người dùng nhập thông tin cá nhân để đăng ký nhận sample                                                                                                                       |
+| **Luồng chính**          | 1. Người dùng mở landing page <br> 2. Nhập thông tin (tên, SĐT, email) <br> 3. Gửi yêu cầu đăng ký <br> 4. Hệ thống tạo bản ghi tạm trong DB <br> 5. Hệ thống gửi OTP xác thực |
+| **Luồng phụ**            | - Nếu người dùng nhập sai định dạng dữ liệu → thông báo lỗi.                                                                                                                   |
+| **Điều kiện tiên quyết** | Campaign còn hoạt động và quota > 0.                                                                                                                                           |
+| **Kết quả**              | User được ghi nhận pending xác thực.                                                                                                                                           |
+| **Tiêu chí chấp nhận**   | Tốc độ phản hồi ≤ 1s; dữ liệu lưu thành công trong MongoDB.                                                                                                                    |
+
+---
+
+#### UC-02: Xác thực OTP
+
+| Mục                    | Mô tả                                                                                                                                                              |
+| :--------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                 | UC-02                                                                                                                                                              |
+| **Actor**              | End User                                                                                                                                                           |
+| **Trigger**            | Sau khi gửi OTP, người dùng nhập mã để xác thực                                                                                                                    |
+| **Mô tả**              | Xác minh người dùng thật bằng OTP để tránh spam/gian lận                                                                                                           |
+| **Luồng chính**        | 1. Người dùng nhập mã OTP <br> 2. Hệ thống kiểm tra mã trong Redis <br> 3. Nếu hợp lệ → cập nhật user.otp_verified = true <br> 4. Gửi response xác nhận thành công |
+| **Luồng phụ**          | - Sai OTP → báo lỗi <br> - Hết hạn OTP → yêu cầu gửi lại.                                                                                                          |
+| **Kết quả**            | User được đánh dấu là verified.                                                                                                                                    |
+| **Tiêu chí chấp nhận** | 98% OTP gửi thành công, ≤3 lần nhập sai.                                                                                                                           |
+
+---
+
+#### UC-03: Sinh mã voucher
+
+| **Actor** | System / Brand |
+| **Mô tả** | Khi người dùng đã xác minh OTP, hệ thống sinh mã voucher duy nhất. |
+| **Luồng chính** | 1. API kiểm tra user.otp_verified = true <br> 2. Sinh mã voucher (Redis + Mongo) <br> 3. Lưu trạng thái issued <br> 4. Gửi thông tin voucher về user. |
+| **Kết quả** | Người dùng nhận được mã voucher (text hoặc QR). |
+| **Tiêu chí chấp nhận** | Mỗi user chỉ có 1 voucher / chiến dịch. |
+
+---
+
+#### UC-04: Redeem tại điểm bán
+
+| **Actor** | End User / Retail Node |
+| **Mô tả** | Người dùng mang voucher đến điểm bán để đổi sample. |
+| **Luồng chính** | 1. POS quét QR hoặc nhập mã <br> 2. Node gửi API `/redeem` đến server <br> 3. Hệ thống kiểm tra voucher hợp lệ <br> 4. Ghi nhận giao dịch <br> 5. Trả kết quả success hoặc failed |
+| **Luồng phụ** | - Node offline → lưu vào hàng đợi Redis, đồng bộ sau |
+| **Kết quả** | Transaction được ghi vào PostgreSQL, cập nhật status voucher. |
+| **Tiêu chí chấp nhận** | 100% giao dịch đồng bộ khi mạng ổn định. |
+
+---
+
+#### UC-05: Quản lý chiến dịch sampling
+
+| **Actor** | Brand Admin |
+| **Mô tả** | Quản trị viên tạo, cấu hình, chỉnh sửa và xem thông tin chiến dịch. |
+| **Luồng chính** | 1. Đăng nhập dashboard <br> 2. Chọn “Tạo chiến dịch” <br> 3. Nhập thông tin & upload media <br> 4. Gửi request tạo campaign API <br> 5. Nhận phản hồi success và hiển thị trên dashboard. |
+| **Tiêu chí chấp nhận** | 100% chiến dịch có cấu hình hợp lệ, không trùng ID. |
+
+---
+
+#### UC-06: Xem dashboard và báo cáo
+
+| **Actor** | Brand / System Admin |
+| **Mô tả** | Hiển thị tổng quan hiệu suất chiến dịch. |
+| **Luồng chính** | 1. Người dùng mở dashboard <br> 2. Gọi API metrics <br> 3. Render dữ liệu biểu đồ (conversion, redeem rate, fraud alerts) |
+| **Kết quả** | Dữ liệu hiển thị real-time (≤5s delay). |
+
+---
+
+#### UC-07: Đồng bộ dữ liệu sang CRM
+
+| **Actor** | System / CRM |
+| **Mô tả** | Hệ thống gửi dữ liệu verified user đến CRM brand thông qua webhook. |
+| **Luồng chính** | 1. Worker chọn batch user verified <br> 2. Gửi POST webhook đến CRM <br> 3. CRM phản hồi success 200 OK <br> 4. Đánh dấu record đã sync |
+| **Luồng phụ** | CRM không phản hồi → retry tối đa 5 lần (backoff). |
+| **Kết quả** | CRM nhận dữ liệu user đầy đủ. |
+| **Tiêu chí chấp nhận** | 97% success rate per delivery. |
+
+---
+
+#### UC-08: Phát hiện và chặn gian lận
+
+| **Actor** | System |
+| **Mô tả** | Phát hiện hành vi đăng ký ảo, trùng lặp IP, spoof location. |
+| **Luồng chính** | 1. Fraud Engine thu thập log <br> 2. Phân tích heuristic + ML model <br> 3. Tính điểm fraud_score <br> 4. Nếu > threshold → chặn user & flag record |
+| **Kết quả** | Fraud giảm ≥90%, alert gửi đến admin. |
+
+---
+
+### 9.4 Tổng kết
+
+* Các Use Case trên bao quát toàn bộ hành trình người dùng và tác nghiệp hệ thống.
+* Đảm bảo tương thích với Functional Requirements (FR) và API Design.
+* Các tiêu chí định lượng có thể dùng làm cơ sở test case và QA validation.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 09 – Use Cases. Bao gồm 8 Use Case chính, luồng chi tiết, điều kiện, kết quả và tiêu chí chấp nhận.
+
+# 02-SRS-Part10-UIUX-and-Wireframes.md
+
+## 10. Giao diện người dùng & Wireframes (UI/UX Design)
+
+### 10.1 Mục tiêu
+
+Phần này trình bày các nguyên tắc thiết kế giao diện người dùng (UI), trải nghiệm người dùng (UX), và mô tả các màn hình chính của hệ thống Product Sampling System (PSS), bao gồm Landing Page, Dashboard, POS App và Admin Console.
+
+---
+
+### 10.2 Nguyên tắc thiết kế tổng thể
+
+1. **Đơn giản và trực quan** – Người dùng có thể hoàn tất đăng ký nhận sample trong ≤ 2 bước.
+2. **Thống nhất thương hiệu** – Mỗi chiến dịch có thể gắn logo, màu và font riêng của Brand.
+3. **Khả năng truy cập (Accessibility)** – Đáp ứng chuẩn WCAG 2.1 AA.
+4. **Mobile-first** – Landing Page và POS App tối ưu cho thiết bị di động.
+5. **Tối ưu hiệu năng UX** – Thời gian tải trang ≤ 1.5s, feedback tức thời sau mỗi hành động.
+
+---
+
+### 10.3 Flow trải nghiệm người dùng (User Flow)
+
+```mermaid
+flowchart TD
+    A[Truy cập Landing Page] --> B[Điền thông tin đăng ký]
+    B --> C[Nhận OTP]
+    C --> D[Xác thực OTP]
+    D --> E[Nhận mã Voucher / QR]
+    E --> F[Redeem tại điểm bán]
+    F --> G[Đánh giá trải nghiệm (optional)]
+```
+
+---
+
+### 10.4 Màn hình chính
+
+#### 1. Landing Page (End User)
+
+* **Thành phần chính:**
+
+  * Header: logo brand, banner hình ảnh
+  * Form đăng ký: input name, phone, email, checkbox đồng ý điều khoản
+  * Nút “Nhận mã OTP” và “Gửi”
+  * Thông báo trạng thái (loading, lỗi, thành công)
+* **Nguyên tắc UX:**
+
+  * Tối đa 2 thao tác → người dùng nhận được OTP.
+  * Sử dụng màu nhấn (CTA) tương phản cao.
+  * Hiển thị tiến trình (progress stepper: 1/2 → 2/2).
+
+#### 2. OTP Verification
+
+* Màn hình nhập OTP gồm 6 ô số, hỗ trợ paste toàn bộ chuỗi.
+* Hiển thị thời gian đếm ngược 120s và nút “Gửi lại OTP”.
+* UX pattern: auto-focus từng ô, rung nhẹ khi sai mã.
+
+#### 3. Voucher Screen
+
+* Hiển thị mã QR / text voucher.
+* Nút “Lưu vào ví / chia sẻ”.
+* Thông báo địa chỉ các điểm đổi quà gần nhất (geolocation permission).
+
+#### 4. Retail Node App (POS)
+
+* Giao diện đơn giản dạng kiosk mode:
+
+  * Trường nhập / quét mã voucher.
+  * Kết quả: ✅ Redeem success hoặc ❌ Invalid.
+  * Nút “Đồng bộ” khi offline.
+  * Lịch sử giao dịch (local cache 50 record).
+
+#### 5. Brand Dashboard
+
+* Màn hình chính:
+
+  * Thẻ thống kê: `Đăng ký`, `OTP xác thực`, `Voucher phát`, `Redeem`, `Fraud alerts`.
+  * Biểu đồ conversion funnel.
+  * Bộ lọc theo thời gian / khu vực / node.
+* UX pattern: lazy loading dữ liệu, auto refresh mỗi 10s.
+
+#### 6. Admin Console
+
+* Quản trị user, brand, node, logs.
+* Phân quyền theo vai trò (RBAC).
+* Giao diện dạng table view, filter & pagination.
+
+---
+
+### 10.5 Nguyên tắc màu sắc và thương hiệu
+
+| Thành phần | Màu chủ đạo | Ghi chú                       |
+| :--------- | :---------- | :---------------------------- |
+| Primary    | #007AFF     | CTA chính (nút, link, icon)   |
+| Secondary  | #FFD700     | Accent / Highlight            |
+| Background | #F9FAFB     | Nền nhẹ, tránh tương phản cao |
+| Text       | #111827     | Độ tương phản đủ cho đọc lâu  |
+| Error      | #EF4444     | Thông báo lỗi                 |
+| Success    | #10B981     | Thành công / xác nhận         |
+
+---
+
+### 10.6 Wireframe mô tả (giản lược)
+
+```mermaid
+graph LR
+    subgraph LandingPage
+        A1[Header: Logo + Banner]
+        A2[Form: Name, Phone, Email]
+        A3[CTA: Gửi OTP]
+        A4[OTP Verify Box]
+        A5[Voucher QR Result]
+    end
+
+    subgraph Dashboard
+        B1[Campaign Card]
+        B2[Filter Panel]
+        B3[Metrics Chart]
+    end
+
+    subgraph POSApp
+        C1[Input Voucher]
+        C2[Redeem Result]
+        C3[Sync Button]
+    end
+```
+
+---
+
+### 10.7 Accessibility & Responsive Rules
+
+* Tất cả font ≥ 14px, button ≥ 44px chiều cao.
+* Hỗ trợ keyboard navigation, aria-label.
+* Responsive breakpoints: 360px, 768px, 1280px.
+* Màu đáp ứng tỷ lệ tương phản ≥ 4.5:1.
+
+---
+
+### 10.8 Hiệu năng UX (UX Performance Targets)
+
+| Mục tiêu                    | Chỉ số     |
+| :-------------------------- | :--------- |
+| Thời gian tải trang Landing | ≤ 1.5 giây |
+| Tỷ lệ hoàn tất đăng ký      | ≥ 85%      |
+| Bounce rate                 | ≤ 20%      |
+| Tỷ lệ thành công OTP        | ≥ 98%      |
+
+---
+
+### 10.9 Tổng kết
+
+* Thiết kế UI tuân thủ nguyên tắc UX hiện đại, tối ưu cho tốc độ, mobile và thương hiệu.
+* Mỗi màn hình được định nghĩa rõ layout, hành vi và phản hồi.
+* Các chỉ số UX sẽ dùng cho kiểm thử thực tế và cải tiến liên tục.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 10 – UI/UX & Wireframes. Bao gồm flow, layout, màu sắc, nguyên tắc responsive và KPI UX.
