@@ -14,7 +14,7 @@ Người thì mình vô biên nên bạn không phải lo, mình muốn làm des
 
 Sau khi gen xong hỏi lại claude(như hỏi grok):
 Giờ bạn giúp tôi tạo một bộ khung nội dung để với bộ khung này tôi đưa cho bất kỳ một đội PM, BA, và Teachlead nào họ đều viết nội dung giống nhau (kiểu tạo prototype, design pattern ấy). Bạn giúp tôi nhé.
-Thêm những cái yêu cầu nó về role teachlead. Thêm cả cái này: mình muốn làm design pattern thật chuẩn(kể cả phần tài liệu), để các sub-project độc lập build, độc lập test, cũng như ai cũng có thể code được. Người sau không phụ thuộc vào code người trước, không hiểu function nào đập đi làm mới không sao.
+Thêm những cái yêu cầu nó về role teachlead. Thêm cả cái này: mình muốn làm design pattern thật chuẩn(kể cả phần tài liệu), để các sub-project độc lập build, độc lập test, cũng như ai cũng có thể code được. Người sau không phụ thuộc vào code người trước, không hiểu function nào đập đi làm mới không sao. Trong tài liệu chỉ có các interface, abstract class và giải pháp, không có full code dễ rối. Sẽ có tài liệu triển khai sau. Project chuyên nghiệp luôn không cần (MVP).
 
 
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
