@@ -1,8602 +1,5703 @@
-# 📋 System Requirement Specification (SRS)
-**Hệ thống Product Sampling Platform**
+# 📋 Part00 - SRS Checklist & Overview
+**System Requirement Specification (SRS) - Product Sampling Platform**
 
 **Phiên bản**: 1.0  
 **Ngày**: 2025-10-17  
 **Tác giả**: System Analyst Team  
-**Dựa trên**: BRD v3.0, System Feature Tree v4.0, Access Control Tree v2.2  
+**Dự án**: Product Sampling Platform (PSP)  
+**Tham chiếu**: `01-BRD.md`, `System_Feature_Tree_Grok.md`, `Access_Control_Tree_Grok.md`
 
 ---
 
-## 📑 Mục lục tài liệu
+## 🎯 Mục đích checklist
 
-| Part       | Tên phần                                                    | Tình trạng   | Mô tả chức năng                                              |
-| :--------- | :---------------------------------------------------------- | :----------- | :----------------------------------------------------------- |
-| **Part00** | **Mục lục tài liệu**                                       | ✅ Hoàn thành | Index và overview tổng thể về cấu trúc SRS                   |
-| **Part01** | **Giới thiệu (Introduction)**                              | ⏳ Sắp tạo   | Mục tiêu SRS, phạm vi dự án, định nghĩa thuật ngữ, tài liệu tham chiếu |
-| **Part02** | **Tổng quan hệ thống (Overall Description)**               | ⏳ Sắp tạo   | Stakeholders, system actors, use context, constraints và assumptions |
-| **Part03** | **Phạm vi & Mục tiêu sản phẩm (Scope and Objectives)**     | ⏳ Sắp tạo   | Business goals, success criteria, feature mapping theo MoSCoW |
-| **Part04** | **Yêu cầu chức năng (Functional Requirements)**            | ⏳ Sắp tạo   | FR-001 → FR-013: Campaign Management, Barcode, Landing Page, OTP, Redemption, Analytics, CRM, RBAC, User Portal, Ads Format |
-| **Part05** | **Yêu cầu phi chức năng (Non-Functional Requirements)**    | ⏳ Sắp tạo   | Performance (100K RPM), scalability (10M users), security (ISO 27001), reliability (99.9% uptime), usability KPIs |
-| **Part06** | **Kiến trúc hệ thống (System Architecture & Components)**  | ⏳ Sắp tạo   | Microservices architecture, component diagram, technology stack, deployment architecture, CI/CD pipeline |
-| **Part07** | **Thiết kế dữ liệu & CSDL (Data Design & Database Schema)** | ⏳ Sắp tạo   | ERD, collection design (MongoDB), relational schema (PostgreSQL), Redis caching strategy, data flow |
-| **Part08** | **Thiết kế API & Tích hợp (API Design & Integration)**     | ⏳ Sắp tạo   | REST API endpoints, webhook specifications, error handling, rate limiting, third-party integrations |
-| **Part09** | **Use Case chi tiết (Detailed Use Cases)**                 | ⏳ Sắp tạo   | 8 use cases chính với flow steps, alternative scenarios, exception handling |
-| **Part10** | **Giao diện & Wireframes (UI/UX Design)**                  | ⏳ Sắp tạo   | User experience flow, wireframes, UI components, accessibility standards, mobile responsiveness |
-| **Part11** | **Bảo mật & Tuân thủ (System Security & Compliance)**      | ⏳ Sắp tạo   | Authentication (OAuth2), authorization (RBAC), data encryption, GDPR/PDPA compliance, disaster recovery |
-| **Part12** | **Kiểm thử hiệu năng & tải (Performance & Load Testing)**  | ⏳ Sắp tạo   | Load testing scenarios (JMeter/K6), performance benchmarks, stress testing procedures |
-| **Part13** | **Kế hoạch kiểm thử tổng thể (System & UAT Testing)**      | ⏳ Sắp tạo   | Test strategy, test cases design, UAT matrix, regression testing, quality gates |
-| **Part14** | **Quản lý cấu hình & triển khai (Configuration & Deployment)** | ⏳ Sắp tạo | Environment setup, version control strategy, CI/CD workflows, deployment procedures |
-| **Part15** | **Kế hoạch bảo trì & vận hành (Maintenance & Monitoring)** | ⏳ Sắp tạo   | System monitoring, logging strategy, incident response procedures, maintenance schedules |
-| **Part16** | **Phụ lục & Tài liệu tham chiếu (Appendices)**             | ⏳ Cuối cùng | Glossary, technical diagrams, requirements traceability matrix, change log |
+Tài liệu này là **roadmap tổng thể** cho việc phát triển SRS hoàn chỉnh, đảm bảo:
+- Không bỏ sót yêu cầu nào từ BRD
+- Cấu trúc nhất quán và logic
+- Traceability từ business requirements → technical specifications
+- Readiness cho development và testing phases
 
 ---
 
-## 🎯 Mục tiêu tài liệu SRS
+## 📊 Tiến độ tổng thể
 
-Tài liệu SRS này được xây dựng để:
+| Tình trạng | Số lượng Parts | Tỷ lệ hoàn thành |
+|------------|----------------|------------------|
+| ✅ Hoàn thành | 11/16 | 69% |
+| ⏳ Đang thực hiện | 0/16 | 0% |
+| 🔄 Sắp triển khai | 5/16 | 31% |
 
-1. **Cung cấp đặc tả kỹ thuật chi tiết** cho đội phát triển Product Sampling Platform
-2. **Đảm bảo alignment** giữa business requirements (BRD) và technical implementation
-3. **Hướng dẫn thiết kế và phát triển** các module hệ thống theo chuẩn
-4. **Định nghĩa acceptance criteria** cho testing và quality assurance
-5. **Tạo baseline** cho project management và change control
-
-## 📐 Phương pháp tiếp cận
-
-- **Chuẩn tham chiếu**: IEEE 830-1998 Software Requirements Specification
-- **Phương pháp**: Agile-compatible, iterative refinement
-- **Traceability**: Mapping từ BRD → SRS → Design → Code → Test
-- **Validation**: Stakeholder review sau mỗi Part
+**Ước tính thời gian hoàn thành**: 2-3 tuần (với team 2-3 analysts)
 
 ---
 
-**Tình trạng**: Part00 hoàn thành ✅  
-**Tiếp theo**: Part01 - Introduction  
-**Người review**: Product Manager, System Architect, Development Lead
+## 📘 Chi tiết từng Part
 
-# 📋 SRS Part01 - Giới thiệu (Introduction)
-**Hệ thống Product Sampling Platform**
+### **Part01 - Giới thiệu (Introduction)** ✅
+**Mục đích**: Thiết lập context và foundation cho toàn bộ SRS
+
+**Nội dung chính**:
+- Mục tiêu của tài liệu SRS và audience (Dev team, QA, PM, Stakeholders)
+- Phạm vi dự án (In-scope: Hybrid sampling platform / Out-scope: Logistics, Native apps)
+- Định nghĩa thuật ngữ (Campaign, Barcode Pool, Verified User, Redemption, etc.)
+- Tài liệu tham chiếu (BRD, Feature Tree, Access Control)
+- Quy ước ký hiệu (FR-XXX, NFR-XXX, UC-XXX)
+
+**Deliverable**: Foundation document cho team hiểu rõ dự án
+**Trọng số**: 🔴 Critical - Phải hoàn thành trước khi làm các parts khác
+
+---
+
+### **Part02 - Tổng quan hệ thống (Overall Description)** ✅
+**Mục đích**: Mô tả high-level view của hệ thống và context sử dụng
+
+**Nội dung chính**:
+- System actors (6 roles: Admin, Group Admin, Customer Account, Serving Account, Auditor, User Role)
+- Use context và business scenarios
+- Assumptions và constraints chính
+- Dependencies với external systems (POS, CRM, SMS/Email providers)
+- Operating environment (Cloud, multi-tenant)
+
+**Deliverable**: Shared understanding về system boundaries và stakeholders
+**Trọng số**: 🔴 Critical - Architecture foundation
+
+---
+
+### **Part03 - Phạm vi & Mục tiêu sản phẩm (Scope and Objectives)** ✅
+**Mục đích**: Map business goals từ BRD thành technical objectives
+
+**Nội dung chính**:
+- Business goals (Cost per verified user ≤ 0.4 USD, Conversion ≥ 90%, Fraud ≤ 5%)
+- Success criteria và KPI mapping
+- Feature prioritization (Must-have → Should-have → Nice-to-have)
+- MVP scope definition và phasing strategy
+- ROI targets và business value metrics
+
+**Deliverable**: Clear scope boundaries và success definition
+**Trọng số**: 🟡 High - Guides development priorities
+
+---
+
+### **Part04 - Yêu cầu chức năng (Functional Requirements)** ✅
+**Mục đích**: Chi tiết hóa tất cả chức năng hệ thống cần thực hiện
+
+**Nội dung chính**:
+- FR-001 đến FR-013 (13 functional requirements chính)
+- User stories với acceptance criteria cụ thể
+- Business rules và logic flows
+- Input/Output specifications
+- Error handling requirements
+- Integration points với external systems
+
+**Deliverable**: Complete functional specification cho development
+**Trọng số**: 🔴 Critical - Core development guide
+
+---
+
+### **Part05 - Yêu cầu phi chức năng (Non-Functional Requirements)** ✅
+**Mục đích**: Định nghĩa quality attributes và performance standards
+
+**Nội dung chính**:
+- Performance (API response ≤ 3s, 100K requests/min peak load)
+- Security (PII encryption, OAuth2, RBAC)
+- Reliability (99.9% uptime, disaster recovery)
+- Scalability (10M users by 2027, multi-tenant)
+- Usability (mobile-first, accessibility)
+- Compliance (GDPR/PDPA, audit trails)
+
+**Deliverable**: Quality gates và performance benchmarks
+**Trọng số**: 🔴 Critical - System reliability foundation
+
+---
+
+### **Part06 - Kiến trúc hệ thống (System Architecture & Components)** ✅
+**Mục đích**: Thiết kế kiến trúc technical để đáp ứng requirements
+
+**Nội dung chính**:
+- Logical architecture (microservices, API gateway, databases)
+- Physical deployment diagram (cloud infrastructure)
+- Technology stack selection (Node.js/Go, React, MongoDB/PostgreSQL)
+- Component interactions và data flows
+- Scalability patterns và load balancing
+- CI/CD pipeline design
+
+**Deliverable**: Technical blueprint cho infrastructure team
+**Trọng số**: 🔴 Critical - Implementation foundation
+
+---
+
+### **Part07 - Thiết kế dữ liệu & CSDL (Data Design & Database Schema)** ✅
+**Mục đích**: Thiết kế data model và database schema chi tiết
+
+**Nội dung chính**:
+- Entity Relationship Diagram (ERD)
+- MongoDB collections design (campaigns, users, barcodes, redemptions)
+- PostgreSQL tables cho transactional data
+- Redis caching strategy
+- Data flow diagrams
+- Backup và recovery procedures
+
+**Deliverable**: Database implementation guide
+**Trọng số**: 🟡 High - Data integrity critical
+
+---
+
+### **Part08 - Thiết kế API & Tích hợp (API Design & Integration)** ✅
+**Mục đích**: Định nghĩa API contracts và integration specifications
+
+**Nội dung chính**:
+- REST API endpoints (CRUD operations)
+- Request/Response schemas
+- Authentication & authorization flows
+- Error codes và handling
+- Webhook specifications cho external integrations
+- Rate limiting và throttling policies
+- API versioning strategy
+
+**Deliverable**: API documentation cho frontend và integration teams
+**Trọng số**: 🔴 Critical - Integration contract
+
+---
+
+### **Part09 - Use Case chi tiết (Detailed Use Cases)** ✅
+**Mục đích**: Mô tả chi tiết các scenarios sử dụng hệ thống
+
+**Nội dung chính**:
+- 8 use cases chính (từ Campaign creation đến Analytics export)
+- Actor interactions và preconditions
+- Normal flows và alternative flows
+- Exception handling scenarios
+- Business rules enforcement
+- Cross-references với functional requirements
+
+**Deliverable**: Behavior specification cho testing team
+**Trọng số**: 🟡 High - Testing foundation
+
+---
+
+### **Part10 - Giao diện & Wireframes (UI/UX Design)** ✅
+**Mục đích**: Thiết kế user experience và interface guidelines
+
+**Nội dung chính**:
+- User journey flows (scan → form → verify → redeem)
+- Wireframes cho key screens (dashboard, landing page, portal)
+- Mobile-first design principles
+- Accessibility standards (WCAG 2.1)
+- Brand guidelines và color schemes
+- UX KPIs (form completion >90%, user engagement >70%)
+
+**Deliverable**: Design specifications cho UI/UX team
+**Trọng số**: 🟡 High - User experience critical
+
+---
+
+### **Part11 - Bảo mật & Tuân thủ (System Security & Compliance)** ✅
+**Mục đích**: Đảm bảo security và regulatory compliance
+
+**Nội dung chính**:
+- OAuth2 authentication flows
+- RBAC (Role-Based Access Control) implementation
+- Data encryption (AES-256, TLS 1.3)
+- GDPR/PDPA compliance procedures
+- Audit logging và monitoring
+- Disaster Recovery Plan (DRP)
+- Security testing requirements
+
+**Deliverable**: Security implementation guide
+**Trọng số**: 🔴 Critical - Risk mitigation
+
+---
+
+### **Part12 - Kiểm thử hiệu năng & tải (Performance & Load Testing Plan)** ⏳
+**Mục đích**: Đảm bảo hệ thống đáp ứng performance requirements
+
+**Nội dung dự kiến**:
+- Load testing scenarios (100K concurrent users)
+- Performance benchmarks (API response times, throughput)
+- Stress testing để tìm breaking points
+- Tools setup (JMeter, K6, Locust)
+- Monitoring và alerting thresholds
+- Performance optimization strategies
+
+**Deliverable**: Performance testing framework
+**Trọng số**: 🟡 High - Scalability validation
+
+---
+
+### **Part13 - Kế hoạch kiểm thử tổng thể (System & UAT Testing Plan)** ⏳
+**Mục đích**: Comprehensive testing strategy cho quality assurance
+
+**Nội dung dự kiến**:
+- Test types (Unit, Integration, System, UAT)
+- Test case design methodology
+- Automation testing framework
+- UAT acceptance matrix với business stakeholders
+- Regression testing procedures
+- Bug tracking và resolution workflows
+
+**Deliverable**: Complete testing methodology
+**Trọng số**: 🟡 High - Quality gates
+
+---
+
+### **Part14 - Quản lý cấu hình & triển khai (Configuration & Deployment)** ⏳
+**Mục đích**: Standardize deployment và configuration management
+
+**Nội dung dự kiến**:
+- Environment setup (Dev, Staging, Production)
+- Version control strategy (Git workflows)
+- CI/CD pipeline configuration
+- Configuration management (environment variables, secrets)
+- Blue-green deployment procedures
+- Rollback strategies
+
+**Deliverable**: DevOps implementation guide
+**Trọng số**: 🟠 Medium - Operational efficiency
+
+---
+
+### **Part15 - Kế hoạch bảo trì & vận hành (Maintenance & Monitoring Plan)** ⏳
+**Mục đích**: Ensure long-term system health và operational excellence
+
+**Nội dung dự kiến**:
+- Application và infrastructure monitoring
+- Logging strategy (centralized logs, log retention)
+- Incident response procedures
+- Maintenance windows và update procedures
+- Capacity planning và scaling triggers
+- Support escalation matrix
+
+**Deliverable**: Operations playbook
+**Trọng số**: 🟠 Medium - Operational readiness
+
+---
+
+### **Part16 - Phụ lục & Tài liệu tham chiếu (Appendices)** ⏳
+**Mục đích**: Supporting documentation và reference materials
+
+**Nội dung dự kiến**:
+- Glossary của thuật ngữ technical
+- Traceability matrix (Business Req → Functional Req → Test Cases)
+- Architecture diagrams (detailed)
+- Sample data và test datasets
+- Change management procedures
+- Document approval workflows
+
+**Deliverable**: Reference documentation
+**Trọng số**: 🟢 Low - Documentation completeness
+
+---
+
+## 🔄 Dependencies & Prerequisites
+
+### **Critical Path**:
+Part01 → Part02 → Part04 → Part06 → Part08 → Development
+
+### **Parallel Workstreams**:
+- **Architecture Track**: Part06 → Part07 → Part08
+- **Testing Track**: Part09 → Part12 → Part13
+- **Operations Track**: Part14 → Part15
+- **Documentation Track**: Part10 → Part11 → Part16
+
+### **Key Milestones**:
+- **Week 1**: Complete Part01-Part04 (Requirements foundation)
+- **Week 2**: Complete Part06-Part08 (Technical design)
+- **Week 3**: Complete Part12-Part15 (Testing & Operations)
+- **Week 4**: Part16 và final review
+
+---
+
+## 🎯 Success Criteria
+
+### **Documentation Quality**:
+- [ ] Tất cả requirements traceable từ BRD
+- [ ] Zero contradictions giữa các parts
+- [ ] Complete API specifications cho development
+- [ ] Acceptance criteria measurable và testable
+
+### **Technical Readiness**:
+- [ ] Architecture supports NFRs (scalability, security)
+- [ ] Database schema optimized cho performance
+- [ ] Integration points clearly defined
+- [ ] Testing strategy comprehensive
+
+### **Business Alignment**:
+- [ ] MVP scope feasible trong timeline
+- [ ] KPIs measurable và achievable
+- [ ] Risk mitigation strategies identified
+- [ ] Stakeholder sign-off secured
+
+---
+
+## 📞 Next Actions
+
+1. **Immediate (Week 1)**:
+   - Complete Part01-Part04
+   - Validate requirements với stakeholders
+   - Setup documentation repository
+
+2. **Short-term (Week 2-3)**:
+   - Architecture review với CTO
+   - API design review với frontend team
+   - Security review với compliance team
+
+3. **Long-term (Week 4+)**:
+   - Final SRS review và approval
+   - Handoff to development teams
+   - Setup change management process
+
+---
+
+**Document Owner**: System Analyst Team  
+**Review Cycle**: Weekly progress reviews  
+**Final Approval**: CTO + PM + Business Stakeholders
+
+# 📘 Part01 - Giới thiệu (Introduction)
+**System Requirement Specification (SRS) - Product Sampling Platform**
 
 **Phiên bản**: 1.0  
 **Ngày**: 2025-10-17  
 **Tác giả**: System Analyst Team  
+**Trạng thái**: ✅ Hoàn thành  
 
 ---
 
 ## 1.1 Mục đích tài liệu
 
-### 1.1.1 Tổng quan
-Tài liệu System Requirement Specification (SRS) này mô tả chi tiết các yêu cầu kỹ thuật cho việc phát triển **Product Sampling Platform (PSS)** - nền tảng quản lý và phân phối sản phẩm dùng thử thông minh. 
+### 1.1.1 Đối tượng sử dụng
+Tài liệu SRS này được thiết kế cho các stakeholder chính sau:
 
-SRS được xây dựng dựa trên Business Requirement Document (BRD) đã được phê duyệt, nhằm chuyển đổi các yêu cầu kinh doanh thành đặc tả kỹ thuật chi tiết cho đội phát triển.
+| Đối tượng | Mục đích sử dụng | Phần quan tâm chính |
+|-----------|------------------|-------------------|
+| **Development Team** | Hiểu requirements để implement | Part04-Part08 (Functional, API, Database) |
+| **QA/Testing Team** | Thiết kế test cases và validation | Part09 (Use Cases), Part12-13 (Testing) |
+| **Project Manager** | Quản lý scope, timeline, delivery | Part03 (Scope), Part00 (Checklist) |
+| **Technical Lead/Architect** | Thiết kế kiến trúc và technology stack | Part06 (Architecture), Part07 (Database) |
+| **Business Stakeholders** | Validation requirements đáp ứng business goals | Part02-03 (Overview, Scope), Part04 (Functional) |
+| **DevOps/Infrastructure** | Setup môi trường và deployment | Part14-15 (Deployment, Monitoring) |
+| **Security/Compliance Team** | Đảm bảo bảo mật và tuân thủ | Part11 (Security & Compliance) |
 
-### 1.1.2 Đối tượng sử dụng
-- **System Architect**: Thiết kế kiến trúc hệ thống
-- **Development Team**: Backend, Frontend, DevOps engineers
-- **QA Team**: Thiết kế test cases và quality assurance
-- **Product Manager**: Validation và acceptance criteria
-- **Business Stakeholders**: Review và sign-off requirements
-
-### 1.1.3 Mục tiêu chính
-- Định nghĩa rõ ràng functional và non-functional requirements
-- Cung cấp đặc tả kỹ thuật để estimate effort và timeline
-- Tạo baseline cho change management và version control
-- Đảm bảo traceability từ business needs đến technical implementation
+### 1.1.2 Mục tiêu chính
+- **Traceability**: Đảm bảo mọi requirement đều traceable từ Business Requirements (BRD) đến implementation
+- **Consistency**: Tạo shared understanding giữa tất cả team members về system behavior
+- **Completeness**: Cover đầy đủ functional và non-functional requirements
+- **Testability**: Cung cấp acceptance criteria rõ ràng cho testing và validation
 
 ---
 
 ## 1.2 Phạm vi dự án
 
-### 1.2.1 Tên sản phẩm
-**Product Sampling Platform (PSS)** - Nền tảng quản lý phân phối mẫu sản phẩm thông minh
+### 1.2.1 In-Scope (Trong phạm vi)
+Hệ thống **Product Sampling Platform (PSP)** sẽ bao gồm:
 
-### 1.2.2 Phạm vi chức năng (In-scope)
-**MVP Phase (Q1-Q2 2025):**
-- Quản lý Campaign và Barcode/Voucher  
-- Landing Page với form thu thập dữ liệu khách hàng
-- Xác thực OTP (SMS/Email) chống spam
-- Cấp phát barcode/voucher single-use
-- Redemption tại POS với offline sync
-- Dashboard analytics và báo cáo realtime
-- Tích hợp CRM cơ bản (webhook/API)
-- Phân quyền RBAC cho 6 roles
-- User Portal (PWA) cho khách hàng cuối
-- Quản lý Ads Format với dynamic QR
+**Core Business Functions:**
+- ✅ **Campaign Management**: Tạo và quản lý chiến dịch sampling với barcode pools
+- ✅ **Hybrid Distribution**: Hỗ trợ phân phối tại POS (Circle K, GS25) và digital vouchers
+- ✅ **Customer Verification**: OTP verification (SMS/Email) để chống spam và fraud
+- ✅ **Data Collection**: Thu thập thông tin verified users với consent management
+- ✅ **Redemption Tracking**: Theo dõi redemption tại POS với offline sync capability
+- ✅ **Analytics & Reporting**: Dashboard realtime với funnel tracking và ROI metrics
 
-**Advanced Phase (Q3 2025-Q4 2026):**
-- Fraud detection và trust scoring  
-- Inventory reconciliation
-- A/B testing và dynamic offers
-- Support ticketing system
-- Multi-market localization
+**Technical Capabilities:**
+- ✅ **Multi-tenant Architecture**: Hỗ trợ multiple brands và retail partners
+- ✅ **API Integration**: REST APIs cho CRM, POS, và third-party systems
+- ✅ **Mobile-first PWA**: Progressive Web App cho end users
+- ✅ **Role-based Access Control**: 6 user roles với phân quyền chi tiết
+- ✅ **Compliance**: GDPR/PDPA compliance với audit trails
 
-### 1.2.3 Phạm vi kỹ thuật
-- **Platform**: Web-based (PWA), microservices architecture
-- **Geographic**: Việt Nam (pilot) → Southeast Asia (expansion)
-- **Scale**: Hỗ trợ 10K verified users (MVP) → 10M users (long-term)
-- **Integration**: CRM, POS, SMS/Email providers, Analytics tools
+**Phase Coverage:**
+- **Phase 1 (MVP)**: Must-have features cho pilot 5-10 brands, 10K verified users
+- **Phase 2**: Should-have features cho scale 1M-3M users, advanced analytics
+- **Phase 3**: Nice-to-have features cho vision "Sampling Intelligence Platform"
 
-### 1.2.4 Ngoài phạm vi (Out-of-scope)
-- Logistics thực tế (vận chuyển mẫu hàng)
-- Mobile native apps (chỉ PWA)
-- Blockchain/tokenization (Phase 3)
-- Payment processing cho mua hàng
-- ERP quản lý kho hàng phức tạp
+### 1.2.2 Out-of-Scope (Ngoài phạm vi)
+Những chức năng sau **KHÔNG** nằm trong scope hiện tại:
+
+❌ **Physical Logistics**: Brand tự chịu trách nhiệm vận chuyển hàng mẫu đến retail nodes  
+❌ **Native Mobile Apps**: Chỉ phát triển PWA, không có iOS/Android native apps  
+❌ **Payment Processing**: Không xử lý thanh toán, chỉ voucher/barcode free samples  
+❌ **Inventory Management**: Không quản lý kho hàng vật lý, chỉ digital tracking  
+❌ **Blockchain/Tokenization**: Tính năng này thuộc Phase 3 (Nice-to-have)  
+❌ **AI/ML Advanced Features**: Predictive analytics thuộc Phase 2-3  
 
 ---
 
-## 1.3 Định nghĩa và thuật ngữ
+## 1.3 Định nghĩa thuật ngữ
 
-| Thuật ngữ | Định nghĩa |
-|-----------|------------|
-| **Product Sampling** | Việc phân phối sản phẩm dùng thử miễn phí để thu thập dữ liệu khách hàng và tăng brand awareness |
-| **Campaign** | Chiến dịch phân phối mẫu sản phẩm với mục tiêu, thời gian và ngân sách cụ thể |
-| **Barcode/Voucher** | Mã định danh duy nhất (QR code/barcode) cho phép khách hàng đổi lấy mẫu sản phẩm |
-| **Landing Page** | Trang web thu thập thông tin khách hàng sau khi scan QR code |
-| **OTP (One-Time Password)** | Mã xác thực một lần gửi qua SMS/Email để verify khách hàng |
-| **Ads Format** | Định dạng quảng cáo (poster, flyer, banner) chứa QR code của campaign |
-| **Redemption** | Quá trình đổi voucher lấy mẫu sản phẩm tại điểm bán |
-| **POS (Point of Sale)** | Điểm bán hàng/đổi quà (cửa hàng, booth sự kiện) |
-| **Verified User** | Khách hàng đã hoàn thành xác thực OTP và cung cấp thông tin chính xác |
-| **Funnel** | Quy trình từ scan QR → điền form → verify OTP → nhận voucher → redeem |
-| **RBAC** | Role-Based Access Control - phân quyền dựa trên vai trò |
-| **PWA** | Progressive Web App - ứng dụng web có trải nghiệm như mobile app |
-| **CPL** | Cost Per Lead - chi phí để thu thập một khách hàng tiềm năng |
-| **ROI** | Return on Investment - tỷ suất sinh lời của chiến dịch |
+### 1.3.1 Business Terms
+
+| Thuật ngữ | Định nghĩa | Ví dụ |
+|-----------|------------|-------|
+| **Campaign** | Chiến dịch sampling của brand với mục tiêu, thời gian, và budget cụ thể | "Unilever Shampoo Trial - Q1 2025" |
+| **Barcode Pool** | Tập hợp các barcode/voucher được gán cho một campaign | 10,000 mã barcode cho campaign Coca-Cola |
+| **Verified User** | Người dùng đã complete OTP verification và consent | User đã nhập OTP từ SMS và tick opt-in |
+| **Redemption** | Hành động đổi barcode/voucher thành sản phẩm tại POS | Scan barcode tại Circle K nhận lon Coca-Cola |
+| **Sampling Network** | Mạng lưới các retail nodes hỗ trợ phân phối samples | Circle K, GS25, booth events, pop-up stores |
+| **Hybrid Distribution** | Kết hợp phân phối vật lý (tại store) và digital (voucher online) | QR code tại store dẫn đến form digital |
+| **Funnel Tracking** | Theo dõi customer journey từ scan QR đến redemption | Scan → Form → Verify → Issue → Redeem |
+
+### 1.3.2 Technical Terms
+
+| Thuật ngữ | Định nghĩa | Technical Notes |
+|-----------|------------|-----------------|
+| **PWA** | Progressive Web App - ứng dụng web hoạt động như native app | React-based, offline-capable |
+| **OTP** | One-Time Password - mã xác thực dùng một lần | 6-digit code, 5 minutes expiry |
+| **API Gateway** | Central point quản lý tất cả API calls và routing | Kong hoặc AWS API Gateway |
+| **Multi-tenant** | Kiến trúc hỗ trợ nhiều customers trên cùng infrastructure | Tenant isolation by database/schema |
+| **RBAC** | Role-Based Access Control - phân quyền dựa trên roles | 6 roles: Admin, Group Admin, Customer Account, Serving Account, Auditor, User Role |
+| **Audit Trail** | Log immutable của mọi hành động trong hệ thống | Compliance với GDPR/PDPA requirements |
+| **Webhook** | HTTP callback để notify external systems về events | POST request khi có redemption mới |
+
+### 1.3.3 User Roles
+
+| Role | Mô tả ngắn | Primary Use Cases |
+|------|------------|-------------------|
+| **Admin** | Toàn quyền hệ thống, quản lý global resources | System config, user management, global campaigns |
+| **Group Admin** | Quản lý resources trong group/organization | Group campaigns, team member management |
+| **Customer Account** | Brand account quản lý campaigns riêng | Campaign creation, analytics, data export |
+| **Serving Account** | Staff tại retail nodes để scan/redeem | Barcode scanning, redemption processing |
+| **Auditor** | Xem logs và reports cho compliance | Audit logs, compliance reports |
+| **User Role** | End user sử dụng User Portal | View sampling history, track redemption status |
 
 ---
 
 ## 1.4 Tài liệu tham chiếu
 
-### 1.4.1 Tài liệu dự án
-| Tài liệu | Phiên bản | Ngày | Mô tả |
-|----------|-----------|------|-------|
-| **Problem.md** | 1.0 | 2025-10-16 | Định nghĩa bài toán và phân loại requirements theo MoSCoW |
-| **Product-Sampling-Vision-and-Strategy Document.md** | 1.0 | 2025-10-16 | Tầm nhìn chiến lược, cơ hội thị trường và go-to-market strategy |
-| **01-BRD.md** | 3.0 | 2025-10-17 | Business Requirement Document với financial model và stakeholder analysis |
-| **System_Feature_Tree_Grok.md** | 4.0 | 2025-10-16 | Cây chức năng hệ thống với user stories chi tiết |
-| **Access_Control_Tree_Grok.md** | 2.2 | 2025-10-16 | Phân quyền RBAC và access control matrix |
+### 1.4.1 Input Documents
+Các tài liệu đầu vào đã được sử dụng để tạo SRS này:
 
-### 1.4.2 Chuẩn kỹ thuật tham chiếu
-- **IEEE 830-1998**: Software Requirements Specification standard
-- **ISO/IEC 25010**: Systems and software Quality Requirements and Evaluation (SQuaRE)
-- **OWASP Top 10**: Web application security standards
-- **GDPR/PDPA**: Data protection and privacy regulations
-- **ISO 27001**: Information security management standards
-- **REST API Design Guidelines**: RESTful web services best practices
+| Tài liệu | Phiên bản | Ngày | Vai trò |
+|----------|-----------|------|---------|
+| **Problem.md** | Latest | 2025-10 | Problem definition, MoSCoW prioritization |
+| **01-BRD.md** | 3.0 | 2025-10-17 | Business requirements, financial model, KPIs |
+| **Product-Sampling-Vision-and-Strategy Document.md** | 1.0 | 2025-10 | Vision, market opportunity, go-to-market strategy |
+| **System_Feature_Tree_Grok.md** | 4.0 | 2025-10-16 | Feature breakdown, user stories, technical requirements |
+| **Access_Control_Tree_Grok.md** | 2.2 | 2025-10-16 | Role definitions, permission matrix |
 
-### 1.4.3 Technology Standards
-- **OpenAPI 3.0**: API specification format
-- **OAuth 2.0 / OpenID Connect**: Authentication and authorization
-- **JWT (RFC 7519)**: JSON Web Token standard
-- **SMS OTP (RFC 4226/6238)**: Time-based One-time Password
-- **QR Code (ISO/IEC 18004)**: 2D barcode standard
+### 1.4.2 Standards và References
+- **IEEE Std 830-1998**: Software Requirements Specifications standard
+- **ISO/IEC 25010**: Software product quality characteristics
+- **GDPR (EU 2016/679)**: General Data Protection Regulation
+- **PDPA (Personal Data Protection Act)**: Vietnam data protection law
+- **WCAG 2.1**: Web Content Accessibility Guidelines
+- **REST API Design**: RESTful web services best practices
+- **OAuth 2.0**: Authorization framework standard
 
 ---
 
-## 1.5 Tổng quan cấu trúc tài liệu
+## 1.5 Quy ước ký hiệu
 
-Tài liệu SRS được tổ chức thành 16 phần chính:
+### 1.5.1 Requirement Identifiers
+- **FR-XXX**: Functional Requirement (FR-001, FR-002, ...)
+- **NFR-XXX**: Non-Functional Requirement (NFR-001, NFR-002, ...)
+- **UC-XXX**: Use Case (UC-001, UC-002, ...)
+- **API-XXX**: API Endpoint specification (API-001, API-002, ...)
+- **DB-XXX**: Database entity/table (DB-001, DB-002, ...)
 
-**Phần Foundation (Part 01-03):**
-- Introduction, Overall Description, Scope & Objectives
+### 1.5.2 Priority Levels
+- 🔴 **Critical**: Must-have cho MVP, blocking nếu không có
+- 🟡 **High**: Important cho user experience và business value
+- 🟠 **Medium**: Nice-to-have, có thể defer sang phase sau
+- 🟢 **Low**: Future enhancement, không ảnh hưởng core functionality
 
-**Phần Core Requirements (Part 04-05):**
-- Functional Requirements, Non-Functional Requirements  
+### 1.5.3 Status Indicators
+- ✅ **Complete**: Requirement đã defined đầy đủ và approved
+- ⏳ **In Progress**: Đang được analysis và documentation
+- 🔄 **Under Review**: Cần review và validation từ stakeholders
+- ❌ **Blocked**: Bị block do dependencies hoặc decisions pending
 
-**Phần Technical Design (Part 06-08):**
-- System Architecture, Data Design, API Design
+### 1.5.4 Diagram Conventions
+Tất cả diagrams sử dụng **Mermaid syntax** để đảm bảo consistency:
 
-**Phần Implementation (Part 09-11):**
-- Use Cases, UI/UX Design, Security & Compliance
-
-**Phần Quality Assurance (Part 12-13):**
-- Performance Testing, System Testing
-
-**Phần Operations (Part 14-16):**
-- Configuration & Deployment, Maintenance & Monitoring, Appendices
-
----
-
-## 1.6 Quy trình phê duyệt và quản lý thay đổi
-
-### 1.6.1 Review Process
-1. **Technical Review**: System Architect + Lead Developer
-2. **Business Review**: Product Manager + Key Stakeholders  
-3. **Final Approval**: Project Steering Committee
-
-### 1.6.2 Change Management
-- Mọi thay đổi requirements phải được document và approve
-- Impact analysis cho technical và business implications
-- Version control với semantic versioning (Major.Minor.Patch)
-- Traceability matrix cập nhật theo changes
+```mermaid
+graph TD
+    A[User] --> B[Landing Page]
+    B --> C[Form + OTP]
+    C --> D[Barcode Issued]
+    D --> E[Redemption at POS]
+    
+    style A fill:#e1f5fe
+    style E fill:#c8e6c9
+```
 
 ---
 
-**Nguồn tham khảo chính:**
-- Business Requirement Document (BRD v3.0)
-- System Feature Tree (v4.0) 
-- Access Control Tree (v2.2)
-- Problem Definition Document (v1.0)
-- Product Vision & Strategy Document (v1.0)
+## 1.6 Document Structure Overview
 
-**Tình trạng**: Part01 hoàn thành ✅  
-**Tiếp theo**: Part02 - Overall Description  
-**Người review**: Product Manager, System Architect
+### 1.6.1 SRS Organization
+Tài liệu được tổ chức theo 16 parts với dependencies rõ ràng:
 
-# 📋 SRS Part02 - Tổng quan hệ thống (Overall Description)
-**Hệ thống Product Sampling Platform**
+```mermaid
+graph LR
+    P01[Part01: Introduction] --> P02[Part02: System Overview]
+    P02 --> P03[Part03: Scope & Objectives]
+    P03 --> P04[Part04: Functional Requirements]
+    P04 --> P06[Part06: System Architecture]
+    P06 --> P07[Part07: Database Design]
+    P06 --> P08[Part08: API Design]
+    P04 --> P09[Part09: Use Cases]
+    P09 --> P12[Part12: Performance Testing]
+    P12 --> P13[Part13: System Testing]
+    
+    style P01 fill:#ffcccc
+    style P04 fill:#ffffcc
+    style P06 fill:#ccffcc
+```
+
+### 1.6.2 Cross-References
+Mỗi requirement sẽ có cross-references để đảm bảo traceability:
+
+- **Business → Functional**: BRD requirement maps to FR-XXX
+- **Functional → Technical**: FR-XXX implements via API-XXX, DB-XXX
+- **Functional → Testing**: FR-XXX tested by UC-XXX, Test Case TC-XXX
+- **Non-Functional → Architecture**: NFR-XXX addressed by architectural decisions
+
+---
+
+## 1.7 Quality Assurance
+
+### 1.7.1 Review Process
+Mỗi part sẽ qua review process sau:
+
+1. **Technical Review**: Architecture và feasibility validation
+2. **Business Review**: Alignment với business goals từ BRD
+3. **Security Review**: Compliance và security requirements validation
+4. **Final Approval**: Sign-off từ PM, Technical Lead, Business Stakeholders
+
+### 1.7.2 Change Management
+- All changes phải update traceability matrix
+- Version control với clear change logs
+- Impact analysis cho changes affecting multiple parts
+- Stakeholder notification cho major changes
+
+---
+
+## 1.8 Success Criteria
+
+Document này được considered **successful** khi:
+
+✅ **Completeness**: Tất cả requirements từ BRD được covered  
+✅ **Consistency**: Không có contradictions giữa các parts  
+✅ **Testability**: Mọi requirement có measurable acceptance criteria  
+✅ **Implementability**: Development team có đủ thông tin để implement  
+✅ **Traceability**: Clear mapping từ business goals đến technical requirements  
+✅ **Stakeholder Sign-off**: Approval từ tất cả key stakeholders  
+
+---
+
+**Document Status**: ✅ Ready for Part02  
+**Next Action**: Proceed với Part02 - System Overview  
+**Owner**: System Analyst Team
+
+# 📘 Part02 - Tổng quan hệ thống (System Overview)
+**System Requirement Specification (SRS) - Product Sampling Platform**
 
 **Phiên bản**: 1.0  
 **Ngày**: 2025-10-17  
 **Tác giả**: System Analyst Team  
+**Trạng thái**: ✅ Hoàn thành  
 
 ---
 
-## 2.1 Bối cảnh sản phẩm
+## 2.1 Tổng quan hệ thống
 
-### 2.1.1 Vấn đề kinh doanh hiện tại
-Dựa trên phân tích trong **Problem.md** và **01-BRD.md**, các thương hiệu FMCG đang gặp phải những thách thức sau:
+### 2.1.1 Mô tả chung
+**Product Sampling Platform (PSP)** là một nền tảng **microservices-based** được thiết kế để giải quyết bài toán phân phối sản phẩm mẫu giá thấp (~1 USD) một cách hiệu quả, đồng thời thu thập dữ liệu khách hàng chất lượng cao và chống gian lận.
 
-- **Chi phí phân phối cao**: Logistics > giá trị quà tặng (~1 USD)
-- **Spam và gian lận**: Đăng ký ảo, bot làm sai lệch dữ liệu khách hàng
-- **Thiếu đo lường**: Khó tracking ROI, funnel conversion, hiệu quả campaign
-- **Quản lý phức tạp**: Thiếu công cụ tự động hóa quy trình sampling
+**Giá trị cốt lõi:**
+- 🎯 **Hybrid Distribution**: Kết hợp phân phối vật lý (POS) và digital (voucher)
+- 🔐 **Verified Data Collection**: Thu thập data với OTP verification và consent management
+- 📊 **Real-time Analytics**: Dashboard và báo cáo chi tiết cho brands
+- 🛡️ **Fraud Prevention**: Multi-layer security với rate limiting và device fingerprinting
+- 🔗 **Seamless Integration**: API-first design cho CRM, POS, và third-party systems
 
-### 2.1.2 Giải pháp tổng thể
-Product Sampling Platform là nền tảng **"Sampling Network-as-a-Service"** giúp:
-- Tối ưu phân phối qua mạng lưới retail nodes đã verify
-- Thu thập dữ liệu verified với OTP authentication
-- Cung cấp analytics realtime và CRM integration
-- Giảm cost-per-verified-lead xuống <0.4 USD
+### 2.1.2 Business Context
+Hệ thống phục vụ ecosystem sampling tại Đông Nam Á với focus vào thị trường Việt Nam:
 
-### 2.1.3 Vị trí trong hệ sinh thái
-```
-Brand/Agency → PSS Platform → Retail Network → End Users
-     ↑              ↓              ↓           ↓
-   CRM/ERP ← Analytics Dashboard ← POS System ← User Portal
-```
-
----
-
-## 2.2 Chức năng sản phẩm tổng quan
-
-### 2.2.1 Core Functions (dựa trên System_Feature_Tree_Grok.md v4.0)
-
-**Quản lý Campaign & Content:**
-- Tạo và quản lý campaign với barcode pool, location targeting
-- Upload và config ads format (13 loại: poster, flyer, digital banner...)
-- Dynamic QR code generation với UTM tracking
-
-**Thu thập & Xác thực dữ liệu:**
-- Landing page với form thu thập (tên, email, SĐT, preferences)
-- OTP verification (SMS/Email) với anti-fraud measures
-- Consent management tuân thủ GDPR/PDPA
-
-**Phân phối & Redemption:**
-- Cấp phát voucher/barcode single-use sau verification
-- POS integration cho redemption tại stores/booths
-- Offline sync cho retail nodes không có internet ổn định
-
-**Analytics & Integration:**
-- Funnel tracking realtime (scan → submit → verify → redeem)
-- CRM sync với webhook/API (HubSpot, Salesforce)
-- User portal cho customer experience
-
-### 2.2.2 Advanced Functions (Phase 2)
-- Fraud detection với ML-based scoring
-- Inventory reconciliation và settlement
-- A/B testing cho campaign optimization
-- Multi-market localization
-
----
-
-## 2.3 Người dùng và đặc điểm
-
-### 2.3.1 System Actors (dựa trên Access_Control_Tree_Grok.md v2.2)
-
-| Actor | Mô tả | Đặc điểm sử dụng | Quyền truy cập |
-|-------|-------|------------------|----------------|
-| **Admin** | Quản trị hệ thống toàn cục | - IT background<br>- Toàn quyền config<br>- Troubleshooting | Full access toàn bộ modules |
-| **Group Admin** | Quản lý nhóm brands/agencies | - Marketing background<br>- Quản lý multi-brand<br>- Strategy planning | Group-scoped permissions |
-| **Customer Account** | Brand manager/Agency account | - Campaign management<br>- ROI tracking<br>- Data analysis | Own campaigns only |
-| **Serving Account** | Staff tại retail nodes | - Limited tech skills<br>- Mobile/tablet usage<br>- Quick scan operations | Redemption tool only |
-| **Auditor** | Compliance và audit | - Legal/compliance background<br>- Read-only access<br>- Report generation | View logs và compliance reports |
-| **User Role (End User)** | Khách hàng cuối | - Consumer behavior<br>- Mobile-first<br>- Instant gratification | User portal PWA |
-
-### 2.3.2 User Environment
-- **Retail Staff**: Android/iOS tablets, intermittent internet
-- **Brand Managers**: Desktop/laptop, stable internet, multiple campaigns
-- **End Users**: Smartphones, social media savvy, instant mobile experience
-- **Admin/Auditors**: Desktop workstations, enterprise network
-
----
-
-## 2.4 Constraints và ràng buộc
-
-### 2.4.1 Technical Constraints
-**Performance Requirements:**
-- API gateway: 100,000 requests/phút (peak load)
-- Response time: <3 giây cho dashboard
-- Database: Hỗ trợ 10M users concurrent
-
-**Technology Stack:**
-- Backend: Node.js/Go microservices  
-- Frontend: React PWA
-- Database: MongoDB (documents), PostgreSQL (relational), Redis (cache)
-- Cloud: AWS/GCP với multi-region deployment
-
-**Integration Constraints:**
-- CRM: RESTful API với rate limiting
-- SMS Provider: Twilio/MessageBird với delivery SLA
-- POS: Scandit SDK hoặc generic barcode scanners
-
-### 2.4.2 Business Constraints
-**Budget và Timeline:**
-- MVP development: 6 tháng, 500K USD
-- Scale phase: 12 tháng bổ sung
-- Team size: 8 developers + 2 QA
-
-**Regulatory Compliance:**
-- GDPR/PDPA cho data protection
-- PCI-DSS nếu có payment processing
-- Local telco regulations cho SMS OTP
-
-**Operational Constraints:**
-- 99.9% uptime SLA
-- Data retention: 7 năm cho audit
-- Backup và disaster recovery: RTO < 4 hours, RPO < 1 hour
-
----
-
-## 2.5 Assumptions và dependencies
-
-### 2.5.1 Business Assumptions (từ 01-BRD.md v3.0)
-- **Market Adoption**: Brands sẵn sàng chi 12-120 triệu VND/tháng cho SaaS
-- **Retail Partnership**: Circle K, GS25 hợp tác phân phối
-- **User Behavior**: 90%+ smartphone adoption, willingness để share data với incentives
-- **Competition**: 18-24 tháng trước khi competitor lớn vào thị trường
-
-### 2.5.2 Technical Assumptions
-- **Internet Connectivity**: 3G/4G coverage ổn định tại urban areas
-- **Device Compatibility**: Android 8+, iOS 12+ cho PWA
-- **Third-party APIs**: Uptime 99.5%+ cho critical services (SMS, CRM)
-- **Scaling**: Cloud auto-scaling hiệu quả cho traffic spikes
-
-### 2.5.3 Dependencies
-**External Dependencies:**
-- Twilio/MessageBird cho SMS OTP
-- HubSpot/Salesforce APIs cho CRM sync  
-- Scandit SDK cho barcode scanning
-- GA4/Meta Pixel cho tracking
-- Zendesk cho customer support
-
-**Internal Dependencies:**
-- UI/UX design completion trước frontend development
-- Database schema finalization trước backend APIs
-- Security audit completion trước production deployment
-
----
-
-## 2.6 Kiến trúc hệ thống cấp cao
-
-### 2.6.1 System Context Diagram
-```
-┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
-│   Brand/Agency  │────│  PSS Platform        │────│  Retail Network │
-│   - Dashboard   │    │  - Campaign Mgmt     │    │  - POS Systems  │
-│   - Analytics   │    │  - User Portal       │    │  - Staff Apps   │
-└─────────────────┘    │  - Admin Console     │    └─────────────────┘
-                       └──────────────────────┘
-                                │
-                   ┌────────────┼────────────┐
-                   │            │            │
-          ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-          │   CRM/ERP   │ │   SMS/Email │ │  Analytics  │
-          │   Systems   │ │   Providers │ │   Tools     │
-          └─────────────┘ └─────────────┘ └─────────────┘
-```
-
-### 2.6.2 Deployment Architecture
-- **Multi-tier**: Presentation → Application → Data layers
-- **Microservices**: Independent deployable services
-- **Cloud-native**: Container-based với Kubernetes orchestration
-- **Multi-region**: Primary (VN), DR (Singapore)
-
----
-
-## 2.7 Mô hình dữ liệu cấp cao
-
-### 2.7.1 Core Entities
-- **Campaign**: Thông tin campaign, timeline, budget
-- **Barcode**: Voucher codes và trạng thái lifecycle  
-- **User**: Profile khách hàng với verified status
-- **Location**: Retail nodes và geo-targeting
-- **Analytics**: Event logs và funnel metrics
-
-### 2.7.2 Data Flow
-```
-QR Scan → Landing Page → Form Submit → OTP Verify → Barcode Issue → Redemption → Analytics
+```mermaid
+graph TB
+    subgraph "Brands (FMCG)"
+        B1[Unilever]
+        B2[P&G]
+        B3[Coca-Cola]
+        B4[Local Brands]
+    end
+    
+    subgraph "Product Sampling Platform"
+        PSP[PSP Core]
+    end
+    
+    subgraph "Retail Network"
+        R1[Circle K]
+        R2[GS25]
+        R3[Mini Stop]
+        R4[Events/Booths]
+    end
+    
+    subgraph "End Users"
+        U1[Verified Customers]
+    end
+    
+    B1 --> PSP
+    B2 --> PSP
+    B3 --> PSP
+    B4 --> PSP
+    
+    PSP --> R1
+    PSP --> R2
+    PSP --> R3
+    PSP --> R4
+    
+    R1 --> U1
+    R2 --> U1
+    R3 --> U1
+    R4 --> U1
+    
+    style PSP fill:#e3f2fd
+    style U1 fill:#e8f5e8
 ```
 
 ---
 
-**Nguồn tham khảo chính:**
-- Business Requirement Document (01-BRD.md v3.0) - Stakeholders, Business constraints
-- System Feature Tree (System_Feature_Tree_Grok.md v4.0) - Functional overview
-- Access Control Tree (Access_Control_Tree_Grok.md v2.2) - User roles và permissions
-- Problem Definition (Problem.md v1.0) - Business context và challenges
-- Vision & Strategy Document (Product-Sampling-Vision-and-Strategy Document.md v1.0) - Market positioning
+## 2.2 System Actors
 
-**Tình trạng**: Part02 hoàn thành ✅  
-**Tiếp theo**: Part03 - Scope and Objectives  
-**Người review**: System Architect, Product Manager
-# 📋 SRS Part03 - Phạm vi và mục tiêu sản phẩm (Scope and Objectives)
-**Hệ thống Product Sampling Platform**
+### 2.2.1 Primary Actors
+
+| Actor | Mô tả | Primary Goals | System Interaction |
+|-------|-------|---------------|-------------------|
+| **Admin** | System administrator với toàn quyền | Quản lý hệ thống, setup global config, user management | Web dashboard, API management |
+| **Group Admin** | Quản lý resources trong organization/group | Quản lý campaigns trong group, team coordination | Web dashboard (scoped) |
+| **Customer Account** | Brand account manager | Tạo campaigns, xem analytics, export data | Web dashboard, API integration |
+| **Serving Account** | Staff tại retail nodes | Scan barcode, process redemption | Mobile PWA, POS integration |
+| **Auditor** | Compliance và audit personnel | Xem logs, compliance reports, audit trails | Read-only dashboard |
+| **End User** | Khách hàng cuối nhận samples | Nhận samples, track redemption, manage profile | User Portal PWA |
+
+### 2.2.2 Secondary Actors
+
+| Actor | Role | Integration Method |
+|-------|------|-------------------|
+| **CRM Systems** | HubSpot, Salesforce, Braze | REST API, Webhooks |
+| **SMS/Email Providers** | Twilio, FPT Telecom, Viettel | API integration |
+| **POS Systems** | Circle K POS, retail terminals | API, CSV import/export |
+| **Analytics Platforms** | Google Analytics, Meta Pixel | JavaScript tracking, API |
+| **Payment Gateways** | Future integration cho paid samples | REST API (Phase 2) |
+
+---
+
+## 2.3 Microservices Architecture Overview
+
+### 2.3.1 Service Decomposition Strategy
+
+**Hệ thống được chia thành 8 microservices chính** dựa trên business capabilities:
+
+```mermaid
+graph TB
+    subgraph "API Gateway Layer"
+        Gateway[Kong API Gateway]
+    end
+    
+    subgraph "Core Business Services"
+        Auth[auth-service]
+        Campaign[campaign-service]
+        Barcode[barcode-service]
+        User[user-service]
+    end
+    
+    subgraph "Operational Services"
+        Redemption[redemption-service]
+        Analytics[analytics-service]
+        Notification[notification-service]
+        Integration[integration-service]
+    end
+    
+    subgraph "Data Layer"
+        MongoDB[(MongoDB)]
+        PostgreSQL[(PostgreSQL)]
+        Redis[(Redis)]
+    end
+    
+    subgraph "External Systems"
+        CRM[CRM Systems]
+        SMS[SMS Providers]
+        POS[POS Systems]
+    end
+    
+    Gateway --> Auth
+    Gateway --> Campaign
+    Gateway --> Barcode
+    Gateway --> User
+    Gateway --> Redemption
+    Gateway --> Analytics
+    Gateway --> Notification
+    Gateway --> Integration
+    
+    Auth --> Redis
+    Campaign --> MongoDB
+    Barcode --> PostgreSQL
+    User --> MongoDB
+    Redemption --> PostgreSQL
+    Analytics --> MongoDB
+    Notification --> Redis
+    Integration --> MongoDB
+    
+    Integration --> CRM
+    Notification --> SMS
+    Redemption --> POS
+    
+    style Auth fill:#ffebee
+    style Campaign fill:#e3f2fd
+    style Analytics fill:#e8f5e8
+```
+
+### 2.3.2 Service Definitions
+
+| Service | Technology Stack | Primary Responsibility | Database |
+|---------|------------------|----------------------|----------|
+| **auth-service** | NestJS + JWT + Redis | Authentication, authorization, RBAC | Redis (sessions) |
+| **campaign-service** | NestJS + MongoDB | Campaign CRUD, ads format management | MongoDB |
+| **barcode-service** | NestJS + PostgreSQL | Barcode generation, pool management | PostgreSQL |
+| **user-service** | NestJS + MongoDB | User profiles, verification, consent | MongoDB |
+| **redemption-service** | NestJS + PostgreSQL | POS integration, redemption tracking | PostgreSQL |
+| **analytics-service** | NestJS + MongoDB | Reporting, dashboard data, export | MongoDB |
+| **notification-service** | NestJS + Redis + Queue | OTP, email, push notifications | Redis (queue) |
+| **integration-service** | NestJS + MongoDB | CRM sync, webhooks, external APIs | MongoDB |
+
+### 2.3.3 Inter-Service Communication
+
+**Communication Patterns:**
+- 🔄 **Synchronous**: REST API calls cho immediate responses
+- 📨 **Asynchronous**: Message queue (Redis Pub/Sub) cho long-running tasks
+- 🎯 **Event-driven**: Domain events cho loose coupling
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant G as API Gateway
+    participant A as auth-service
+    participant C as campaign-service
+    participant B as barcode-service
+    participant N as notification-service
+    
+    U->>G: POST /api/submit-form
+    G->>A: Validate token
+    A-->>G: Token valid
+    G->>C: Get campaign details
+    C-->>G: Campaign data
+    G->>B: Reserve barcode
+    B-->>G: Barcode reserved
+    G->>N: Send OTP
+    N-->>G: OTP sent
+    G-->>U: Form submitted, check OTP
+```
+
+---
+
+## 2.4 Development Environment
+
+### 2.4.1 Docker-based Development Setup
+
+**Local development stack** sử dụng Docker Compose:
+
+```yaml
+# docker-compose.dev.yml structure
+services:
+  # API Gateway
+  kong:
+    image: kong:latest
+    ports: ["8000:8000", "8001:8001"]
+  
+  # Core Services (NestJS)
+  auth-service:
+    build: ./services/auth
+    ports: ["3001:3000"]
+  
+  campaign-service:
+    build: ./services/campaign
+    ports: ["3002:3000"]
+  
+  # Databases
+  mongodb:
+    image: mongo:5.0
+    ports: ["27017:27017"]
+  
+  postgresql:
+    image: postgres:14
+    ports: ["5432:5432"]
+  
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+```
+
+### 2.4.2 Technology Stack Details
+
+| Layer | Technology | Version | Justification |
+|-------|------------|---------|---------------|
+| **Runtime** | Node.js | 18+ LTS | Stable, mature ecosystem |
+| **Framework** | NestJS | 10+ | TypeScript, decorators, dependency injection |
+| **API Gateway** | Kong | Latest | Open source, plugin ecosystem |
+| **Primary DB** | MongoDB | 5.0+ | Document store cho flexible schema |
+| **Transactional DB** | PostgreSQL | 14+ | ACID compliance cho financial data |
+| **Cache/Queue** | Redis | 7+ | In-memory speed, pub/sub capability |
+| **Container** | Docker | 20+ | Development/production parity |
+| **Orchestration** | Docker Compose | 2+ | Local development simplicity |
+
+---
+
+## 2.5 Operating Environment
+
+### 2.5.1 Deployment Architecture
+
+```mermaid
+graph TB
+    subgraph "Load Balancer"
+        LB[Nginx/CloudFlare]
+    end
+    
+    subgraph "Application Tier"
+        Gateway[API Gateway]
+        subgraph "Service Cluster"
+            S1[Service Instance 1]
+            S2[Service Instance 2]
+            S3[Service Instance N]
+        end
+    end
+    
+    subgraph "Data Tier"
+        MongoDB[MongoDB Cluster]
+        PostgreSQL[PostgreSQL Master/Slave]
+        Redis[Redis Cluster]
+    end
+    
+    subgraph "External Services"
+        Twilio[Twilio API]
+        HubSpot[HubSpot CRM]
+        GA[Google Analytics]
+    end
+    
+    LB --> Gateway
+    Gateway --> S1
+    Gateway --> S2
+    Gateway --> S3
+    
+    S1 --> MongoDB
+    S1 --> PostgreSQL
+    S1 --> Redis
+    
+    S2 --> Twilio
+    S3 --> HubSpot
+    S1 --> GA
+    
+    style LB fill:#ffecb3
+    style Gateway fill:#e1f5fe
+    style MongoDB fill:#e8f5e8
+```
+
+### 2.5.2 Environment Tiers
+
+| Environment | Purpose | Infrastructure | Data |
+|-------------|---------|----------------|------|
+| **Development** | Local development | Docker Compose | Sample/mock data |
+| **Staging** | Testing & integration | Cloud containers | Anonymized production data |
+| **Production** | Live system | Auto-scaling clusters | Real customer data |
+
+---
+
+## 2.6 System Constraints
+
+### 2.6.1 Technical Constraints
+
+| Constraint | Description | Impact | Mitigation |
+|------------|-------------|--------|------------|
+| **Peak Load** | 100,000 requests/minute during campaigns | System performance | Auto-scaling, caching, queue |
+| **Data Consistency** | Barcode must be single-use, atomic | Financial accuracy | PostgreSQL transactions, locks |
+| **Network Latency** | POS integration có thể intermittent | User experience | Offline-first design, sync |
+| **Mobile Performance** | PWA phải hoạt động trên 3G networks | Accessibility | Optimized assets, caching |
+
+### 2.6.2 Business Constraints
+
+| Constraint | Description | Technical Implementation |
+|------------|-------------|-------------------------|
+| **Cost per Verified User** | ≤ 0.4 USD target | Efficient infrastructure, fraud prevention |
+| **Fraud Rate** | ≤ 5% tolerance | Multi-layer verification, ML detection |
+| **Compliance** | GDPR/PDPA requirements | Audit trails, consent management, encryption |
+| **Multi-tenancy** | Support multiple brands | Tenant isolation, role-based access |
+
+---
+
+## 2.7 Assumptions và Dependencies
+
+### 2.7.1 Key Assumptions
+
+✅ **Network Connectivity**: Retail nodes có smartphone/tablet với internet  
+✅ **Staff Training**: Serving Account có thể được train để sử dụng scanning tool  
+✅ **Brand Adoption**: Brands sẵn sàng integrate API với existing CRM systems  
+✅ **User Behavior**: End users comfortable với OTP verification process  
+✅ **Compliance**: Current data protection laws remain stable  
+
+### 2.7.2 External Dependencies
+
+| Dependency | Type | Risk Level | Contingency |
+|------------|------|------------|-------------|
+| **Twilio SMS** | Critical | Medium | Backup SMS provider (FPT, Viettel) |
+| **MongoDB Atlas** | High | Low | Self-hosted MongoDB option |
+| **Kong Gateway** | High | Low | Nginx alternative configuration |
+| **HubSpot API** | Medium | Medium | Multiple CRM support |
+| **Internet Connectivity** | Critical | High | Offline-first architecture |
+
+---
+
+## 2.8 Success Criteria
+
+### 2.8.1 Technical Success Metrics
+
+| Metric | Target | Measurement Method |
+|--------|--------|--------------------|
+| **API Response Time** | ≤ 3 seconds | Application monitoring |
+| **System Uptime** | ≥ 99.9% | Infrastructure monitoring |
+| **Data Accuracy** | ≥ 99.5% | Audit reconciliation |
+| **Security Compliance** | 100% | Security audit, penetration testing |
+
+### 2.8.2 Business Success Metrics
+
+| Metric | Target | Business Impact |
+|--------|--------|-----------------|
+| **Cost per Verified Lead** | ≤ 0.4 USD | ROI optimization |
+| **Conversion Rate** | ≥ 90% | User experience validation |
+| **Fraud Detection Rate** | ≥ 95% | System security effectiveness |
+| **Brand Retention** | ≥ 85% | Product-market fit validation |
+
+---
+
+## 2.9 Next Steps
+
+### 2.9.1 Architecture Validation
+- [ ] Technical review với development team
+- [ ] Infrastructure cost estimation
+- [ ] Security assessment với compliance team
+- [ ] Performance benchmarking plan
+
+### 2.9.2 Implementation Readiness
+- [ ] Service interface contracts definition
+- [ ] Database schema design
+- [ ] API specification documentation
+- [ ] Development environment setup guide
+
+---
+
+**Document Status**: ✅ Ready for Part03  
+**Dependencies**: Architecture decisions confirmed  
+**Next Action**: Define detailed scope and objectives in Part03  
+**Owner**: System Analyst Team
+
+# 📘 Part03 - Phạm vi & Mục tiêu sản phẩm (Scope and Objectives)
+**System Requirement Specification (SRS) - Product Sampling Platform**
 
 **Phiên bản**: 1.0  
 **Ngày**: 2025-10-17  
 **Tác giả**: System Analyst Team  
+**Trạng thái**: ✅ Hoàn thành  
 
 ---
 
-## 3.1 Mục tiêu kinh doanh
+## 3.1 Business Goals & Strategic Objectives
 
-### 3.1.1 Vision Statement (từ Product-Sampling-Vision-and-Strategy Document.md)
-> "Transform product sampling from a cost center into a data-driven growth engine"
+### 3.1.1 Primary Business Goals (từ BRD)
 
-Product Sampling Platform hướng tới trở thành **nền tảng hạ tầng sampling toàn cầu**, nơi mọi thương hiệu có thể:
-- Triển khai chiến dịch sampling đa kênh trong vài phút
-- Xác thực khách hàng và chống gian lận tự động  
-- Nhận insight chi tiết về hiệu quả campaign theo thời gian thực
-- Dự đoán ROI chiến dịch bằng AI
+| Business Goal | Target Metric | Technical Implementation | Success Criteria |
+|---------------|---------------|-------------------------|------------------|
+| **Cost Optimization** | ≤ 0.4 USD per verified user | Efficient service architecture, fraud prevention | Monthly cost reports ≤ target |
+| **Data Quality** | ≥ 95% verified data accuracy | Multi-layer OTP verification, consent management | Audit reports confirm accuracy |
+| **User Experience** | ≥ 90% form completion rate | Mobile-first PWA, optimized flows | Analytics dashboard tracking |
+| **Fraud Prevention** | ≤ 5% fraud rate | ML-based detection, device fingerprinting | Real-time fraud monitoring |
+| **Brand Retention** | ≥ 85% repeat campaigns | Superior analytics, easy integration | Customer satisfaction surveys |
+| **Market Leadership** | #1 in SEA by 2027 | Scalable architecture, multi-market support | Market share analysis |
 
-### 3.1.2 Business Objectives
+### 3.1.2 Strategic Value Proposition
 
-**Ngắn hạn (2025 - MVP):**
-- Triển khai thành công tại Việt Nam với 25 brands
-- Xử lý 1M sample distribution 
-- Thu thập 50K verified leads/tháng
-- Đạt doanh thu 5.76 tỷ VND
-
-**Trung hạn (2026 - Scale):**
-- Mở rộng Thailand, Indonesia với 80 brands
-- Xử lý 3M users active
-- Đạt doanh thu 26.88 tỷ VND
-- Net Promoter Score >60
-
-**Dài hạn (2027 - Market Leadership):**
-- Dẫn đầu Southeast Asia với 200 brands
-- Phục vụ 10M users
-- Đạt doanh thu 67.2 tỷ VND với lợi nhuận 21.312 tỷ VND
-- Chuẩn bị exit strategy (M&A/IPO)
-
-### 3.1.3 Success Metrics (từ 01-BRD.md v3.0)
-
-| Category | KPI | Target Value | Measurement Method |
-|----------|-----|--------------|-------------------|
-| **Cost Efficiency** | Cost per verified lead | ≤ 0.4 USD | Platform analytics |
-| **User Experience** | Form completion rate | ≥ 90% | Funnel tracking |
-| **Data Quality** | OTP verification success | ≥ 95% | System logs |
-| **Fraud Prevention** | Fraud rate | ≤ 5% | ML detection algorithms |
-| **System Performance** | Platform uptime | ≥ 99.9% | Monitoring tools |
-| **Business Growth** | Brand retention rate | ≥ 85% | Customer success tracking |
-| **User Engagement** | Redemption rate | ≥ 85% | POS integration data |
-
----
-
-## 3.2 Phạm vi chức năng
-
-### 3.2.1 Must-Have Features (Core MVP - dựa trên System_Feature_Tree_Grok.md v4.0)
-
-**Campaign & Content Management:**
-- **FR-001**: Quản lý Campaign với barcode assignment, location targeting, UTM tracking
-- **FR-002**: Quản lý Barcode/Voucher với single-use validation và reconciliation  
-- **FR-003**: Quản lý Ads Format với 13 loại format và dynamic QR generation
-
-**Customer Data Collection:**
-- **FR-004**: Landing Page với responsive form, quiz integration, consent management
-- **FR-005**: OTP Verification với SMS/Email, rate limiting, fraud detection
-- **FR-006**: Cấp phát Barcode personalized với Apple Wallet integration
-
-**Distribution & Analytics:**
-- **FR-007**: POS Integration với offline sync, atomic redemption
-- **FR-008**: Analytics Dashboard với funnel tracking, export capabilities
-- **FR-009**: CRM Integration với webhook/API sync, GDPR compliance
-
-**Security & Management:**
-- **FR-010**: Access Control với 6 roles RBAC, audit trails
-- **FR-011**: User Portal PWA với history tracking, notification system
-
-### 3.2.2 Should-Have Features (Advanced Phase 2)
-
-**Advanced Operations:**
-- Inventory reconciliation với batch tracking
-- Retailer portal với store management
-- Fraud detection với ML-based scoring
-- A/B testing framework cho campaign optimization
-
-**Enhanced Experience:**  
-- Support ticketing system
-- Multi-language localization
-- Advanced analytics với predictive insights
-- Consent management hub
-
-### 3.2.3 Nice-to-Have Features (Future Phase 3)
-
-**AI & Intelligence:**
-- Predictive analytics cho demand forecasting
-- AI-driven personalization
-- Marketplace cho brand co-sampling
-- Sustainability tracking
-
-**Advanced Integration:**
-- Blockchain traceability (optional)
-- AR integration cho virtual try-on
-- Voice-activated campaigns
-- Real-time attribution với sales data
-
----
-
-## 3.3 Phạm vi kỹ thuật
-
-### 3.3.1 Technology Scope
-
-**Platform Architecture:**
-- **Backend**: Microservices với Node.js/Go
-- **Frontend**: React PWA cho cross-platform compatibility
-- **Database**: MongoDB (documents), PostgreSQL (relational), Redis (cache)
-- **Cloud**: AWS/GCP với multi-region deployment
-- **API**: RESTful services với OpenAPI 3.0 specification
-
-**Integration Scope:**
-- **CRM Systems**: HubSpot, Salesforce, custom APIs
-- **Communication**: Twilio, MessageBird cho SMS/Email
-- **Analytics**: GA4, Meta Pixel, custom tracking
-- **POS Systems**: Scandit SDK, generic barcode scanners
-- **Support**: Zendesk integration cho ticketing
-
-### 3.3.2 Performance Scope
-
-**Scalability Targets:**
-- **Concurrent Users**: 10K (MVP) → 100K (Scale) → 1M (Long-term)
-- **API Throughput**: 100K requests/minute peak load
-- **Data Storage**: 100GB (Year 1) → 10TB (Year 3)
-- **Geographic**: Vietnam → ASEAN → Global expansion capability
-
-**Performance Benchmarks:**
-- **Response Time**: <3s cho dashboard loads
-- **API Latency**: <500ms cho core operations  
-- **Mobile Performance**: <2s cho PWA load times
-- **Offline Capability**: 24h local storage cho retail nodes
-
-### 3.3.3 Security Scope
-
-**Data Protection:**
-- PII encryption với AES-256
-- GDPR/PDPA compliance framework
-- ISO 27001-aligned security controls
-- SOC 2 Type II audit readiness
-
-**Access Control:**
-- OAuth 2.0/OpenID Connect authentication
-- JWT-based session management
-- Role-based access control (RBAC)
-- Multi-factor authentication cho admin roles
-
----
-
-## 3.4 Phạm vi người dùng
-
-### 3.4.1 Primary Users
-
-**Brand Managers/Marketing Teams:**
-- **Quantity**: 100-500 users (Year 1-3)
-- **Geography**: Vietnam → Thailand, Indonesia, Philippines
-- **Use Cases**: Campaign creation, analytics review, ROI tracking
-- **Technical Proficiency**: Medium, cần UI intuitive
-
-**Retail Staff/Serving Accounts:**  
-- **Quantity**: 1K-10K users (store staff)
-- **Geography**: Urban centers với retail network
-- **Use Cases**: Barcode scanning, redemption processing
-- **Technical Proficiency**: Basic, cần mobile-optimized tools
-
-**End Consumers:**
-- **Quantity**: 50K-10M verified users  
-- **Demographics**: 18-45 tuổi, smartphone users, brand conscious
-- **Use Cases**: Sample collection, profile management, history tracking
-- **Technical Proficiency**: Varied, cần PWA user-friendly
-
-### 3.4.2 Secondary Users
-
-**System Administrators:**
-- Platform management, troubleshooting, system configuration
-- Yêu cầu technical expertise cao
-
-**Auditors/Compliance:**
-- Compliance monitoring, audit trail review, regulatory reporting  
-- Yêu cầu read-only access với detailed logging
-
----
-
-## 3.5 Ràng buộc và giới hạn
-
-### 3.5.1 Business Constraints (từ 01-BRD.md v3.0)
-
-**Budget Constraints:**
-- Total development budget: 122.64 tỷ VND (3 years)
-- MVP development: 36 tỷ VND (6 months)
-- Operational costs: <40% revenue sau Year 2
-
-**Timeline Constraints:**
-- MVP launch: Q2 2025 (6 months development)
-- Scale phase: Q3 2025 - Q4 2026  
-- Regional expansion: 18 months sau MVP
-
-**Regulatory Constraints:**
-- GDPR compliance cho EU customers
-- PDPA compliance cho ASEAN markets
-- Local telecommunications regulations cho SMS OTP
-- PCI-DSS nếu có payment processing
-
-### 3.5.2 Technical Constraints
-
-**Performance Constraints:**
-- 99.9% uptime SLA requirement
-- <3s response time cho critical operations
-- Support cho 100K concurrent users (peak)
-- Mobile-first design với PWA compatibility
-
-**Integration Constraints:**
-- RESTful API compatibility với existing CRM systems
-- Offline-first design cho intermittent connectivity
-- Multi-language support cho regional expansion
-- Cross-browser compatibility (Chrome, Safari, Firefox)
-
-### 3.5.3 Operational Constraints
-
-**Scalability Constraints:**
-- Auto-scaling capability cho traffic spikes
-- Database sharding strategy cho large datasets  
-- CDN deployment cho global performance
-- Disaster recovery với <4h RTO, <1h RPO
-
-**Maintenance Constraints:**
-- Zero-downtime deployment capability
-- Automated backup và recovery procedures
-- 24/7 monitoring với alerting system
-- Security patch deployment trong 48h
-
----
-
-## 3.6 Feature Prioritization Matrix
-
-### 3.6.1 MoSCoW Analysis (từ Problem.md v1.0)
-
-| Priority | Features | Business Value | Development Effort | Timeline |
-|----------|----------|----------------|-------------------|----------|
-| **Must-Have** | Campaign Management, OTP Verification, POS Integration | Cao | Medium | Q1-Q2 2025 |
-| **Should-Have** | Fraud Detection, A/B Testing, Inventory Reconciliation | Medium-High | Medium-High | Q3 2025-Q1 2026 |
-| **Could-Have** | Advanced Analytics, Multi-language Support | Medium | Medium | Q2-Q4 2026 |
-| **Won't-Have** | AI Personalization, Blockchain, AR Integration | Low-Medium | High | Phase 3 (2027+) |
-
-### 3.6.2 Value vs Effort Matrix
-
-```
-High Value │ Analytics      │ Fraud Detection │
-          │ Dashboard      │ A/B Testing     │
-          │ ─────────────────────────────────│
-          │ User Portal    │ AI Insights     │
-Low Value │ Basic Reports  │ Blockchain      │
-          └────────────────────────────────
-           Low Effort        High Effort
+```mermaid
+graph TB
+    subgraph "Business Problem"
+        BP1[High Distribution Cost]
+        BP2[Low Data Quality]
+        BP3[No Measurement]
+        BP4[Fraud/Spam Issues]
+    end
+    
+    subgraph "PSP Solution"
+        S1[Hybrid Distribution]
+        S2[Verified Data Collection]
+        S3[Real-time Analytics]
+        S4[Multi-layer Security]
+    end
+    
+    subgraph "Business Value"
+        V1[Cost per Lead < $0.4]
+        V2[95%+ Data Accuracy]
+        V3[ROI Visibility]
+        V4[Fraud Rate < 5%]
+    end
+    
+    BP1 --> S1 --> V1
+    BP2 --> S2 --> V2
+    BP3 --> S3 --> V3
+    BP4 --> S4 --> V4
+    
+    style S1 fill:#e3f2fd
+    style S2 fill:#e8f5e8
+    style S3 fill:#fff3e0
+    style S4 fill:#fce4ec
 ```
 
 ---
 
-## 3.7 Success Criteria và Acceptance
+## 3.2 Product Vision & Market Positioning
 
-### 3.7.1 MVP Success Criteria
+### 3.2.1 Vision Statement
+> "Transform product sampling from a cost center into a data-driven growth engine by providing the most intelligent, secure, and scalable sampling platform in Southeast Asia."
 
-**Technical Criteria:**
-- [ ] Hệ thống xử lý được 10K users concurrent
-- [ ] API response time <3s cho 95% requests  
-- [ ] 99% uptime trong 3 tháng đầu production
-- [ ] Zero critical security vulnerabilities
+### 3.2.2 Market Opportunity (từ Vision Document)
 
-**Business Criteria:**
-- [ ] 25 brands đăng ký sử dụng platform
-- [ ] 50K verified leads thu thập được
-- [ ] Cost-per-lead <0.4 USD achievement
-- [ ] 90%+ form completion rate
+| Market Segment | Size (2025) | CAGR | PSP Target Share |
+|----------------|-------------|------|------------------|
+| **Global Sampling** | $12-15B USD | 8% | N/A (focus SEA) |
+| **SEA Sampling** | $1.2B USD | 10% | 5% by 2027 |
+| **Vietnam Market** | $120-150M USD | 12% | 15% by 2026 |
 
-**User Experience Criteria:**
-- [ ] NPS score >50 từ brand users
-- [ ] <10s average form completion time
-- [ ] >85% redemption rate tại POS
-- [ ] Mobile responsiveness score >90
-
-### 3.7.2 Long-term Success Criteria
-
-**Market Position:**
-- Market leadership position trong SEA sampling industry
-- 200+ enterprise clients với high retention rate  
-- Platform scalability đến 10M+ end users
-- Profitable unit economics với sustainable growth
+**Competitive Advantage:**
+- 🎯 **SEA-first design** với local compliance (PDPA, language support)
+- 🔗 **Retail network integration** với Circle K, GS25, local chains
+- 💰 **Cost efficiency** targeting <$0.4 per verified lead
+- 📊 **Advanced analytics** với AI-powered insights (Phase 2+)
 
 ---
 
-**Nguồn tham khảo chính:**
-- Business Requirement Document (01-BRD.md v3.0) - Business objectives, financial targets, success metrics
-- System Feature Tree (System_Feature_Tree_Grok.md v4.0) - Feature prioritization, MoSCoW analysis
-- Problem Definition (Problem.md v1.0) - Must-have/Should-have/Nice-to-have classification
-- Vision & Strategy Document (Product-Sampling-Vision-and-Strategy Document.md v1.0) - Vision statement, market objectives
-- Access Control Tree (Access_Control_Tree_Grok.md v2.2) - User scope definition
+## 3.3 MVP Scope Definition
 
-**Tình trạng**: Part03 hoàn thành ✅  
-**Tiếp theo**: Part04 - Functional Requirements  
-**Người review**: Product Manager, Business Analyst, System Architect
+### 3.3.1 MVP Objectives (Phase 1: 0-6 months)
 
-# 📋 SRS Part04 - Yêu cầu chức năng (Functional Requirements)
-**Hệ thống Product Sampling Platform**
+**Target Metrics for MVP Success:**
+- 🏢 **5-10 pilot brands** signed và active
+- 👥 **10,000 verified users** trong system
+- 🏪 **50+ retail locations** integrated
+- 💵 **Cost per verified lead** ≤ $0.5 (optimization target: $0.4)
+- ⚡ **90%+ system uptime** during pilot phase
+
+### 3.3.2 MVP Feature Scope
+
+#### **Must-Have Features (Critical Priority 🔴)**
+
+| Feature Category | Specific Features | Technical Services | Business Value |
+|------------------|-------------------|-------------------|----------------|
+| **Campaign Management** | Create/edit campaigns, barcode pool assignment, UTM tracking | campaign-service, barcode-service | Brand onboarding capability |
+| **User Verification** | OTP SMS/Email, CAPTCHA, consent management | auth-service, notification-service | Data quality assurance |
+| **Barcode Distribution** | QR code generation, single-use enforcement, expiry tracking | barcode-service, campaign-service | Core sampling functionality |
+| **POS Integration** | Scan redemption, offline sync, status updates | redemption-service | Retail network enablement |
+| **Basic Analytics** | Funnel tracking, campaign performance, export CSV | analytics-service | ROI measurement |
+| **Role-based Access** | 6 user roles, permission matrix, audit logs | auth-service | Security & compliance |
+
+#### **Should-Have Features (High Priority 🟡)**
+
+| Feature Category | Phase 2 Target | Technical Implementation |
+|------------------|----------------|-------------------------|
+| **Advanced Analytics** | ML insights, predictive analytics | Enhanced analytics-service với AI models |
+| **Fraud Detection** | Device fingerprinting, anomaly detection | ML-enhanced auth-service |
+| **Multi-market Support** | Thailand, Indonesia expansion | Localization trong user-service |
+| **API Marketplace** | Public APIs, developer portal | Enhanced integration-service |
+
+### 3.3.3 MVP Success Criteria
+
+```mermaid
+graph LR
+    subgraph "Technical KPIs"
+        T1[API Response < 3s]
+        T2[Uptime > 99%]
+        T3[Data Accuracy > 95%]
+    end
+    
+    subgraph "Business KPIs"
+        B1[Cost per Lead < $0.5]
+        B2[Conversion Rate > 85%]
+        B3[Fraud Rate < 8%]
+    end
+    
+    subgraph "User KPIs"
+        U1[Form Completion > 85%]
+        U2[Brand Satisfaction > 4/5]
+        U3[Retailer Adoption > 80%]
+    end
+    
+    style T1 fill:#e3f2fd
+    style B1 fill:#e8f5e8
+    style U1 fill:#fff3e0
+```
+
+---
+
+## 3.4 Service-Level Objectives (SLOs)
+
+### 3.4.1 Performance Objectives
+
+| Service | Response Time SLO | Availability SLO | Throughput SLO |
+|---------|-------------------|------------------|----------------|
+| **auth-service** | < 500ms (p95) | 99.9% | 1000 RPS |
+| **campaign-service** | < 1s (p95) | 99.5% | 500 RPS |
+| **barcode-service** | < 800ms (p95) | 99.9% | 2000 RPS |
+| **redemption-service** | < 2s (p95) | 99.5% | 1500 RPS |
+| **analytics-service** | < 5s (p95) | 99% | 200 RPS |
+| **notification-service** | < 10s (async) | 99% | 1000 messages/min |
+
+### 3.4.2 Data Quality Objectives
+
+| Data Category | Accuracy Target | Validation Method | Recovery SLA |
+|---------------|-----------------|-------------------|--------------|
+| **User Profiles** | 99.5% | OTP verification + manual audit | 24h |
+| **Campaign Data** | 100% | Schema validation + business rules | 4h |
+| **Barcode Inventory** | 99.9% | Atomic transactions + reconciliation | 1h |
+| **Redemption Records** | 100% | Financial audit + POS verification | 2h |
+
+---
+
+## 3.5 Enterprise Architecture Standards
+
+### 3.5.1 Design Pattern Standards
+
+**Service Design Patterns:**
+- 🏗️ **Domain-Driven Design (DDD)**: Mỗi service là một bounded context
+- 🔄 **CQRS Pattern**: Command/Query separation cho complex operations
+- 📨 **Event Sourcing**: Critical business events (redemption, fraud detection)
+- 🛡️ **Circuit Breaker**: Fault tolerance giữa services
+- 🎯 **API Gateway Pattern**: Single entry point với authentication/rate limiting
+
+**Code Standards:**
+```typescript
+// NestJS Service Template Structure
+@Injectable()
+export class CampaignService {
+  constructor(
+    private readonly repository: CampaignRepository,
+    private readonly eventBus: EventBus,
+    private readonly logger: Logger
+  ) {}
+
+  async createCampaign(dto: CreateCampaignDto): Promise<Campaign> {
+    // Validation, business logic, event emission
+  }
+}
+```
+
+### 3.5.2 Documentation Standards
+
+| Document Type | Template | Ownership | Update Frequency |
+|---------------|----------|-----------|------------------|
+| **Service README** | Standardized template với setup, API, examples | Service team | Each release |
+| **API Documentation** | OpenAPI 3.0 auto-generated | Development team | Each API change |
+| **Architecture Decision Records** | ADR template trong repo | Tech lead | Each major decision |
+| **Runbooks** | Deployment, troubleshooting guides | DevOps team | Monthly review |
+
+### 3.5.3 Testing Standards
+
+```mermaid
+graph TB
+    subgraph "Testing Pyramid"
+        U[Unit Tests - 70%]
+        I[Integration Tests - 20%]
+        E[E2E Tests - 10%]
+    end
+    
+    subgraph "Service Testing"
+        C[Contract Testing]
+        M[Mock External Dependencies]
+        P[Performance Testing]
+    end
+    
+    subgraph "System Testing"
+        S[Security Testing]
+        L[Load Testing]
+        A[Accessibility Testing]
+    end
+    
+    U --> C
+    I --> M
+    E --> P
+    C --> S
+    M --> L
+    P --> A
+    
+    style U fill:#e8f5e8
+    style I fill:#e3f2fd
+    style E fill:#fff3e0
+```
+
+---
+
+## 3.6 Phased Development Strategy
+
+### 3.6.1 Phase 1: MVP Foundation (Months 1-6)
+
+**Objective**: Establish core platform với verified pilot customers
+
+**Service Development Priority:**
+1. **Week 1-4**: auth-service + user-service (Foundation)
+2. **Week 5-8**: campaign-service + barcode-service (Core Business)
+3. **Week 9-12**: redemption-service + notification-service (User Experience)
+4. **Week 13-16**: analytics-service + integration-service (Business Value)
+5. **Week 17-24**: Testing, optimization, pilot deployment
+
+**Success Gates:**
+- [ ] All 8 microservices deployed và functional
+- [ ] 5 pilot brands onboarded successfully
+- [ ] 10K verified users processed
+- [ ] Cost per lead under $0.5 achieved
+
+### 3.6.2 Phase 2: Scale & Intelligence (Months 7-18)
+
+**Objective**: Scale to 100K+ users with advanced features
+
+**Enhancement Focus:**
+- 🤖 **AI/ML Integration**: Fraud detection, predictive analytics
+- 🌏 **Multi-market Expansion**: Thailand, Indonesia localization
+- 📊 **Advanced Analytics**: Custom reports, API marketplace
+- 🔐 **Enterprise Security**: SOC2, penetration testing
+
+### 3.6.3 Phase 3: Market Leadership (Months 19-36)
+
+**Objective**: Become dominant platform in SEA region
+
+**Innovation Focus:**
+- 🛒 **Marketplace Features**: Multi-brand co-sampling
+- 🌱 **Sustainability Tracking**: Carbon footprint, eco-metrics
+- 🧠 **AI-driven Optimization**: Automatic campaign optimization
+- 🔗 **Ecosystem Integration**: E-commerce, social media platforms
+
+---
+
+## 3.7 Risk Management & Mitigation
+
+### 3.7.1 Technical Risks
+
+| Risk | Probability | Impact | Mitigation Strategy |
+|------|-------------|--------|-------------------|
+| **Service Complexity** | Medium | High | Standardized templates, comprehensive documentation |
+| **Database Performance** | Low | High | Query optimization, caching layers, monitoring |
+| **External API Failures** | High | Medium | Circuit breakers, fallback mechanisms, multiple providers |
+| **Security Breaches** | Low | Critical | Defense in depth, regular audits, incident response plan |
+
+### 3.7.2 Business Risks
+
+| Risk | Probability | Impact | Mitigation Strategy |
+|------|-------------|--------|-------------------|
+| **Slow Brand Adoption** | Medium | High | Pilot program, success stories, competitive pricing |
+| **Retail Partner Resistance** | Medium | Medium | Revenue sharing model, training programs |
+| **Regulatory Changes** | Low | High | Compliance team, legal review, adaptable architecture |
+| **Competition** | High | Medium | Innovation focus, customer lock-in, partnership strategy |
+
+---
+
+## 3.8 Success Measurement Framework
+
+### 3.8.1 Key Performance Indicators (KPIs)
+
+**Financial KPIs:**
+- Monthly Recurring Revenue (MRR)
+- Customer Acquisition Cost (CAC)
+- Customer Lifetime Value (LTV)
+- Cost per verified lead
+
+**Operational KPIs:**
+- System uptime và performance
+- API response times
+- Error rates và resolution times
+- Security incident count
+
+**Product KPIs:**
+- User engagement rates
+- Feature adoption rates
+- Customer satisfaction scores
+- Market share growth
+
+### 3.8.2 Monitoring & Alerting
+
+```mermaid
+graph TB
+    subgraph "Real-time Monitoring"
+        M1[Application Metrics]
+        M2[Infrastructure Metrics]
+        M3[Business Metrics]
+    end
+    
+    subgraph "Alerting System"
+        A1[Critical Alerts]
+        A2[Warning Alerts]
+        A3[Info Alerts]
+    end
+    
+    subgraph "Response Team"
+        R1[On-call Engineer]
+        R2[Product Manager]
+        R3[Business Stakeholder]
+    end
+    
+    M1 --> A1 --> R1
+    M2 --> A2 --> R1
+    M3 --> A3 --> R2
+    A1 -.-> R3
+    
+    style A1 fill:#ffcdd2
+    style A2 fill:#fff3e0
+    style A3 fill:#e8f5e8
+```
+
+---
+
+## 3.9 Acceptance Criteria
+
+### 3.9.1 MVP Acceptance Criteria
+
+**Technical Acceptance:**
+- [ ] All microservices pass security audit
+- [ ] Performance benchmarks met under load testing
+- [ ] 100% API documentation coverage
+- [ ] Disaster recovery procedures tested
+
+**Business Acceptance:**
+- [ ] 5+ pilot brands successfully launched campaigns
+- [ ] Cost per verified lead ≤ $0.5 achieved
+- [ ] 90%+ customer satisfaction score
+- [ ] Zero critical security incidents
+
+**Operational Acceptance:**
+- [ ] 24/7 monitoring và alerting functional
+- [ ] CI/CD pipelines operational for all services
+- [ ] Team documentation complete và validated
+- [ ] Support processes established
+
+---
+
+## 3.10 Next Steps & Dependencies
+
+### 3.10.1 Immediate Actions
+1. **Technical Architecture Review** với development team
+2. **Service Interface Design** workshop
+3. **Database Schema Planning** session
+4. **Development Environment Setup** guide creation
+
+### 3.10.2 Critical Dependencies
+- Development team hiring và onboarding
+- Cloud infrastructure setup
+- External API integrations (Twilio, HubSpot)
+- Legal compliance review
+
+---
+
+**Document Status**: ✅ Ready for Part04  
+**Next Action**: Define detailed functional requirements  
+**Dependencies**: Architecture và scope confirmed  
+**Owner**: System Analyst Team
+# 📘 Part04 - Yêu cầu chức năng (Functional Requirements)
+**Đặc tả yêu cầu hệ thống (SRS) - Product Sampling Platform**
 
 **Phiên bản**: 1.0  
 **Ngày**: 2025-10-17  
 **Tác giả**: Đội phân tích hệ thống  
+**Trạng thái**: ✅ Hoàn thành  
 
 ---
 
 ## 4.1 Tổng quan yêu cầu chức năng
 
-### 4.1.1 Phân nhóm chức năng chính
-Dựa trên **System_Feature_Tree_Grok.md v4.0**, hệ thống được chia thành 11 yêu cầu chức năng chính:
+### 4.1.1 Phân loại yêu cầu
+Hệ thống Product Sampling Platform (PSP) có **13 yêu cầu chức năng chính** được chia thành 3 nhóm ưu tiên:
 
-| Mã FR | Tên chức năng | Độ ưu tiên | Nguồn tham chiếu |
-|-------|---------------|------------|------------------|
-| FR-001 | Quản lý chiến dịch | Bắt buộc có | Cây chức năng 1.1 |
-| FR-002 | Quản lý Barcode/Voucher | Bắt buộc có | Cây chức năng 1.2 |
-| FR-003 | Quản lý định dạng quảng cáo | Bắt buộc có | Cây chức năng 1.10 |
-| FR-004 | Trang đích và biểu mẫu | Bắt buộc có | Cây chức năng 1.3 |
-| FR-005 | Xác thực OTP | Bắt buộc có | Cây chức năng 1.4 |
-| FR-006 | Cấp phát mã barcode | Bắt buộc có | Cây chức năng 1.5 |
-| FR-007 | Tích hợp POS và đổi quà | Bắt buộc có | Cây chức năng 1.5 |
-| FR-008 | Phân tích và báo cáo | Bắt buộc có | Cây chức năng 1.6 |
-| FR-009 | Tích hợp CRM | Bắt buộc có | Cây chức năng 1.7 |
-| FR-010 | Kiểm soát truy cập và phân quyền | Bắt buộc có | Cây chức năng 1.8 |
-| FR-011 | Cổng thông tin người dùng | Bắt buộc có | Cây chức năng 1.9 |
+| Mức ưu tiên | Số lượng | Giai đoạn triển khai |
+|-------------|----------|-------------------|
+| 🔴 **Must-Have (Core)** | 8 yêu cầu | MVP - Phase 1 |
+| 🟡 **Should-Have (Advanced)** | 3 yêu cầu | Phase 2 |
+| 🟠 **Nice-to-Have (Future)** | 2 yêu cầu | Phase 3 |
 
----
+### 4.1.2 Traceability Matrix
+Mỗi yêu cầu chức năng được liên kết với business requirements từ BRD:
 
-## 4.2 FR-001: Quản lý chiến dịch
-
-### 4.2.1 Mô tả chức năng
-Hệ thống cung cấp khả năng tạo, quản lý và theo dõi các chiến dịch phân phối mẫu sản phẩm với việc gán barcode, nhắm mục tiêu địa điểm và theo dõi UTM.
-
-### 4.2.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.1)
-- **Quản trị viên**: Tôi tạo chiến dịch toàn cầu, gán barcode/địa điểm, cài đặt theo dõi UTM
-- **Quản trị nhóm**: Tôi tạo chiến dịch trong nhóm, xem trước trước khi xuất bản
-- **Tài khoản khách hàng**: Tôi quản lý chiến dịch riêng, xem trước chiến dịch
-- **Kiểm toán viên**: Tôi xem nhật ký thực thi chiến dịch
-
-### 4.2.3 Đặc tả chức năng chi tiết
-
-**Yêu cầu đầu vào:**
-- Tên chiến dịch (bắt buộc, tối đa 255 ký tự)
-- Mô tả chiến dịch (tùy chọn, tối đa 1000 ký tự)  
-- Thời gian bắt đầu/kết thúc (bắt buộc, định dạng ngày giờ)
-- Mã địa điểm (bắt buộc, danh sách các định danh địa điểm)
-- Tải lên CSV barcode (bắt buộc, định dạng đã được xác thực)
-- Tham số UTM (mã_chiến_dịch, nguồn, phương tiện, từ_khóa, nội_dung)
-
-**Logic xử lý:**
-- Xác thực thời gian chiến dịch (bắt đầu < kết thúc, ngày trong tương lai)
-- Kiểm tra tính khả dụng của barcode và quyền địa điểm
-- Tạo mã chiến dịch duy nhất
-- Tạo mã QR động với theo dõi nhúng
-- Cách ly đa thuê bao dựa trên vai trò người dùng
-
-**Yêu cầu đầu ra:**
-- Tạo mã chiến dịch (định dạng UUID)
-- Mã QR động cho mỗi địa điểm/định dạng quảng cáo
-- Trạng thái chiến dịch (Nháp/Hoạt động/Tạm dừng/Hoàn thành)
-- URL theo dõi với tham số UTM
-
-**Tiêu chí chấp nhận:**
-- [ ] Quản trị viên có thể tạo không giới hạn chiến dịch
-- [ ] Quản trị nhóm chỉ tạo chiến dịch trong phạm vi nhóm
-- [ ] Tài khoản khách hàng chỉ quản lý chiến dịch riêng
-- [ ] Thời gian thiết lập chiến dịch <2 ngày (yêu cầu kinh doanh)
-- [ ] Độ chính xác theo dõi UTM 100%
+```mermaid
+graph LR
+    subgraph "Business Goals"
+        BG1[Chi phí ≤ 0.4 USD]
+        BG2[Dữ liệu chất lượng ≥ 95%]
+        BG3[Chống gian lận ≤ 5%]
+        BG4[Tỷ lệ chuyển đổi ≥ 90%]
+    end
+    
+    subgraph "Functional Requirements"
+        FR1[FR-001: Quản lý Campaign]
+        FR2[FR-002: Xác thực người dùng]
+        FR3[FR-003: Phân phối Barcode]
+        FR4[FR-004: Redemption POS]
+    end
+    
+    BG1 --> FR1
+    BG2 --> FR2
+    BG3 --> FR2
+    BG4 --> FR3
+    BG4 --> FR4
+    
+    style FR1 fill:#e3f2fd
+    style FR2 fill:#ffebee
+    style FR3 fill:#e8f5e8
+    style FR4 fill:#fff3e0
+```
 
 ---
 
-## 4.3 FR-002: Quản lý Barcode/Voucher
+## 4.2 Must-Have Requirements (MVP - Phase 1)
 
-### 4.3.1 Mô tả chức năng
-Quản lý vòng đời barcode/voucher từ nhập khẩu, gán đến đổi quà với xác thực sử dụng một lần và khả năng đối soát.
+### FR-001: Quản lý Campaign 🔴
+**Mô tả**: Hệ thống cho phép các brand tạo, quản lý và theo dõi các chiến dịch sampling với khả năng gán barcode pool, ads format và UTM tracking.
 
-### 4.3.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.2)
-- **Quản trị viên**: Tôi nhập CSV barcode, đối soát trạng thái, cài đặt API đẩy/kéo với ERP
-- **Quản trị nhóm**: Tôi nhập barcode cho nhóm, xem nhật ký nhập
-- **Tài khoản khách hàng**: Tôi nhập barcode cho chiến dịch riêng
-- **Kiểm toán viên**: Tôi xem nhật ký nhập/đối soát barcode
+**Actors**: Admin, Group Admin, Customer Account  
+**Service liên quan**: `campaign-service`, `barcode-service`  
+**Tham chiếu BRD**: Section 4.1 - Campaign Management
 
-### 4.3.3 Đặc tả chức năng chi tiết
+#### User Stories:
+```
+Là một Customer Account,
+Tôi muốn tạo campaign mới cho sản phẩm của mình
+Để có thể phân phối samples đến khách hàng target
 
-**Yêu cầu đầu vào:**
-- Định dạng CSV: barcode, tên_sản_phẩm, ngày_hết_hạn, giá_trị, mã_lô, số_lượng_có_sẵn
-- Xác thực tệp: mã hóa UTF-8, kích thước tệp tối đa 100MB
-- Định dạng barcode: Chữ và số, 8-50 ký tự
-- Xác thực ngày hết hạn (chỉ ngày trong tương lai)
+Acceptance Criteria:
+- Tôi có thể nhập tên campaign, mô tả, thời gian bắt đầu/kết thúc
+- Tôi có thể chọn sản phẩm từ danh sách có sẵn
+- Tôi có thể gán barcode pool với số lượng cụ thể
+- Tôi có thể chọn locations/retail nodes để phân phối
+- Tôi có thể preview campaign trước khi publish
+- System tự động tạo UTM tracking codes
+```
 
-**Logic xử lý:**
-- Phân tích CSV với xử lý lỗi và phát hiện trùng lặp
-- Xác thực tính duy nhất của barcode trên toàn hệ thống
-- Vòng đời trạng thái: Chưa phát → Đã phát → Đã đổi → Hết hạn → Thu hồi
-- Hoạt động nguyên tử cho cập nhật kho
-- Dấu vết kiểm tra cho mọi thay đổi trạng thái
+#### Functional Specifications:
 
-**Yêu cầu đầu ra:**
-- Báo cáo thành công/thất bại nhập khẩu
-- Tạo hình ảnh QR/Barcode (định dạng PDF/PNG)
-- Tích hợp Apple Wallet cho người dùng di động
-- Bảng điều khiển theo dõi kho thời gian thực
+| Chức năng | Input | Output | Business Rules |
+|-----------|-------|--------|----------------|
+| **Tạo Campaign** | Tên, mô tả, ngày bắt đầu/kết thúc, sản phẩm | Campaign ID, URL tracking | Ngày kết thúc > ngày bắt đầu |
+| **Gán Barcode Pool** | Campaign ID, số lượng barcode | Pool assignment confirmation | Số lượng <= available barcodes |
+| **Chọn Locations** | Campaign ID, danh sách location IDs | Location assignment | Locations phải active và verified |
+| **UTM Tracking** | Campaign ID, source, medium | UTM parameters | Auto-generate unique tracking codes |
 
-**Điểm tích hợp:**
-- API Voucherify cho tính năng voucher nâng cao
-- Hệ thống ERP qua REST API/webhook
-- Hệ thống POS cho xác thực đổi quà
+#### API Endpoints:
+- `POST /api/campaigns` - Tạo campaign mới
+- `PUT /api/campaigns/{id}` - Cập nhật campaign
+- `GET /api/campaigns` - Lấy danh sách campaigns
+- `POST /api/campaigns/{id}/barcodes` - Gán barcode pool
+- `POST /api/campaigns/{id}/locations` - Gán locations
 
-**Tiêu chí chấp nhận:**
-- [ ] Nhập CSV <10MB trong <30 giây
-- [ ] Thực thi tính duy nhất barcode 100%
-- [ ] Độ chính xác kho >95%
-- [ ] Xác thực sử dụng một lần với không có đổi quà kép
-
----
-
-## 4.4 FR-003: Quản lý định dạng quảng cáo
-
-### 4.4.1 Mô tả chức năng
-Tạo và quản lý các định dạng quảng cáo cho chiến dịch với tải lên thiết kế, cấu hình mã QR và tích hợp theo dõi.
-
-### 4.4.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.10)
-- **Quản trị viên**: Tôi tạo/tải lên định dạng quảng cáo (300 DPI), cấu hình vùng/tọa độ QR, theo dõi
-- **Quản trị nhóm**: Tôi tạo/tải lên định dạng quảng cáo cho nhóm, xem trước trước xuất bản
-- **Tài khoản khách hàng**: Tôi tạo/tải lên định dạng quảng cáo cho chiến dịch riêng
-- **Kiểm toán viên**: Tôi xem nhật ký tải lên và cấu hình định dạng quảng cáo
-
-### 4.4.3 Đặc tả chức năng chi tiết
-
-**Định dạng được hỗ trợ (13 loại):**
-1. Tờ rơi A4 (210x297mm)
-2. Poster A3 (297x420mm)  
-3. Poster A2 (420x594mm)
-4. Banner 2x1m
-5. Banner 3x1m
-6. Standee 60x160cm
-7. Thẻ lều A5
-8. Banner hiển thị kỹ thuật số
-9. Bài đăng mạng xã hội
-10. Tiêu đề email
-11. Thông báo đẩy di động
-12. Biển hiệu kệ trong cửa hàng
-13. Chân trang hóa đơn
-
-**Yêu cầu đầu vào:**
-- Tệp thiết kế: PNG/JPG/PDF ≥300 DPI
-- Tải lên logo (tùy chọn): PNG với nền trong suốt
-- Tọa độ vùng QR (x, y, chiều_rộng, chiều_cao)
-- Kích thước QR tối thiểu: 2cm x 2cm với vùng an toàn 0.5cm
-- Số lượng in và kế hoạch phân phối
-
-**Logic xử lý:**
-- Xác thực tệp (DPI, định dạng, kích thước tệp <50MB)
-- Tạo mã QR động với tham số theo dõi
-- Kết xuất mẫu với hướng dẫn thương hiệu
-- Tạo đầu ra đa định dạng
-
-**Yêu cầu đầu ra:**
-- Tệp sẵn sàng in với mã QR nhúng
-- Định dạng banner kỹ thuật số cho phân phối trực tuyến
-- Tạo liên kết ngắn cho mạng xã hội
-- Tích hợp pixel theo dõi
-
-**Tiêu chí chấp nhận:**
-- [ ] Độ chính xác xác thực tệp 100%
-- [ ] Thời gian tạo QR <5 giây
-- [ ] Tỷ lệ chuyển đổi quét-gửi >90%
-- [ ] Vượt qua xác minh chất lượng in
+#### Acceptance Criteria:
+- [ ] Campaign có thể được tạo trong < 2 phút
+- [ ] UTM tracking codes là unique và traceable
+- [ ] Preview functionality hoạt động chính xác
+- [ ] Role-based access control được enforce
+- [ ] Audit logs được tạo cho mọi thay đổi
 
 ---
 
-## 4.5 FR-004: Trang đích và biểu mẫu
+### FR-002: Xác thực người dùng 🔴
+**Mô tả**: Hệ thống thực hiện xác thực người dùng qua OTP (SMS/Email) và các biện pháp chống spam để đảm bảo chất lượng dữ liệu.
 
-### 4.5.1 Mô tả chức năng
-Trang đích phản hồi với biểu mẫu thu thập dữ liệu khách hàng, tích hợp câu đố, quản lý đồng ý và liên kết cổng thông tin người dùng.
+**Actors**: End User (khách hàng cuối)  
+**Service liên quan**: `auth-service`, `notification-service`, `user-service`  
+**Tham chiếu BRD**: Section 4.1 - Customer Verification
 
-### 4.5.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.3)
-- **Quản trị viên**: Tôi tạo/chỉnh sửa mẫu trang đích, cấu hình câu đố/khảo sát, quản lý đồng ý
-- **Quản trị nhóm**: Tôi xem trước/chỉnh sửa mẫu trong nhóm
-- **Tài khoản khách hàng**: Tôi xem trước trang đích, cấu hình câu đố cơ bản
-- **Người dùng cuối**: Tôi điền biểu mẫu trong 30 giây, nhận barcode, xem cổng thông tin người dùng
-- **Kiểm toán viên**: Tôi xem nhật ký gửi/đồng ý
+#### User Stories:
+```
+Là một khách hàng,
+Tôi muốn xác thực thông tin của mình một cách an toàn
+Để nhận được barcode/voucher hợp lệ
 
-### 4.5.3 Đặc tả chức năng chi tiết
+Acceptance Criteria:
+- Tôi có thể chọn xác thực qua SMS hoặc Email
+- Tôi nhận được OTP 6 chữ số trong vòng 30 giây
+- Tôi có tối đa 3 lần thử nhập OTP
+- OTP có hiệu lực trong 5 phút
+- System block tôi nếu có hành vi spam
+```
 
-**Trường biểu mẫu:**
-- **Bắt buộc**: Họ tên, Email, Số điện thoại
-- **Tùy chọn**: Tuổi, Giới tính, Địa chỉ, Nghề nghiệp
-- **Sở thích**: Câu đố ngắn (5-10 câu hỏi trắc nghiệm)
-- **Đồng ý**: Đăng ký tiếp thị, Thỏa thuận xử lý dữ liệu, Chấp nhận điều khoản
+#### Functional Specifications:
 
-**Logic xử lý:**
-- Xác thực biểu mẫu thời gian thực (mẫu regex)
-- Tích hợp reCAPTCHA v3 (điểm >0.5)
-- Lập hồ sơ tiến bộ để giảm bỏ biểu mẫu
-- Nội dung động dựa trên phản hồi người dùng
-- Thu thập đồng ý tuân thủ GDPR/PDPA
+| Chức năng | Input | Output | Business Rules |
+|-----------|-------|--------|----------------|
+| **Gửi OTP** | Số điện thoại/Email | OTP code (6 digits) | Rate limit: 1 OTP/minute/number |
+| **Xác thực OTP** | OTP code, session ID | Verification status | Max 3 attempts, 5 min expiry |
+| **Chống Spam** | Device info, IP, patterns | Risk score (0-100) | Auto-block nếu score > 80 |
+| **Consent Management** | Checkbox selections | Consent flags | GDPR/PDPA compliance |
 
-**Yêu cầu đầu ra:**
-- Hồ sơ JSON với PII được băm
-- Cờ đồng ý với dấu thời gian
-- Kết quả chấm điểm câu đố/khảo sát
-- Tạo token truy cập cổng thông tin người dùng
+#### Security Features:
+- **Rate Limiting**: 1 OTP request/phút/số điện thoại
+- **Device Fingerprinting**: Browser, IP, screen resolution tracking
+- **CAPTCHA**: reCAPTCHA v3 integration
+- **Blacklist**: Disposable email domains, suspicious patterns
 
-**Điểm tích hợp:**
-- React PWA cho trải nghiệm ưu tiên di động
-- Theo dõi sự kiện GA4 cho phân tích phễu
-- Tích hợp khung kiểm thử A/B
-- Hỗ trợ đa ngôn ngữ
+#### API Endpoints:
+- `POST /api/auth/send-otp` - Gửi OTP
+- `POST /api/auth/verify-otp` - Xác thực OTP
+- `GET /api/auth/risk-score` - Kiểm tra risk score
+- `POST /api/users/consent` - Cập nhật consent
 
-**Tiêu chí chấp nhận:**
-- [ ] Thời gian hoàn thành biểu mẫu trung bình <30 giây
-- [ ] Điểm phản hồi di động >95
-- [ ] Tỷ lệ hoàn thành biểu mẫu >90%
-- [ ] Điểm chất lượng dữ liệu >95%
-- [ ] Tỷ lệ phản hồi khảo sát >50%
-
----
-
-## 4.6 FR-005: Xác thực OTP
-
-### 4.6.1 Mô tả chức năng
-Hệ thống xác thực OTP đa kênh với ngăn chặn gian lận, giới hạn tỷ lệ và lấy dấu vân tay thiết bị.
-
-### 4.6.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.4)
-- **Người dùng cuối**: Tôi nhập OTP (3 lần thử, 5 phút hết thời gian) để mở khóa barcode
-- **Quản trị viên**: Tôi cấu hình quy tắc OTP, xem thống kê tỷ lệ thất bại
-- **Kiểm toán viên**: Tôi xem nhật ký thử OTP và sự kiện bảo mật
-
-### 4.6.3 Đặc tả chức năng chi tiết
-
-**Tạo OTP:**
-- Mã số 6 chữ số
-- Cửa sổ hết hạn 5 phút
-- Tạo ngẫu nhiên an toàn mật mã
-- Tùy chọn gửi SMS và Email
-
-**Logic xác minh:**
-- Tối đa 3 lần thử mỗi phiên
-- Độ trễ tiến bộ: 30s → 60s → 120s
-- Lấy dấu vân tay thiết bị cho người dùng lặp lại
-- Kiểm tra tốc độ (số lần thử tối đa trên IP/điện thoại)
-
-**Ngăn chặn gian lận:**
-- Giới hạn tỷ lệ: 10 yêu cầu OTP/giờ mỗi số điện thoại
-- Phát hiện và chặn email dùng một lần
-- Phát hiện VPN/proxy
-- Phát hiện mẫu đáng ngờ
-
-**Điểm tích hợp:**
-- Twilio/MessageBird cho gửi SMS
-- SendGrid/AWS SES cho gửi email  
-- Redis cho quản lý phiên
-- Công cụ chấm điểm gian lận ML
-
-**Tiêu chí chấp nhận:**
-- [ ] Thời gian gửi OTP <30 giây
-- [ ] Tỷ lệ thành công xác minh >95%
-- [ ] Độ chính xác phát hiện gian lận >90%
-- [ ] Không có dương tính giả cho người dùng hợp pháp
+#### Acceptance Criteria:
+- [ ] OTP delivery rate ≥ 95%
+- [ ] Verification success rate ≥ 90%
+- [ ] Fraud detection accuracy ≥ 85%
+- [ ] Response time < 2 seconds cho verification
+- [ ] Compliance với PDPA/GDPR requirements
 
 ---
 
-## 4.7 FR-006: Cấp phát mã barcode
+### FR-003: Phân phối Barcode/Voucher 🔴
+**Mô tả**: Hệ thống tự động cấp phát barcode/voucher duy nhất cho người dùng đã xác thực, đảm bảo single-use và time-limited.
 
-### 4.7.1 Mô tả chức năng
-Gán barcode tự động sau xác minh thành công với cá nhân hóa và tích hợp ví di động.
+**Actors**: System (automated), End User  
+**Service liên quan**: `barcode-service`, `campaign-service`  
+**Tham chiếu BRD**: Section 4.1 - Barcode Distribution
 
-### 4.7.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.5)
-- **Hệ thống**: Sau xác minh, gán barcode sử dụng một lần từ pool chưa phát
-- **Người dùng cuối**: Tôi nhận barcode qua email/SMS hoặc ví di động
-- **Quản trị viên**: Tôi cấu hình quy tắc cá nhân hóa và phương thức gửi
+#### User Stories:
+```
+Là một khách hàng đã xác thực,
+Tôi muốn nhận barcode/voucher ngay lập tức
+Để có thể đổi sản phẩm tại cửa hàng
 
-### 4.7.3 Đặc tả chức năng chi tiết
+Acceptance Criteria:
+- Tôi nhận được barcode trong vòng 5 giây sau khi verify OTP
+- Barcode được hiển thị dưới dạng QR code và số
+- Tôi có thể lưu barcode vào Apple Wallet/Google Pay
+- Tôi nhận được email/SMS confirmation với barcode
+- Barcode có thông tin expiry date rõ ràng
+```
 
-**Logic gán:**
-- Phân bổ barcode dựa trên pool
-- Pool barcode riêng cho chiến dịch
-- Xác thực ngày hết hạn
-- Thực thi hạn chế địa lý
+#### Functional Specifications:
 
-**Cá nhân hóa:**
-- Gán dựa trên sở thích người dùng
-- Khớp biến thể sản phẩm
-- Ưu đãi theo địa điểm cụ thể
-- Xem xét hành vi lịch sử
+| Chức năng | Input | Output | Business Rules |
+|-----------|-------|--------|----------------|
+| **Generate Barcode** | User ID, Campaign ID | Unique barcode | Single-use, time-limited |
+| **QR Code Creation** | Barcode data | QR image (PNG) | 300x300 pixels minimum |
+| **Wallet Integration** | Barcode, metadata | Wallet pass file | Apple Wallet/Google Pay format |
+| **Notification** | User contact, barcode | Email/SMS | Template-based messaging |
 
-**Phương thức gửi:**
-- Email với tệp đính kèm PDF
-- SMS với liên kết tải xuống
-- Tạo thẻ Apple Wallet
-- Tích hợp Google Pay
-- Hiển thị PWA trong ứng dụng
+#### Barcode Format:
+```
+Structure: [CAMPAIGN_PREFIX][RANDOM_8_DIGITS][CHECK_DIGIT]
+Example: COC2024A12345678C
+- COC: Campaign identifier (3 chars)
+- 2024A: Year + batch identifier
+- 12345678: Random digits
+- C: Check digit (validation)
+```
 
-**Yêu cầu ghi nhật ký:**
-- Dấu vết kiểm tra đầy đủ: mã_người_dùng, mã_chiến_dịch, mã_barcode, dấu_thời_gian
-- Thu thập thông tin thiết bị
-- Dữ liệu vị trí (nếu được cấp phép)
-- Theo dõi phân bổ
+#### API Endpoints:
+- `POST /api/barcodes/generate` - Tạo barcode mới
+- `GET /api/barcodes/{code}/validate` - Validate barcode
+- `POST /api/barcodes/{code}/wallet` - Tạo wallet pass
+- `GET /api/barcodes/status/{code}` - Kiểm tra trạng thái
 
-**Tiêu chí chấp nhận:**
-- [ ] Thời gian gán <2 giây sau xác minh
-- [ ] Tính duy nhất barcode 100%
-- [ ] Khả năng tương thích ví di động >95%
-- [ ] Tỷ lệ gửi thành công >98%
-
----
-
-## 4.8 FR-007: Tích hợp POS và đổi quà
-
-### 4.8.1 Mô tả chức năng
-Hệ thống đổi quà đa kênh với tích hợp POS, đồng bộ ngoại tuyến và xử lý giao dịch nguyên tử.
-
-### 4.8.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.5)
-- **Tài khoản phục vụ**: Tôi quét barcode tại Circle K, cập nhật trạng thái thời gian thực
-- **Quản trị viên**: Tôi thiết lập API/webhook POS, nhập nhật ký đổi quà theo lô
-- **Người dùng cuối**: Tôi xem trạng thái đổi quà trong cổng thông tin người dùng
-- **Kiểm toán viên**: Tôi xem nhật ký tuân thủ đổi quà
-
-### 4.8.3 Đặc tả chức năng chi tiết
-
-**Kênh đổi quà:**
-- Tích hợp terminal POS
-- Ứng dụng quét di động (Nhân viên)
-- Công cụ đổi quà dựa trên web
-- Nhập CSV theo lô cho đổi quà ngoại tuyến
-
-**Logic xử lý:**
-- Xác thực barcode nguyên tử và cập nhật trạng thái
-- Hạn chế đổi quà dựa trên địa điểm
-- Xác thực cửa sổ thời gian (giờ kinh doanh)
-- Kiểm tra tính khả dụng của kho
-
-**Khả năng ngoại tuyến:**
-- Lưu trữ dữ liệu cục bộ (IndexedDB)
-- Đồng bộ dựa trên hàng đợi khi kết nối lại
-- Giải quyết xung đột cho đổi quà đồng thời
-- Khả năng hoạt động ngoại tuyến 24 giờ
-
-**Điểm tích hợp:**
-- Scandit SDK cho quét barcode
-- Bộ chuyển đổi API POS (Circle K, GS25, Mini Stop)
-- Thông báo webhook cho cập nhật thời gian thực
-- API cổng thông tin người dùng cho đồng bộ trạng thái
-
-**Tiêu chí chấp nhận:**
-- [ ] Tỷ lệ thành công đổi quà >98%
-- [ ] Độ chính xác đồng bộ ngoại tuyến 100%
-- [ ] Thời gian quét trung bình <3 giây
-- [ ] Không có sự cố đổi quà kép
+#### Acceptance Criteria:
+- [ ] Barcode generation time < 1 second
+- [ ] 100% unique barcode guarantee
+- [ ] QR codes scannable bằng standard readers
+- [ ] Wallet integration success rate ≥ 90%
+- [ ] Email/SMS delivery rate ≥ 95%
 
 ---
 
-## 4.9 FR-008: Phân tích và báo cáo
+### FR-004: Redemption tại POS 🔴
+**Mô tả**: Hệ thống hỗ trợ scan và redeem barcode tại các điểm bán lẻ với khả năng offline sync và real-time status update.
 
-### 4.9.1 Mô tả chức năng
-Bảng điều khiển phân tích thời gian thực với theo dõi phễu, khả năng xuất và báo cáo nâng cao.
+**Actors**: Serving Account (nhân viên bán hàng)  
+**Service liên quan**: `redemption-service`, `barcode-service`  
+**Tham chiếu BRD**: Section 4.1 - POS Integration
 
-### 4.9.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.6)
-- **Quản trị viên**: Tôi xem số liệu phễu đầy đủ, xuất CSV/API, cấu hình báo cáo nâng cao
-- **Quản trị nhóm**: Tôi xem báo cáo tổng hợp nhóm
-- **Tài khoản khách hàng**: Tôi xem báo cáo chiến dịch riêng, xuất dữ liệu khách hàng
-- **Kiểm toán viên**: Tôi xem báo cáo tuân thủ và dấu vết kiểm tra
+#### User Stories:
+```
+Là một nhân viên tại Circle K,
+Tôi muốn scan barcode của khách hàng một cách nhanh chóng
+Để xử lý redemption và cập nhật inventory
 
-### 4.9.3 Đặc tả chức năng chi tiết
+Acceptance Criteria:
+- Tôi có thể scan QR code bằng camera điện thoại/tablet
+- System hiển thị thông tin sản phẩm và campaign ngay lập tức
+- Tôi có thể confirm redemption với 1 click
+- System hoạt động khi mất mạng (offline mode)
+- Dữ liệu được sync khi có mạng trở lại
+```
 
-**Số liệu cốt lõi:**
-- Chuyển đổi phễu: Quét → Gửi → Xác minh → Phát hành → Đổi
-- Chi phí trên khách hàng tiềm năng được xác minh (CPL)
-- Phân phối địa lý
-- Phân tích chuỗi thời gian
-- Tính toán ROI chiến dịch
+#### Functional Specifications:
 
-**Tính năng bảng điều khiển:**
-- Cập nhật dữ liệu thời gian thực (<5 giây độ trễ)
-- Biểu đồ tương tác và lọc
-- Khả năng drill-down
-- Công cụ phân tích so sánh
-- Lựa chọn phạm vi ngày tùy chỉnh
+| Chức năng | Input | Output | Business Rules |
+|-----------|-------|--------|----------------|
+| **Scan Barcode** | QR/Barcode image | Product info, validity | Real-time validation |
+| **Process Redemption** | Barcode, location, staff ID | Redemption record | Single-use enforcement |
+| **Offline Storage** | Redemption data | Local queue | IndexedDB storage |
+| **Sync Process** | Queued data | Server update | Automatic when online |
 
-**Khả năng xuất:**
-- Xuất CSV/Excel cho dữ liệu thô
-- Báo cáo PDF với tóm tắt điều hành
-- Điểm cuối API cho truy cập theo chương trình
-- Báo cáo email theo lịch
+#### Offline Capabilities:
+```mermaid
+graph TB
+    subgraph "Online Mode"
+        O1[Scan Barcode] --> O2[Real-time Validation]
+        O2 --> O3[Process Redemption]
+        O3 --> O4[Update Server]
+    end
+    
+    subgraph "Offline Mode"
+        F1[Scan Barcode] --> F2[Local Validation]
+        F2 --> F3[Queue Redemption]
+        F3 --> F4[Store in IndexedDB]
+    end
+    
+    subgraph "Sync Process"
+        S1[Network Available] --> S2[Upload Queued Data]
+        S2 --> S3[Resolve Conflicts]
+        S3 --> S4[Update Local Status]
+    end
+    
+    F4 --> S1
+    O4 --> S4
+    
+    style O2 fill:#e8f5e8
+    style F2 fill:#fff3e0
+    style S2 fill:#e3f2fd
+```
 
-**Phân tích nâng cao:**
-- Kết quả khảo sát sau lấy mẫu
-- Chấm điểm NPS và phân tích tình cảm
-- Phân tích nhóm cho hành vi người dùng
-- Phân tích dự đoán cho hiệu suất chiến dịch
+#### API Endpoints:
+- `POST /api/redemptions/scan` - Scan và validate barcode
+- `POST /api/redemptions/process` - Xử lý redemption
+- `POST /api/redemptions/batch-sync` - Sync offline data
+- `GET /api/redemptions/status` - Kiểm tra sync status
 
-**Điểm tích hợp:**
-- Phân tích nhúng Metabase
-- BigQuery cho phân tích dữ liệu quy mô lớn
-- Tích hợp GA4 cho phân tích web
-- Bộ kết nối công cụ BI tùy chỉnh
-
-**Tiêu chí chấp nhận:**
-- [ ] Thời gian tải bảng điều khiển <3 giây
-- [ ] Độ chính xác dữ liệu 99.9%
-- [ ] Tạo xuất <30 giây cho 100K bản ghi
-- [ ] Độ trễ cập nhật thời gian thực <5 giây
-
----
-
-## 4.10 FR-009: Tích hợp CRM
-
-### 4.10.1 Mô tả chức năng
-Đồng bộ CRM hai chiều với chấm điểm khách hàng tiềm năng, quy trình làm việc tự động và tuân thủ GDPR.
-
-### 4.10.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.7)
-- **Quản trị viên**: Tôi cấu hình kết nối API CRM, thiết lập ánh xạ dữ liệu
-- **Tài khoản khách hàng**: Tôi xuất khách hàng tiềm năng đã xác minh cho chiến dịch riêng
-- **Người dùng cuối**: Tôi nhận ưu đãi cá nhân hóa qua tiếp thị lại
-- **Kiểm toán viên**: Tôi xác minh tuân thủ GDPR cho chuyển giao dữ liệu
-
-### 4.10.3 Đặc tả chức năng chi tiết
-
-**Hệ thống CRM được hỗ trợ:**
-- HubSpot (tích hợp chính)
-- Salesforce
-- Pipedrive
-- Điểm cuối API REST tùy chỉnh
-
-**Đồng bộ dữ liệu:**
-- Đẩy webhook thời gian thực
-- Lập lịch xuất theo lô
-- Cập nhật gia tăng
-- Khả năng đồng bộ hai chiều
-
-**Chấm điểm khách hàng tiềm năng:**
-- Tính toán điểm tương tác
-- Xác suất chuyển đổi
-- Chấm điểm nhân khẩu học
-- Phân tích hành vi
-
-**Tuân thủ quyền riêng tư:**
-- Đồng bộ cờ đồng ý
-- Tự động hóa quyền bị lãng quên
-- Thực thi giảm thiểu dữ liệu
-- Duy trì dấu vết kiểm tra
-
-**Tiêu chí chấp nhận:**
-- [ ] Tỷ lệ thành công đồng bộ >99%
-- [ ] Độ trễ chuyển giao dữ liệu <60 giây
-- [ ] Tuân thủ GDPR 100%
-- [ ] Độ chính xác chấm điểm khách hàng tiềm năng >85%
+#### Acceptance Criteria:
+- [ ] Scan response time < 2 seconds
+- [ ] Offline functionality hoạt động ≥ 8 hours
+- [ ] Sync success rate ≥ 99% khi có mạng
+- [ ] Conflict resolution automatic
+- [ ] Audit trail đầy đủ cho mọi redemption
 
 ---
 
-## 4.11 FR-010: Kiểm soát truy cập và phân quyền RBAC
+### FR-005: Landing Page và Form 🔴
+**Mô tả**: Hệ thống cung cấp mobile-first landing page với form thu thập thông tin khách hàng, quiz preferences và consent management.
 
-### 4.11.1 Mô tả chức năng
-Hệ thống kiểm soát truy cập dựa trên vai trò với 6 vai trò được định nghĩa, quyền chi tiết và ghi nhật ký kiểm tra.
+**Actors**: End User  
+**Service liên quan**: `user-service`, `campaign-service`  
+**Tham chiếu BRD**: Section 4.1 - Data Collection
 
-### 4.11.2 Câu chuyện người dùng (từ Access_Control_Tree_Grok.md v2.2)
-- **Quản trị viên**: Tôi gán vai trò, quản lý người dùng, cấu hình chính sách bảo mật
-- **Quản trị nhóm**: Tôi tạo người dùng trong phạm vi nhóm
-- **Tài khoản khách hàng**: Tôi xem quyền và cài đặt hồ sơ
-- **Kiểm toán viên**: Tôi giám sát mẫu truy cập và tuân thủ
+#### User Stories:
+```
+Là một khách hàng scan QR code,
+Tôi muốn điền thông tin một cách nhanh chóng và dễ dàng
+Để hoàn thành quá trình nhận sample
 
-### 4.11.3 Ma trận phân quyền động (từ Access_Control_Tree_Grok.md v2.2)
+Acceptance Criteria:
+- Landing page load trong < 3 giây trên 3G
+- Form có thể điền hoàn tất trong < 30 giây
+- Tôi thấy rõ privacy policy và consent options
+- Form validation real-time và user-friendly
+- Tôi có thể access User Portal sau khi submit
+```
 
-**Thiết kế quyền động cho từng chức năng:**
+#### Functional Specifications:
 
-| Chức năng | Admin | Group Admin | Customer Account | Serving Account | Auditor | User Role |
-|-----------|-------|-------------|------------------|-----------------|---------|-----------|
-| **FR-001: Quản lý Campaign** | ✅ Full | ✅ Group scope | ✅ Own campaigns | ❌ | 👁️ View logs | ❌ |
-| **FR-002: Quản lý Barcode** | ✅ Full import/export | ✅ Group import | ✅ Campaign import | ❌ | 👁️ View logs | ❌ |
-| **FR-003: Quản lý Ads Format** | ✅ Create/upload global | ✅ Group upload/preview | ✅ Campaign upload/preview | ❌ | 👁️ View logs | ❌ |
-| **FR-004: Landing Page** | ✅ Create/edit templates | ✅ Group edit/preview | ✅ Preview own | ❌ | 👁️ View logs | ✅ Fill form/quiz |
-| **FR-005: OTP Verification** | ✅ Config rules/view stats | ✅ View group stats | ✅ View campaign stats | ❌ | 👁️ View logs | ✅ Verify OTP |
-| **FR-006: Cấp phát Barcode** | ✅ Config rules global | ✅ View group allocation | ✅ View campaign allocation | ❌ | 👁️ View logs | ✅ Receive barcode |
-| **FR-007: POS & Redemption** | ✅ Setup API/webhook | ✅ View group stats | ✅ View campaign stats | ✅ Scan/redeem | 👁️ View logs | 👁️ View status |
-| **FR-008: Analytics** | ✅ Full analytics/export | ✅ Group analytics | ✅ Campaign analytics | ❌ | ✅ Compliance reports | 👁️ Personal reports |
-| **FR-009: CRM Integration** | ✅ Config API connections | ✅ Group data export | ✅ Campaign data export | ❌ | 👁️ Compliance logs | ❌ |
-| **FR-010: Access Control** | ✅ Manage all users/roles | ✅ Create group users | 👁️ View own permissions | 🔒 Login redeem tool | 👁️ View permissions | ❌ |
-| **FR-011: User Portal** | ✅ Config portal/FAQ | 👁️ View group user stats | 👁️ View campaign user stats | 👁️ View redeem tickets | 👁️ View user interactions | ✅ Full portal access |
+| Chức năng | Input | Output | Business Rules |
+|-----------|-------|--------|----------------|
+| **Form Rendering** | Campaign ID, device type | Responsive form | Mobile-first design |
+| **Data Validation** | Form fields | Validation errors | Real-time validation |
+| **Quiz Engine** | User responses | Preference profile | Optional completion |
+| **Consent Management** | Checkbox selections | Consent record | GDPR/PDPA compliance |
 
-**Ký hiệu:**
-- ✅ = Full permission
-- 🔒 = Limited access  
-- 👁️ = View only
-- ❌ = No access
-
-### 4.11.4 Thiết kế quyền động chi tiết
-
-**Cấu trúc quyền theo tài nguyên:**
-```json
-{
-  "permissions": {
-    "campaign": {
-      "create": ["admin", "group_admin", "customer_account"],
-      "read": ["admin", "group_admin", "customer_account", "auditor"],
-      "update": ["admin", "group_admin:own_group", "customer_account:own"],
-      "delete": ["admin", "group_admin:own_group", "customer_account:own"]
-    },
-    "barcode": {
-      "import": ["admin", "group_admin:own_group", "customer_account:own"],
-      "export": ["admin", "group_admin:own_group", "customer_account:own"],
-      "view_logs": ["admin", "group_admin:own_group", "auditor"]
-    },
-    "redemption": {
-      "scan": ["serving_account"],
-      "process": ["serving_account"],
-      "view_status": ["user_role:own"]
-    }
-  }
+#### Form Fields:
+```typescript
+interface UserForm {
+  // Bắt buộc
+  fullName: string;           // Họ và tên
+  email: string;              // Email
+  phoneNumber: string;        // Số điện thoại
+  
+  // Tùy chọn
+  age?: number;               // Tuổi
+  gender?: 'M' | 'F' | 'Other'; // Giới tính
+  location?: string;          // Khu vực
+  
+  // Quiz preferences (campaign-specific)
+  preferences?: {
+    dietaryRestrictions?: string[];
+    brandPreferences?: string[];
+    shoppingHabits?: string[];
+  };
+  
+  // Consent
+  marketingConsent: boolean;  // Đồng ý marketing
+  dataProcessingConsent: boolean; // Đồng ý xử lý dữ liệu
 }
 ```
 
-**Scope-based access control:**
-- **Global scope**: Admin có quyền trên toàn hệ thống
-- **Group scope**: Group Admin chỉ trong group được gán
-- **Campaign scope**: Customer Account chỉ campaigns riêng  
-- **Personal scope**: User Role chỉ dữ liệu cá nhân
+#### API Endpoints:
+- `GET /api/landing/{campaignId}` - Lấy landing page config
+- `POST /api/forms/validate` - Validate form data
+- `POST /api/forms/submit` - Submit form
+- `GET /api/user-portal/link` - Tạo User Portal link
 
-**Dynamic permission evaluation:**
-```javascript
-function hasPermission(user, action, resource, context) {
-  const userRole = user.role;
-  const resourceOwner = resource.owner;
-  const userGroup = user.group;
-  
-  // Check role-based permissions
-  if (!rolePermissions[userRole][action]) return false;
-  
-  // Apply scope restrictions
-  switch(userRole) {
-    case 'group_admin':
-      return resource.group === userGroup;
-    case 'customer_account':
-      return resource.owner === user.id;
-    case 'serving_account':
-      return action === 'redemption' && resource.location in user.locations;
-    default:
-      return true;
-  }
-}
+#### Acceptance Criteria:
+- [ ] Page load time < 3 seconds trên 3G
+- [ ] Form completion rate ≥ 90%
+- [ ] Mobile usability score ≥ 95%
+- [ ] Accessibility compliance (WCAG 2.1)
+- [ ] Cross-browser compatibility
+
+---
+
+### FR-006: Báo cáo và Analytics 🔴
+**Mô tả**: Hệ thống cung cấp dashboard real-time với funnel tracking, campaign performance và khả năng export dữ liệu.
+
+**Actors**: Admin, Group Admin, Customer Account  
+**Service liên quan**: `analytics-service`  
+**Tham chiếu BRD**: Section 4.1 - Analytics & Reporting
+
+#### User Stories:
+```
+Là một brand manager,
+Tôi muốn xem hiệu quả campaign real-time
+Để có thể điều chỉnh strategy kịp thời
+
+Acceptance Criteria:
+- Dashboard update mỗi 5 phút
+- Tôi thấy được funnel từ scan → redeem
+- Tôi có thể filter theo location, time range
+- Tôi có thể export data CSV/Excel
+- Tôi thấy được cost per verified lead
 ```
 
-**Phương thức xác thực:**
-- OAuth 2.0/OpenID Connect
-- Quản lý phiên JWT
-- Xác thực đa yếu tố
-- Khả năng tích hợp SSO
+#### Dashboard Metrics:
 
-**Khung ủy quyền:**
-- Quyền dựa trên tài nguyên
-- Kế thừa vai trò phân cấp
-- Đánh giá quyền động
-- Kiểm soát truy cập cấp API
+```mermaid
+graph TB
+    subgraph "Funnel Metrics"
+        F1[QR Scans: 10,000]
+        F2[Form Submissions: 8,500]
+        F3[OTP Verified: 7,650]
+        F4[Barcodes Issued: 7,650]
+        F5[Redemptions: 6,885]
+    end
+    
+    subgraph "Performance KPIs"
+        K1[Conversion Rate: 85%]
+        K2[Cost per Lead: $0.35]
+        K3[Fraud Rate: 3.2%]
+        K4[Average Time to Redeem: 2.3 days]
+    end
+    
+    F1 --> F2 --> F3 --> F4 --> F5
+    F5 --> K1 --> K2 --> K3 --> K4
+    
+    style F1 fill:#e3f2fd
+    style F5 fill:#e8f5e8
+    style K2 fill:#fff3e0
+```
 
-**Tiêu chí chấp nhận:**
-- [ ] Không có sự cố truy cập trái phép
-- [ ] Thời gian gán vai trò <2 phút
-- [ ] Phản hồi xác thực <1 giây
-- [ ] Tính đầy đủ nhật ký kiểm tra 100%
+#### Report Types:
 
----
+| Report | Frequency | Format | Recipients |
+|--------|-----------|--------|------------|
+| **Campaign Summary** | Daily | Dashboard | Brand managers |
+| **Funnel Analysis** | Real-time | Dashboard | Marketing teams |
+| **Cost Analysis** | Weekly | PDF/Email | Finance teams |
+| **Fraud Report** | Daily | Dashboard | Security teams |
+| **Location Performance** | Weekly | CSV Export | Operations teams |
 
-## 4.12 FR-011: Cổng thông tin người dùng
+#### API Endpoints:
+- `GET /api/analytics/dashboard` - Dashboard data
+- `GET /api/analytics/funnel` - Funnel metrics
+- `POST /api/analytics/export` - Export data
+- `GET /api/analytics/cost-analysis` - Cost breakdown
 
-### 4.12.1 Mô tả chức năng
-Ứng dụng web tiến bộ cho người dùng cuối với lịch sử sản phẩm, theo dõi trạng thái, thông báo và hệ thống ticket hỗ trợ.
-
-### 4.12.2 Câu chuyện người dùng (từ System_Feature_Tree_Grok.md 1.9)
-- **Người dùng cuối**: Tôi xem lịch sử sản phẩm, kiểm tra trạng thái barcode, nhận thông báo
-- **Người dùng cuối**: Tôi gửi ticket hỗ trợ, rút đồng ý GDPR
-- **Quản trị viên**: Tôi cấu hình quy tắc thông báo, nội dung FAQ
-- **Kiểm toán viên**: Tôi giám sát tương tác người dùng và tuân thủ quyền riêng tư
-
-### 4.12.3 Đặc tả chức năng chi tiết
-
-**Tính năng cốt lõi:**
-- Lịch sử sản phẩm với barcode, tên_sản_phẩm, ngày_hết_hạn
-- Theo dõi trạng thái thời gian thực (Chưa đổi/Đã đổi/Hết hạn)
-- Thông báo đẩy cho nhắc nhở đổi quà và ưu đãi mới
-- Gửi ticket hỗ trợ với tệp đính kèm
-
-**Khả năng PWA:**
-- Chức năng ngoại tuyến với lưu trữ cục bộ
-- Hỗ trợ thông báo đẩy
-- Trải nghiệm giống ứng dụng đa nền tảng
-- Tải nhanh với bộ nhớ đệm service worker
-
-**Hệ thống thông báo:**
-- Thông báo SMS qua Twilio
-- Thông báo email với mẫu
-- Thông báo đẩy PWA
-- Trung tâm thông báo trong ứng dụng
-
-**Kiểm soát quyền riêng tư:**
-- Giao diện quản lý đồng ý
-- Yêu cầu tải xuống dữ liệu
-- Yêu cầu xóa tài khoản
-- Tùy chọn giao tiếp
-
-**Điểm tích hợp:**
-- Hệ thống xác thực người dùng
-- API dữ liệu chiến dịch
-- Ticketing hỗ trợ (Zendesk)
-- Theo dõi phân tích (GA4)
-
-**Tiêu chí chấp nhận:**
-- [ ] Điểm hiệu suất PWA >90
-- [ ] Tỷ lệ tương tác người dùng >70%
-- [ ] Tỷ lệ gửi thông báo >95%
-- [ ] Giải quyết ticket hỗ trợ <48h
-- [ ] Tuân thủ GDPR 100%
+#### Acceptance Criteria:
+- [ ] Dashboard load time < 5 seconds
+- [ ] Data accuracy ≥ 99.5%
+- [ ] Real-time updates trong 5 minutes
+- [ ] Export completion time < 30 seconds
+- [ ] Support concurrent 100+ users
 
 ---
 
-## 4.13 Ma trận truy xuất nguồn gốc
+### FR-007: User Portal 🔴
+**Mô tả**: PWA cho end users xem lịch sử sampling, track redemption status, nhận notifications và manage consent.
 
-| Yêu cầu kinh doanh | Yêu cầu chức năng | Độ ưu tiên triển khai |
-|-------------------|-------------------|----------------------|
-| Phân phối mẫu hiệu quả chi phí | FR-001, FR-002, FR-007 | Bắt buộc có |
-| Thu thập dữ liệu khách hàng đã xác minh | FR-004, FR-005, FR-006 | Bắt buộc có |
-| Đo lường hiệu suất chiến dịch | FR-008, FR-009 | Bắt buộc có |
-| Phân phối đa kênh | FR-003, FR-007 | Bắt buộc có |
-| Tối ưu trải nghiệm người dùng | FR-004, FR-011 | Bắt buộc có |
-| Bảo mật và tuân thủ | FR-005, FR-010 | Bắt buộc có |
-| Ngăn chặn gian lận | FR-005, FR-006 | Bắt buộc có |
-| Hoạt động có thể mở rộng | Tất cả FR | Tiến bộ |
+**Actors**: User Role (End User)  
+**Service liên quan**: `user-service`, `notification-service`  
+**Tham chiếu BRD**: Section 4.1 - User Experience
+
+#### User Stories:
+```
+Là một khách hàng đã nhận samples,
+Tôi muốn theo dõi lịch sử và trạng thái redemption
+Để quản lý các samples của mình
+
+Acceptance Criteria:
+- Tôi login bằng phone/email
+- Tôi thấy danh sách tất cả samples đã nhận
+- Tôi biết trạng thái từng barcode (chưa dùng/đã dùng/hết hạn)
+- Tôi nhận push notifications khi sắp hết hạn
+- Tôi có thể withdraw consent/opt-out
+```
+
+#### Portal Features:
+
+| Feature | Description | Business Value |
+|---------|-------------|----------------|
+| **Sample History** | Danh sách products đã nhận theo thời gian | User engagement tracking |
+| **Redemption Status** | Real-time status của mỗi barcode | Transparency, trust building |
+| **Notification Center** | Push/SMS/Email notifications | User retention |
+| **Consent Management** | Update preferences, opt-out options | GDPR compliance |
+| **Support Tickets** | Report issues, contact support | Customer service |
+
+#### Portal Flow:
+```mermaid
+graph TB
+    A[User Access Portal] --> B{Authenticated?}
+    B -->|No| C[Login/Register]
+    B -->|Yes| D[Dashboard]
+    
+    C --> D
+    D --> E[Sample History]
+    D --> F[Notifications]
+    D --> G[Settings]
+    
+    E --> H[View Details]
+    E --> I[Track Status]
+    
+    F --> J[Mark as Read]
+    F --> K[Notification Preferences]
+    
+    G --> L[Update Profile]
+    G --> M[Consent Management]
+    G --> N[Support Tickets]
+    
+    style D fill:#e3f2fd
+    style E fill:#e8f5e8
+    style G fill:#fff3e0
+```
+
+#### API Endpoints:
+- `GET /api/user-portal/dashboard` - User dashboard data
+- `GET /api/user-portal/samples` - Sample history
+- `POST /api/user-portal/notifications/read` - Mark notifications
+- `PUT /api/user-portal/consent` - Update consent
+- `POST /api/user-portal/support` - Create support ticket
+
+#### Acceptance Criteria:
+- [ ] PWA installable on mobile devices
+- [ ] Offline viewing cho sample history
+- [ ] Push notification delivery rate ≥ 90%
+- [ ] Page load time < 3 seconds
+- [ ] User engagement rate ≥ 70%
 
 ---
 
-**Nguồn tham khảo chính:**
-- Cây chức năng hệ thống (System_Feature_Tree_Grok.md v4.0) - Chi tiết tất cả câu chuyện người dùng và yêu cầu
-- Cây kiểm soát truy cập (Access_Control_Tree_Grok.md v2.2) - Đặc tả RBAC
-- Tài liệu yêu cầu kinh doanh (01-BRD.md v3.0) - Bối cảnh kinh doanh và tiêu chí chấp nhận
-- Định nghĩa vấn đề (Problem.md v1.0) - Ưu tiên MoSCoW
+### FR-008: Role-based Access Control 🔴
+**Mô tả**: Hệ thống phân quyền chi tiết cho 6 user roles với audit logging và security compliance.
 
-**Tình trạng**: Part04 hoàn thành ✅  
-**Tiếp theo**: Part05 - Yêu cầu phi chức năng  
-**Người đánh giá**: Kiến trúc sư hệ thống, Trưởng nhóm phát triển, Trưởng nhóm QA
-# 📋 SRS Part05 - Yêu cầu phi chức năng (Non-Functional Requirements)
-**Hệ thống Product Sampling Platform**
+**Actors**: Admin, Group Admin, Customer Account, Serving Account, Auditor, User Role  
+**Service liên quan**: `auth-service`  
+**Tham chiếu**: `Access_Control_Tree_Grok.md`
+
+#### Permission Matrix:
+
+| Module | Admin | Group Admin | Customer Account | Serving Account | Auditor | User Role |
+|--------|-------|-------------|------------------|-----------------|---------|-----------|
+| Campaign Management | Full | Group scope | Own campaigns | None | View logs | None |
+| Barcode Operations | Full | Group scope | Own pools | Scan only | View logs | View own |
+| User Management | Full | Group users | None | None | View logs | Own profile |
+| Analytics | Global | Group reports | Own data | None | Compliance | Personal stats |
+| System Config | Full | None | None | None | None | None |
+
+#### Security Features:
+- **JWT Authentication** với refresh tokens
+- **Multi-factor Authentication** cho admin roles
+- **Session Management** với automatic timeout
+- **Audit Logging** cho tất cả sensitive operations
+- **IP Whitelisting** cho admin accounts
+
+#### API Endpoints:
+- `POST /api/auth/login` - Authentication
+- `POST /api/auth/refresh` - Token refresh
+- `GET /api/auth/permissions` - User permissions
+- `POST /api/auth/mfa/setup` - Setup MFA
+- `GET /api/audit/logs` - Audit trail
+
+#### Acceptance Criteria:
+- [ ] Zero unauthorized access incidents
+- [ ] Permission check time < 100ms
+- [ ] Audit log completeness 100%
+- [ ] MFA setup rate ≥ 90% for admins
+- [ ] Session security compliance
+
+---
+
+## 4.3 Should-Have Requirements (Phase 2)
+
+### FR-009: Fraud Detection nâng cao 🟡
+**Mô tả**: Machine learning-based fraud detection với device fingerprinting và anomaly detection.
+
+**Service liên quan**: `auth-service` enhanced với ML models  
+**Business Value**: Giảm fraud rate từ 5% xuống <2%
+
+#### ML Features:
+- Behavioral pattern analysis
+- Device fingerprinting correlation
+- Velocity checks và geographic analysis
+- Risk scoring với automatic blocking
+
+---
+
+### FR-010: Inventory Reconciliation 🟡
+**Mô tả**: Quản lý stock theo batch với expiry tracking và automatic reconciliation.
+
+**Service liên quan**: `inventory-service` (new), `barcode-service`  
+**Business Value**: Inventory accuracy >99%, waste reduction
+
+#### Features:
+- Batch tracking với expiry dates
+- Automatic reconciliation với POS systems
+- Waste reporting và optimization
+- Supplier integration APIs
+
+---
+
+### FR-011: A/B Testing Framework 🟡
+**Mô tả**: Built-in A/B testing cho landing pages, incentives và user flows.
+
+**Service liên quan**: `campaign-service`, `analytics-service`  
+**Business Value**: Conversion optimization, data-driven improvements
+
+#### Features:
+- Experiment configuration interface
+- Traffic splitting và control groups
+- Statistical significance testing
+- Automatic winner selection
+
+---
+
+## 4.4 Nice-to-Have Requirements (Phase 3)
+
+### FR-012: AI Campaign Optimization 🟠
+**Mô tả**: AI-powered campaign optimization với predictive analytics.
+
+**Service liên quan**: `ai-service` (new)  
+**Business Value**: Automatic ROI optimization, predictive insights
+
+---
+
+### FR-013: Sustainability Tracking 🟠
+**Mô tả**: Carbon footprint tracking và eco-metrics cho campaigns.
+
+**Service liên quan**: `sustainability-service` (new)  
+**Business Value**: ESG compliance, Gen Z appeal
+
+---
+
+## 4.5 Tổng kết và Dependencies
+
+### 4.5.1 Implementation Priority
+```mermaid
+gantt
+    title Functional Requirements Implementation Timeline
+    dateFormat  YYYY-MM-DD
+    section Phase 1 (MVP)
+    FR-001 Campaign Mgmt    :done, fr001, 2025-01-01, 30d
+    FR-002 User Auth        :done, fr002, 2025-01-15, 45d
+    FR-003 Barcode Dist     :active, fr003, 2025-02-01, 30d
+    FR-004 POS Redemption   :fr004, 2025-02-15, 45d
+    FR-005 Landing Page     :fr005, 2025-01-01, 60d
+    FR-006 Analytics        :fr006, 2025-03-01, 30d
+    FR-007 User Portal      :fr007, 2025-03-15, 45d
+    FR-008 RBAC            :fr008, 2025-01-01, 90d
+    
+    section Phase 2
+    FR-009 Fraud Detection  :fr009, 2025-06-01, 60d
+    FR-010 Inventory        :fr010, 2025-07-01, 45d
+    FR-011 A/B Testing      :fr011, 2025-08-01, 30d
+```
+
+### 4.5.2 Cross-Functional Dependencies
+- FR-002 (Auth) → cần trước FR-003, FR-004, FR-006, FR-007
+- FR-001 (Campaign) → cần trước FR-003, FR-005, FR-006
+- FR-003 (Barcode) → cần trước FR-004, FR-007
+- FR-008 (RBAC) → cần cho tất cả modules
+
+---
+
+**Trạng thái tài liệu**: ✅ Sẵn sàng cho Part05  
+**Hành động tiếp theo**: Định nghĩa Non-Functional Requirements  
+**Dependencies**: Functional specs confirmed  
+**Người sở hữu**: Đội phân tích hệ thống
+
+# 📘 Part05 - Yêu cầu phi chức năng (Non-Functional Requirements)
+**Đặc tả yêu cầu hệ thống (SRS) - Product Sampling Platform**
 
 **Phiên bản**: 1.0  
 **Ngày**: 2025-10-17  
 **Tác giả**: Đội phân tích hệ thống  
+**Trạng thái**: ✅ Hoàn thành  
 
 ---
 
 ## 5.1 Tổng quan yêu cầu phi chức năng
 
-### 5.1.1 Phân loại yêu cầu phi chức năng
-Dựa trên **01-BRD.md v3.0** và **System_Feature_Tree_Grok.md v4.0**, các yêu cầu phi chức năng được chia thành 8 nhóm chính:
+### 5.1.1 Phân loại NFR theo ISO 25010
+Hệ thống Product Sampling Platform phải đáp ứng các **quality attributes** sau theo chuẩn ISO 25010:
 
-| Mã NFR | Tên nhóm | Mô tả | Nguồn tham chiếu |
-|--------|----------|-------|------------------|
-| NFR-001 | Hiệu năng | Thời gian phản hồi, lưu lượng, độ trễ | BRD 1.4, Cây chức năng KPI |
-| NFR-002 | Khả năng mở rộng | Người dùng đồng thời, khối lượng dữ liệu, địa lý | BRD 2.2, Tài liệu chiến lược |
-| NFR-003 | Độ tin cậy | Thời gian hoạt động, chịu lỗi, phục hồi | BRD 1.4, Cây chức năng |
-| NFR-004 | Bảo mật | Xác thực, ủy quyền, mã hóa | Cây kiểm soát truy cập v2.2 |
-| NFR-005 | Khả năng sử dụng | Trải nghiệm người dùng, khả năng tiếp cận, di động | BRD 4.4, Cây chức năng UX |
-| NFR-006 | Tương thích | Trình duyệt, thiết bị, tích hợp | Problem.md, BRD |
-| NFR-007 | Bảo trì | Chất lượng code, triển khai, giám sát | BRD 6.1, Cây chức năng |
-| NFR-008 | Tuân thủ | GDPR, PDPA, tiêu chuẩn ISO | BRD 1.4, Kiểm soát truy cập |
+```mermaid
+graph TB
+    subgraph "ISO 25010 Quality Model"
+        QM[Product Quality]
+        
+        QM --> P[Performance Efficiency]
+        QM --> R[Reliability]  
+        QM --> S[Security]
+        QM --> M[Maintainability]
+        QM --> U[Usability]
+        QM --> C[Compatibility]
+        QM --> PT[Portability]
+        QM --> F[Functional Suitability]
+    end
+    
+    subgraph "PSP Focus Areas"
+        P --> P1[Response Time]
+        P --> P2[Throughput]
+        P --> P3[Resource Usage]
+        
+        R --> R1[Availability]
+        R --> R2[Fault Tolerance]
+        R --> R3[Recoverability]
+        
+        S --> S1[Authentication]
+        S --> S2[Data Protection]
+        S --> S3[Compliance]
+    end
+    
+    style P fill:#e3f2fd
+    style R fill:#e8f5e8
+    style S fill:#ffebee
+```
 
----
-
-## 5.2 NFR-001: Yêu cầu hiệu năng
-
-### 5.2.1 Mục tiêu hiệu năng (từ 01-BRD.md 1.5)
-- **Chi phí trên người dùng đã xác minh**: ≤ 0.4 USD
-- **Độ trễ bảng điều khiển thời gian thực**: ≤ 3 giây
-- **Tải đỉnh cổng API**: 100,000 yêu cầu/phút
-- **Tỷ lệ hoàn thành biểu mẫu**: ≥ 90%
-
-### 5.2.2 Yêu cầu thời gian phản hồi
-
-| Thao tác | Mục tiêu thời gian | Điều kiện đo | Nguồn tham chiếu |
-|----------|-------------------|--------------|------------------|
-| **Tải trang đích** | < 2 giây | 95% yêu cầu, di động 3G | Cây chức năng 1.3 KPI |
-| **Gửi OTP** | < 30 giây | Gửi SMS/Email | Cây chức năng 1.4 KPI |
-| **Xác thực OTP** | < 3 giây | 95% yêu cầu | Cây chức năng 1.4 KPI |
-| **Tạo mã vạch** | < 5 giây | Sau xác minh thành công | Cây chức năng 1.5 KPI |
-| **Quét đổi quà** | < 3 giây | Quét POS/di động | Cây chức năng 1.5 KPI |
-| **Tải bảng điều khiển** | < 3 giây | Cổng quản trị/thương hiệu | Cây chức năng 1.6 KPI |
-| **Xuất báo cáo** | < 30 giây | 100K bản ghi CSV/Excel | Cây chức năng 1.6 KPI |
-
-### 5.2.3 Yêu cầu lưu lượng
-
-**Điểm cuối API:**
-- **Trang đích**: 50,000 yêu cầu/phút (đỉnh khởi chạy chiến dịch)
-- **Xác thực OTP**: 20,000 yêu cầu/phút
-- **Tạo mã vạch**: 10,000 yêu cầu/phút  
-- **API đổi quà**: 5,000 yêu cầu/phút
-- **Truy vấn phân tích**: 1,000 yêu cầu/phút
-
-**Hiệu năng cơ sở dữ liệu:**
-- **Thao tác đọc**: < 100ms cho 95% truy vấn
-- **Thao tác ghi**: < 200ms cho giao dịch
-- **Kết nối đồng thời**: 1,000 kết nối cùng lúc
-- **Lưu lượng truy vấn**: 10,000 truy vấn/giây
-
-### 5.2.4 Tiêu chí chấp nhận hiệu năng
-- [ ] Kiểm thử tải với JMeter/K6 đạt 100K RPM
-- [ ] Thời gian phản hồi phần trăm thứ 95 < mục tiêu
-- [ ] Không có lỗi hết thời gian trong tải bình thường
-- [ ] Tối ưu truy vấn cơ sở dữ liệu < 100ms trung bình
+### 5.1.2 Mức độ ưu tiên NFR
+| Nhóm NFR | Mức ưu tiên | Lý do business |
+|----------|-------------|----------------|
+| **Security** | 🔴 Critical | GDPR/PDPA compliance, fraud prevention |
+| **Performance** | 🔴 Critical | User experience, cost optimization |
+| **Reliability** | 🟡 High | Business continuity, brand trust |
+| **Scalability** | 🟡 High | Growth targets (10M users by 2027) |
+| **Usability** | 🟡 High | Conversion rate optimization |
+| **Maintainability** | 🟠 Medium | Development efficiency |
 
 ---
 
-## 5.3 NFR-002: Yêu cầu khả năng mở rộng
+## 5.2 Performance Requirements (NFR-P)
 
-### 5.3.1 Mục tiêu mở rộng (từ Product-Sampling-Vision-and-Strategy Document.md)
-- **Năm 1**: 50K người dùng đã xác minh, 25 thương hiệu
-- **Năm 2**: 200K người dùng đã xác minh, 80 thương hiệu  
-- **Năm 3**: 500K người dùng đã xác minh, 200 thương hiệu
-- **Dài hạn**: 10M người dùng, toàn khu vực ASEAN
+### NFR-P01: Response Time Requirements
+**Mô tả**: Hệ thống phải đảm bảo response time tối ưu cho user experience và business KPIs.
 
-### 5.3.2 Khả năng mở rộng người dùng
+#### Performance Targets:
 
-| Giai đoạn | Người dùng đồng thời | Tải đỉnh | Khối lượng dữ liệu | Yêu cầu hạ tầng |
-|-----------|----------------------|----------|---------------------|-----------------|
-| **MVP (Q1-Q2 2025)** | 10,000 | 50K RPM | 100 GB | Triển khai 2-AZ |
-| **Mở rộng (Q3 2025-Q4 2026)** | 100,000 | 500K RPM | 1 TB | Đa vùng |
-| **Khu vực (2027+)** | 1,000,000 | 5M RPM | 10 TB | Triển khai ASEAN |
+| Operation Type | Target (p95) | Target (p99) | Business Impact |
+|----------------|--------------|--------------|-----------------|
+| **API Authentication** | ≤ 500ms | ≤ 1s | User experience critical |
+| **Form Submission** | ≤ 1s | ≤ 2s | Conversion rate impact |
+| **Barcode Generation** | ≤ 800ms | ≤ 1.5s | User waiting time |
+| **POS Redemption** | ≤ 2s | ≤ 3s | Store operation efficiency |
+| **Dashboard Loading** | ≤ 3s | ≤ 5s | Brand user satisfaction |
+| **Analytics Export** | ≤ 10s | ≤ 30s | Acceptable for background task |
 
-### 5.3.3 Khả năng mở rộng địa lý
-**Giai đoạn 1 (Việt Nam):**
-- Hồ Chí Minh và Hà Nội làm vùng chính
-- 99.9% thời gian hoạt động trong giờ cao điểm (9-18h)
-- Hỗ trợ tiếng Việt
+#### Measurement Strategy:
+```mermaid
+graph LR
+    subgraph "Performance Monitoring"
+        M1[Application Performance Monitoring]
+        M2[Real User Monitoring]
+        M3[Synthetic Monitoring]
+    end
+    
+    subgraph "Alerting Thresholds"
+        A1[Warning: >80% of target]
+        A2[Critical: >100% of target]
+        A3[Emergency: >150% of target]
+    end
+    
+    M1 --> A1
+    M2 --> A2
+    M3 --> A3
+    
+    style A1 fill:#fff3e0
+    style A2 fill:#ffebee
+    style A3 fill:#ffcdd2
+```
 
-**Giai đoạn 2 (ASEAN):**
-- Thái Lan, Indonesia, Philippines
-- Hỗ trợ đa ngôn ngữ (Thái, Bahasa, tiếng Anh)
-- Tuân thủ địa phương (lưu trữ dữ liệu, nhà cung cấp viễn thông)
-- Tổng hợp phân tích xuyên biên giới
-
-### 5.3.4 Khả năng mở rộng dữ liệu
-**Chiến lược phân vùng cơ sở dữ liệu:**
-- **Khóa phân vùng**: mã_quốc_gia + mã_chiến_dịch
-- **Mở rộng ngang**: Phân vùng MongoDB, phân chia PostgreSQL
-- **Lưu trữ dữ liệu**: 2 năm dữ liệu nóng, 5 năm lưu trữ lạnh
-- **Chiến lược sao lưu**: Gia tăng hàng ngày, sao lưu đầy đủ hàng tuần
-
-**Tiêu chí chấp nhận:**
-- [ ] Thời gian phản hồi tự động mở rộng < 5 phút
-- [ ] Không mất dữ liệu trong sự kiện mở rộng
-- [ ] Độ trễ xuyên vùng < 200ms
-- [ ] Mở rộng cơ sở dữ liệu minh bạch cho người dùng
-
----
-
-## 5.4 NFR-003: Yêu cầu độ tin cậy
-
-### 5.4.1 Mục tiêu độ tin cậy (từ 01-BRD.md 1.4)
-- **Thời gian hoạt động nền tảng**: 99.9% SLA
-- **Tính khả dụng API**: 99.95% cho điểm cuối quan trọng
-- **Tính nhất quán dữ liệu**: 100% cho giao dịch tài chính
-- **Mục tiêu phục hồi**: RTO < 4 giờ, RPO < 1 giờ
-
-### 5.4.2 Khả năng chịu lỗi
-
-**Loại bỏ điểm lỗi đơn:**
-- **Bộ cân bằng tải**: Đa AZ với kiểm tra sức khỏe
-- **Máy chủ ứng dụng**: Nhóm tự động mở rộng
-- **Cơ sở dữ liệu**: Sao chép chính-phụ, chuyển đổi dự phòng tự động
-- **Bộ nhớ đệm**: Cụm Redis với tính bền vững
-- **Lưu trữ tệp**: S3 với sao chép xuyên vùng
-
-**Mô hình ngắt mạch:**
-- **API bên thứ ba**: Hết thời gian 30s, thử lại 3 lần
-- **Kết nối cơ sở dữ liệu**: Quản lý pool với kết nối lại
-- **Nhà cung cấp SMS/Email**: Nhà cung cấp dự phòng tự động
-
-### 5.4.3 Sao lưu và phục hồi
-**Chiến lược sao lưu:**
-- **Cơ sở dữ liệu**: Sao lưu liên tục với phục hồi điểm thời gian
-- **Tải lên tệp**: Sao chép xuyên vùng
-- **Cấu hình**: Hạ tầng dưới dạng code (Terraform)
-- **Code ứng dụng**: Triển khai dựa trên Git với rollback
-
-**Khôi phục thảm họa:**
-- **RTO (Mục tiêu thời gian phục hồi)**: 4 giờ
-- **RPO (Mục tiêu điểm phục hồi)**: 1 giờ
-- **Kiểm thử chuyển đổi dự phòng**: Bài tập drill hàng tháng
-- **Dự phòng trung tâm dữ liệu**: Trang web chính + DR
-
-### 5.4.4 Giám sát và cảnh báo
-**Giám sát hệ thống:**
-- **Chỉ số ứng dụng**: Thời gian phản hồi, tỷ lệ lỗi, lưu lượng
-- **Chỉ số hạ tầng**: CPU, bộ nhớ, đĩa, mạng
-- **Chỉ số kinh doanh**: Tỷ lệ chuyển đổi, doanh thu, hoạt động người dùng
-- **Chỉ số bảo mật**: Đăng nhập thất bại, hoạt động đáng ngờ
-
-**Quy tắc cảnh báo:**
-- **Quan trọng**: Thời gian phản hồi > 5s, Tỷ lệ lỗi > 1%, Ngừng hoạt động
-- **Cảnh báo**: Thời gian phản hồi > 3s, Tỷ lệ lỗi > 0.5%
-- **Thông tin**: Hoàn thành triển khai, sự kiện mở rộng
-
-**Tiêu chí chấp nhận:**
-- [ ] Đo lường 99.9% thời gian hoạt động qua 3 tháng
-- [ ] Drill khôi phục thảm họa thành công
-- [ ] Thời gian trung bình để phục hồi (MTTR) < 30 phút
-- [ ] Không có sự cố hỏng dữ liệu
+#### Acceptance Criteria:
+- [ ] 95% của API calls đáp ứng response time targets
+- [ ] Performance degradation <10% trong peak hours
+- [ ] Automatic alerting khi vượt thresholds
+- [ ] Performance reports hàng tuần cho optimization
 
 ---
 
-## 5.5 NFR-004: Yêu cầu bảo mật
+### NFR-P02: Throughput Requirements
+**Mô tả**: Hệ thống phải xử lý peak load trong các campaign lớn.
 
-### 5.5.1 Mục tiêu bảo mật (từ Access_Control_Tree_Grok.md v2.2)
-- **Xác thực**: OAuth 2.0/OpenID Connect
-- **Ủy quyền**: RBAC với quyền động 6 vai trò
-- **Bảo vệ dữ liệu**: Mã hóa PII AES-256
-- **Tuân thủ**: ISO 27001, GDPR/PDPA
+#### Throughput Targets:
 
-### 5.5.2 Bảo mật xác thực và ủy quyền
+| Service | Normal Load | Peak Load | Burst Capacity |
+|---------|-------------|-----------|----------------|
+| **auth-service** | 200 RPS | 1,000 RPS | 2,000 RPS (5 min) |
+| **campaign-service** | 100 RPS | 500 RPS | 1,000 RPS |
+| **barcode-service** | 500 RPS | 2,000 RPS | 5,000 RPS |
+| **redemption-service** | 300 RPS | 1,500 RPS | 3,000 RPS |
+| **analytics-service** | 50 RPS | 200 RPS | 500 RPS |
+| **notification-service** | 1,000 messages/min | 10,000 messages/min | 50,000 messages/min |
 
-**Yêu cầu xác thực:**
-- **Chính sách mật khẩu**: Tối thiểu 8 ký tự, quy tắc phức tạp
-- **Xác thực đa yếu tố**: SMS/Email OTP cho vai trò quản trị
-- **Quản lý phiên**: JWT với hết hạn trượt
-- **Khóa tài khoản**: 5 lần thử thất bại → khóa 15 phút
+#### Load Distribution Strategy:
+- **Horizontal Scaling**: Auto-scaling containers based on CPU/memory
+- **Load Balancing**: Round-robin với health checks
+- **Caching**: Redis caching cho frequent data
+- **CDN**: Static assets delivery optimization
 
-**Khung ủy quyền:**
-- **Quyền dựa trên vai trò**: Gán động theo chức năng
-- **Bảo mật cấp tài nguyên**: Cách ly tenant, lọc dữ liệu
-- **Bảo mật API**: Giới hạn tỷ lệ, quản lý khóa API
-- **Tăng cấp đặc quyền**: Nâng cao vai trò tạm thời với phê duyệt
-
-### 5.5.3 Bảo mật dữ liệu
-
-**Mã hóa dữ liệu:**
-- **Khi nghỉ**: AES-256 cho PII trong cơ sở dữ liệu
-- **Khi truyền**: TLS 1.3 cho tất cả giao tiếp API
-- **Mã hóa sao lưu**: Tệp sao lưu được mã hóa
-- **Quản lý khóa**: AWS KMS hoặc HashiCorp Vault
-
-**Quyền riêng tư dữ liệu:**
-- **Xử lý PII**: Lưu trữ băm, thu thập tối thiểu
-- **Lưu giữ dữ liệu**: 7 năm cho kiểm toán, 2 năm cho tiếp thị
-- **Quyền bị lãng quên**: Quy trình xóa tự động
-- **Quản lý đồng ý**: Kiểm soát đăng ký/hủy đăng ký chi tiết
-
-### 5.5.4 Bảo mật ứng dụng
-
-**Bảo vệ OWASP Top 10:**
-- **Tiêm**: Truy vấn tham số, xác thực đầu vào
-- **Xác thực bị hỏng**: Quản lý phiên an toàn
-- **Tiết lộ dữ liệu nhạy cảm**: Mã hóa, tiêu đề bảo mật
-- **XXE**: Vô hiệu hóa xử lý thực thể bên ngoài
-- **Kiểm soát truy cập bị hỏng**: Ủy quyền cấp tài nguyên
-- **Cấu hình sai bảo mật**: Quét bảo mật tự động
-- **XSS**: Chính sách bảo mật nội dung, mã hóa đầu ra
-- **Deserialization không an toàn**: API chỉ JSON
-- **Thành phần có lỗ hổng**: Quét phụ thuộc
-- **Ghi nhật ký không đủ**: Dấu vết kiểm tra toàn diện
-
-**Kiểm thử bảo mật:**
-- **Phân tích tĩnh**: SonarQube, CodeQL
-- **Phân tích động**: OWASP ZAP, Burp Suite
-- **Kiểm thử thâm nhập**: Đánh giá bên ngoài hàng quý
-- **Quản lý lỗ hổng**: Quét tự động, quản lý bản vá
-
-**Tiêu chí chấp nhận:**
-- [ ] Không có lỗ hổng quan trọng trong sản xuất
-- [ ] Kiểm thử thâm nhập passed với no high-risk findings
-- [ ] Kiểm toán tuân thủ GDPR passed
-- [ ] Thời gian phản hồi sự cố bảo mật < 2 giờ
+#### Acceptance Criteria:
+- [ ] Peak load handling không có service degradation
+- [ ] Auto-scaling response time < 2 minutes
+- [ ] Load balancing efficiency ≥ 95%
+- [ ] Cache hit ratio ≥ 80% cho frequent operations
 
 ---
 
-## 5.6 NFR-005: Yêu cầu khả năng sử dụng
+### NFR-P03: Resource Usage Optimization
+**Mô tả**: Hiệu quả sử dụng tài nguyên để tối ưu infrastructure cost.
 
-### 5.6.1 Mục tiêu trải nghiệm người dùng (từ System_Feature_Tree_Grok.md UX KPIs)
-- **Tỷ lệ hoàn thành biểu mẫu**: > 90%
-- **Tỷ lệ tương tác người dùng**: > 70% (Cổng người dùng)
-- **Phản hồi di động**: > 95% điểm
-- **Khả năng tiếp cận**: Tuân thủ WCAG 2.1 AA
+#### Resource Targets:
 
-### 5.6.2 Giao diện người dùng
+| Resource Type | Normal Usage | Peak Usage | Optimization Target |
+|---------------|--------------|------------|-------------------|
+| **CPU Usage** | <60% | <80% | Auto-scaling trigger at 70% |
+| **Memory Usage** | <70% | <85% | Memory leak prevention |
+| **Database Connections** | <200 | <500 | Connection pooling |
+| **Storage Growth** | <10GB/month | <50GB/month | Data archival strategy |
 
-**Nguyên tắc thiết kế:**
-- **Ưu tiên di động**: PWA với thiết kế phản hồi
-- **UI tối giản**: Tập trung vào hành động cốt lõi
-- **Tiết lộ tiến bộ**: Hiển thị thông tin theo mức độ cần thiết
-- **Thương hiệu nhất quán**: Khả năng white-label cho thương hiệu
-
-**Luồng trải nghiệm người dùng:**
-- **Trang đích**: Hoàn thành biểu mẫu một trang < 30 giây
-- **Xác thực OTP**: Hướng dẫn rõ ràng, cơ chế thử lại
-- **Hiển thị mã vạch**: Nhiều định dạng (QR, Apple Wallet, PDF)
-- **Cổng người dùng**: Điều hướng trực quan, chức năng tìm kiếm
-
-### 5.6.3 Tiêu chuẩn khả năng tiếp cận
-
-**Tuân thủ WCAG 2.1 AA:**
-- **Có thể nhận thức**: Văn bản thay thế cho hình ảnh, tỷ lệ tương phản màu
-- **Có thể vận hành**: Điều hướng bàn phím, chỉ báo focus
-- **Có thể hiểu**: Ngôn ngữ rõ ràng, điều hướng nhất quán
-- **Mạnh mẽ**: HTML ngữ nghĩa, khả năng tương thích trình đọc màn hình
-
-**Hỗ trợ đa ngôn ngữ:**
-- **Bản địa hóa**: Tiếng Việt, tiếng Anh, tiếng Thái, Bahasa Indonesia
-- **Hỗ trợ RTL**: Thị trường Ả Rập/Hebrew (tương lai)
-- **Định dạng số/ngày**: Định dạng theo địa phương
-- **Tiền tệ**: Hiển thị tiền tệ địa phương
-
-### 5.6.4 Hiệu năng UX
-
-**Core Web Vitals:**
-- **Largest Contentful Paint (LCP)**: < 2.5 giây
-- **First Input Delay (FID)**: < 100ms
-- **Cumulative Layout Shift (CLS)**: < 0.1
-
-**Yêu cầu PWA:**
-- **Chức năng ngoại tuyến**: Bộ nhớ đệm service worker
-- **Lời nhắc cài đặt**: Khả năng thêm vào màn hình chính
-- **Thông báo đẩy**: Tương tác và giữ chân
-- **Trải nghiệm giống ứng dụng**: Chế độ toàn màn hình, màn hình khởi động
-
-**Tiêu chí chấp nhận:**
-- [ ] Điểm Google PageSpeed Insights > 90
-- [ ] Điểm Lighthouse PWA > 90
-- [ ] Kiểm thử tự động WCAG 2.1 AA passed
-- [ ] Kiểm thử chấp nhận người dùng > 85% hài lòng
+#### Cost Optimization:
+- **Right-sizing**: Regular review của instance sizes
+- **Reserved Instances**: Cost optimization cho predictable workloads
+- **Spot Instances**: Non-critical workloads optimization
+- **Data Lifecycle**: Automatic archival của old data
 
 ---
 
-## 5.7 NFR-006: Yêu cầu tương thích
+## 5.3 Reliability Requirements (NFR-R)
 
-### 5.7.1 Tương thích trình duyệt và thiết bị
+### NFR-R01: Availability Requirements
+**Mô tả**: Hệ thống phải đảm bảo uptime cao để không ảnh hưởng business operations.
 
-**Hỗ trợ trình duyệt:**
-- **Desktop**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Di động**: Chrome Mobile 90+, Safari iOS 14+, Samsung Internet 14+
-- **Cải tiến tiến bộ**: Suy giảm graceful cho trình duyệt cũ
+#### Availability Targets:
 
-**Tương thích thiết bị:**
-- **Điện thoại thông minh**: iOS 12+, Android 8+ (API level 26+)
-- **Máy tính bảng**: iPad iOS 14+, máy tính bảng Android 10"+
-- **Desktop**: Windows 10+, macOS 10.15+, Ubuntu 18.04+
-- **Kích thước màn hình**: Thiết kế phản hồi 320px đến 4K
+| Service Tier | Uptime Target | Downtime/Month | Business Impact |
+|--------------|---------------|----------------|-----------------|
+| **Critical Services** | 99.9% | <45 minutes | Revenue loss, brand damage |
+| **Important Services** | 99.5% | <4 hours | User experience impact |
+| **Supporting Services** | 99% | <7 hours | Reduced functionality |
 
-### 5.7.2 Tương thích tích hợp
+#### Service Classification:
+```mermaid
+graph TB
+    subgraph "Critical (99.9%)"
+        C1[auth-service]
+        C2[barcode-service]
+        C3[redemption-service]
+    end
+    
+    subgraph "Important (99.5%)"
+        I1[campaign-service]
+        I2[user-service]
+        I3[notification-service]
+    end
+    
+    subgraph "Supporting (99%)"
+        S1[analytics-service]
+        S2[integration-service]
+    end
+    
+    style C1 fill:#ffcdd2
+    style C2 fill:#ffcdd2
+    style C3 fill:#ffcdd2
+    style I1 fill:#fff3e0
+    style S1 fill:#e8f5e8
+```
 
-**Tích hợp CRM (từ System_Feature_Tree_Grok.md 1.7):**
-- **HubSpot**: REST API v3, hỗ trợ webhook
-- **Salesforce**: REST API v52, OAuth 2.0
-- **Pipedrive**: REST API v1, đồng bộ thời gian thực
-- **API tùy chỉnh**: Đặc tả OpenAPI 3.0
-
-**Tích hợp POS (từ System_Feature_Tree_Grok.md 1.5):**
-- **Circle K**: Tích hợp API tùy chỉnh
-- **GS25**: Giao thức quét mã vạch
-- **Mini Stop**: Khả năng đồng bộ ngoại tuyến
-- **POS chung**: Scandit SDK, định dạng mã vạch tiêu chuẩn
-
-**Dịch vụ bên thứ ba:**
-- **Nhà cung cấp SMS**: Twilio, MessageBird với dự phòng
-- **Dịch vụ email**: SendGrid, AWS SES
-- **Phân tích**: GA4, Meta Pixel, theo dõi tùy chỉnh
-- **Hỗ trợ**: Tích hợp Zendesk, Freshdesk
-
-### 5.7.3 Tương thích API
-
-**Tiêu chuẩn REST API:**
-- **OpenAPI 3.0**: Tài liệu API đầy đủ
-- **Phương thức HTTP**: GET, POST, PUT, DELETE, PATCH
-- **Mã trạng thái**: Mã phản hồi HTTP tiêu chuẩn
-- **Giới hạn tỷ lệ**: 1000 yêu cầu/giờ mỗi khóa API
-- **Phiên bản**: Cấu trúc URL /api/v1/
-
-**Hỗ trợ webhook:**
-- **Loại sự kiện**: Sự kiện chiến dịch, đổi quà, hành động người dùng
-- **Định dạng payload**: JSON với xác minh chữ ký
-- **Logic thử lại**: Backoff theo cấp số nhân, hàng đợi dead letter
-- **Bảo mật**: Chữ ký HMAC, danh sách trắng IP
-
-**Tiêu chí chấp nhận:**
-- [ ] Kiểm thử cross-browser passed trên tất cả trình duyệt được hỗ trợ
-- [ ] Kiểm thử tương thích API với hệ thống CRM chính
-- [ ] Kiểm thử thiết bị di động trên iOS và Android
-- [ ] Kiểm thử tích hợp bên thứ ba hoàn thành
+#### High Availability Architecture:
+- **Multi-AZ Deployment**: Services deployed across multiple availability zones
+- **Load Balancers**: Health check và automatic failover
+- **Database Replication**: Master-slave setup với automatic failover
+- **Circuit Breakers**: Prevent cascade failures
 
 ---
 
-## 5.8 NFR-007: Yêu cầu bảo trì
+### NFR-R02: Fault Tolerance
+**Mô tả**: Hệ thống phải graceful degradation khi có component failures.
 
-### 5.8.1 Khả năng bảo trì code
+#### Fault Tolerance Strategies:
 
-**Tiêu chuẩn chất lượng code:**
-- **Code coverage**: > 80% unit test coverage
-- **Chỉ số phức tạp**: Phức tạp cyclomatic < 10
-- **Tài liệu**: Bình luận inline, tài liệu API
-- **Phong cách code**: Định dạng nhất quán, quy tắc linting
+| Failure Type | Detection Time | Recovery Strategy | RTO Target |
+|--------------|----------------|-------------------|------------|
+| **Service Crash** | <30 seconds | Auto-restart, health check | <2 minutes |
+| **Database Failure** | <1 minute | Failover to replica | <5 minutes |
+| **Network Partition** | <2 minutes | Retry với exponential backoff | <10 minutes |
+| **External API Failure** | <30 seconds | Circuit breaker, fallback | <1 minute |
 
-**Khả năng bảo trì kiến trúc:**
-- **Microservices**: Kết nối lỏng lẻo, triển khai độc lập
-- **Thiết kế API-first**: Ranh giới dịch vụ rõ ràng
-- **Quản lý cấu hình**: Cấu hình theo môi trường
-- **Quản lý phụ thuộc**: Cập nhật thường xuyên, bản vá bảo mật
-
-### 5.8.2 Triển khai và CI/CD
-
-**Tích hợp liên tục:**
-- **Kiểm thử tự động**: Unit, tích hợp, end-to-end tests
-- **Cổng chất lượng code**: Phân tích SonarQube, quét bảo mật
-- **Tự động hóa build**: Container hóa Docker
-- **Quản lý artifact**: Triển khai có phiên bản
-
-**Triển khai liên tục:**
-- **Triển khai blue-green**: Phát hành không downtime
-- **Khả năng rollback**: Hoàn nguyên ngay lập tức trong < 5 phút
-- **Thăng tiến môi trường**: Dev → Staging → Production
-- **Feature flags**: Triển khai tính năng từ từ
-
-### 5.8.3 Giám sát và observability
-
-**Giám sát ứng dụng:**
-- **Thu thập chỉ số**: Prometheus, CloudWatch
-- **Tổng hợp nhật ký**: ELK stack, ghi nhật ký tập trung
-- **Tracing phân tán**: Jaeger, tương quan yêu cầu
-- **Theo dõi lỗi**: Sentry, tổng hợp ngoại lệ
-
-**Trí tuệ kinh doanh:**
-- **Bảng điều khiển KPI**: Chỉ số kinh doanh thời gian thực
-- **Phân tích sử dụng**: Theo dõi hành vi người dùng
-- **Xu hướng hiệu năng**: Phân tích lịch sử
-- **Lập kế hoạch năng lực**: Xu hướng sử dụng tài nguyên
-
-**Tiêu chí chấp nhận:**
-- [ ] Cổng chất lượng code passed trong pipeline CI
-- [ ] Kiểm thử tự động hóa triển khai hoàn thành
-- [ ] Cảnh báo giám sát được cấu hình đúng
-- [ ] Tài liệu được cập nhật và có thể truy cập
+#### Resilience Patterns:
+- **Retry Logic**: Exponential backoff với jitter
+- **Circuit Breaker**: Prevent cascading failures
+- **Bulkhead**: Isolate critical resources
+- **Timeout**: Prevent resource exhaustion
 
 ---
 
-## 5.9 NFR-008: Yêu cầu tuân thủ
+### NFR-R03: Disaster Recovery
+**Mô tả**: Khả năng phục hồi từ disasters lớn với minimal data loss.
 
-### 5.9.1 Tuân thủ quy định dữ liệu (từ Access_Control_Tree_Grok.md Tuân thủ)
+#### DR Objectives:
+- **Recovery Time Objective (RTO)**: ≤ 4 hours
+- **Recovery Point Objective (RPO)**: ≤ 15 minutes
+- **Data Backup Frequency**: Every 6 hours
+- **Cross-region Replication**: Real-time cho critical data
 
-**Tuân thủ GDPR (Liên minh châu Âu):**
-- **Cơ sở pháp lý**: Đồng ý cho tiếp thị, lợi ích hợp pháp cho dịch vụ
-- **Giảm thiểu dữ liệu**: Chỉ thu thập dữ liệu cần thiết
-- **Quyền truy cập**: Cổng người dùng với tải xuống dữ liệu
-- **Quyền chỉnh sửa**: Chức năng cập nhật hồ sơ
-- **Quyền xóa**: Xóa tài khoản với tẩy dữ liệu
-- **Tính di động dữ liệu**: Xuất dữ liệu người dùng trong định dạng machine-readable
-- **Quyền riêng tư theo thiết kế**: Cài đặt quyền riêng tư mặc định
-
-**Tuân thủ PDPA (ASEAN):**
-- **Bản địa hóa dữ liệu**: Yêu cầu lưu trữ dữ liệu trong nước
-- **Quản lý đồng ý**: Đăng ký rõ ràng cho xử lý dữ liệu
-- **Thông báo vi phạm dữ liệu**: Yêu cầu thông báo 72 giờ
-- **Chuyển giao xuyên biên giới**: Quyết định đầy đủ, điều khoản hợp đồng tiêu chuẩn
-
-### 5.9.2 Tuân thủ bảo mật
-
-**Phù hợp ISO 27001:**
-- **Chính sách bảo mật thông tin**: Chính sách và quy trình được tài liệu hóa
-- **Đánh giá rủi ro**: Đánh giá bảo mật thường xuyên
-- **Kiểm soát truy cập**: Quyền dựa trên vai trò, đặc quyền tối thiểu
-- **Quản lý sự cố**: Kế hoạch phản hồi sự cố bảo mật
-- **Liên tục kinh doanh**: Quy trình khôi phục thảm họa
-- **Quản lý nhà cung cấp**: Đánh giá bảo mật bên thứ ba
-
-**SOC 2 Type II (Tương lai):**
-- **Bảo mật**: Kiểm soát truy cập logic và vật lý
-- **Tính khả dụng**: Giám sát uptime và hiệu năng hệ thống
-- **Tính toàn vẹn xử lý**: Cơ chế bảo vệ độ chính xác và đầy đủ dữ liệu
-- **Bảo mật**: Cơ chế bảo vệ dữ liệu
-- **Quyền riêng tư**: Xử lý thông tin cá nhân
-
-### 5.9.3 Tuân thủ tài chính
-
-**Chống rửa tiền (AML):**
-- **Nhận dạng khách hàng**: Quy trình KYC cho chiến dịch giá trị cao
-- **Giám sát giao dịch**: Phát hiện hoạt động đáng ngờ
-- **Lưu giữ hồ sơ**: Lưu giữ lịch sử giao dịch 5 năm
-
-**Tuân thủ thuế:**
-- **Tính toán VAT/GST**: Tính thuế tự động
-- **Báo cáo**: Khả năng báo cáo cơ quan thuế
-- **Dấu vết kiểm tra**: Nhật ký giao dịch tài chính đầy đủ
-
-### 5.9.4 Kiểm toán và báo cáo tuân thủ
-
-**Yêu cầu kiểm toán:**
-- **Nhật ký kiểm toán**: Ghi nhật ký sự kiện bất biến
-- **Dòng dữ liệu**: Theo dõi luồng dữ liệu đầy đủ
-- **Báo cáo tuân thủ**: Báo cáo trạng thái tuân thủ tự động
-- **Kiểm toán bên ngoài**: Kiểm toán tuân thủ bên thứ ba hàng năm
-
-**Khả năng báo cáo:**
-- **Báo cáo quyền riêng tư**: Hoạt động xử lý dữ liệu
-- **Báo cáo bảo mật**: Tóm tắt sự cố, trạng thái lỗ hổng
-- **Báo cáo tài chính**: Tóm tắt giao dịch, tính toán thuế
-- **Báo cáo vận hành**: Tuân thủ SLA, chỉ số hiệu năng
-
-**Tiêu chí chấp nhận:**
-- [ ] Kiểm toán tuân thủ GDPR passed
-- [ ] Xác minh tuân thủ PDPA hoàn thành
-- [ ] Phân tích khoảng cách ISO 27001 hoàn thành
-- [ ] Xác minh tính toàn vẹn nhật ký kiểm toán passed
+#### DR Plan Components:
+```mermaid
+graph TB
+    subgraph "Primary Region"
+        P1[Production Environment]
+        P2[Primary Database]
+        P3[File Storage]
+    end
+    
+    subgraph "DR Region"
+        D1[Standby Environment]
+        D2[Replica Database]
+        D3[Backup Storage]
+    end
+    
+    subgraph "Recovery Process"
+        R1[Automated Failover]
+        R2[Data Synchronization]
+        R3[Service Validation]
+        R4[Traffic Redirect]
+    end
+    
+    P1 -.-> D1
+    P2 -.-> D2
+    P3 -.-> D3
+    
+    D1 --> R1 --> R2 --> R3 --> R4
+    
+    style P1 fill:#e3f2fd
+    style D1 fill:#fff3e0
+    style R1 fill:#e8f5e8
+```
 
 ---
 
-## 5.10 Ma trận ưu tiên NFR
+## 5.4 Security Requirements (NFR-S)
 
-| NFR | Mức độ quan trọng | Giai đoạn triển khai | Ước tính công sức | Phụ thuộc |
-|-----|-------------------|---------------------|-------------------|-----------|
-| **NFR-001 Hiệu năng** | Cao | MVP | Trung bình | Tối ưu cơ sở dữ liệu |
-| **NFR-002 Khả năng mở rộng** | Cao | Giai đoạn 2 | Cao | Hạ tầng đám mây |
-| **NFR-003 Độ tin cậy** | Cao | MVP | Trung bình | Thiết lập giám sát |
-| **NFR-004 Bảo mật** | Rất cao | MVP | Cao | Khung tuân thủ |
-| **NFR-005 Khả năng sử dụng** | Cao | MVP | Trung bình | Thiết kế UX hoàn thành |
-| **NFR-006 Tương thích** | Trung bình | MVP | Thấp | API bên thứ ba |
-| **NFR-007 Bảo trì** | Trung bình | Liên tục | Trung bình | Thiết lập DevOps |
-| **NFR-008 Tuân thủ** | Rất cao | MVP | Cao | Đánh giá pháp lý |
+### NFR-S01: Authentication & Authorization
+**Mô tả**: Bảo mật access control với multi-layer authentication.
+
+#### Authentication Requirements:
+
+| User Type | Authentication Method | Session Duration | MFA Requirement |
+|-----------|----------------------|------------------|-----------------|
+| **Admin** | Username/Password + MFA | 4 hours | Mandatory |
+| **Group Admin** | Username/Password + MFA | 8 hours | Mandatory |
+| **Customer Account** | Username/Password | 24 hours | Optional |
+| **Serving Account** | PIN/Biometric | 12 hours | Device-based |
+| **End User** | OTP (SMS/Email) | 30 days | Phone verification |
+
+#### Authorization Framework:
+- **Role-Based Access Control (RBAC)**: 6 defined roles với permission matrix
+- **Resource-Level Permissions**: Granular control per campaign/data
+- **API Rate Limiting**: Prevent abuse và DDoS
+- **JWT Tokens**: Stateless authentication với refresh mechanism
+
+#### Security Standards:
+- **OWASP Top 10**: Compliance với latest security guidelines
+- **OAuth 2.0**: Industry standard authorization framework
+- **PKCE**: Proof Key for Code Exchange cho mobile security
 
 ---
 
-**Nguồn tham khảo chính:**
-- Tài liệu yêu cầu kinh doanh (01-BRD.md v3.0) - Mục tiêu KPI, ràng buộc kinh doanh, mô hình tài chính
-- Cây chức năng hệ thống (System_Feature_Tree_Grok.md v4.0) - KPI hiệu năng, yêu cầu UX
-- Cây kiểm soát truy cập (Access_Control_Tree_Grok.md v2.2) - Yêu cầu bảo mật, khung tuân thủ
-- Định nghĩa vấn đề (Problem.md v1.0) - Ràng buộc kỹ thuật, yêu cầu mở rộng
-- Tài liệu tầm nhìn và chiến lược (Product-Sampling-Vision-and-Strategy Document.md v1.0) - Mục tiêu khả năng mở rộng, mở rộng thị trường
+### NFR-S02: Data Protection
+**Mô tả**: Bảo vệ dữ liệu cá nhân (PII) và business data.
 
-**Tình trạng**: Part05 hoàn thành ✅  
-**Tiếp theo**: Part06 - Kiến trúc hệ thống và thành phần  
-**Người đánh giá**: Kiến trúc sư hệ thống, Kỹ sư bảo mật, Kỹ sư hiệu năng
-# 📋 SRS Part06 - Kiến trúc hệ thống và thành phần (System Architecture & Components)
-**Hệ thống Product Sampling Platform**
+#### Encryption Requirements:
+
+| Data State | Encryption Standard | Key Management | Compliance |
+|------------|-------------------|----------------|------------|
+| **Data at Rest** | AES-256 | AWS KMS/HashiCorp Vault | GDPR/PDPA |
+| **Data in Transit** | TLS 1.3 | Certificate rotation | Industry standard |
+| **Database Fields** | Field-level encryption | Per-tenant keys | PII protection |
+| **Backup Data** | AES-256 | Separate key store | Compliance requirement |
+
+#### Data Classification:
+```mermaid
+graph TB
+    subgraph "Data Classification"
+        DC1[Public Data]
+        DC2[Internal Data] 
+        DC3[Confidential Data]
+        DC4[Restricted Data]
+    end
+    
+    subgraph "Protection Levels"
+        PL1[No encryption required]
+        PL2[Standard encryption]
+        PL3[Enhanced encryption + access control]
+        PL4[Maximum security + audit logs]
+    end
+    
+    DC1 --> PL1
+    DC2 --> PL2
+    DC3 --> PL3
+    DC4 --> PL4
+    
+    style DC4 fill:#ffcdd2
+    style DC3 fill:#fff3e0
+    style PL4 fill:#ffcdd2
+```
+
+#### PII Handling:
+- **Data Minimization**: Chỉ collect data cần thiết
+- **Pseudonymization**: Hash PII fields khi possible
+- **Right to Erasure**: GDPR deletion capabilities
+- **Consent Management**: Granular consent tracking
+
+---
+
+### NFR-S03: Compliance Requirements
+**Mô tả**: Tuân thủ các quy định về bảo vệ dữ liệu và security standards.
+
+#### Regulatory Compliance:
+
+| Regulation | Scope | Key Requirements | Implementation |
+|------------|-------|------------------|----------------|
+| **GDPR** | EU customers | Consent, deletion, portability | Consent engine, data export APIs |
+| **PDPA** | Vietnam market | Local data protection | Vietnamese compliance framework |
+| **SOC 2** | Enterprise customers | Security controls audit | Annual certification |
+| **ISO 27001** | Information security | Security management system | Security policies, procedures |
+
+#### Audit & Monitoring:
+- **Audit Logging**: Immutable logs cho tất cả sensitive operations
+- **Security Monitoring**: Real-time threat detection
+- **Vulnerability Management**: Regular security scans
+- **Incident Response**: 24/7 security incident handling
+
+#### Privacy Features:
+- **Cookie Consent**: GDPR-compliant cookie management
+- **Data Subject Rights**: Portal for data requests
+- **Privacy by Design**: Built-in privacy controls
+- **Cross-border Data Transfer**: Proper legal mechanisms
+
+---
+
+## 5.5 Scalability Requirements (NFR-SC)
+
+### NFR-SC01: User Scalability
+**Mô tả**: Hệ thống phải scale để support growth targets.
+
+#### Growth Projections:
+
+| Metric | Year 1 | Year 2 | Year 3 | Scaling Strategy |
+|--------|--------|--------|--------|------------------|
+| **Active Users** | 100K | 1M | 10M | Horizontal scaling |
+| **Concurrent Users** | 1K | 10K | 100K | Auto-scaling groups |
+| **Campaigns/Month** | 100 | 1K | 10K | Database partitioning |
+| **Redemptions/Day** | 10K | 100K | 1M | Event-driven architecture |
+
+#### Scaling Architecture:
+```mermaid
+graph TB
+    subgraph "Load Balancer Layer"
+        LB[Application Load Balancer]
+    end
+    
+    subgraph "Application Layer"
+        AS1[Auto Scaling Group]
+        AS2[Container Orchestration]
+        AS3[Microservices Mesh]
+    end
+    
+    subgraph "Data Layer"
+        DB1[Database Sharding]
+        DB2[Read Replicas]
+        DB3[Distributed Cache]
+    end
+    
+    subgraph "Storage Layer"
+        S1[Object Storage]
+        S2[CDN Distribution]
+        S3[Data Archival]
+    end
+    
+    LB --> AS1 --> DB1 --> S1
+    AS1 --> AS2 --> DB2 --> S2
+    AS2 --> AS3 --> DB3 --> S3
+    
+    style AS1 fill:#e3f2fd
+    style DB1 fill:#e8f5e8
+    style S1 fill:#fff3e0
+```
+
+---
+
+### NFR-SC02: Data Scalability
+**Mô tả**: Quản lý data volume growth hiệu quả.
+
+#### Data Growth Projections:
+
+| Data Type | Volume/Month | Growth Rate | Storage Strategy |
+|-----------|--------------|-------------|------------------|
+| **User Profiles** | 100K records | 50%/year | MongoDB sharding |
+| **Campaign Data** | 1K campaigns | 100%/year | PostgreSQL partitioning |
+| **Redemption Logs** | 1M records | 200%/year | Time-series database |
+| **Analytics Data** | 10GB | 150%/year | Data warehouse |
+
+#### Data Management:
+- **Data Lifecycle Management**: Automatic archival policies
+- **Data Compression**: Optimize storage costs
+- **Data Partitioning**: Performance optimization
+- **Data Replication**: Multi-region availability
+
+---
+
+## 5.6 Usability Requirements (NFR-U)
+
+### NFR-U01: User Experience
+**Mô tả**: Mobile-first design với excellent user experience.
+
+#### UX Targets:
+
+| Metric | Target | Measurement Method |
+|--------|--------|--------------------|
+| **Task Completion Rate** | ≥90% | User testing, analytics |
+| **Time to Complete Form** | ≤30 seconds | User journey tracking |
+| **Mobile Usability Score** | ≥95% | Google Mobile-Friendly Test |
+| **User Satisfaction** | ≥4.5/5 | Post-interaction surveys |
+
+#### Design Principles:
+- **Mobile-First**: Design cho mobile trước, desktop sau
+- **Progressive Disclosure**: Hiển thị information gradually
+- **Consistent UI**: Design system cho consistency
+- **Accessibility**: WCAG 2.1 AA compliance
+
+---
+
+### NFR-U02: Accessibility
+**Mô tả**: Hệ thống accessible cho users với disabilities.
+
+#### Accessibility Standards:
+- **WCAG 2.1 Level AA**: Full compliance
+- **Screen Reader Support**: ARIA labels và semantic HTML
+- **Keyboard Navigation**: Full keyboard accessibility
+- **Color Contrast**: 4.5:1 ratio minimum
+
+#### Testing Requirements:
+- **Automated Testing**: Accessibility scanners trong CI/CD
+- **Manual Testing**: Regular testing với assistive technologies
+- **User Testing**: Testing với users có disabilities
+
+---
+
+## 5.7 Compatibility Requirements (NFR-C)
+
+### NFR-C01: Browser Compatibility
+**Mô tả**: Support major browsers với backward compatibility.
+
+#### Browser Support Matrix:
+
+| Browser | Minimum Version | Market Share | Priority |
+|---------|----------------|--------------|----------|
+| **Chrome** | 90+ | 65% | Critical |
+| **Safari** | 14+ | 20% | Critical |
+| **Firefox** | 88+ | 8% | High |
+| **Edge** | 90+ | 5% | Medium |
+| **Samsung Internet** | 14+ | 2% | Medium (mobile focus) |
+
+---
+
+### NFR-C02: Device Compatibility
+**Mô tả**: Optimal experience across devices.
+
+#### Device Support:
+- **iOS**: iPhone 8+ (iOS 14+)
+- **Android**: Android 8+ (API level 26+)
+- **Tablets**: iPad, Android tablets
+- **Desktop**: Windows 10+, macOS 10.14+
+
+---
+
+## 5.8 Maintainability Requirements (NFR-M)
+
+### NFR-M01: Code Quality
+**Mô tả**: High-quality, maintainable codebase.
+
+#### Quality Metrics:
+- **Code Coverage**: ≥80% test coverage
+- **Technical Debt**: <10% của total codebase
+- **Code Duplication**: <5%
+- **Cyclomatic Complexity**: ≤10 per function
+
+#### Development Standards:
+- **Coding Standards**: ESLint, Prettier configuration
+- **Code Reviews**: Mandatory peer reviews
+- **Documentation**: JSDoc comments, README files
+- **Refactoring**: Regular technical debt reduction
+
+---
+
+## 5.9 NFR Testing Strategy
+
+### 5.9.1 Performance Testing
+```mermaid
+graph TB
+    subgraph "Performance Testing Types"
+        PT1[Load Testing]
+        PT2[Stress Testing]
+        PT3[Volume Testing]
+        PT4[Endurance Testing]
+    end
+    
+    subgraph "Testing Tools"
+        T1[JMeter]
+        T2[K6]
+        T3[Locust]
+        T4[Artillery]
+    end
+    
+    subgraph "Monitoring Tools"
+        M1[New Relic]
+        M2[Datadog]
+        M3[Grafana]
+        M4[Prometheus]
+    end
+    
+    PT1 --> T1 --> M1
+    PT2 --> T2 --> M2
+    PT3 --> T3 --> M3
+    PT4 --> T4 --> M4
+    
+    style PT1 fill:#e3f2fd
+    style T1 fill:#e8f5e8
+    style M1 fill:#fff3e0
+```
+
+### 5.9.2 Security Testing
+- **Penetration Testing**: Quarterly security assessments
+- **Vulnerability Scanning**: Weekly automated scans
+- **OWASP Testing**: OWASP Top 10 compliance testing
+- **Compliance Audits**: Annual compliance certifications
+
+---
+
+## 5.10 NFR Monitoring & Alerting
+
+### 5.10.1 Monitoring Framework
+| NFR Category | Key Metrics | Alert Thresholds | Response SLA |
+|--------------|-------------|------------------|--------------|
+| **Performance** | Response time, throughput | >target thresholds | 15 minutes |
+| **Reliability** | Uptime, error rates | >99% availability | 5 minutes |
+| **Security** | Failed logins, anomalies | Security incidents | Immediate |
+| **Scalability** | Resource usage, capacity | >80% utilization | 30 minutes |
+
+### 5.10.2 Alerting Strategy
+- **Tiered Alerting**: Warning → Critical → Emergency
+- **On-call Rotation**: 24/7 support coverage
+- **Escalation Procedures**: Automatic escalation rules
+- **Post-incident Reviews**: Learning từ incidents
+
+---
+
+## 5.11 NFR Acceptance Criteria
+
+### 5.11.1 MVP Acceptance Thresholds
+| NFR | Minimum Acceptable | Target | Stretch Goal |
+|-----|-------------------|---------|--------------|
+| **API Response Time** | <5s | <3s | <1s |
+| **System Uptime** | >99% | >99.5% | >99.9% |
+| **Security Compliance** | PDPA basic | GDPR + PDPA | SOC2 + ISO27001 |
+| **Mobile Performance** | Usable | Good | Excellent |
+
+### 5.11.2 Testing Completion Criteria
+- [ ] Tất cả performance benchmarks đạt target
+- [ ] Security audit passed without critical issues
+- [ ] Accessibility testing WCAG 2.1 AA compliant
+- [ ] Load testing confirms scalability targets
+- [ ] Disaster recovery procedures tested successfully
+
+---
+
+**Trạng thái tài liệu**: ✅ Sẵn sàng cho Part06  
+**Hành động tiếp theo**: Thiết kế System Architecture & Components  
+**Dependencies**: NFR targets confirmed và approved  
+**Người sở hữu**: Đội phân tích hệ thống
+
+# 📘 Part06 - Kiến trúc hệ thống (System Architecture & Components)
+**Đặc tả yêu cầu hệ thống (SRS) - Product Sampling Platform**
 
 **Phiên bản**: 1.0  
 **Ngày**: 2025-10-17  
-**Tác giả**: Đội phân tích hệ thống  
+**Tác giả**: Đội kiến trúc sư hệ thống  
+**Trạng thái**: ✅ Hoàn thành  
 
 ---
 
 ## 6.1 Tổng quan kiến trúc hệ thống
 
-### 6.1.1 Nguyên tắc thiết kế kiến trúc (từ System_Feature_Tree_Grok.md v4.0)
-Dựa trên **yêu cầu kỹ thuật tổng quan** trong tài liệu cây chức năng, hệ thống được thiết kế theo các nguyên tắc:
+### 6.1.1 Triết lý thiết kế
+Kiến trúc Product Sampling Platform được thiết kế dựa trên các nguyên tắc:
 
-- **Microservices**: Kiến trúc dịch vụ nhỏ với Node.js/Go
-- **Multi-tenant**: Hỗ trợ 10M người dùng đến 2027
-- **Cloud-native**: AWS/GCP với khả năng mở rộng tự động
-- **Security-first**: Mã hóa PII AES, tuân thủ ISO 27001
-- **API-driven**: Tích hợp HubSpot, Twilio, Scandit, GA4
+- 🏗️ **Microservices Architecture**: Tách biệt business capabilities thành các services độc lập
+- 🔄 **Event-Driven Design**: Loose coupling thông qua message queues và events  
+- 📱 **API-First Approach**: Tất cả interactions thông qua well-defined APIs
+- 🛡️ **Security by Design**: Multi-layer security được tích hợp từ đầu
+- 📈 **Scalability Ready**: Horizontal scaling capabilities cho growth targets
+- 🎯 **Domain-Driven Design**: Services organized theo business domains
 
-### 6.1.2 Mục tiêu kiến trúc (từ 01-BRD.md v3.0)
-**Mục tiêu hiệu năng:**
-- Xử lý 100,000 requests/phút tại API gateway
-- Uptime 99.9% SLA
-- Khả năng mở rộng từ 25 brands (năm 1) đến 200 brands (năm 3)
-- Chi phí vận hành <40% doanh thu sau năm 2
+### 6.1.2 Kiến trúc tổng thể (High-Level Architecture)
 
-**Mục tiêu kỹ thuật:**
-- Thời gian phản hồi <3 giây cho dashboard
-- RTO <4 giờ, RPO <1 giờ cho disaster recovery
-- Zero downtime deployment với blue-green strategy
+```mermaid
+graph TB
+    subgraph "Người dùng cuối"
+        EU[End Users - Mobile/Web]
+        BA[Brand Admins - Dashboard]
+        SA[Store Staff - POS Tools]
+    end
+    
+    subgraph "Tầng Load Balancer"
+        CDN[CloudFlare CDN]
+        LB[Application Load Balancer]
+    end
+    
+    subgraph "Tầng API Gateway"
+        AG[Kong API Gateway]
+        Auth[Authentication Layer]
+        RL[Rate Limiting]
+    end
+    
+    subgraph "Tầng Microservices"
+        AS[auth-service]
+        CS[campaign-service]  
+        BS[barcode-service]
+        US[user-service]
+        RS[redemption-service]
+        ANS[analytics-service]
+        NS[notification-service]
+        IS[integration-service]
+    end
+    
+    subgraph "Tầng Dữ liệu"
+        MongoDB[(MongoDB Cluster)]
+        PostgreSQL[(PostgreSQL)]
+        Redis[(Redis Cluster)]
+        S3[(Object Storage)]
+    end
+    
+    subgraph "Hệ thống bên ngoài"
+        CRM[CRM Systems]
+        SMS[SMS Providers]
+        POS[POS Systems]
+        Analytics[GA4/Meta Pixel]
+    end
+    
+    EU --> CDN --> LB --> AG
+    BA --> CDN --> LB --> AG  
+    SA --> CDN --> LB --> AG
+    
+    AG --> Auth --> RL
+    
+    RL --> AS
+    RL --> CS
+    RL --> BS
+    RL --> US
+    RL --> RS
+    RL --> ANS
+    RL --> NS
+    RL --> IS
+    
+    AS --> Redis
+    CS --> MongoDB
+    BS --> PostgreSQL
+    US --> MongoDB
+    RS --> PostgreSQL
+    ANS --> MongoDB
+    NS --> Redis
+    IS --> MongoDB
+    
+    CS --> S3
+    ANS --> S3
+    
+    IS --> CRM
+    NS --> SMS
+    RS --> POS
+    ANS --> Analytics
+    
+    style AG fill:#e3f2fd
+    style AS fill:#ffebee
+    style MongoDB fill:#e8f5e8
+    style Redis fill:#fff3e0
+```
 
-### 6.1.3 Ràng buộc kiến trúc
-**Ràng buộc từ 01-BRD.md:**
-- Ngân sách phát triển: 122.64 tỷ VND (3 năm)
-- Đội ngũ: 16 người (năm 1) → 37 người (năm 3)
-- Timeline: MVP 6 tháng, mở rộng khu vực 18 tháng
+### 6.1.3 Các nguyên tắc kiến trúc chính
 
-**Ràng buộc từ Problem.md:**
-- Hỗ trợ offline-first sync cho retail nodes
-- Tích hợp với mạng lưới Circle K, GS25, Mini Stop
-- Tuân thủ GDPR/PDPA cho dữ liệu cá nhân
+| Nguyên tắc | Mô tả | Lợi ích |
+|------------|-------|---------|
+| **Single Responsibility** | Mỗi service chỉ chịu trách nhiệm một business domain | Dễ maintain, test, deploy độc lập |
+| **Loose Coupling** | Services communicate qua APIs và events | Flexibility, fault isolation |
+| **High Cohesion** | Related functions grouped trong cùng service | Code organization, team ownership |
+| **Database per Service** | Mỗi service có database riêng | Data independence, technology flexibility |
+| **Stateless Services** | Services không lưu state giữa requests | Horizontal scaling, load balancing |
+| **Idempotency** | Operations có thể retry safely | Reliability, error recovery |
 
 ---
 
-## 6.2 Kiến trúc tổng thể
+## 6.2 Kiến trúc Microservices chi tiết
 
-### 6.2.1 Sơ đồ kiến trúc cấp cao
+### 6.2.1 Service Decomposition Strategy
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CDN & Load Balancer                      │
-│                     (CloudFlare / AWS ALB)                      │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │
-┌─────────────────────┴───────────────────────────────────────────┐
-│                    API Gateway Layer                            │
-│              (Kong / AWS API Gateway)                           │
-│     ┌─────────────┬─────────────┬─────────────┬─────────────┐   │
-│     │ Rate Limit  │ Auth/OAuth  │  Routing    │  Logging    │   │
-│     └─────────────┴─────────────┴─────────────┴─────────────┘   │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │
-┌─────────────────────┴───────────────────────────────────────────┐
-│                  Application Layer                              │
-│                 (Microservices)                                 │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
-│  │ Campaign    │ │ User Mgmt   │ │ Barcode     │ │ Analytics   ││
-│  │ Service     │ │ Service     │ │ Service     │ │ Service     ││
-│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
-│  │ OTP         │ │ POS         │ │ CRM         │ │ Notification││
-│  │ Service     │ │ Service     │ │ Service     │ │ Service     ││
-│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
-└─────────────────────┬───────────────────────────────────────────┘
-                      │
-┌─────────────────────┴───────────────────────────────────────────┐
-│                    Data Layer                                   │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
-│  │ MongoDB     │ │ PostgreSQL  │ │ Redis       │ │ S3/MinIO    ││
-│  │ (Documents) │ │ (ACID)      │ │ (Cache)     │ │ (Files)     ││
-│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
-└─────────────────────────────────────────────────────────────────┘
-```
+**Phân chia services dựa trên business capabilities:**
 
-### 6.2.2 Luồng dữ liệu chính (từ System_Feature_Tree_Grok.md Flow vận hành)
-
-```
-1. Khách hàng quét QR → API Gateway → Campaign Service
-2. Điền form → User Service → OTP Service → SMS/Email Provider
-3. Xác thực OTP → Barcode Service → Tạo mã duy nhất
-4. Đổi quà tại POS → POS Service → Cập nhật trạng thái
-5. Analytics → CRM Service → Đồng bộ với HubSpot/Salesforce
+```mermaid
+graph TB
+    subgraph "Core Business Domain"
+        CBD1[Campaign Management]
+        CBD2[Product Sampling]
+        CBD3[Customer Management]
+    end
+    
+    subgraph "Supporting Domain"
+        SD1[Authentication & Authorization]
+        SD2[Notifications]
+        SD3[Analytics & Reporting]
+        SD4[External Integrations]
+    end
+    
+    subgraph "Infrastructure Domain"
+        ID1[API Gateway]
+        ID2[Service Discovery]
+        ID3[Configuration Management]
+        ID4[Monitoring & Logging]
+    end
+    
+    CBD1 --> campaign-service
+    CBD2 --> barcode-service
+    CBD2 --> redemption-service
+    CBD3 --> user-service
+    
+    SD1 --> auth-service
+    SD2 --> notification-service
+    SD3 --> analytics-service
+    SD4 --> integration-service
+    
+    ID1 --> Kong
+    ID2 --> Consul
+    ID3 --> Vault
+    ID4 --> ELK-Stack
+    
+    style CBD1 fill:#e3f2fd
+    style SD1 fill:#ffebee
+    style ID1 fill:#e8f5e8
 ```
 
-### 6.2.3 Deployment topology
+### 6.2.2 Chi tiết từng Microservice
 
-**Multi-region setup:**
-- **Primary region**: Việt Nam (AWS ap-southeast-1)
-- **Secondary region**: Singapore (DR + ASEAN expansion)
-- **CDN**: Global CloudFlare distribution
+#### **auth-service** 🔐
+**Chức năng chính**: Xử lý authentication, authorization và RBAC
 
-**Environment strategy:**
-- **Development**: Local + cloud dev environment
-- **Staging**: Pre-production testing environment  
-- **Production**: Multi-AZ với auto-scaling
-- **DR (Disaster Recovery)**: Hot standby trong Singapore
+| Thành phần | Công nghệ | Mô tả |
+|------------|-----------|--------|
+| **Framework** | NestJS + Passport | JWT authentication, OAuth2 support |
+| **Database** | Redis | Session storage, token blacklist |
+| **Security** | bcrypt, JWT | Password hashing, token management |
+| **MFA** | TOTP libraries | Two-factor authentication |
 
----
+**API Endpoints chính**:
+- `POST /auth/login` - Đăng nhập người dùng
+- `POST /auth/refresh` - Refresh JWT tokens
+- `GET /auth/profile` - Lấy thông tin profile
+- `POST /auth/mfa/setup` - Thiết lập MFA
 
-## 6.3 Microservices chi tiết
+#### **campaign-service** 📊
+**Chức năng chính**: Quản lý campaigns, ads formats và business logic
 
-### 6.3.1 Campaign Service (từ System_Feature_Tree_Grok.md 1.1)
+| Thành phần | Công nghệ | Mô tả |
+|------------|-----------|--------|
+| **Framework** | NestJS + TypeORM | Business logic, data validation |
+| **Database** | MongoDB | Campaign data, ads formats |
+| **File Storage** | AWS S3/MinIO | Ads format files, images |
+| **Search** | Elasticsearch | Campaign search và filtering |
 
-**Chức năng chính:**
-- Quản lý lifecycle campaign (tạo, cập nhật, tạm dừng, hoàn thành)
-- Gán barcode pool và location targeting
-- Tạo dynamic QR với UTM tracking
-- Multi-tenant isolation theo user role
-
-**API endpoints chính:**
-```
-POST /api/v1/campaigns          - Tạo campaign mới
-GET  /api/v1/campaigns/{id}     - Chi tiết campaign
-PUT  /api/v1/campaigns/{id}     - Cập nhật campaign
-POST /api/v1/campaigns/{id}/qr  - Tạo QR code
-```
-
-**Database schema:**
-- **campaigns** collection (MongoDB)
-- **campaign_locations** (PostgreSQL relation)
-- **campaign_analytics** (time-series data)
-
-**Dependencies:**
-- User Service (authorization)
-- Barcode Service (pool assignment)
-- Analytics Service (tracking)
-
-### 6.3.2 User Management Service (từ Access_Control_Tree_Grok.md v2.2)
-
-**Chức năng chính:**
-- RBAC với 6 roles: Admin, Group Admin, Customer Account, Serving Account, Auditor, User Role
-- OAuth 2.0/JWT authentication
-- Dynamic permission evaluation
-- Audit logging cho compliance
-
-**API endpoints chính:**
-```
-POST /api/v1/auth/login         - Đăng nhập
-POST /api/v1/auth/refresh       - Refresh token
-GET  /api/v1/users/me           - Profile người dùng
-POST /api/v1/users/permissions  - Kiểm tra quyền
-```
-
-**Permission matrix implementation:**
-```javascript
-// Dynamic permission từ Access_Control_Tree_Grok.md
-{
-  "campaign.create": ["admin", "group_admin", "customer_account"],
-  "barcode.import": ["admin", "group_admin:own_group", "customer_account:own"],
-  "redemption.scan": ["serving_account"]
+**Domain Models**:
+```typescript
+interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  barcodePoolId: string;
+  adsFormats: AdsFormat[];
+  locations: string[];
+  utmTracking: UTMParams;
+  status: 'draft' | 'active' | 'paused' | 'completed';
 }
 ```
 
-### 6.3.3 Barcode Service (từ System_Feature_Tree_Grok.md 1.2)
+#### **barcode-service** 🎫
+**Chức năng chính**: Tạo, quản lý và validate barcodes/vouchers
 
-**Chức năng chính:**
-- Import/quản lý barcode pools từ CSV
-- Single-use validation và trạng thái lifecycle
-- Personalized assignment sau OTP verification
-- Apple Wallet/Google Pay integration
+| Thành phần | Công nghệ | Mô tả |
+|------------|-----------|--------|
+| **Framework** | NestJS + Prisma | Transactional operations |
+| **Database** | PostgreSQL | ACID compliance cho barcodes |
+| **Queue** | Redis Bull | Batch barcode generation |
+| **QR Generation** | qrcode library | QR code image generation |
 
-**Trạng thái lifecycle:**
-```
-Chưa phát → Đã phát → Đã redeem → Hết hạn → Revoked
-```
-
-**API endpoints chính:**
-```
-POST /api/v1/barcodes/import    - Import CSV
-POST /api/v1/barcodes/assign    - Gán cho user
-PUT  /api/v1/barcodes/redeem    - Đổi quà
-GET  /api/v1/barcodes/status    - Kiểm tra trạng thái
-```
-
-**Integration points:**
-- Voucherify API cho advanced features
-- Apple Wallet API cho mobile wallet
-- ERP webhooks cho inventory sync
-
-### 6.3.4 OTP Service (từ System_Feature_Tree_Grok.md 1.4)
-
-**Chức năng chính:**
-- Multi-channel OTP (SMS via Twilio, Email via SendGrid)
-- Rate limiting và fraud prevention
-- 6-digit code với 5 phút expiration
-- Device fingerprinting cho security
-
-**Fraud prevention rules:**
-- Max 10 OTP requests/hour per phone
-- 3 verification attempts per session
-- Progressive delay: 30s → 60s → 120s
-- Disposable email detection
-
-**API endpoints chính:**
-```
-POST /api/v1/otp/send           - Gửi OTP
-POST /api/v1/otp/verify         - Xác thực OTP
-GET  /api/v1/otp/stats          - Thống kê admin
+**Barcode Lifecycle**:
+```mermaid
+stateDiagram-v2
+    [*] --> Available
+    Available --> Reserved : User verified
+    Reserved --> Issued : Barcode generated
+    Issued --> Redeemed : POS scan
+    Issued --> Expired : Time limit exceeded
+    Reserved --> Available : Timeout/Cancel
+    Redeemed --> [*]
+    Expired --> [*]
+    
+    note right of Reserved : 5 minutes timeout
+    note right of Issued : Campaign end date
 ```
 
-### 6.3.5 POS Service (từ System_Feature_Tree_Grok.md 1.5)
+#### **user-service** 👥
+**Chức năng chính**: Quản lý user profiles, verification và consent
 
-**Chức năng chính:**
-- Multi-channel redemption (web tool, mobile app, POS API)
-- Offline-first với IndexedDB sync
-- Atomic barcode validation
-- Integration với Circle K, GS25, Mini Stop
+| Thành phần | Công nghệ | Mô tả |
+|------------|-----------|--------|
+| **Framework** | NestJS + Mongoose | User data management |
+| **Database** | MongoDB | Flexible user schemas |
+| **Encryption** | crypto-js | PII field encryption |
+| **Validation** | class-validator | Data validation rules |
 
-**Offline capability:**
-- 24-hour local storage capacity
-- Queue-based sync khi online
-- Conflict resolution cho simultaneous redemptions
+#### **redemption-service** 🏪
+**Chức năng chính**: POS integration, redemption processing và offline sync
 
-**API endpoints chính:**
-```
-POST /api/v1/pos/scan           - Scan barcode
-POST /api/v1/pos/redeem         - Xử lý đổi quà
-POST /api/v1/pos/sync           - Sync offline data
-GET  /api/v1/pos/locations      - Danh sách điểm đổi
-```
+| Thành phần | Công nghệ | Mô tả |
+|------------|-----------|--------|
+| **Framework** | NestJS + Prisma | Transactional redemptions |
+| **Database** | PostgreSQL | Financial data integrity |
+| **Offline Storage** | IndexedDB | Client-side queue |
+| **Sync Engine** | Custom conflict resolution | Data consistency |
 
-### 6.3.6 Analytics Service (từ System_Feature_Tree_Grok.md 1.6)
-
-**Chức năng chính:**
-- Real-time funnel tracking: Scan → Submit → Verify → Issue → Redeem
-- Dashboard với <3s response time
-- Export CSV/Excel/API capabilities
-- Integration với GA4, Meta Pixel
-
-**Metrics collection:**
-- Event-driven architecture với message queue
-- Time-series data storage
-- Pre-aggregated dashboards
-- Custom KPI calculations
-
-**API endpoints chính:**
-```
-GET  /api/v1/analytics/funnel   - Funnel metrics
-GET  /api/v1/analytics/export   - Export data
-POST /api/v1/analytics/events   - Custom events
-GET  /api/v1/analytics/kpi      - Business KPIs
-```
-
-### 6.3.7 CRM Service (từ System_Feature_Tree_Grok.md 1.7)
-
-**Chức năng chính:**
-- Bi-directional sync với HubSpot, Salesforce, Pipedrive
-- Lead scoring và conversion tracking
-- GDPR-compliant data transfer
-- Webhook-based real-time updates
-
-**Supported integrations:**
-- HubSpot REST API v3
-- Salesforce REST API v52  
-- Custom webhook endpoints
-- Batch export scheduling
-
-**API endpoints chính:**
-```
-POST /api/v1/crm/sync           - Manual sync trigger
-GET  /api/v1/crm/mappings       - Field mappings
-POST /api/v1/crm/webhook        - Incoming webhooks
-GET  /api/v1/crm/leads          - Lead export
+**Offline Sync Process**:
+```mermaid
+sequenceDiagram
+    participant Staff as Store Staff
+    participant App as POS App
+    participant Local as Local Storage
+    participant API as redemption-service
+    
+    Staff->>App: Scan barcode
+    App->>Local: Check online status
+    
+    alt Online Mode
+        App->>API: Validate & redeem
+        API-->>App: Success response
+        App->>Local: Cache result
+    else Offline Mode
+        App->>Local: Queue redemption
+        App-->>Staff: Offline confirmation
+        
+        Note over App,API: When connection restored
+        App->>API: Sync queued data
+        API-->>App: Conflict resolution
+        App->>Local: Update status
+    end
 ```
 
-### 6.3.8 Notification Service
+#### **analytics-service** 📈
+**Chức năng chính**: Data processing, reporting và dashboard APIs
 
-**Chức năng chính:**
-- Multi-channel notifications (SMS, Email, Push)
-- Template management cho brands
-- Delivery tracking và retry logic
-- Personalization dựa trên user preferences
+| Thành phần | Công nghệ | Mô tả |
+|------------|-----------|--------|
+| **Framework** | NestJS + Aggregation | Complex data queries |
+| **Database** | MongoDB | Time-series data |
+| **Caching** | Redis | Report caching |
+| **Export** | ExcelJS, csv-parser | Data export functionality |
 
-**Provider integrations:**
-- Twilio (SMS primary)
-- MessageBird (SMS backup)
-- SendGrid (Email primary)
-- AWS SES (Email backup)
+#### **notification-service** 📱
+**Chức năng chính**: OTP, email, SMS và push notifications
+
+| Thành phần | Công nghệ | Mô tả |
+|------------|-----------|--------|
+| **Framework** | NestJS + Bull Queue | Async message processing |
+| **Queue** | Redis | Message queue |
+| **SMS** | Twilio SDK | SMS delivery |
+| **Email** | SendGrid/SES | Email delivery |
+
+#### **integration-service** 🔗
+**Chức năng chính**: External API integrations và webhook management
+
+| Thành phần | Công nghệ | Mô tả |
+|------------|-----------|--------|
+| **Framework** | NestJS + Axios | HTTP client integrations |
+| **Database** | MongoDB | Integration configs |
+| **Queue** | Redis | Webhook delivery |
+| **Retry Logic** | Exponential backoff | Fault tolerance |
 
 ---
 
-## 6.4 Data Architecture
+## 6.3 Data Architecture
 
-### 6.4.1 Database strategy (từ System_Feature_Tree_Grok.md yêu cầu kỹ thuật)
+### 6.3.1 Database Selection Strategy
 
-**MongoDB (Document store):**
-- **Campaigns**: Flexible schema cho campaign metadata
-- **User profiles**: JSON documents với preferences
-- **Analytics events**: Time-series event logs
-- **Audit trails**: Immutable compliance logs
+**Database phù hợp cho từng use case:**
 
-**PostgreSQL (ACID transactions):**
-- **Users & permissions**: RBAC relationships
-- **Barcode inventory**: Financial-grade consistency
-- **Transactions**: Payment và redemption records
-- **Reconciliation**: Settlement và audit data
+| Database | Use Cases | Services | Lý do lựa chọn |
+|----------|-----------|----------|----------------|
+| **PostgreSQL** | Transactional data, financial records | barcode-service, redemption-service | ACID compliance, data integrity |
+| **MongoDB** | Document storage, flexible schemas | campaign-service, user-service, analytics-service | Schema flexibility, horizontal scaling |
+| **Redis** | Caching, sessions, queues | auth-service, notification-service | In-memory performance, pub/sub |
 
-**Redis (Caching & sessions):**
-- **Session storage**: JWT token management
-- **Rate limiting**: API quotas và fraud prevention
-- **Real-time data**: Dashboard metrics cache
-- **Queue management**: Background job processing
+### 6.3.2 Data Flow Architecture
 
-### 6.4.2 Data partitioning strategy
-
-**Horizontal sharding:**
-```javascript
-// Partition key strategy
-{
-  "partition_key": "country_code + tenant_id",
-  "examples": {
-    "VN_brand001": "Vietnam brand data",
-    "TH_brand002": "Thailand brand data",
-    "ID_brand003": "Indonesia brand data"
-  }
-}
+```mermaid
+graph LR
+    subgraph "Data Sources"
+        DS1[User Forms]
+        DS2[POS Systems]
+        DS3[Campaign Configs]
+        DS4[External APIs]
+    end
+    
+    subgraph "Data Processing"
+        DP1[Real-time Ingestion]
+        DP2[Data Validation]
+        DP3[Business Logic]
+        DP4[Event Publishing]
+    end
+    
+    subgraph "Data Storage"
+        DB1[Operational DBs]
+        DB2[Analytics DB]
+        DB3[Cache Layer]
+        DB4[Object Storage]
+    end
+    
+    subgraph "Data Consumption"
+        DC1[Real-time Dashboard]
+        DC2[Batch Reports]
+        DC3[External Integrations]
+        DC4[Mobile Apps]
+    end
+    
+    DS1 --> DP1 --> DB1 --> DC1
+    DS2 --> DP2 --> DB2 --> DC2
+    DS3 --> DP3 --> DB3 --> DC3
+    DS4 --> DP4 --> DB4 --> DC4
+    
+    style DP1 fill:#e3f2fd
+    style DB1 fill:#e8f5e8
+    style DC1 fill:#fff3e0
 ```
 
-**Data retention policy:**
-- **Hot data**: 2 năm trong primary storage
-- **Warm data**: 3-7 năm trong archive storage
-- **Cold data**: >7 năm trong compliance archive
-- **GDPR deletion**: 30 ngày processing window
+### 6.3.3 Data Consistency Strategy
 
-### 6.4.3 Backup và recovery strategy
+**Event-driven data consistency:**
 
-**Backup schedule:**
-- **Continuous backup**: MongoDB change streams
-- **Daily snapshots**: PostgreSQL với point-in-time recovery
-- **Weekly full backup**: Cross-region replication
-- **Monthly archive**: Long-term compliance storage
-
-**Recovery procedures:**
-- **RTO target**: <4 giờ full service restoration
-- **RPO target**: <1 giờ data loss tolerance
-- **Automated failover**: Database cluster management
-- **Manual procedures**: Documented disaster recovery playbook
+| Pattern | Sử dụng cho | Implementation |
+|---------|-------------|----------------|
+| **Saga Pattern** | Multi-service transactions | Orchestration-based saga |
+| **Event Sourcing** | Audit trail, critical events | Event store với snapshots |
+| **CQRS** | Read/write optimization | Separate query models |
+| **Eventually Consistent** | Non-critical updates | Async event processing |
 
 ---
 
-## 6.5 Integration Architecture
+## 6.4 Security Architecture
 
-### 6.5.1 External integrations (từ System_Feature_Tree_Grok.md tích hợp)
+### 6.4.1 Defense in Depth Strategy
 
-**Third-party services:**
-
-| Service | Provider | Purpose | SLA requirement |
-|---------|----------|---------|-----------------|
-| **SMS OTP** | Twilio, MessageBird | OTP delivery | 99.5% uptime, <30s delivery |
-| **Email** | SendGrid, AWS SES | Notifications, OTP | 99.9% delivery rate |
-| **CRM** | HubSpot, Salesforce | Lead management | 99% API availability |
-| **Analytics** | GA4, Meta Pixel | Tracking, attribution | Best effort |
-| **Scanning** | Scandit SDK | Barcode scanning | Offline capability |
-| **Wallet** | Apple Wallet, Google Pay | Mobile barcode | Platform-dependent |
-| **Support** | Zendesk | Ticketing system | 99% uptime |
-
-### 6.5.2 API Gateway configuration
-
-**Kong/AWS API Gateway setup:**
-- **Rate limiting**: 1000 requests/hour per API key
-- **Authentication**: JWT token validation
-- **Routing**: Service discovery và load balancing
-- **Monitoring**: Request/response logging
-- **Versioning**: /api/v1/, /api/v2/ support
-
-**Security policies:**
-- **CORS**: Whitelist origins cho web clients
-- **HTTPS only**: TLS 1.3 enforcement
-- **Request validation**: OpenAPI 3.0 schema validation
-- **IP filtering**: Geo-blocking cho restricted countries
-
-### 6.5.3 Event-driven architecture
-
-**Message queue setup:**
-- **Redis Pub/Sub**: Real-time notifications
-- **AWS SQS**: Reliable background processing
-- **Dead letter queues**: Failed message handling
-- **Event sourcing**: Audit trail reconstruction
-
-**Event types:**
-```javascript
-{
-  "campaign.created": {...},
-  "barcode.assigned": {...},
-  "redemption.completed": {...},
-  "user.verified": {...},
-  "analytics.tracked": {...}
-}
+```mermaid
+graph TB
+    subgraph "Network Security"
+        NS1[WAF - Web Application Firewall]
+        NS2[DDoS Protection]
+        NS3[VPN Access]
+    end
+    
+    subgraph "Application Security"
+        AS1[API Gateway Security]
+        AS2[Service-to-Service Auth]
+        AS3[Input Validation]
+        AS4[Output Encoding]
+    end
+    
+    subgraph "Data Security"
+        DS1[Encryption at Rest]
+        DS2[Encryption in Transit]
+        DS3[Key Management]
+        DS4[Access Controls]
+    end
+    
+    subgraph "Infrastructure Security"
+        IS1[Container Security]
+        IS2[Network Segmentation]
+        IS3[Security Monitoring]
+        IS4[Vulnerability Management]
+    end
+    
+    NS1 --> AS1 --> DS1 --> IS1
+    NS2 --> AS2 --> DS2 --> IS2
+    NS3 --> AS3 --> DS3 --> IS3
+    AS4 --> DS4 --> IS4
+    
+    style AS1 fill:#ffebee
+    style DS1 fill:#ffebee
+    style IS1 fill:#ffebee
 ```
+
+### 6.4.2 Authentication & Authorization Flow
+
+```mermaid
+sequenceDiagram
+    participant Client as Client App
+    participant Gateway as API Gateway
+    participant Auth as auth-service
+    participant Service as Target Service
+    participant DB as Database
+    
+    Client->>Gateway: Request với credentials
+    Gateway->>Auth: Validate credentials
+    Auth->>DB: Check user & permissions
+    DB-->>Auth: User data & roles
+    Auth-->>Gateway: JWT token + permissions
+    Gateway-->>Client: Access token
+    
+    Note over Client,Service: Subsequent requests
+    
+    Client->>Gateway: Request với JWT
+    Gateway->>Auth: Validate JWT
+    Auth-->>Gateway: Token valid + permissions
+    Gateway->>Service: Forward request với user context
+    Service->>DB: Execute operation
+    DB-->>Service: Response data
+    Service-->>Gateway: Response
+    Gateway-->>Client: Final response
+```
+
+### 6.4.3 Data Protection Implementation
+
+**PII Encryption Strategy:**
+
+| Data Type | Encryption Level | Key Management | Access Control |
+|-----------|-----------------|----------------|----------------|
+| **Email addresses** | Field-level AES-256 | Per-tenant keys | Role-based access |
+| **Phone numbers** | Field-level AES-256 | Per-tenant keys | Role-based access |
+| **Names** | Field-level AES-256 | Per-tenant keys | Role-based access |
+| **Preferences** | Database-level | Shared encryption | Service-level access |
+| **Analytics data** | Pseudonymized | Hash functions | Aggregated access only |
 
 ---
 
-## 6.6 Security Architecture
+## 6.5 Deployment Architecture
 
-### 6.6.1 Authentication & Authorization (từ Access_Control_Tree_Grok.md v2.2)
+### 6.5.1 Container Architecture
 
-**OAuth 2.0 flow:**
-```
-1. Client → Authorization Server (Login)
-2. User credentials → JWT token issue
-3. API calls → JWT validation
-4. Refresh token → New access token
-```
+**Docker containerization strategy:**
 
-**JWT payload structure:**
-```json
-{
-  "sub": "user_id",
-  "role": "customer_account", 
-  "permissions": ["campaign.create", "barcode.view"],
-  "tenant": "brand_001",
-  "exp": 1234567890
-}
-```
+```dockerfile
+# Base image cho NestJS services
+FROM node:18-alpine AS base
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
 
-### 6.6.2 Data encryption
+FROM base AS development
+RUN npm ci
+COPY . .
+CMD ["npm", "run", "start:dev"]
 
-**Encryption at rest:**
-- **PII fields**: AES-256 encryption trong database
-- **Backup files**: Encrypted storage với key rotation
-- **Log files**: Sensitive data masking
-
-**Encryption in transit:**
-- **API traffic**: TLS 1.3 cho tất cả endpoints
-- **Database connections**: SSL/TLS cho DB access
-- **Internal services**: mTLS cho service-to-service
-
-**Key management:**
-- **AWS KMS**: Centralized key management
-- **Key rotation**: Automated 90-day rotation
-- **HSM integration**: Hardware security modules cho production
-
-### 6.6.3 Network security
-
-**VPC architecture:**
-- **Public subnet**: Load balancers, API gateway
-- **Private subnet**: Application servers
-- **Database subnet**: Isolated DB access
-- **NAT gateway**: Outbound internet access
-
-**Security groups:**
-- **Web tier**: Port 80/443 from internet
-- **App tier**: Internal communication only
-- **DB tier**: Database ports from app tier only
-
----
-
-## 6.7 Monitoring & Observability
-
-### 6.7.1 Application monitoring
-
-**Metrics collection:**
-- **Prometheus**: Application metrics scraping
-- **Grafana**: Dashboard visualization
-- **AlertManager**: Alert routing và notifications
-
-**Key metrics:**
-- **SLI (Service Level Indicators)**: Response time, error rate, throughput
-- **SLO (Service Level Objectives)**: 99.9% uptime, <3s response time
-- **Business metrics**: Conversion rate, revenue, user engagement
-
-### 6.7.2 Logging architecture
-
-**Centralized logging:**
-- **ELK Stack**: Elasticsearch, Logstash, Kibana
-- **Structured logging**: JSON format với correlation IDs
-- **Log retention**: 90 ngày operational, 7 năm compliance
-
-**Log categories:**
-- **Application logs**: Service interactions, errors
-- **Audit logs**: GDPR compliance, user actions
-- **Security logs**: Authentication, authorization events
-- **Performance logs**: Response times, resource usage
-
-### 6.7.3 Distributed tracing
-
-**Jaeger implementation:**
-- **Trace correlation**: Request flow across services
-- **Performance profiling**: Bottleneck identification
-- **Error tracking**: Exception propagation
-
-**Trace context:**
-```javascript
-{
-  "trace_id": "abc123",
-  "span_id": "def456", 
-  "operation": "barcode.assign",
-  "duration": "150ms",
-  "status": "success"
-}
+FROM base AS production
+COPY dist/ ./dist/
+USER node
+CMD ["node", "dist/main.js"]
 ```
 
----
+### 6.5.2 Multi-Environment Setup
 
-## 6.8 Deployment Architecture
+| Environment | Purpose | Infrastructure | Data |
+|-------------|---------|----------------|------|
+| **Development** | Local development | Docker Compose | Sample data |
+| **Staging** | Integration testing | Kubernetes cluster | Anonymized production data |
+| **Production** | Live system | Multi-AZ deployment | Real customer data |
 
-### 6.8.1 Container strategy
+### 6.5.3 Kubernetes Deployment
 
-**Docker containerization:**
-- **Base images**: Alpine Linux cho security
-- **Multi-stage builds**: Optimized image sizes
-- **Security scanning**: Vulnerability assessment
-
-**Kubernetes orchestration:**
-- **EKS/GKE**: Managed Kubernetes service
-- **Helm charts**: Application deployment templates
-- **Service mesh**: Istio cho advanced networking
-
-### 6.8.2 CI/CD Pipeline
-
-**GitLab CI/Docker approach:**
 ```yaml
-stages:
-  - test
-  - build
-  - deploy
-
-unit_tests:
-  stage: test
-  script:
-    - npm test
-    - coverage report
-
-build_image:
-  stage: build
-  script:
-    - docker build -t app:$CI_COMMIT_SHA .
-    - docker push registry/app:$CI_COMMIT_SHA
-
-deploy_staging:
-  stage: deploy
-  script:
-    - helm upgrade --install app ./helm-chart
+# Service deployment example
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - name: auth-service
+        image: psp/auth-service:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
 ```
-
-**Deployment strategies:**
-- **Blue-Green**: Zero downtime deployments
-- **Rolling updates**: Gradual service updates
-- **Canary releases**: Feature flag-based rollouts
-
-### 6.8.3 Environment management
-
-**Infrastructure as Code:**
-- **Terraform**: Cloud resource provisioning
-- **Ansible**: Configuration management
-- **GitOps**: Declarative environment definitions
-
-**Environment isolation:**
-- **Development**: Shared resources, cost optimized
-- **Staging**: Production-like, isolated testing
-- **Production**: High availability, performance optimized
-- **DR**: Hot standby, automated failover
 
 ---
 
-**Nguồn tham khảo chính:**
-- System Feature Tree (System_Feature_Tree_Grok.md v4.0) - Yêu cầu kỹ thuật, microservices, flow vận hành, KPI technical
-- Access Control Tree (Access_Control_Tree_Grok.md v2.2) - Security architecture, RBAC design, authentication
-- Business Requirement Document (01-BRD.md v3.0) - Performance targets, scaling requirements, budget constraints
-- Problem Definition (Problem.md v1.0) - Technical constraints, integration requirements
-- Vision & Strategy Document (Product-Sampling-Vision-and-Strategy Document.md v1.0) - Scaling timeline, market expansion
+## 6.6 Monitoring & Observability
 
-**Tình trạng**: Part06 hoàn thành ✅  
-**Tiếp theo**: Part07 - Thiết kế dữ liệu và CSDL  
-**Người đánh giá**: Kiến trúc sư hệ thống, DevOps Engineer, Security Architect
+### 6.6.1 Monitoring Stack
 
-# 📋 SRS Part07 - Thiết kế dữ liệu và CSDL (Data Design & Database Schema)
-**Hệ thống Product Sampling Platform**
+```mermaid
+graph TB
+    subgraph "Metrics Collection"
+        MC1[Prometheus]
+        MC2[Application Metrics]
+        MC3[Infrastructure Metrics]
+    end
+    
+    subgraph "Logging"
+        L1[Fluentd/Filebeat]
+        L2[Elasticsearch]
+        L3[Kibana]
+    end
+    
+    subgraph "Tracing"
+        T1[Jaeger]
+        T2[OpenTelemetry]
+        T3[Distributed Tracing]
+    end
+    
+    subgraph "Alerting"
+        A1[Grafana]
+        A2[AlertManager]
+        A3[PagerDuty]
+    end
+    
+    subgraph "Business Metrics"
+        BM1[Custom Dashboards]
+        BM2[KPI Tracking]
+        BM3[Real-time Reports]
+    end
+    
+    MC1 --> A1
+    MC2 --> A2
+    MC3 --> A3
+    
+    L1 --> L2 --> L3
+    T1 --> T2 --> T3
+    
+    A1 --> BM1
+    A2 --> BM2
+    A3 --> BM3
+    
+    style MC1 fill:#e3f2fd
+    style L2 fill:#e8f5e8
+    style T1 fill:#fff3e0
+    style A1 fill:#ffebee
+```
+
+### 6.6.2 Health Check Strategy
+
+**Multi-level health checks:**
+
+| Level | Endpoint | Check Type | Response Time |
+|-------|----------|------------|---------------|
+| **Liveness** | `/health` | Service running | <1s |
+| **Readiness** | `/ready` | Dependencies available | <2s |
+| **Deep** | `/health/deep` | Database connectivity | <5s |
+| **Business** | `/health/business` | Critical workflows | <10s |
+
+### 6.6.3 Alerting Rules
+
+| Alert Type | Condition | Severity | Action |
+|------------|-----------|----------|--------|
+| **Service Down** | Health check fails > 2 min | Critical | Immediate page |
+| **High Response Time** | P95 > threshold for 5 min | Warning | Slack notification |
+| **High Error Rate** | Error rate > 5% for 3 min | Critical | Page + escalate |
+| **Resource Usage** | CPU/Memory > 80% for 10 min | Warning | Auto-scale trigger |
+
+---
+
+## 6.7 Performance Optimization
+
+### 6.7.1 Caching Strategy
+
+```mermaid
+graph TB
+    subgraph "Client Side"
+        CS1[Browser Cache]
+        CS2[Service Worker]
+        CS3[Local Storage]
+    end
+    
+    subgraph "CDN Layer"
+        CDN1[Static Assets]
+        CDN2[API Responses]
+        CDN3[Edge Caching]
+    end
+    
+    subgraph "Application Layer"
+        AL1[Redis Cache]
+        AL2[Query Results]
+        AL3[Session Data]
+    end
+    
+    subgraph "Database Layer"
+        DL1[Query Cache]
+        DL2[Connection Pool]
+        DL3[Read Replicas]
+    end
+    
+    CS1 --> CDN1 --> AL1 --> DL1
+    CS2 --> CDN2 --> AL2 --> DL2
+    CS3 --> CDN3 --> AL3 --> DL3
+    
+    style AL1 fill:#fff3e0
+    style CDN1 fill:#e8f5e8
+    style DL1 fill:#e3f2fd
+```
+
+### 6.7.2 Database Optimization
+
+**Performance optimization strategies:**
+
+| Strategy | Implementation | Expected Gain |
+|----------|----------------|---------------|
+| **Indexing** | Strategic index creation | 5-10x query speed |
+| **Connection Pooling** | PgBouncer, MongoDB connection limits | 2-3x throughput |
+| **Read Replicas** | Separate read/write workloads | 2x read performance |
+| **Query Optimization** | Explain plan analysis | 2-5x specific queries |
+| **Caching** | Redis query result cache | 10-100x frequent queries |
+
+---
+
+## 6.8 Disaster Recovery Architecture
+
+### 6.8.1 Backup Strategy
+
+```mermaid
+graph TB
+    subgraph "Production Environment"
+        PE1[Primary Database]
+        PE2[Application Data]
+        PE3[Configuration Data]
+    end
+    
+    subgraph "Backup Types"
+        BT1[Continuous WAL Backup]
+        BT2[Daily Full Backup]
+        BT3[Hourly Incremental]
+    end
+    
+    subgraph "Storage Locations"
+        SL1[Local Backup Storage]
+        SL2[Cross-Region Storage]
+        SL3[Cold Storage Archive]
+    end
+    
+    subgraph "Recovery Testing"
+        RT1[Weekly Recovery Test]
+        RT2[Monthly DR Drill]
+        RT3[Quarterly Full Test]
+    end
+    
+    PE1 --> BT1 --> SL1 --> RT1
+    PE2 --> BT2 --> SL2 --> RT2
+    PE3 --> BT3 --> SL3 --> RT3
+    
+    style BT1 fill:#e8f5e8
+    style SL2 fill:#fff3e0
+    style RT2 fill:#e3f2fd
+```
+
+### 6.8.2 Failover Procedures
+
+**Automated failover cho critical services:**
+
+| Component | Detection Time | Failover Time | Recovery Strategy |
+|-----------|----------------|---------------|-------------------|
+| **Database** | 30 seconds | 2 minutes | Promote read replica |
+| **Application Services** | 1 minute | 3 minutes | Start new instances |
+| **Load Balancer** | 10 seconds | 30 seconds | Route to healthy targets |
+| **External Dependencies** | 30 seconds | 1 minute | Circuit breaker activation |
+
+---
+
+## 6.9 Development & Deployment Pipeline
+
+### 6.9.1 CI/CD Architecture
+
+```mermaid
+graph LR
+    subgraph "Source Control"
+        SC1[Git Repository]
+        SC2[Feature Branches]
+        SC3[Pull Requests]
+    end
+    
+    subgraph "CI Pipeline"
+        CI1[Code Quality Checks]
+        CI2[Unit Tests]
+        CI3[Integration Tests]
+        CI4[Security Scans]
+        CI5[Build & Package]
+    end
+    
+    subgraph "CD Pipeline"
+        CD1[Deploy to Staging]
+        CD2[Automated Testing]
+        CD3[Manual Approval]
+        CD4[Production Deployment]
+        CD5[Health Checks]
+    end
+    
+    SC1 --> CI1 --> CD1
+    SC2 --> CI2 --> CD2
+    SC3 --> CI3 --> CD3
+    CI4 --> CI5 --> CD4 --> CD5
+    
+    style CI3 fill:#e8f5e8
+    style CD3 fill:#fff3e0
+    style CD5 fill:#e3f2fd
+```
+
+### 6.9.2 Quality Gates
+
+**Mandatory quality checks:**
+
+| Stage | Quality Gate | Criteria | Block Deployment |
+|-------|--------------|----------|------------------|
+| **Code Quality** | ESLint, SonarQube | No critical issues | Yes |
+| **Test Coverage** | Jest coverage | >80% coverage | Yes |
+| **Security Scan** | OWASP ZAP, Snyk | No high vulnerabilities | Yes |
+| **Performance Test** | Load testing | Meets SLA targets | Yes |
+| **Manual Review** | Code review | 2 approvals required | Yes |
+
+---
+
+## 6.10 Technology Stack Summary
+
+### 6.10.1 Complete Technology Matrix
+
+| Layer | Technology | Version | Purpose |
+|-------|------------|---------|---------|
+| **Runtime** | Node.js | 18+ LTS | JavaScript runtime |
+| **Framework** | NestJS | 10+ | Backend framework |
+| **API Gateway** | Kong | 3.x | Request routing, security |
+| **Primary Database** | MongoDB | 6.x | Document storage |
+| **Transactional DB** | PostgreSQL | 15.x | ACID transactions |
+| **Cache/Queue** | Redis | 7.x | Caching, messaging |
+| **Container** | Docker | 24.x | Containerization |
+| **Orchestration** | Kubernetes | 1.28+ | Container orchestration |
+| **Monitoring** | Prometheus + Grafana | Latest | Metrics & alerting |
+| **Logging** | ELK Stack | 8.x | Centralized logging |
+| **CI/CD** | GitLab CI/Jenkins | Latest | Automation pipeline |
+
+### 6.10.2 External Dependencies
+
+| Service Type | Primary Provider | Backup Provider | SLA Requirement |
+|--------------|------------------|-----------------|-----------------|
+| **SMS** | Twilio | FPT Telecom | 99.9% delivery |
+| **Email** | SendGrid | AWS SES | 99.9% delivery |
+| **Storage** | AWS S3 | MinIO | 99.99% availability |
+| **CDN** | CloudFlare | AWS CloudFront | 99.9% availability |
+| **Monitoring** | Datadog | New Relic | 99.9% uptime |
+
+---
+
+## 6.11 Architecture Decision Records (ADRs)
+
+### 6.11.1 Key Architecture Decisions
+
+| Decision | Rationale | Trade-offs | Status |
+|----------|-----------|------------|--------|
+| **Microservices vs Monolith** | Team scalability, independent deployment | Complexity overhead | ✅ Approved |
+| **MongoDB + PostgreSQL** | Right tool for right job | Operational complexity | ✅ Approved |
+| **Kong API Gateway** | Feature richness, plugin ecosystem | Learning curve | ✅ Approved |
+| **Docker + Kubernetes** | Industry standard, scalability | Infrastructure complexity | ✅ Approved |
+| **Event-driven Architecture** | Loose coupling, scalability | Eventual consistency | 🔄 Under review |
+
+### 6.11.2 Future Architecture Considerations
+
+| Area | Current State | Future Enhancement | Timeline |
+|------|---------------|-------------------|----------|
+| **Service Mesh** | Direct service calls | Istio implementation | Phase 2 |
+| **Message Streaming** | Redis pub/sub | Apache Kafka | Phase 3 |
+| **Database Sharding** | Single instances | Horizontal sharding | Phase 2 |
+| **Multi-region** | Single region | Global deployment | Phase 3 |
+
+---
+
+## 6.12 Architecture Validation
+
+### 6.12.1 Non-Functional Requirements Mapping
+
+| NFR Category | Architecture Component | Validation Method |
+|--------------|----------------------|-------------------|
+| **Performance** | Caching, load balancing, horizontal scaling | Load testing, performance monitoring |
+| **Security** | Multi-layer security, encryption, RBAC | Security audits, penetration testing |
+| **Reliability** | Health checks, failover, backup | Chaos engineering, DR testing |
+| **Scalability** | Microservices, auto-scaling, database optimization | Capacity planning, stress testing |
+
+### 6.12.2 Architecture Review Checklist
+
+- [ ] **Scalability**: Architecture supports 10M users by 2027
+- [ ] **Performance**: Response time targets achievable
+- [ ] **Security**: Defense in depth implemented
+- [ ] **Reliability**: 99.9% uptime achievable
+- [ ] **Maintainability**: Clear service boundaries
+- [ ] **Cost Optimization**: Resource efficiency optimized
+- [ ] **Team Scalability**: Independent development enabled
+
+---
+
+**Trạng thái tài liệu**: ✅ Sẵn sàng cho Part07  
+**Hành động tiếp theo**: Thiết kế Database Schema chi tiết  
+**Dependencies**: Architecture design được approved  
+**Người sở hữu**: Đội kiến trúc sư hệ thống
+
+# 📘 Part07 - Thiết kế dữ liệu & CSDL (Database Design & Schema)
+**Đặc tả yêu cầu hệ thống (SRS) - Product Sampling Platform**
 
 **Phiên bản**: 1.0  
 **Ngày**: 2025-10-17  
-**Tác giả**: Đội phân tích hệ thống  
+**Tác giả**: Đội thiết kế dữ liệu  
+**Trạng thái**: ✅ Hoàn thành  
 
 ---
 
 ## 7.1 Tổng quan thiết kế dữ liệu
 
-### 7.1.1 Chiến lược cơ sở dữ liệu (từ System_Feature_Tree_Grok.md v4.0)
-Dựa trên **yêu cầu kỹ thuật tổng quan**, hệ thống sử dụng kiến trúc cơ sở dữ liệu đa dạng:
+### 7.1.1 Chiến lược lựa chọn database
+Hệ thống Product Sampling Platform sử dụng **polyglot persistence** - mỗi database được chọn phù hợp với use case cụ thể:
 
-- **MongoDB**: Dữ liệu documents cho campaigns, analytics events, audit logs
-- **PostgreSQL**: Dữ liệu quan hệ cho users, permissions, financial transactions
-- **Redis**: Cache layer cho sessions, rate limiting, real-time data
-- **S3/MinIO**: File storage cho ads formats, exports, backups
+| Database | Use Cases | Services | Lý do lựa chọn |
+|----------|-----------|----------|----------------|
+| **PostgreSQL** | Dữ liệu giao dịch, tài chính | barcode-service, redemption-service | ACID compliance, data integrity |
+| **MongoDB** | Dữ liệu linh hoạt, analytics | campaign-service, user-service, analytics-service | Schema flexibility, horizontal scaling |
+| **Redis** | Cache, sessions, queues | auth-service, notification-service | Performance cao, pub/sub messaging |
 
 ### 7.1.2 Nguyên tắc thiết kế dữ liệu
-**Từ Access_Control_Tree_Grok.md v2.2:**
-- **Multi-tenant isolation**: Phân tách dữ liệu theo tenant_id
-- **GDPR compliance**: PII encryption và audit trails
-- **Data consistency**: ACID transactions cho financial data
-- **Scalability**: Horizontal sharding cho 10M users
 
-**Từ 01-BRD.md v3.0:**
-- **Data retention**: 7 năm cho audit, 2 năm cho marketing
-- **Backup strategy**: Daily incremental, weekly full
-- **Performance**: <100ms cho 95% database queries
-
-### 7.1.3 Phân vùng dữ liệu
-**Chiến lược phân vùng theo địa lý và tenant:**
+```mermaid
+graph TB
+    subgraph "Nguyên tắc chính"
+        P1[Database per Service]
+        P2[Data Ownership]
+        P3[Eventual Consistency]
+        P4[Event Sourcing]
+    end
+    
+    subgraph "Data Quality"
+        DQ1[Data Validation]
+        DQ2[Referential Integrity]
+        DQ3[Audit Trails]
+        DQ4[Backup Strategy]
+    end
+    
+    subgraph "Performance"
+        PF1[Indexing Strategy]
+        PF2[Query Optimization]
+        PF3[Caching Layers]
+        PF4[Read Replicas]
+    end
+    
+    P1 --> DQ1 --> PF1
+    P2 --> DQ2 --> PF2
+    P3 --> DQ3 --> PF3
+    P4 --> DQ4 --> PF4
+    
+    style P1 fill:#e3f2fd
+    style DQ1 fill:#e8f5e8
+    style PF1 fill:#fff3e0
 ```
-Partition Key = country_code + tenant_id
-VN_brand001, TH_brand002, ID_brand003...
-```
 
-**Lưu trữ phân tầng:**
-- **Hot data**: Active campaigns, recent transactions
-- **Warm data**: Historical analytics, completed campaigns  
-- **Cold data**: Archived compliance data
+### 7.1.3 Data governance và compliance
+
+**Phân loại dữ liệu theo mức độ nhạy cảm:**
+
+| Loại dữ liệu | Mức độ | Mã hóa | Backup | Retention |
+|--------------|--------|---------|--------|-----------|
+| **PII (Personal Data)** | Cao | AES-256 field-level | Encrypted daily | 7 năm (GDPR) |
+| **Financial Data** | Cao | Database-level | Encrypted hourly | 10 năm (luật kế toán) |
+| **Campaign Data** | Trung bình | TLS in transit | Daily | 5 năm |
+| **Analytics Data** | Thấp | Standard | Weekly | 3 năm |
+| **System Logs** | Thấp | No encryption | Monthly | 1 năm |
 
 ---
 
-## 7.2 MongoDB Schema Design
+## 7.2 PostgreSQL Database Design
 
-### 7.2.1 Campaigns Collection (từ System_Feature_Tree_Grok.md 1.1)
+### 7.2.1 Tổng quan PostgreSQL schemas
+PostgreSQL được sử dụng cho dữ liệu transactional cần ACID compliance:
 
-```javascript
-// campaigns collection
-{
-  "_id": ObjectId("..."),
-  "campaign_id": "CAMP_2025_001",
-  "tenant_id": "brand_001",
-  "name": "Tên chiến dịch sampling",
-  "description": "Mô tả chi tiết chiến dịch",
-  "status": "active", // draft, active, paused, completed
-  "dates": {
-    "start_date": ISODate("2025-01-01T00:00:00Z"),
-    "end_date": ISODate("2025-12-31T23:59:59Z"),
-    "created_at": ISODate("2025-01-01T00:00:00Z"),
-    "updated_at": ISODate("2025-01-01T00:00:00Z")
-  },
-  "settings": {
-    "max_participants": 10000,
-    "budget_limit": 50000.00,
-    "cost_per_lead": 0.4
-  },
-  "targeting": {
-    "locations": ["HCM_DIST1", "HN_DIST2"],
-    "demographics": {
-      "age_min": 18,
-      "age_max": 65,
-      "gender": "all" // male, female, all
+```mermaid
+erDiagram
+    BARCODE_POOLS ||--o{ BARCODES : contains
+    CAMPAIGNS ||--o{ BARCODE_POOLS : has
+    BARCODES ||--o| REDEMPTIONS : redeemed_by
+    LOCATIONS ||--o{ REDEMPTIONS : processed_at
+    USERS ||--o{ REDEMPTIONS : performed_by
+    
+    BARCODE_POOLS {
+        uuid id PK
+        string name
+        uuid campaign_id FK
+        integer total_quantity
+        integer available_quantity
+        timestamp created_at
+        timestamp updated_at
     }
-  },
-  "utm_tracking": {
-    "utm_source": "sampling",
-    "utm_medium": "qr",
-    "utm_campaign": "CAMP_2025_001",
-    "utm_term": "product_trial",
-    "utm_content": "poster_v1"
-  },
-  "barcode_pool": {
-    "total_codes": 10000,
-    "assigned_codes": 2500,
-    "redeemed_codes": 1200,
-    "expired_codes": 50
-  },
-  "created_by": "user_id_123",
-  "group_id": "group_001", // cho Group Admin scope
-  
-  // Indexes
-  "indexes": [
-    {"tenant_id": 1, "status": 1},
-    {"campaign_id": 1},
-    {"created_by": 1},
-    {"dates.start_date": 1, "dates.end_date": 1}
-  ]
-}
-```
-
-### 7.2.2 User Profiles Collection (từ System_Feature_Tree_Grok.md 1.3)
-
-```javascript
-// user_profiles collection
-{
-  "_id": ObjectId("..."),
-  "user_id": "USER_2025_001",
-  "phone_hash": "sha256_hashed_phone", // GDPR compliance
-  "email_hash": "sha256_hashed_email",
-  "profile": {
-    "first_name_encrypted": "AES256_encrypted_data",
-    "last_name_encrypted": "AES256_encrypted_data",
-    "age_range": "25-34", // aggregated không encrypt
-    "gender": "female",
-    "city": "Ho Chi Minh",
-    "interests": ["beauty", "food", "technology"]
-  },
-  "preferences": {
-    "product_categories": ["cosmetics", "snacks"],
-    "notification_channels": ["sms", "email"],
-    "language": "vi",
-    "timezone": "Asia/Ho_Chi_Minh"
-  },
-  "verification": {
-    "phone_verified": true,
-    "email_verified": true,
-    "verified_at": ISODate("2025-01-01T10:30:00Z"),
-    "verification_method": "sms_otp"
-  },
-  "consent": {
-    "marketing_opt_in": true,
-    "data_processing_consent": true,
-    "consent_version": "v1.2",
-    "consent_date": ISODate("2025-01-01T10:30:00Z"),
-    "gdpr_compliant": true
-  },
-  "engagement": {
-    "total_campaigns": 5,
-    "total_redemptions": 4,
-    "last_activity": ISODate("2025-10-15T14:20:00Z"),
-    "engagement_score": 85 // 0-100
-  },
-  "created_at": ISODate("2025-01-01T10:30:00Z"),
-  "updated_at": ISODate("2025-10-15T14:20:00Z"),
-  
-  // Indexes
-  "indexes": [
-    {"phone_hash": 1},
-    {"email_hash": 1},
-    {"created_at": -1},
-    {"engagement.last_activity": -1}
-  ]
-}
-```
-
-### 7.2.3 Analytics Events Collection (từ System_Feature_Tree_Grok.md 1.6)
-
-```javascript
-// analytics_events collection (time-series)
-{
-  "_id": ObjectId("..."),
-  "event_id": "EVT_2025_001234",
-  "timestamp": ISODate("2025-10-17T14:30:00Z"),
-  "event_type": "qr_scan", // form_submit, otp_verify, barcode_assign, redemption
-  "campaign_id": "CAMP_2025_001",
-  "user_id": "USER_2025_001",
-  "session_id": "SESS_ABC123",
-  
-  "location": {
-    "location_id": "HCM_CIRCLE_K_001",
-    "city": "Ho Chi Minh",
-    "district": "District 1",
-    "coordinates": {
-      "lat": 10.7769,
-      "lng": 106.7009
+    
+    BARCODES {
+        uuid id PK
+        string code UK "Unique barcode"
+        uuid pool_id FK
+        string product_name
+        decimal value
+        date expiry_date
+        string batch_code
+        enum status "available|reserved|issued|redeemed|expired"
+        uuid assigned_user_id FK
+        timestamp reserved_at
+        timestamp issued_at
+        timestamp created_at
+        timestamp updated_at
     }
-  },
-  
-  "device": {
-    "device_type": "mobile",
-    "os": "iOS",
-    "browser": "Safari",
-    "screen_size": "375x812",
-    "user_agent": "Mozilla/5.0..."
-  },
-  
-  "conversion_funnel": {
-    "step": "scan", // scan, form, verify, assign, redeem
-    "step_order": 1,
-    "time_from_previous": 0, // seconds
-    "completion_rate": 0.95
-  },
-  
-  "attribution": {
-    "utm_source": "poster",
-    "utm_medium": "qr",
-    "ads_format_id": "ADS_POSTER_A4_001",
-    "referrer": "organic"
-  },
-  
-  "metadata": {
-    "ip_address_hash": "sha256_ip",
-    "country_code": "VN",
-    "tenant_id": "brand_001"
-  },
-  
-  // Time-series optimized indexes
-  "indexes": [
-    {"timestamp": -1, "event_type": 1},
-    {"campaign_id": 1, "timestamp": -1},
-    {"user_id": 1, "timestamp": -1},
-    {"tenant_id": 1, "timestamp": -1}
-  ]
-}
+    
+    REDEMPTIONS {
+        uuid id PK
+        uuid barcode_id FK
+        uuid user_id FK
+        uuid location_id FK
+        uuid staff_id FK
+        decimal transaction_amount
+        timestamp redeemed_at
+        json metadata
+        boolean is_offline_sync
+        timestamp synced_at
+        timestamp created_at
+    }
+    
+    LOCATIONS {
+        uuid id PK
+        string name
+        string type "store|booth|event"
+        string address
+        decimal latitude
+        decimal longitude
+        json contact_info
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
 ```
 
-### 7.2.4 Audit Logs Collection (từ Access_Control_Tree_Grok.md v2.2)
+### 7.2.2 barcode-service Database Schema
 
-```javascript
-// audit_logs collection (immutable)
-{
-  "_id": ObjectId("..."),
-  "audit_id": "AUDIT_2025_001234",
-  "timestamp": ISODate("2025-10-17T14:30:00Z"),
-  "action": "barcode_import", // user_login, campaign_create, permission_change
-  "actor": {
-    "user_id": "USER_ADMIN_001",
-    "role": "admin",
-    "tenant_id": "brand_001",
-    "ip_address_hash": "sha256_ip"
-  },
-  "target": {
-    "resource_type": "barcode",
-    "resource_id": "BARCODE_BATCH_001",
-    "campaign_id": "CAMP_2025_001"
-  },
-  "changes": {
-    "before": {"status": "pending"},
-    "after": {"status": "imported", "count": 10000}
-  },
-  "compliance": {
-    "gdpr_relevant": true,
-    "retention_until": ISODate("2032-10-17T14:30:00Z"), // 7 years
-    "legal_basis": "legitimate_interest"
-  },
-  "metadata": {
-    "user_agent": "Mozilla/5.0...",
-    "session_id": "SESS_ABC123",
-    "request_id": "REQ_DEF456"
-  },
-  
-  // Immutable - không được update sau khi tạo
-  "immutable": true,
-  
-  // Compliance indexes
-  "indexes": [
-    {"timestamp": -1},
-    {"actor.user_id": 1, "timestamp": -1},
-    {"target.resource_type": 1, "timestamp": -1},
-    {"compliance.retention_until": 1}
-  ]
-}
-```
-
----
-
-## 7.3 PostgreSQL Schema Design
-
-### 7.3.1 Users và RBAC Tables (từ Access_Control_Tree_Grok.md v2.2)
-
+#### **Bảng barcode_pools**
 ```sql
--- Users table
-CREATE TABLE users (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username VARCHAR(100) UNIQUE NOT NULL,
-    email_hash VARCHAR(64) UNIQUE NOT NULL, -- SHA-256 hash
-    phone_hash VARCHAR(64) UNIQUE, -- SHA-256 hash
-    password_hash VARCHAR(255) NOT NULL, -- bcrypt
-    role_id INTEGER REFERENCES roles(role_id),
-    tenant_id VARCHAR(50) NOT NULL,
-    group_id VARCHAR(50), -- NULL cho global users
+CREATE TABLE barcode_pools (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    campaign_id UUID NOT NULL,
+    total_quantity INTEGER NOT NULL CHECK (total_quantity > 0),
+    available_quantity INTEGER NOT NULL CHECK (available_quantity >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
-    -- Profile data (encrypted trong application layer)
-    profile_encrypted TEXT, -- JSON encrypted với AES-256
-    
-    -- Status tracking
-    status VARCHAR(20) DEFAULT 'active', -- active, inactive, suspended
-    email_verified BOOLEAN DEFAULT FALSE,
-    phone_verified BOOLEAN DEFAULT FALSE,
-    
-    -- Audit fields
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID REFERENCES users(user_id),
-    last_login TIMESTAMP,
-    
-    -- Indexes
-    CONSTRAINT users_tenant_check CHECK (tenant_id ~ '^[a-z0-9_]+$')
+    CONSTRAINT fk_campaign FOREIGN KEY (campaign_id) 
+        REFERENCES campaigns(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_users_tenant_role ON users(tenant_id, role_id);
-CREATE INDEX idx_users_email_hash ON users(email_hash);
-CREATE INDEX idx_users_phone_hash ON users(phone_hash);
-CREATE INDEX idx_users_last_login ON users(last_login);
-
--- Roles table (6 roles từ Access Control Tree)
-CREATE TABLE roles (
-    role_id SERIAL PRIMARY KEY,
-    role_name VARCHAR(50) UNIQUE NOT NULL,
-    role_description TEXT,
-    scope_type VARCHAR(20) NOT NULL, -- global, group, campaign, personal
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO roles (role_name, role_description, scope_type) VALUES
-('admin', 'Toàn quyền hệ thống', 'global'),
-('group_admin', 'Quản trị nhóm', 'group'),
-('customer_account', 'Tài khoản khách hàng', 'campaign'),
-('serving_account', 'Tài khoản phục vụ', 'personal'),
-('auditor', 'Kiểm toán viên', 'global'),
-('user_role', 'Người dùng cuối', 'personal');
-
--- Permissions table (dynamic permissions)
-CREATE TABLE permissions (
-    permission_id SERIAL PRIMARY KEY,
-    permission_name VARCHAR(100) UNIQUE NOT NULL,
-    resource_type VARCHAR(50) NOT NULL, -- campaign, barcode, analytics
-    action VARCHAR(50) NOT NULL, -- create, read, update, delete
-    scope_restriction VARCHAR(100), -- own, group, global
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Role-Permission mapping
-CREATE TABLE role_permissions (
-    role_id INTEGER REFERENCES roles(role_id),
-    permission_id INTEGER REFERENCES permissions(permission_id),
-    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (role_id, permission_id)
-);
+-- Indexes
+CREATE INDEX idx_barcode_pools_campaign_id ON barcode_pools(campaign_id);
+CREATE INDEX idx_barcode_pools_available ON barcode_pools(available_quantity) 
+    WHERE available_quantity > 0;
 ```
 
-### 7.3.2 Barcode Inventory Tables (từ System_Feature_Tree_Grok.md 1.2)
-
+#### **Bảng barcodes**
 ```sql
--- Barcode batches
-CREATE TABLE barcode_batches (
-    batch_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    batch_name VARCHAR(255) NOT NULL,
-    campaign_id VARCHAR(100), -- Reference to MongoDB campaigns
-    tenant_id VARCHAR(50) NOT NULL,
-    
-    -- Batch metadata
-    total_codes INTEGER NOT NULL,
-    imported_codes INTEGER DEFAULT 0,
-    assigned_codes INTEGER DEFAULT 0,
-    redeemed_codes INTEGER DEFAULT 0,
-    expired_codes INTEGER DEFAULT 0,
-    
-    -- Product info
-    product_name VARCHAR(255) NOT NULL,
-    product_value DECIMAL(10,2),
-    expiry_date DATE,
-    
-    -- Audit
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID REFERENCES users(user_id),
-    
-    CONSTRAINT positive_counts CHECK (
-        total_codes >= 0 AND
-        imported_codes >= 0 AND
-        assigned_codes >= 0 AND
-        redeemed_codes >= 0 AND
-        expired_codes >= 0
-    )
-);
-
-CREATE INDEX idx_barcode_batches_campaign ON barcode_batches(campaign_id);
-CREATE INDEX idx_barcode_batches_tenant ON barcode_batches(tenant_id);
-
--- Individual barcodes
 CREATE TABLE barcodes (
-    barcode_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    barcode_value VARCHAR(100) UNIQUE NOT NULL,
-    batch_id UUID REFERENCES barcode_batches(batch_id),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) NOT NULL UNIQUE,
+    pool_id UUID NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    value DECIMAL(10,2),
+    expiry_date DATE NOT NULL,
+    batch_code VARCHAR(100),
+    status barcode_status DEFAULT 'available',
+    assigned_user_id UUID,
+    reserved_at TIMESTAMP WITH TIME ZONE,
+    issued_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
-    -- Status lifecycle
-    status VARCHAR(20) DEFAULT 'available', -- available, assigned, redeemed, expired, revoked
-    
-    -- Assignment tracking
-    assigned_to_user_hash VARCHAR(64), -- SHA-256 của user identifier
-    assigned_at TIMESTAMP,
-    assignment_campaign_id VARCHAR(100),
-    
-    -- Redemption tracking
-    redeemed_at TIMESTAMP,
-    redeemed_location_id VARCHAR(100),
-    redeemed_by_staff VARCHAR(100),
-    
-    -- Expiry
-    expires_at TIMESTAMP,
-    
-    -- Audit trail
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Constraints
-    CONSTRAINT valid_status CHECK (
-        status IN ('available', 'assigned', 'redeemed', 'expired', 'revoked')
-    ),
-    CONSTRAINT assignment_logic CHECK (
-        (status = 'assigned' AND assigned_to_user_hash IS NOT NULL) OR
-        (status != 'assigned' OR assigned_to_user_hash IS NULL)
+    CONSTRAINT fk_pool FOREIGN KEY (pool_id) 
+        REFERENCES barcode_pools(id) ON DELETE CASCADE,
+    CONSTRAINT check_expiry CHECK (expiry_date > CURRENT_DATE),
+    CONSTRAINT check_status_flow CHECK (
+        (status = 'available' AND assigned_user_id IS NULL) OR
+        (status IN ('reserved', 'issued', 'redeemed') AND assigned_user_id IS NOT NULL)
     )
 );
 
--- Optimized indexes cho performance
-CREATE UNIQUE INDEX idx_barcodes_value ON barcodes(barcode_value);
-CREATE INDEX idx_barcodes_batch_status ON barcodes(batch_id, status);
-CREATE INDEX idx_barcodes_user_hash ON barcodes(assigned_to_user_hash) WHERE assigned_to_user_hash IS NOT NULL;
-CREATE INDEX idx_barcodes_redemption ON barcodes(redeemed_at) WHERE redeemed_at IS NOT NULL;
-CREATE INDEX idx_barcodes_expiry ON barcodes(expires_at) WHERE expires_at IS NOT NULL;
-
--- Barcode status history (cho audit)
-CREATE TABLE barcode_status_history (
-    history_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    barcode_id UUID REFERENCES barcodes(barcode_id),
-    old_status VARCHAR(20),
-    new_status VARCHAR(20),
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    changed_by UUID REFERENCES users(user_id),
-    change_reason TEXT,
-    metadata JSONB
+-- Custom enum type
+CREATE TYPE barcode_status AS ENUM (
+    'available', 'reserved', 'issued', 'redeemed', 'expired'
 );
 
-CREATE INDEX idx_barcode_history_barcode ON barcode_status_history(barcode_id, changed_at);
+-- Indexes
+CREATE UNIQUE INDEX idx_barcodes_code ON barcodes(code);
+CREATE INDEX idx_barcodes_pool_status ON barcodes(pool_id, status);
+CREATE INDEX idx_barcodes_user_status ON barcodes(assigned_user_id, status) 
+    WHERE assigned_user_id IS NOT NULL;
+CREATE INDEX idx_barcodes_expiry ON barcodes(expiry_date) 
+    WHERE status IN ('available', 'reserved', 'issued');
 ```
 
-### 7.3.3 Financial Transactions Table (từ 01-BRD.md v3.0)
-
+#### **Bảng redemptions**
 ```sql
--- Transactions cho billing và settlement
-CREATE TABLE transactions (
-    transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id VARCHAR(50) NOT NULL,
+CREATE TABLE redemptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    barcode_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    location_id UUID NOT NULL,
+    staff_id UUID,
+    transaction_amount DECIMAL(10,2),
+    redeemed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    metadata JSONB,
+    is_offline_sync BOOLEAN DEFAULT FALSE,
+    synced_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
-    -- Transaction details
-    transaction_type VARCHAR(50) NOT NULL, -- subscription, usage_fee, refund
-    amount DECIMAL(15,2) NOT NULL,
-    currency CHAR(3) DEFAULT 'VND',
-    
-    -- Reference data
-    campaign_id VARCHAR(100),
-    billing_period DATE,
-    item_count INTEGER, -- số lượng leads, redemptions, etc.
-    unit_price DECIMAL(10,4),
-    
-    -- Status
-    status VARCHAR(20) DEFAULT 'pending', -- pending, completed, failed, refunded
-    processed_at TIMESTAMP,
-    
-    -- Payment integration
-    payment_provider VARCHAR(50),
-    payment_reference VARCHAR(255),
-    
-    -- Audit
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID REFERENCES users(user_id),
-    
-    -- Invoice data
-    invoice_id VARCHAR(100),
-    invoice_generated_at TIMESTAMP,
-    
-    CONSTRAINT positive_amount CHECK (amount > 0),
-    CONSTRAINT valid_status CHECK (
-        status IN ('pending', 'completed', 'failed', 'refunded')
+    CONSTRAINT fk_barcode FOREIGN KEY (barcode_id) 
+        REFERENCES barcodes(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_location FOREIGN KEY (location_id) 
+        REFERENCES locations(id) ON DELETE RESTRICT,
+    CONSTRAINT check_sync_logic CHECK (
+        (is_offline_sync = FALSE AND synced_at IS NULL) OR
+        (is_offline_sync = TRUE AND synced_at IS NOT NULL)
     )
 );
 
-CREATE INDEX idx_transactions_tenant_period ON transactions(tenant_id, billing_period);
-CREATE INDEX idx_transactions_status ON transactions(status, created_at);
-CREATE INDEX idx_transactions_campaign ON transactions(campaign_id) WHERE campaign_id IS NOT NULL;
+-- Indexes
+CREATE UNIQUE INDEX idx_redemptions_barcode ON redemptions(barcode_id);
+CREATE INDEX idx_redemptions_user_date ON redemptions(user_id, redeemed_at);
+CREATE INDEX idx_redemptions_location_date ON redemptions(location_id, redeemed_at);
+CREATE INDEX idx_redemptions_offline_sync ON redemptions(is_offline_sync, synced_at) 
+    WHERE is_offline_sync = TRUE;
 ```
 
-### 7.3.4 Locations và Retail Network (từ System_Feature_Tree_Grok.md 2.8)
+### 7.2.3 Business Logic trong Database
 
+#### **Triggers cho data consistency**
 ```sql
--- Retail locations
-CREATE TABLE locations (
-    location_id VARCHAR(100) PRIMARY KEY,
-    location_name VARCHAR(255) NOT NULL,
-    location_type VARCHAR(50), -- circle_k, gs25, mini_stop, booth, other
+-- Trigger cập nhật available_quantity khi barcode status thay đổi
+CREATE OR REPLACE FUNCTION update_pool_quantity()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.status = 'available' AND NEW.status != 'available' THEN
+        -- Giảm available quantity
+        UPDATE barcode_pools 
+        SET available_quantity = available_quantity - 1,
+            updated_at = NOW()
+        WHERE id = NEW.pool_id;
+    ELSIF OLD.status != 'available' AND NEW.status = 'available' THEN
+        -- Tăng available quantity
+        UPDATE barcode_pools 
+        SET available_quantity = available_quantity + 1,
+            updated_at = NOW()
+        WHERE id = NEW.pool_id;
+    END IF;
     
-    -- Address
-    address TEXT NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    district VARCHAR(100),
-    country_code CHAR(2) DEFAULT 'VN',
-    postal_code VARCHAR(20),
-    
-    -- Coordinates
-    latitude DECIMAL(10, 8),
-    longitude DECIMAL(11, 8),
-    
-    -- Operational info
-    status VARCHAR(20) DEFAULT 'active', -- active, inactive, maintenance
-    operating_hours JSONB, -- {"mon": "06:00-22:00", "tue": "06:00-22:00", ...}
-    contact_phone VARCHAR(20),
-    contact_email VARCHAR(100),
-    
-    -- Partner info
-    partner_id VARCHAR(100),
-    partner_name VARCHAR(255),
-    commission_rate DECIMAL(5,4) DEFAULT 0.00, -- % commission
-    
-    -- Capabilities
-    pos_integration BOOLEAN DEFAULT FALSE,
-    offline_capability BOOLEAN DEFAULT TRUE,
-    max_daily_redemptions INTEGER,
-    
-    -- Audit
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    CONSTRAINT valid_coordinates CHECK (
-        (latitude IS NULL AND longitude IS NULL) OR
-        (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)
-    )
-);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-CREATE INDEX idx_locations_city_status ON locations(city, status);
-CREATE INDEX idx_locations_type_country ON locations(location_type, country_code);
-CREATE INDEX idx_locations_partner ON locations(partner_id) WHERE partner_id IS NOT NULL;
-
--- Spatial index cho geo queries (PostGIS extension)
-CREATE INDEX idx_locations_geo ON locations USING GIST (ST_MakePoint(longitude, latitude));
+CREATE TRIGGER trigger_update_pool_quantity
+    AFTER UPDATE OF status ON barcodes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_pool_quantity();
 ```
 
----
-
-## 7.4 Redis Schema Design
-
-### 7.4.1 Session Management (từ System_Feature_Tree_Grok.md 1.4)
-
-```javascript
-// Redis keys cho session management
-{
-  // JWT session cache
-  "session:jwt:{token_hash}": {
-    "user_id": "USER_2025_001",
-    "role": "customer_account",
-    "tenant_id": "brand_001",
-    "permissions": ["campaign.create", "barcode.view"],
-    "expires_at": "2025-10-17T18:00:00Z"
-  },
-  "ttl": 3600, // 1 hour
-  
-  // OTP verification
-  "otp:verify:{phone_hash}": {
-    "code": "123456",
-    "attempts": 1,
-    "max_attempts": 3,
-    "created_at": "2025-10-17T14:30:00Z"
-  },
-  "ttl": 300, // 5 minutes
-  
-  // Rate limiting
-  "rate_limit:api:{user_id}": {
-    "count": 45,
-    "window_start": "2025-10-17T14:00:00Z"
-  },
-  "ttl": 3600, // 1 hour window
-  
-  // Fraud detection
-  "fraud:phone:{phone_hash}": {
-    "otp_requests_today": 8,
-    "last_request": "2025-10-17T14:30:00Z",
-    "suspicious_score": 0.2
-  },
-  "ttl": 86400 // 24 hours
-}
-```
-
-### 7.4.2 Real-time Analytics Cache
-
-```javascript
-// Dashboard metrics cache
-{
-  "analytics:campaign:{campaign_id}:today": {
-    "scans": 1250,
-    "form_submissions": 980,
-    "verifications": 945,
-    "assignments": 920,
-    "redemptions": 650,
-    "conversion_rate": 0.76,
-    "last_updated": "2025-10-17T14:30:00Z"
-  },
-  "ttl": 300, // 5 minutes
-  
-  "analytics:funnel:{campaign_id}:realtime": {
-    "scan_to_form": 0.78,
-    "form_to_verify": 0.96,
-    "verify_to_assign": 0.97,
-    "assign_to_redeem": 0.71,
-    "overall_conversion": 0.52
-  },
-  "ttl": 60, // 1 minute
-  
-  // Location-based metrics
-  "analytics:location:{location_id}:today": {
-    "total_scans": 85,
-    "unique_users": 72,
-    "redemptions": 45,
-    "peak_hour": "14:00-15:00",
-    "avg_time_to_redeem": 1800 // seconds
-  },
-  "ttl": 1800 // 30 minutes
-}
-```
-
-### 7.4.3 Background Jobs Queue
-
-```javascript
-// Job queue cho background processing
-{
-  "queue:email:high": [
-    {
-      "job_id": "JOB_EMAIL_001",
-      "type": "otp_email",
-      "recipient": "user@example.com",
-      "template": "otp_verification",
-      "data": {"otp_code": "123456"},
-      "retry_count": 0,
-      "created_at": "2025-10-17T14:30:00Z"
-    }
-  ],
-  
-  "queue:sms:high": [
-    {
-      "job_id": "JOB_SMS_001", 
-      "type": "otp_sms",
-      "phone": "+84901234567",
-      "message": "Mã xác thực của bạn: 123456",
-      "provider": "twilio",
-      "retry_count": 0
-    }
-  ],
-  
-  "queue:analytics:low": [
-    {
-      "job_id": "JOB_ANALYTICS_001",
-      "type": "event_processing",
-      "events_batch": [...],
-      "processing_at": "2025-10-17T14:35:00Z"
-    }
-  ]
-}
-```
-
----
-
-## 7.5 File Storage Design
-
-### 7.5.1 S3/MinIO Bucket Structure (từ System_Feature_Tree_Grok.md 1.10)
-
-```
-product-sampling-storage/
-├── ads-formats/
-│   ├── {tenant_id}/
-│   │   ├── {campaign_id}/
-│   │   │   ├── original/
-│   │   │   │   ├── poster_a4_v1.pdf
-│   │   │   │   └── flyer_a5_v2.png
-│   │   │   ├── processed/
-│   │   │   │   ├── poster_a4_v1_qr.pdf
-│   │   │   │   └── flyer_a5_v2_qr.png
-│   │   │   └── thumbnails/
-│   │   │       ├── poster_a4_v1_thumb.jpg
-│   │   │       └── flyer_a5_v2_thumb.jpg
-│   │   └── templates/
-│   │       ├── brand_guidelines.pdf
-│   │       └── logo_high_res.png
-├── exports/
-│   ├── {tenant_id}/
-│   │   ├── analytics/
-│   │   │   ├── 2025-10-17_campaign_report.csv
-│   │   │   └── 2025-10-17_user_data.xlsx
-│   │   └── barcodes/
-│   │       ├── batch_001_export.csv
-│   │       └── redemption_log.csv
-├── backups/
-│   ├── mongodb/
-│   │   ├── 2025-10-17/
-│   │   │   ├── campaigns_backup.gz
-│   │   │   └── analytics_backup.gz
-│   ├── postgresql/
-│   │   ├── 2025-10-17/
-│   │   │   └── full_backup.sql.gz
-└── compliance/
-    ├── audit_logs/
-    │   ├── 2025/10/
-    │   │   └── audit_2025_10_17.json.gz
-    └── gdpr_exports/
-        ├── user_data_export_{user_id}.zip
-        └── deletion_confirmations/
-```
-
-### 7.5.2 File Metadata Schema
-
-```javascript
-// File metadata trong MongoDB
-{
-  "_id": ObjectId("..."),
-  "file_id": "FILE_2025_001234",
-  "tenant_id": "brand_001",
-  "campaign_id": "CAMP_2025_001",
-  
-  "file_info": {
-    "original_name": "poster_a4_campaign.pdf",
-    "stored_name": "ads-formats/brand_001/CAMP_2025_001/original/poster_a4_v1.pdf",
-    "file_size": 2048576, // bytes
-    "mime_type": "application/pdf",
-    "checksum": "sha256_hash_here"
-  },
-  
-  "processing": {
-    "status": "completed", // pending, processing, completed, failed
-    "qr_embedded": true,
-    "thumbnail_generated": true,
-    "dpi_validated": true,
-    "dpi_value": 300
-  },
-  
-  "usage": {
-    "ads_format_type": "poster_a4",
-    "print_ready": true,
-    "download_count": 25,
-    "last_downloaded": ISODate("2025-10-17T14:30:00Z")
-  },
-  
-  "metadata": {
-    "dimensions": "210x297mm",
-    "qr_position": {"x": 180, "y": 50, "size": "20mm"},
-    "color_mode": "CMYK",
-    "bleed": "3mm"
-  },
-  
-  "audit": {
-    "uploaded_by": "USER_2025_001",
-    "uploaded_at": ISODate("2025-10-17T14:00:00Z"),
-    "last_modified": ISODate("2025-10-17T14:30:00Z")
-  }
-}
-```
-
----
-
-## 7.6 Data Migration Strategy
-
-### 7.6.1 Migration Scripts
-
+#### **Stored procedures cho business operations**
 ```sql
--- PostgreSQL migration script example
--- Migration: 001_create_users_table.sql
-
-BEGIN;
-
--- Create users table
-CREATE TABLE users (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    -- ... columns định nghĩa như trên
-);
-
--- Insert seed data cho roles
-INSERT INTO roles (role_name, role_description, scope_type) 
-VALUES 
-    ('admin', 'Toàn quyền hệ thống', 'global'),
-    ('group_admin', 'Quản trị nhóm', 'group');
-
--- Create indexes
-CREATE INDEX idx_users_tenant_role ON users(tenant_id, role_id);
-
-COMMIT;
-```
-
-```javascript
-// MongoDB migration script
-// migration_001_create_campaigns_collection.js
-
-db.campaigns.createIndex({"tenant_id": 1, "status": 1});
-db.campaigns.createIndex({"campaign_id": 1});
-db.campaigns.createIndex({"created_by": 1});
-
-// Tạo campaigns mặc định cho testing
-db.campaigns.insertOne({
-  "campaign_id": "DEMO_CAMPAIGN_001",
-  "tenant_id": "demo_brand",
-  "name": "Demo Sampling Campaign",
-  "status": "active",
-  "dates": {
-    "start_date": new Date(),
-    "end_date": new Date(Date.now() + 30*24*60*60*1000) // 30 ngày
-  },
-  "created_at": new Date()
-});
-
-// Tạo collections với validation rules
-db.createCollection("analytics_events", {
-  validator: {
-    $jsonSchema: {
-      bsonType: "object",
-      required: ["event_type", "timestamp", "campaign_id"],
-      properties: {
-        event_type: {
-          bsonType: "string",
-          enum: ["qr_scan", "form_submit", "otp_verify", "barcode_assign", "redemption"]
-        },
-        timestamp: { bsonType: "date" },
-        campaign_id: { bsonType: "string" }
-      }
-    }
-  }
-});
-```
-
-### 7.6.2 Chiến lược Migration dữ liệu hiện tại
-
-**Giai đoạn 1 - Schema Setup:**
-```bash
-# Tạo databases
-createdb product_sampling_prod
-createdb product_sampling_staging
-
-# Chạy migrations
-psql -d product_sampling_prod -f migrations/001_create_users_table.sql
-psql -d product_sampling_prod -f migrations/002_create_barcodes_table.sql
-
-# MongoDB setup
-mongosh --eval "use product_sampling; load('migrations/001_campaigns.js')"
-```
-
-**Giai đoạn 2 - Data Import:**
-```python
-# Python script cho data import
-import pandas as pd
-import psycopg2
-from pymongo import MongoClient
-
-def migrate_legacy_barcodes():
-    """Import barcode từ hệ thống cũ"""
-    # Đọc CSV legacy data
-    df = pd.read_csv('legacy_barcodes.csv')
-    
-    # Validate data
-    df['barcode_value'] = df['barcode_value'].str.strip()
-    df = df.drop_duplicates(subset=['barcode_value'])
-    
-    # Insert vào PostgreSQL
-    conn = psycopg2.connect(DATABASE_URL)
-    cursor = conn.cursor()
-    
-    for _, row in df.iterrows():
-        cursor.execute("""
-            INSERT INTO barcodes (barcode_value, batch_id, status, expires_at)
-            VALUES (%s, %s, 'available', %s)
-        """, (row['barcode_value'], row['batch_id'], row['expiry_date']))
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-def migrate_user_profiles():
-    """Encrypt và migrate user data"""
-    # Implementation với AES encryption
-    pass
-```
-
----
-
-## 7.7 Backup và Recovery Strategy
-
-### 7.7.1 Backup Schedule (từ 01-BRD.md v3.0)
-
-**PostgreSQL Backup:**
-```bash
-#!/bin/bash
-# daily_backup.sh
-
-DATE=$(date +%Y-%m-%d)
-BACKUP_DIR="/backups/postgresql/${DATE}"
-mkdir -p $BACKUP_DIR
-
-# Full backup với compression
-pg_dump -h localhost -U postgres -d product_sampling \
-  --format=custom --compress=9 \
-  --file="${BACKUP_DIR}/full_backup.dump"
-
-# Upload to S3
-aws s3 cp "${BACKUP_DIR}/full_backup.dump" \
-  "s3://product-sampling-backups/postgresql/${DATE}/"
-
-# Verify backup integrity
-pg_restore --list "${BACKUP_DIR}/full_backup.dump" > /dev/null
-if [ $? -eq 0 ]; then
-    echo "Backup verification successful"
-else
-    echo "Backup verification failed" | mail -s "Backup Alert" admin@company.com
-fi
-```
-
-**MongoDB Backup:**
-```bash
-#!/bin/bash
-# mongodb_backup.sh
-
-DATE=$(date +%Y-%m-%d)
-BACKUP_DIR="/backups/mongodb/${DATE}"
-mkdir -p $BACKUP_DIR
-
-# Mongodump với compression
-mongodump --host localhost:27017 \
-  --db product_sampling \
-  --gzip \
-  --out $BACKUP_DIR
-
-# Upload to S3
-aws s3 sync $BACKUP_DIR \
-  "s3://product-sampling-backups/mongodb/${DATE}/"
-
-# Verify backup
-if [ -f "${BACKUP_DIR}/product_sampling/campaigns.bson.gz" ]; then
-    echo "MongoDB backup completed successfully"
-else
-    echo "MongoDB backup failed"
-fi
-```
-
-### 7.7.2 Point-in-Time Recovery
-
-**PostgreSQL PITR Setup:**
-```sql
--- Enable WAL archiving trong postgresql.conf
-archive_mode = on
-archive_command = 'cp %p /archive/%f'
-wal_level = replica
-max_wal_senders = 3
-
--- Recovery script
--- restore_to_point.sql
-SELECT pg_create_restore_point('before_data_corruption');
-
--- Restore to specific timestamp
--- recovery.conf
-restore_command = 'cp /archive/%f %p'
-recovery_target_time = '2025-10-17 14:30:00'
-```
-
-**MongoDB Replica Set Recovery:**
-```javascript
-// Replica set configuration
-rs.initiate({
-  _id: "product_sampling_rs",
-  members: [
-    { _id: 0, host: "mongo1:27017", priority: 2 },
-    { _id: 1, host: "mongo2:27017", priority: 1 },
-    { _id: 2, host: "mongo3:27017", arbiterOnly: true }
-  ]
-});
-
-// Oplog-based recovery
-db.runCommand({
-  "replSetResizeOplog": 1,
-  "size": 10240 // 10GB oplog
-});
-```
-
-### 7.7.3 Disaster Recovery Plan
-
-**RTO/RPO Targets (từ 01-BRD.md):**
-- **RTO (Recovery Time Objective)**: <4 giờ
-- **RPO (Recovery Point Objective)**: <1 giờ
-
-**DR Procedures:**
-```yaml
-# dr_playbook.yml
-disaster_recovery:
-  primary_failure:
-    - step_1: "Verify primary datacenter status"
-    - step_2: "Promote secondary region to primary"
-    - step_3: "Update DNS records to point to DR site"
-    - step_4: "Verify application functionality"
-    - step_5: "Notify stakeholders"
-  
-  database_corruption:
-    - step_1: "Stop application writes"
-    - step_2: "Assess corruption scope"
-    - step_3: "Restore from latest clean backup"
-    - step_4: "Apply transaction logs"
-    - step_5: "Verify data integrity"
-    - step_6: "Resume operations"
-  
-  contact_list:
-    - primary_dba: "+84901234567"
-    - devops_lead: "+84901234568"
-    - security_team: "security@company.com"
-```
-
----
-
-## 7.8 Data Security và Compliance
-
-### 7.8.1 PII Encryption Strategy (từ Access_Control_Tree_Grok.md v2.2)
-
-**Application-level Encryption:**
-```python
-# encryption_utils.py
-import cryptography
-from cryptography.fernet import Fernet
-import hashlib
-import base64
-
-class PIIEncryption:
-    def __init__(self, master_key):
-        self.fernet = Fernet(master_key)
-    
-    def encrypt_pii(self, plaintext):
-        """Encrypt PII data với AES-256"""
-        if not plaintext:
-            return None
-        
-        encrypted = self.fernet.encrypt(plaintext.encode('utf-8'))
-        return base64.b64encode(encrypted).decode('utf-8')
-    
-    def decrypt_pii(self, encrypted_data):
-        """Decrypt PII data"""
-        if not encrypted_data:
-            return None
-            
-        encrypted_bytes = base64.b64decode(encrypted_data)
-        decrypted = self.fernet.decrypt(encrypted_bytes)
-        return decrypted.decode('utf-8')
-    
-    def hash_identifier(self, identifier):
-        """Hash phone/email cho indexing"""
-        return hashlib.sha256(identifier.encode('utf-8')).hexdigest()
-
-# Usage example
-encryptor = PIIEncryption(os.getenv('MASTER_KEY'))
-
-user_data = {
-    "first_name": encryptor.encrypt_pii("Nguyễn"),
-    "last_name": encryptor.encrypt_pii("Văn A"),
-    "phone_hash": encryptor.hash_identifier("+84901234567"),
-    "email_hash": encryptor.hash_identifier("user@example.com")
-}
-```
-
-### 7.8.2 GDPR Compliance Implementation
-
-**Data Subject Rights:**
-```sql
--- GDPR right to access
-CREATE OR REPLACE FUNCTION get_user_data(user_phone_hash VARCHAR)
-RETURNS JSON AS $
+-- Procedure reserve barcode cho user
+CREATE OR REPLACE FUNCTION reserve_barcode(
+    p_pool_id UUID,
+    p_user_id UUID,
+    p_product_preference TEXT DEFAULT NULL
+)
+RETURNS TABLE(barcode_id UUID, barcode_code TEXT) AS $$
 DECLARE
-    user_record RECORD;
-    result JSON;
+    selected_barcode barcodes%ROWTYPE;
 BEGIN
-    -- Tìm user và decrypt data
-    SELECT u.user_id, u.profile_encrypted, 
-           array_agg(b.barcode_value) as barcodes
-    FROM users u
-    LEFT JOIN barcodes b ON b.assigned_to_user_hash = user_phone_hash
-    WHERE u.phone_hash = user_phone_hash
-    GROUP BY u.user_id, u.profile_encrypted
-    INTO user_record;
+    -- Lock pool để tránh race condition
+    PERFORM 1 FROM barcode_pools 
+    WHERE id = p_pool_id AND available_quantity > 0
+    FOR UPDATE;
     
-    -- Build JSON response
-    result := json_build_object(
-        'user_id', user_record.user_id,
-        'profile_data', user_record.profile_encrypted,
-        'barcodes', user_record.barcodes,
-        'exported_at', NOW()
-    );
+    -- Chọn barcode available
+    SELECT * INTO selected_barcode
+    FROM barcodes 
+    WHERE pool_id = p_pool_id 
+        AND status = 'available'
+        AND expiry_date > CURRENT_DATE
+        AND (p_product_preference IS NULL OR product_name ILIKE '%' || p_product_preference || '%')
+    ORDER BY expiry_date ASC, created_at ASC
+    LIMIT 1
+    FOR UPDATE;
     
-    RETURN result;
-END;
-$ LANGUAGE plpgsql;
-
--- GDPR right to erasure
-CREATE OR REPLACE FUNCTION delete_user_data(user_phone_hash VARCHAR)
-RETURNS BOOLEAN AS $
-BEGIN
-    -- Start transaction
-    BEGIN
-        -- Anonymize user profile
-        UPDATE users 
-        SET profile_encrypted = NULL,
-            email_hash = 'DELETED_' || user_id,
-            phone_hash = 'DELETED_' || user_id,
-            status = 'deleted'
-        WHERE phone_hash = user_phone_hash;
-        
-        -- Update barcodes để remove personal link
-        UPDATE barcodes 
-        SET assigned_to_user_hash = 'DELETED'
-        WHERE assigned_to_user_hash = user_phone_hash;
-        
-        -- Log deletion cho compliance
-        INSERT INTO audit_logs (action, target_id, details)
-        VALUES ('gdpr_deletion', user_phone_hash, 'User data deleted per GDPR request');
-        
-        RETURN TRUE;
-    EXCEPTION WHEN OTHERS THEN
-        RETURN FALSE;
-    END;
-END;
-$ LANGUAGE plpgsql;
-```
-
-### 7.8.3 Data Retention Policy
-
-**Automated Cleanup Jobs:**
-```sql
--- Cleanup job cho expired data
-CREATE OR REPLACE FUNCTION cleanup_expired_data()
-RETURNS VOID AS $
-BEGIN
-    -- Archive old analytics events (>2 years)
-    INSERT INTO analytics_events_archive 
-    SELECT * FROM analytics_events 
-    WHERE timestamp < NOW() - INTERVAL '2 years';
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không có barcode available trong pool %', p_pool_id;
+    END IF;
     
-    DELETE FROM analytics_events 
-    WHERE timestamp < NOW() - INTERVAL '2 years';
-    
-    -- Remove expired barcodes
+    -- Update barcode status
     UPDATE barcodes 
-    SET status = 'expired'
-    WHERE expires_at < NOW() AND status != 'expired';
+    SET status = 'reserved',
+        assigned_user_id = p_user_id,
+        reserved_at = NOW(),
+        updated_at = NOW()
+    WHERE id = selected_barcode.id;
     
-    -- Archive old audit logs (>7 years)
-    INSERT INTO audit_logs_archive
-    SELECT * FROM audit_logs
-    WHERE created_at < NOW() - INTERVAL '7 years';
-    
-    DELETE FROM audit_logs
-    WHERE created_at < NOW() - INTERVAL '7 years';
-    
-    RAISE NOTICE 'Data cleanup completed at %', NOW();
+    RETURN QUERY SELECT selected_barcode.id, selected_barcode.code;
 END;
-$ LANGUAGE plpgsql;
-
--- Schedule cleanup job
-SELECT cron.schedule('cleanup_expired_data', '0 2 * * *', 'SELECT cleanup_expired_data();');
+$$ LANGUAGE plpgsql;
 ```
 
 ---
 
-## 7.9 Performance Optimization
+## 7.3 MongoDB Database Design
 
-### 7.9.1 Database Indexing Strategy
+### 7.3.1 Tổng quan MongoDB collections
+MongoDB được sử dụng cho dữ liệu có schema linh hoạt và cần horizontal scaling:
 
-**PostgreSQL Indexes:**
-```sql
--- Composite indexes cho common queries
-CREATE INDEX CONCURRENTLY idx_barcodes_tenant_status_created 
-ON barcodes(batch_id, status, created_at) 
-WHERE status IN ('available', 'assigned');
-
--- Partial index cho active campaigns
-CREATE INDEX CONCURRENTLY idx_users_active_tenant
-ON users(tenant_id, role_id, last_login)
-WHERE status = 'active';
-
--- Functional index cho search
-CREATE INDEX CONCURRENTLY idx_users_profile_search
-ON users USING gin(to_tsvector('english', 
-    COALESCE(profile_encrypted, '')));
-
--- Index cho analytics queries
-CREATE INDEX CONCURRENTLY idx_transactions_reporting
-ON transactions(tenant_id, billing_period, status)
-INCLUDE (amount, currency);
+```mermaid
+graph TB
+    subgraph "campaign-service"
+        C1[campaigns]
+        C2[ads_formats] 
+        C3[campaign_templates]
+    end
+    
+    subgraph "user-service"
+        U1[users]
+        U2[user_consents]
+        U3[user_preferences]
+    end
+    
+    subgraph "analytics-service"
+        A1[events]
+        A2[funnel_metrics]
+        A3[campaign_reports]
+        A4[export_jobs]
+    end
+    
+    subgraph "integration-service"
+        I1[webhook_configs]
+        I2[api_integrations]
+        I3[sync_logs]
+    end
+    
+    C1 --> A1
+    U1 --> A1
+    C1 --> A3
+    U1 --> U2
+    U1 --> U3
+    
+    style C1 fill:#e3f2fd
+    style U1 fill:#e8f5e8
+    style A1 fill:#fff3e0
 ```
 
-**MongoDB Indexes:**
-```javascript
-// Compound indexes cho analytics
-db.analytics_events.createIndex({
-  "tenant_id": 1,
-  "timestamp": -1,
-  "event_type": 1
-}, {
-  name: "idx_analytics_tenant_time_type"
-});
+### 7.3.2 campaign-service Collections
 
-// Sparse index cho optional fields
-db.user_profiles.createIndex({
-  "phone_hash": 1
-}, {
-  sparse: true,
-  unique: true,
-  name: "idx_user_phone_sparse"
-});
+#### **Collection: campaigns**
+```javascript
+// campaigns collection schema
+{
+  _id: ObjectId,
+  name: String, // required
+  description: String,
+  slug: String, // unique, for URL-friendly access
+  
+  // Thời gian campaign
+  startDate: Date, // required
+  endDate: Date, // required
+  timezone: String, // default: "Asia/Ho_Chi_Minh"
+  
+  // Thông tin sản phẩm
+  products: [{
+    name: String,
+    description: String,
+    imageUrl: String,
+    value: Number, // giá trị ước tính
+    category: String
+  }],
+  
+  // Configuration
+  config: {
+    maxRedemptionsPerUser: Number, // default: 1
+    requireQuiz: Boolean, // default: false
+    requireSurvey: Boolean, // default: false
+    autoExpireHours: Number, // default: 24
+    allowOfflineRedemption: Boolean // default: true
+  },
+  
+  // Tracking và analytics
+  tracking: {
+    utmSource: String,
+    utmMedium: String,
+    utmCampaign: String,
+    utmContent: String,
+    utmTerm: String,
+    gaTrackingId: String,
+    facebookPixelId: String
+  },
+  
+  // Targeting
+  targeting: {
+    ageRange: {
+      min: Number,
+      max: Number
+    },
+    genders: [String], // ["M", "F", "Other"]
+    locations: [ObjectId], // reference to locations
+    interests: [String]
+  },
+  
+  // Status và metadata
+  status: String, // enum: draft|active|paused|completed|cancelled
+  barcodePoolIds: [String], // references to PostgreSQL barcode_pools
+  adsFormatIds: [ObjectId], // references to ads_formats collection
+  
+  // Audit fields
+  createdBy: ObjectId, // user ID
+  updatedBy: ObjectId,
+  tenantId: String, // for multi-tenancy
+  
+  // Timestamps
+  createdAt: Date,
+  updatedAt: Date
+}
+
+// Indexes
+db.campaigns.createIndex({ "slug": 1 }, { unique: true })
+db.campaigns.createIndex({ "status": 1, "startDate": 1, "endDate": 1 })
+db.campaigns.createIndex({ "tenantId": 1, "status": 1 })
+db.campaigns.createIndex({ "createdBy": 1, "updatedAt": -1 })
+db.campaigns.createIndex({ "targeting.locations": 1 })
+```
+
+#### **Collection: ads_formats**
+```javascript
+// ads_formats collection schema  
+{
+  _id: ObjectId,
+  name: String, // required
+  type: String, // enum: flyer|poster|banner|digital|social|email
+  
+  // Kích thước và spec
+  dimensions: {
+    width: Number, // pixels or mm
+    height: Number,
+    unit: String, // enum: px|mm|cm|inch
+    dpi: Number // required for print formats
+  },
+  
+  // File design
+  designFiles: [{
+    filename: String,
+    url: String, // S3/storage URL
+    fileSize: Number, // bytes
+    mimeType: String,
+    uploadedAt: Date
+  }],
+  
+  // QR code configuration
+  qrConfig: {
+    position: {
+      x: Number, // từ góc trái trên
+      y: Number,
+      width: Number,
+      height: Number
+    },
+    style: String, // enum: square|round|logo
+    errorCorrection: String, // enum: L|M|Q|H
+    safeZone: Number // minimum margin around QR
+  },
+  
+  // Print specifications
+  printSpecs: {
+    quantity: Number,
+    paperType: String,
+    finishing: String, // glossy|matte|none
+    bleed: Number, // mm
+    colorSpace: String // CMYK|RGB
+  },
+  
+  // Campaign association
+  campaignId: ObjectId, // required
+  
+  // Usage tracking
+  usage: {
+    totalScans: Number, // default: 0
+    uniqueScans: Number, // default: 0
+    conversionRate: Number, // calculated field
+    lastScannedAt: Date
+  },
+  
+  // Audit fields
+  createdBy: ObjectId,
+  tenantId: String,
+  
+  // Timestamps
+  createdAt: Date,
+  updatedAt: Date
+}
+
+// Indexes
+db.ads_formats.createIndex({ "campaignId": 1, "type": 1 })
+db.ads_formats.createIndex({ "tenantId": 1, "createdAt": -1 })
+db.ads_formats.createIndex({ "usage.totalScans": -1 }) // for top performing formats
+```
+
+### 7.3.3 user-service Collections
+
+#### **Collection: users**
+```javascript
+// users collection schema
+{
+  _id: ObjectId,
+  
+  // Thông tin cơ bản (encrypted)
+  personalInfo: {
+    fullName: String, // encrypted
+    email: String, // encrypted, unique
+    phoneNumber: String, // encrypted, unique
+    dateOfBirth: Date, // encrypted
+    gender: String // enum: M|F|Other|Prefer_not_to_say
+  },
+  
+  // Hashed identifiers cho lookup
+  emailHash: String, // SHA-256 hash for lookup
+  phoneHash: String, // SHA-256 hash for lookup
+  
+  // Địa chỉ
+  address: {
+    street: String,
+    ward: String,
+    district: String,
+    city: String,
+    country: String, // default: "Vietnam"
+    postalCode: String,
+    coordinates: {
+      type: "Point",
+      coordinates: [Number, Number] // [longitude, latitude]
+    }
+  },
+  
+  // Verification status
+  verification: {
+    email: {
+      isVerified: Boolean, // default: false
+      verifiedAt: Date,
+      verificationToken: String
+    },
+    phone: {
+      isVerified: Boolean, // default: false  
+      verifiedAt: Date,
+      lastOtpSentAt: Date,
+      otpAttempts: Number // default: 0
+    }
+  },
+  
+  // User preferences và interests
+  preferences: {
+    language: String, // default: "vi"
+    timezone: String, // default: "Asia/Ho_Chi_Minh"
+    currency: String, // default: "VND"
+    
+    // Marketing preferences
+    marketing: {
+      email: Boolean, // default: false
+      sms: Boolean, // default: false
+      push: Boolean, // default: true
+      phone: Boolean // default: false
+    },
+    
+    // Product interests (từ quiz responses)
+    interests: [String],
+    dietaryRestrictions: [String],
+    brandPreferences: [String],
+    shoppingHabits: [String]
+  },
+  
+  // User behavior tracking
+  activity: {
+    totalCampaigns: Number, // default: 0
+    totalRedemptions: Number, // default: 0
+    lastLoginAt: Date,
+    lastActivityAt: Date,
+    registrationSource: String, // campaign ID or "direct"
+    deviceInfo: {
+      userAgent: String,
+      platform: String, // mobile|desktop|tablet
+      browser: String
+    }
+  },
+  
+  // Risk và fraud detection
+  riskProfile: {
+    trustScore: Number, // 0-100, default: 50
+    riskLevel: String, // enum: low|medium|high
+    fraudFlags: [String],
+    lastRiskCheck: Date
+  },
+  
+  // GDPR/PDPA compliance
+  compliance: {
+    consentVersion: String,
+    consentGivenAt: Date,
+    dataProcessingConsent: Boolean,
+    marketingConsent: Boolean,
+    rightToBeForgettenRequestedAt: Date,
+    dataExportRequestedAt: Date
+  },
+  
+  // Status
+  status: String, // enum: active|inactive|suspended|deleted
+  
+  // Timestamps
+  createdAt: Date,
+  updatedAt: Date,
+  deletedAt: Date // soft delete
+}
+
+// Indexes
+db.users.createIndex({ "emailHash": 1 }, { unique: true })
+db.users.createIndex({ "phoneHash": 1 }, { unique: true })
+db.users.createIndex({ "verification.email.isVerified": 1, "verification.phone.isVerified": 1 })
+db.users.createIndex({ "address.coordinates": "2dsphere" }) // for geo queries
+db.users.createIndex({ "activity.lastActivityAt": -1 })
+db.users.createIndex({ "riskProfile.riskLevel": 1, "riskProfile.trustScore": 1 })
+db.users.createIndex({ "status": 1, "createdAt": -1 })
+db.users.createIndex({ "compliance.rightToBeForgettenRequestedAt": 1 }, { sparse: true })
+```
+
+#### **Collection: user_consents**
+```javascript
+// user_consents collection - for audit trail
+{
+  _id: ObjectId,
+  userId: ObjectId, // required
+  
+  // Consent details
+  consentType: String, // enum: data_processing|marketing|cookies|analytics
+  consentGiven: Boolean,
+  consentVersion: String, // policy version
+  
+  // Context information
+  source: String, // enum: registration|campaign|preference_update|gdpr_request
+  campaignId: ObjectId, // if consent given during campaign
+  ipAddress: String,
+  userAgent: String,
+  
+  // Legal basis (GDPR)
+  legalBasis: String, // enum: consent|contract|legal_obligation|vital_interests|public_task|legitimate_interests
+  
+  // Expiry (for time-limited consents)
+  expiresAt: Date,
+  
+  // Timestamps
+  createdAt: Date
+}
+
+// Indexes
+db.user_consents.createIndex({ "userId": 1, "consentType": 1, "createdAt": -1 })
+db.user_consents.createIndex({ "campaignId": 1 }, { sparse: true })
+db.user_consents.createIndex({ "expiresAt": 1 }, { sparse: true })
+```
+
+### 7.3.4 analytics-service Collections
+
+#### **Collection: events**
+```javascript
+// events collection - for event sourcing và analytics
+{
+  _id: ObjectId,
+  
+  // Event identification
+  eventType: String, // enum: qr_scan|form_submit|otp_sent|otp_verified|barcode_issued|redemption|survey_complete
+  eventId: String, // unique event identifier
+  
+  // Context
+  sessionId: String,
+  userId: ObjectId, // if user is known
+  campaignId: ObjectId,
+  adsFormatId: ObjectId,
+  locationId: String, // could be PostgreSQL UUID
+  
+  // Event data
+  data: {
+    // Flexible object chứa event-specific data
+    // Ví dụ cho qr_scan:
+    // {
+    //   qrCode: String,
+    //   scanLocation: {lat: Number, lng: Number},
+    //   deviceInfo: Object,
+    //   referrer: String
+    // }
+  },
+  
+  // Tracking information
+  tracking: {
+    utmSource: String,
+    utmMedium: String,
+    utmCampaign: String,
+    utmContent: String,
+    utmTerm: String,
+    referrer: String,
+    ipAddress: String,
+    userAgent: String
+  },
+  
+  // Geo information
+  location: {
+    type: "Point",
+    coordinates: [Number, Number] // [longitude, latitude]
+  },
+  city: String,
+  country: String,
+  
+  // Device information
+  device: {
+    type: String, // mobile|desktop|tablet
+    os: String,
+    browser: String,
+    screenSize: String
+  },
+  
+  // Timestamps
+  timestamp: Date, // event occurrence time
+  receivedAt: Date, // when event was received by system
+  processedAt: Date // when event was processed
+}
+
+// Indexes
+db.events.createIndex({ "campaignId": 1, "timestamp": -1 })
+db.events.createIndex({ "userId": 1, "timestamp": -1 }, { sparse: true })
+db.events.createIndex({ "eventType": 1, "timestamp": -1 })
+db.events.createIndex({ "sessionId": 1, "timestamp": 1 })
+db.events.createIndex({ "timestamp": -1 }) // for time-based queries
+db.events.createIndex({ "location": "2dsphere" }) // for geo queries
+```
+
+#### **Collection: campaign_reports**
+```javascript
+// campaign_reports collection - pre-aggregated reports
+{
+  _id: ObjectId,
+  
+  // Report identification
+  campaignId: ObjectId, // required
+  reportType: String, // enum: daily|weekly|monthly|final
+  reportDate: Date, // date this report covers
+  
+  // Funnel metrics
+  funnel: {
+    qrScans: Number,
+    formSubmissions: Number,
+    otpVerifications: Number,
+    barcodesIssued: Number,
+    redemptions: Number,
+    
+    // Conversion rates
+    scanToSubmission: Number, // percentage
+    submissionToVerification: Number,
+    verificationToIssue: Number,
+    issueToRedemption: Number,
+    overallConversion: Number
+  },
+  
+  // Performance metrics
+  performance: {
+    costPerScan: Number,
+    costPerLead: Number,
+    costPerRedemption: Number,
+    averageTimeToRedeem: Number, // hours
+    peakHour: Number, // 0-23
+    peakDay: String // Monday-Sunday
+  },
+  
+  // Demographics breakdown
+  demographics: {
+    ageGroups: {
+      "18-24": Number,
+      "25-34": Number,
+      "35-44": Number,
+      "45-54": Number,
+      "55+": Number
+    },
+    genders: {
+      "M": Number,
+      "F": Number,
+      "Other": Number
+    },
+    locations: [{
+      locationId: String,
+      scans: Number,
+      redemptions: Number,
+      conversionRate: Number
+    }]
+  },
+  
+  // Top performing elements
+  topPerforming: {
+    adsFormats: [{
+      adsFormatId: ObjectId,
+      scans: Number,
+      conversions: Number,
+      conversionRate: Number
+    }],
+    locations: [{
+      locationId: String,
+      performance: Number
+    }],
+    timeSlots: [{
+      hour: Number,
+      dayOfWeek: Number,
+      activity: Number
+    }]
+  },
+  
+  // Fraud và quality metrics
+  quality: {
+    fraudRate: Number, // percentage
+    duplicateAttempts: Number,
+    suspiciousActivities: Number,
+    dataQualityScore: Number // 0-100
+  },
+  
+  // Generated timestamp
+  generatedAt: Date,
+  
+  // Metadata
+  dataRange: {
+    startDate: Date,
+    endDate: Date
+  }
+}
+
+// Indexes
+db.campaign_reports.createIndex({ "campaignId": 1, "reportType": 1, "reportDate": -1 })
+db.campaign_reports.createIndex({ "reportDate": -1 })
+```
+
+---
+
+## 7.4 Redis Data Structures
+
+### 7.4.1 auth-service Redis Usage
+
+#### **Session Storage**
+```javascript
+// Redis key patterns for sessions
+"session:{sessionId}" = {
+  userId: "user_uuid",
+  role: "customer_account",
+  permissions: ["campaign:read", "campaign:write"],
+  tenantId: "tenant_123",
+  createdAt: timestamp,
+  lastActivity: timestamp,
+  deviceInfo: {...}
+}
+// TTL: 24 hours (configurable per role)
+
+// Active sessions per user
+"user_sessions:{userId}" = Set[sessionId1, sessionId2, ...]
+// TTL: 7 days
+
+// JWT blacklist (for logout)
+"jwt_blacklist:{jti}" = true
+// TTL: token expiry time
+```
+
+#### **Rate Limiting**
+```javascript
+// Rate limiting keys
+// Rate limiting keys
+"rate_limit:login:{userId}" = counter
+// TTL: 15 minutes, max 5 attempts
+
+"rate_limit:otp:{phoneNumber}" = counter
+// TTL: 1 hour, max 3 requests
+
+"rate_limit:api:{userId}:{endpoint}" = counter
+// TTL: 1 minute, max varies by endpoint
+```
+
+#### **OTP Storage**
+```javascript
+// OTP verification codes
+"otp:{phoneNumber|email}" = {
+  code: "123456",
+  attempts: 0,
+  maxAttempts: 3,
+  createdAt: timestamp
+}
+// TTL: 5 minutes
+
+// OTP verification tracking
+"otp_verified:{userId}" = timestamp
+// TTL: 30 minutes
+```
+
+### 7.4.2 notification-service Redis Usage
+
+#### **Message Queues**
+```javascript
+// SMS queue
+Queue: "sms_queue"
+Job: {
+  id: "job_uuid",
+  data: {
+    phoneNumber: "+84901234567",
+    message: "Your OTP is 123456",
+    templateId: "otp_template",
+    priority: "high"
+  },
+  attempts: 0,
+  maxAttempts: 3,
+  delay: 0
+}
+
+// Email queue
+Queue: "email_queue"
+Job: {
+  id: "job_uuid", 
+  data: {
+    to: "user@example.com",
+    subject: "Your Sample is Ready!",
+    templateId: "barcode_issued",
+    templateData: {
+      userName: "John Doe",
+      productName: "Coca Cola",
+      barcodeUrl: "https://..."
+    }
+  }
+}
+
+// Push notification queue
+Queue: "push_queue"
+Job: {
+  id: "job_uuid",
+  data: {
+    userId: "user_uuid",
+    title: "Sample Expiring Soon",
+    body: "Your Coca Cola sample expires in 24 hours",
+    data: {
+      campaignId: "campaign_uuid",
+      barcodeId: "barcode_uuid"
+    }
+  }
+}
+```
+
+#### **Notification Status Tracking**
+```javascript
+// Delivery status
+"notification_status:{notificationId}" = {
+  status: "delivered", // sent|delivered|failed|bounced
+  sentAt: timestamp,
+  deliveredAt: timestamp,
+  error: "error message if failed"
+}
+// TTL: 30 days
+
+// User notification preferences cache
+"user_prefs:{userId}" = {
+  email: true,
+  sms: true,
+  push: true,
+  quietHours: {start: 22, end: 7}
+}
+// TTL: 1 hour, invalidate on preference update
+```
+
+### 7.4.3 Shared Cache Patterns
+
+#### **Application-level Caching**
+```javascript
+// Campaign data cache
+"campaign:{campaignId}" = {
+  // Full campaign object from MongoDB
+  name: "Summer Campaign 2025",
+  status: "active",
+  config: {...},
+  // ... other fields
+}
+// TTL: 1 hour
+
+// User profile cache
+"user_profile:{userId}" = {
+  // Non-sensitive user data
+  fullName: "encrypted_value",
+  preferences: {...},
+  verification: {...}
+}
+// TTL: 30 minutes
+
+// Location data cache
+"location:{locationId}" = {
+  name: "Circle K Nguyen Hue",
+  address: "123 Nguyen Hue St, District 1",
+  coordinates: {lat: 10.776, lng: 106.700},
+  isActive: true
+}
+// TTL: 24 hours
+```
+
+---
+
+## 7.5 Data Relationships và Referential Integrity
+
+### 7.5.1 Cross-Database References
+
+```mermaid
+graph TB
+    subgraph "PostgreSQL"
+        PG1[barcodes table]
+        PG2[redemptions table]
+        PG3[barcode_pools table]
+    end
+    
+    subgraph "MongoDB"
+        MG1[campaigns collection]
+        MG2[users collection]
+        MG3[events collection]
+    end
+    
+    subgraph "Redis"
+        RD1[session data]
+        RD2[user preferences]
+        RD3[notification queue]
+    end
+    
+    MG1 -->|campaign_id| PG3
+    MG2 -->|user_id| PG2
+    PG1 -->|barcode_id| MG3
+    MG2 -->|user_id| RD1
+    MG2 -->|preferences| RD2
+    PG2 -->|redemption event| RD3
+    
+    style PG1 fill:#e3f2fd
+    style MG1 fill:#e8f5e8
+    style RD1 fill:#fff3e0
+```
+
+### 7.5.2 Data Consistency Strategies
+
+#### **Eventual Consistency via Events**
+```javascript
+// Event khi user complete verification
+{
+  eventType: "user_verified",
+  userId: "user_uuid",
+  timestamp: "2025-10-17T10:30:00Z",
+  data: {
+    email: "user@example.com",
+    phoneNumber: "+84901234567",
+    campaignId: "campaign_uuid"
+  }
+}
+
+// Services subscribe to this event:
+// 1. barcode-service: Reserve barcode for user
+// 2. analytics-service: Record conversion event  
+// 3. integration-service: Sync to CRM
+// 4. notification-service: Send welcome email
+```
+
+#### **Saga Pattern cho Complex Transactions**
+```javascript
+// Redemption Saga Example
+const redemptionSaga = {
+  steps: [
+    {
+      service: "barcode-service",
+      action: "validateBarcode",
+      compensate: "unreserveBarcode"
+    },
+    {
+      service: "user-service", 
+      action: "validateUser",
+      compensate: "unlockUser"
+    },
+    {
+      service: "redemption-service",
+      action: "processRedemption", 
+      compensate: "cancelRedemption"
+    },
+    {
+      service: "analytics-service",
+      action: "recordEvent",
+      compensate: "deleteEvent"
+    },
+    {
+      service: "integration-service",
+      action: "notifyCRM",
+      compensate: "revertCRMUpdate"
+    }
+  ]
+}
+```
+
+---
+
+## 7.6 Performance Optimization
+
+### 7.6.1 Indexing Strategy
+
+#### **PostgreSQL Indexes**
+```sql
+-- Barcode service indexes
+CREATE INDEX CONCURRENTLY idx_barcodes_pool_available 
+ON barcodes(pool_id) WHERE status = 'available';
+
+CREATE INDEX CONCURRENTLY idx_barcodes_expiry_active
+ON barcodes(expiry_date) WHERE status IN ('available', 'issued');
+
+CREATE INDEX CONCURRENTLY idx_redemptions_analytics
+ON redemptions(redeemed_at, location_id, user_id);
+
+-- Composite index cho common queries
+CREATE INDEX CONCURRENTLY idx_barcodes_compound
+ON barcodes(pool_id, status, expiry_date, created_at);
+```
+
+#### **MongoDB Indexes**
+```javascript
+// Campaign service indexes
+db.campaigns.createIndex(
+  { "tenantId": 1, "status": 1, "startDate": -1 },
+  { name: "campaigns_tenant_status_date" }
+);
+
+// Compound index cho analytics queries
+db.events.createIndex(
+  { "campaignId": 1, "eventType": 1, "timestamp": -1 },
+  { name: "events_campaign_type_time" }
+);
+
+// Text search index
+db.campaigns.createIndex(
+  { "name": "text", "description": "text" },
+  { name: "campaigns_text_search" }
+);
 
 // TTL index cho temporary data
-db.otp_codes.createIndex({
-  "expires_at": 1
-}, {
-  expireAfterSeconds: 0,
-  name: "idx_otp_ttl"
-});
+db.events.createIndex(
+  { "timestamp": 1 },
+  { 
+    name: "events_ttl",
+    expireAfterSeconds: 31536000 // 1 year
+  }
+);
 ```
 
-### 7.9.2 Query Optimization
+### 7.6.2 Query Optimization
 
-**Common Query Patterns:**
+#### **Efficient Barcode Reservation Query**
 ```sql
--- Optimized campaign analytics query
-EXPLAIN (ANALYZE, BUFFERS) 
-SELECT 
-    c.campaign_id,
-    c.name,
-    COUNT(DISTINCT b.barcode_id) as total_codes,
-    COUNT(DISTINCT CASE WHEN b.status = 'redeemed' THEN b.barcode_id END) as redeemed_codes,
-    ROUND(
-        COUNT(DISTINCT CASE WHEN b.status = 'redeemed' THEN b.barcode_id END)::numeric / 
-        NULLIF(COUNT(DISTINCT b.barcode_id), 0) * 100, 
-        2
-    ) as redemption_rate
-FROM campaigns_view c  -- View kết hợp MongoDB + PostgreSQL
-LEFT JOIN barcode_batches bb ON bb.campaign_id = c.campaign_id
-LEFT JOIN barcodes b ON b.batch_id = bb.batch_id
-WHERE c.tenant_id = $1 
-  AND c.status = 'active'
-  AND c.start_date <= CURRENT_DATE
-  AND c.end_date >= CURRENT_DATE
-GROUP BY c.campaign_id, c.name
-ORDER BY redemption_rate DESC
-LIMIT 10;
-
--- Index hints cho performance
-/*
-Required indexes:
-- idx_campaigns_tenant_status_dates ON campaigns_view(tenant_id, status, start_date, end_date)
-- idx_barcode_batches_campaign ON barcode_batches(campaign_id)
-- idx_barcodes_batch_status ON barcodes(batch_id, status)
-*/
+-- Optimized query với CTE và window functions
+WITH available_barcodes AS (
+  SELECT 
+    id,
+    code,
+    product_name,
+    expiry_date,
+    ROW_NUMBER() OVER (
+      PARTITION BY pool_id 
+      ORDER BY 
+        CASE WHEN product_name ILIKE $2 THEN 0 ELSE 1 END,
+        expiry_date ASC,
+        created_at ASC
+    ) as rn
+  FROM barcodes 
+  WHERE pool_id = $1 
+    AND status = 'available'
+    AND expiry_date > CURRENT_DATE
+)
+UPDATE barcodes 
+SET 
+  status = 'reserved',
+  assigned_user_id = $3,
+  reserved_at = NOW()
+WHERE id = (
+  SELECT id FROM available_barcodes WHERE rn = 1
+)
+RETURNING id, code;
 ```
 
-### 7.9.3 Connection Pooling
+#### **MongoDB Aggregation Pipeline cho Analytics**
+```javascript
+// Funnel analysis aggregation
+db.events.aggregate([
+  {
+    $match: {
+      campaignId: ObjectId("..."),
+      timestamp: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }
+  },
+  {
+    $group: {
+      _id: "$eventType",
+      count: { $sum: 1 },
+      uniqueUsers: { $addToSet: "$userId" }
+    }
+  },
+  {
+    $project: {
+      eventType: "$_id",
+      count: 1,
+      uniqueUserCount: { $size: "$uniqueUsers" }
+    }
+  },
+  {
+    $sort: {
+      eventType: 1
+    }
+  }
+]);
+```
 
-**PostgreSQL Connection Pool:**
-```python
-# connection_pool.py
-import psycopg2.pool
-from contextlib import contextmanager
+### 7.6.3 Caching Strategy
 
-class DatabasePool:
-    def __init__(self, config):
-        self.pool = psycopg2.pool.ThreadedConnectionPool(
-            minconn=5,
-            maxconn=50,
-            host=config['host'],
-            database=config['database'],
-            user=config['user'],
-            password=config['password'],
-            # Connection pool settings
-            keepalives_idle=30,
-            keepalives_interval=10,
-            keepalives_count=5
-        )
+#### **Multi-level Caching**
+```mermaid
+graph TB
+    subgraph "Application Cache"
+        AC1[In-Memory Cache]
+        AC2[Redis Cache]
+        AC3[CDN Cache]
+    end
     
-    @contextmanager
-    def get_connection(self):
-        conn = self.pool.getconn()
-        try:
-            yield conn
-        finally:
-            self.pool.putconn(conn)
+    subgraph "Database Cache"
+        DC1[Query Cache]
+        DC2[Connection Pool]
+        DC3[Buffer Pool]
+    end
     
-    def execute_query(self, query, params=None):
-        with self.get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(query, params)
-                return cursor.fetchall()
+    subgraph "Cache Policies"
+        CP1[TTL: 5 minutes]
+        CP2[TTL: 1 hour]
+        CP3[TTL: 24 hours]
+    end
+    
+    AC1 --> CP1
+    AC2 --> CP2
+    AC3 --> CP3
+    
+    style AC2 fill:#fff3e0
+    style CP2 fill:#e8f5e8
+```
+
+#### **Cache Invalidation Strategy**
+```javascript
+// Event-driven cache invalidation
+const cacheInvalidationRules = {
+  'campaign_updated': [
+    'campaign:{campaignId}',
+    'campaign_list:{tenantId}',
+    'analytics:{campaignId}:*'
+  ],
+  'user_preferences_updated': [
+    'user_profile:{userId}',
+    'user_prefs:{userId}'
+  ],
+  'barcode_redeemed': [
+    'campaign_stats:{campaignId}',
+    'location_stats:{locationId}',
+    'user_history:{userId}'
+  ]
+};
 ```
 
 ---
 
-## 7.10 Monitoring và Maintenance
+## 7.7 Data Migration & Versioning
 
-### 7.10.1 Database Health Monitoring
+### 7.7.1 Schema Evolution Strategy
 
-**PostgreSQL Monitoring:**
-```sql
--- Query để monitor database health
-SELECT 
-    schemaname,
-    tablename,
-    n_tup_ins as inserts,
-    n_tup_upd as updates,
-    n_tup_del as deletes,
-    n_live_tup as live_tuples,
-    n_dead_tup as dead_tuples,
-    last_vacuum,
-    last_autovacuum,
-    last_analyze,
-    last_autoanalyze
-FROM pg_stat_user_tables
-WHERE schemaname = 'public'
-ORDER BY n_live_tup DESC;
+#### **MongoDB Schema Versioning**
+```javascript
+// Schema versioning trong documents
+{
+  _id: ObjectId,
+  schemaVersion: "1.2.0", // semantic versioning
+  
+  // Data fields based on schema version
+  name: String,
+  
+  // Migration tracking
+  migrations: [{
+    fromVersion: "1.1.0",
+    toVersion: "1.2.0", 
+    migratedAt: Date,
+    migrationId: "add_tracking_fields"
+  }]
+}
 
--- Index usage statistics
-SELECT 
-    schemaname,
-    tablename,
-    indexname,
-    idx_scan as index_scans,
-    idx_tup_read as tuples_read,
-    idx_tup_fetch as tuples_fetched
-FROM pg_stat_user_indexes
-WHERE idx_scan < 100  -- Potentially unused indexes
-ORDER BY idx_scan;
-
--- Connection monitoring
-SELECT 
-    state,
-    COUNT(*) as connection_count,
-    AVG(EXTRACT(EPOCH FROM NOW() - query_start)) as avg_duration_seconds
-FROM pg_stat_activity
-WHERE state IS NOT NULL
-GROUP BY state;
+// Migration scripts
+const migrations = {
+  "1.1.0_to_1.2.0": {
+    up: async (db) => {
+      await db.campaigns.updateMany(
+        { schemaVersion: "1.1.0" },
+        {
+          $set: {
+            schemaVersion: "1.2.0",
+            "tracking.utmSource": "",
+            "tracking.utmMedium": ""
+          },
+          $push: {
+            migrations: {
+              fromVersion: "1.1.0",
+              toVersion: "1.2.0",
+              migratedAt: new Date(),
+              migrationId: "add_tracking_fields"
+            }
+          }
+        }
+      );
+    },
+    down: async (db) => {
+      // Rollback logic
+    }
+  }
+};
 ```
 
-**MongoDB Monitoring:**
+#### **PostgreSQL Schema Migrations**
+```sql
+-- Migration files với version control
+-- V1.0.0__initial_schema.sql
+-- V1.1.0__add_barcode_metadata.sql
+-- V1.2.0__add_redemption_offline_sync.sql
+
+-- Example migration: V1.2.0__add_redemption_offline_sync.sql
+ALTER TABLE redemptions 
+ADD COLUMN is_offline_sync BOOLEAN DEFAULT FALSE,
+ADD COLUMN synced_at TIMESTAMP WITH TIME ZONE;
+
+CREATE INDEX idx_redemptions_offline_sync 
+ON redemptions(is_offline_sync, synced_at) 
+WHERE is_offline_sync = TRUE;
+
+-- Update schema version
+INSERT INTO schema_migrations (version, applied_at) 
+VALUES ('1.2.0', NOW());
+```
+
+### 7.7.2 Data Archival Strategy
+
+#### **Time-based Data Archival**
 ```javascript
-// MongoDB health checks
-db.runCommand({serverStatus: 1});
+// Archival policies
+const archivalPolicies = {
+  events: {
+    hotData: "6 months", // trong primary database
+    warmData: "2 years", // trong archive database  
+    coldData: "7 years", // trong cold storage
+    deleteAfter: "10 years" // compliance requirement
+  },
+  campaigns: {
+    activeCampaigns: "indefinite",
+    completedCampaigns: "5 years",
+    cancelledCampaigns: "2 years"
+  },
+  userProfiles: {
+    activeUsers: "indefinite",
+    inactiveUsers: "3 years",
+    deletedUsers: "30 days" // grace period
+  }
+};
 
-// Collection statistics
+// Archival job example
+const archiveOldEvents = async () => {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  
+  // Move to archive collection
+  const oldEvents = await db.events.find({
+    timestamp: { $lt: sixMonthsAgo }
+  });
+  
+  if (oldEvents.length > 0) {
+    await db.events_archive.insertMany(oldEvents);
+    await db.events.deleteMany({
+      timestamp: { $lt: sixMonthsAgo }
+    });
+  }
+};
+```
+
+---
+
+## 7.8 Data Security & Encryption
+
+### 7.8.1 Field-level Encryption
+
+#### **PII Encryption Implementation**
+```javascript
+// Encryption service cho PII fields
+const crypto = require('crypto');
+
+class PIIEncryption {
+  constructor(tenantKey) {
+    this.algorithm = 'aes-256-gcm';
+    this.key = Buffer.from(tenantKey, 'hex');
+  }
+  
+  encrypt(text) {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher(this.algorithm, this.key, iv);
+    
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    const authTag = cipher.getAuthTag();
+    
+    return {
+      encrypted: encrypted,
+      iv: iv.toString('hex'),
+      authTag: authTag.toString('hex')
+    };
+  }
+  
+  decrypt(encryptedData) {
+    const decipher = crypto.createDecipher(
+      this.algorithm, 
+      this.key, 
+      Buffer.from(encryptedData.iv, 'hex')
+    );
+    
+    decipher.setAuthTag(Buffer.from(encryptedData.authTag, 'hex'));
+    
+    let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  }
+}
+
+// Usage trong user model
+const userSchema = {
+  personalInfo: {
+    fullName: {
+      encrypted: String, // encrypted value
+      hash: String // SHA-256 hash for searching
+    },
+    email: {
+      encrypted: String,
+      hash: String
+    },
+    phoneNumber: {
+      encrypted: String, 
+      hash: String
+    }
+  }
+};
+```
+
+### 7.8.2 Database Security Configuration
+
+#### **PostgreSQL Security Settings**
+```sql
+-- Enable SSL/TLS
+ALTER SYSTEM SET ssl = on;
+ALTER SYSTEM SET ssl_cert_file = 'server.crt';
+ALTER SYSTEM SET ssl_key_file = 'server.key';
+
+-- Enable audit logging
+ALTER SYSTEM SET log_statement = 'all';
+ALTER SYSTEM SET log_duration = on;
+ALTER SYSTEM SET log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h ';
+
+-- Configure authentication
+-- pg_hba.conf
+hostssl    all    all    0.0.0.0/0    md5
+local      all    postgres                    peer
+
+-- Row Level Security example
+CREATE POLICY tenant_isolation ON campaigns
+    FOR ALL TO application_role
+    USING (tenant_id = current_setting('app.tenant_id'));
+
+ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
+```
+
+#### **MongoDB Security Configuration**
+```javascript
+// MongoDB authentication và authorization
+// mongod.conf
+security:
+  authorization: enabled
+  clusterAuthMode: keyFile
+  keyFile: /etc/mongodb-keyfile
+
+net:
+  ssl:
+    mode: requireSSL
+    PEMKeyFile: /etc/ssl/mongodb.pem
+    CAFile: /etc/ssl/ca.pem
+
+// Application user roles
+db.createUser({
+  user: "campaign_service",
+  pwd: "secure_password",
+  roles: [
+    {
+      role: "readWrite",
+      db: "psp_campaigns"
+    }
+  ]
+});
+
+db.createUser({
+  user: "analytics_service", 
+  pwd: "secure_password",
+  roles: [
+    {
+      role: "read",
+      db: "psp_campaigns"
+    },
+    {
+      role: "readWrite", 
+      db: "psp_analytics"
+    }
+  ]
+});
+```
+
+---
+
+## 7.9 Monitoring & Maintenance
+
+### 7.9.1 Database Health Monitoring
+
+#### **PostgreSQL Monitoring Queries**
+```sql
+-- Connection monitoring
+SELECT 
+  datname,
+  state,
+  COUNT(*) as connection_count
+FROM pg_stat_activity 
+WHERE state IS NOT NULL
+GROUP BY datname, state;
+
+-- Slow query monitoring  
+SELECT 
+  query,
+  mean_time,
+  calls,
+  total_time
+FROM pg_stat_statements 
+ORDER BY mean_time DESC 
+LIMIT 10;
+
+-- Table bloat monitoring
+SELECT 
+  schemaname,
+  tablename,
+  n_tup_ins + n_tup_upd + n_tup_del as total_operations,
+  n_dead_tup,
+  last_vacuum,
+  last_autovacuum
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 1000;
+```
+
+#### **MongoDB Monitoring**
+```javascript
+// Database stats monitoring
+db.runCommand({dbStats: 1});
+
+// Collection stats
 db.campaigns.stats();
-db.analytics_events.stats();
 
-// Index usage
+// Index usage monitoring
 db.campaigns.aggregate([
-  {$indexStats: {}},
-  {$sort: {"accesses.ops": -1}}
+  {$indexStats: {}}
 ]);
 
-// Slow query profiling
-db.setProfilingLevel(1, {slowms: 100});
+// Slow operations profiling
+db.setProfilingLevel(1, {slowms: 1000});
 db.system.profile.find().sort({ts: -1}).limit(5);
 ```
 
-### 7.10.2 Automated Maintenance
+### 7.9.2 Automated Maintenance Tasks
 
-**Database Maintenance Script:**
+#### **Database Maintenance Schedule**
+```yaml
+# maintenance-jobs.yaml
+schedules:
+  postgresql:
+    vacuum_analyze:
+      schedule: "0 2 * * *" # Daily at 2 AM
+      command: "VACUUM ANALYZE;"
+      
+    reindex:
+      schedule: "0 3 * * 0" # Weekly on Sunday at 3 AM
+      command: "REINDEX DATABASE psp_main;"
+      
+    backup:
+      schedule: "0 1 * * *" # Daily at 1 AM
+      command: "pg_dump psp_main | gzip > /backups/psp_$(date +%Y%m%d).sql.gz"
+      
+  mongodb:
+    compact:
+      schedule: "0 4 * * 0" # Weekly on Sunday at 4 AM
+      command: "db.runCommand({compact: 'campaigns'})"
+      
+    index_rebuild:
+      schedule: "0 5 * * 0" # Weekly on Sunday at 5 AM
+      command: "db.campaigns.reIndex()"
+      
+  redis:
+    memory_cleanup:
+      schedule: "*/30 * * * *" # Every 30 minutes
+      command: "redis-cli MEMORY PURGE"
+```
+
+---
+
+## 7.10 Backup & Recovery Strategy
+
+### 7.10.1 Backup Strategy
+
+```mermaid
+graph TB
+    subgraph "Backup Types"
+        BT1[Full Backup - Daily]
+        BT2[Incremental - Hourly] 
+        BT3[Transaction Log - Continuous]
+        BT4[Snapshot - Weekly]
+    end
+    
+    subgraph "Storage Locations"
+        SL1[Local Storage - 7 days]
+        SL2[Regional Storage - 30 days]
+        SL3[Cross-Region - 1 year]
+        SL4[Cold Storage - 7 years]
+    end
+    
+    subgraph "Recovery Objectives"
+        RO1[RTO: 4 hours]
+        RO2[RPO: 15 minutes]
+        RO3[Data Retention: 7 years]
+    end
+    
+    BT1 --> SL1 --> RO1
+    BT2 --> SL2 --> RO2  
+    BT3 --> SL3 --> RO3
+    BT4 --> SL4
+    
+    style BT1 fill:#e3f2fd
+    style SL2 fill:#e8f5e8
+    style RO2 fill:#fff3e0
+```
+
+### 7.10.2 Recovery Procedures
+
+#### **Point-in-Time Recovery Setup**
 ```bash
 #!/bin/bash
-# db_maintenance.sh
-
-echo "Starting database maintenance at $(date)"
-
-# PostgreSQL maintenance
-psql -d product_sampling -c "
-    -- Update table statistics
-    ANALYZE;
-    
-    -- Vacuum tables với high update frequency
-    VACUUM ANALYZE barcodes;
-    VACUUM ANALYZE users;
-    VACUUM ANALYZE transactions;
-    
-    -- Reindex if needed
-    REINDEX INDEX CONCURRENTLY idx_barcodes_batch_status;
-"
-
-# MongoDB maintenance
-mongosh --eval "
-    use product_sampling;
-    
-    // Compact collections
-    db.runCommand({compact: 'analytics_events'});
-    
-    // Update index statistics
-    db.campaigns.reIndex();
-    
-    // Clean up expired TTL documents
-    db.otp_codes.deleteMany({expires_at: {\$lt: new Date()}});
-"
-
-# Redis maintenance
-redis-cli BGREWRITEAOF
-redis-cli MEMORY PURGE
-
-echo "Database maintenance completed at $(date)"
-```
-
----
-
-**Nguồn tham khảo chính:**
-- System Feature Tree (System_Feature_Tree_Grok.md v4.0) - Yêu cầu kỹ thuật database, multi-tenant, PII encryption
-- Access Control Tree (Access_Control_Tree_Grok.md v2.2) - RBAC schema, audit logs, GDPR compliance  
-- Business Requirement Document (01-BRD.md v3.0) - Data retention, backup requirements, performance targets
-- Problem Definition (Problem.md v1.0) - Scalability requirements, integration constraints
-
-**Tình trạng**: Part07 hoàn thành ✅  
-**Tiếp theo**: Part08 - Thiết kế API và tích hợp  
-**Người đánh giá**: Database Architect, Security Engineer, DevOps Engineer
-
-# 📋 SRS Part08 - Thiết kế API và tích hợp (API Design & Integration)
-**Hệ thống Product Sampling Platform**
-
-**Phiên bản**: 1.0  
-**Ngày**: 2025-10-17  
-**Tác giả**: Đội phân tích hệ thống  
-
----
-
-## 8.1 Tổng quan thiết kế API
-
-### 8.1.1 Nguyên tắc thiết kế API (từ System_Feature_Tree_Grok.md v4.0)
-Dựa trên **yêu cầu kỹ thuật tổng quan**, hệ thống API được thiết kế theo các nguyên tắc:
-
-- **RESTful design**: Tuân thủ chuẩn REST với HTTP methods chuẩn
-- **OpenAPI 3.0**: Tài liệu API đầy đủ với schema validation
-- **Microservices**: API phân tán theo từng service độc lập
-- **Rate limiting**: 1000 requests/giờ per API key (từ System Feature Tree)
-- **Multi-tenant**: Phân tách dữ liệu theo tenant_id
-- **Security-first**: OAuth 2.0, JWT, HTTPS only
-
-### 8.1.2 Kiến trúc API Gateway (từ 01-BRD.md v3.0)
-**Mục tiêu hiệu năng:**
-- Xử lý 100,000 requests/phút tại gateway
-- Response time <3 giây cho dashboard APIs
-- 99.9% uptime SLA cho critical endpoints
-
-**Thành phần API Gateway:**
-- **Authentication**: OAuth 2.0/JWT validation
-- **Authorization**: RBAC permission checking
-- **Rate limiting**: Per-user và per-tenant quotas
-- **Logging**: Request/response audit trails
-- **Monitoring**: Performance metrics và error tracking
-
-### 8.1.3 API versioning strategy
-```
-Cấu trúc URL: https://api.productsampling.com/api/v1/{resource}
-- v1: Current stable version (MVP)
-- v2: Future version với breaking changes
-- Backward compatibility: 12 tháng support cho old versions
-```
-
----
-
-## 8.2 Core API Endpoints
-
-### 8.2.1 Authentication APIs
-
-**POST /api/v1/auth/login**
-```json
-{
-  "summary": "Đăng nhập người dùng",
-  "description": "Xác thực credentials và trả về JWT tokens",
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "username": {"type": "string", "example": "admin@brand.com"},
-            "password": {"type": "string", "format": "password"},
-            "tenant_id": {"type": "string", "example": "brand_001"}
-          },
-          "required": ["username", "password"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "200": {
-      "description": "Đăng nhập thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "access_token": {"type": "string"},
-              "refresh_token": {"type": "string"},
-              "expires_in": {"type": "integer", "example": 3600},
-              "user": {
-                "type": "object",
-                "properties": {
-                  "user_id": {"type": "string"},
-                  "role": {"type": "string", "enum": ["admin", "group_admin", "customer_account", "serving_account", "auditor", "user_role"]},
-                  "permissions": {"type": "array", "items": {"type": "string"}},
-                  "tenant_id": {"type": "string"}
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "401": {
-      "description": "Thông tin đăng nhập không hợp lệ",
-      "content": {
-        "application/json": {
-          "schema": {"$ref": "#/components/schemas/ErrorResponse"}
-        }
-      }
-    },
-    "429": {
-      "description": "Quá nhiều attempts - account bị khóa tạm thời"
-    }
-  }
-}
-```
-
-**POST /api/v1/auth/refresh**
-```json
-{
-  "summary": "Làm mới access token",
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "refresh_token": {"type": "string"}
-          },
-          "required": ["refresh_token"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "200": {
-      "description": "Token mới được tạo thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "access_token": {"type": "string"},
-              "expires_in": {"type": "integer"}
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### 8.2.2 Campaign Management APIs (từ System_Feature_Tree_Grok.md 1.1)
-
-**POST /api/v1/campaigns**
-```json
-{
-  "summary": "Tạo chiến dịch mới",
-  "description": "Admin/Group Admin/Customer Account tạo campaign với barcode assignment",
-  "security": [{"BearerAuth": []}],
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "name": {"type": "string", "maxLength": 255, "example": "Tên chiến dịch sampling"},
-            "description": {"type": "string", "maxLength": 1000},
-            "start_date": {"type": "string", "format": "date-time"},
-            "end_date": {"type": "string", "format": "date-time"},
-            "location_ids": {
-              "type": "array",
-              "items": {"type": "string"},
-              "example": ["HCM_CIRCLE_K_001", "HN_GS25_002"]
-            },
-            "settings": {
-              "type": "object",
-              "properties": {
-                "max_participants": {"type": "integer", "minimum": 1},
-                "budget_limit": {"type": "number", "minimum": 0},
-                "cost_per_lead_target": {"type": "number", "maximum": 0.4}
-              }
-            },
-            "targeting": {
-              "type": "object",
-              "properties": {
-                "demographics": {
-                  "type": "object",
-                  "properties": {
-                    "age_min": {"type": "integer", "minimum": 13},
-                    "age_max": {"type": "integer", "maximum": 100},
-                    "gender": {"type": "string", "enum": ["male", "female", "all"]}
-                  }
-                }
-              }
-            },
-            "utm_tracking": {
-              "type": "object",
-              "properties": {
-                "utm_source": {"type": "string"},
-                "utm_medium": {"type": "string"},
-                "utm_campaign": {"type": "string"},
-                "utm_term": {"type": "string"},
-                "utm_content": {"type": "string"}
-              }
-            }
-          },
-          "required": ["name", "start_date", "end_date", "location_ids"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "201": {
-      "description": "Chiến dịch được tạo thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "campaign_id": {"type": "string", "example": "CAMP_2025_001"},
-              "name": {"type": "string"},
-              "status": {"type": "string", "enum": ["draft", "active", "paused", "completed"]},
-              "qr_codes": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "location_id": {"type": "string"},
-                    "qr_url": {"type": "string", "format": "uri"},
-                    "short_link": {"type": "string", "format": "uri"}
-                  }
-                }
-              },
-              "created_at": {"type": "string", "format": "date-time"}
-            }
-          }
-        }
-      }
-    },
-    "400": {"description": "Dữ liệu đầu vào không hợp lệ"},
-    "403": {"description": "Không có quyền tạo campaign trong scope này"},
-    "422": {"description": "Business logic validation failed"}
-  }
-}
-```
-
-**GET /api/v1/campaigns**
-```json
-{
-  "summary": "Danh sách campaigns",
-  "description": "Lấy campaigns theo phân quyền user",
-  "security": [{"BearerAuth": []}],
-  "parameters": [
-    {
-      "name": "status",
-      "in": "query",
-      "schema": {
-        "type": "string",
-        "enum": ["draft", "active", "paused", "completed"]
-      }
-    },
-    {
-      "name": "start_date",
-      "in": "query",
-      "schema": {"type": "string", "format": "date"}
-    },
-    {
-      "name": "end_date", 
-      "in": "query",
-      "schema": {"type": "string", "format": "date"}
-    },
-    {
-      "name": "page",
-      "in": "query",
-      "schema": {"type": "integer", "minimum": 1, "default": 1}
-    },
-    {
-      "name": "limit",
-      "in": "query", 
-      "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 20}
-    }
-  ],
-  "responses": {
-    "200": {
-      "description": "Danh sách campaigns",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "campaigns": {
-                "type": "array",
-                "items": {"$ref": "#/components/schemas/Campaign"}
-              },
-              "pagination": {
-                "type": "object",
-                "properties": {
-                  "page": {"type": "integer"},
-                  "limit": {"type": "integer"},
-                  "total": {"type": "integer"},
-                  "total_pages": {"type": "integer"}
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### 8.2.3 Barcode Management APIs (từ System_Feature_Tree_Grok.md 1.2)
-
-**POST /api/v1/barcodes/import**
-```json
-{
-  "summary": "Import barcode từ CSV",
-  "description": "Admin/Group Admin/Customer Account import barcode pool",
-  "security": [{"BearerAuth": []}],
-  "requestBody": {
-    "required": true,
-    "content": {
-      "multipart/form-data": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "file": {
-              "type": "string",
-              "format": "binary",
-              "description": "CSV file với columns: barcode, product_name, expiry_date, value, batch_code"
-            },
-            "campaign_id": {"type": "string"},
-            "batch_name": {"type": "string"},
-            "validate_only": {"type": "boolean", "default": false}
-          },
-          "required": ["file", "batch_name"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "202": {
-      "description": "File đang được xử lý",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "job_id": {"type": "string", "example": "IMPORT_JOB_001"},
-              "status": {"type": "string", "enum": ["processing", "completed", "failed"]},
-              "preview": {
-                "type": "object",
-                "properties": {
-                  "total_rows": {"type": "integer"},
-                  "valid_rows": {"type": "integer"},
-                  "invalid_rows": {"type": "integer"},
-                  "sample_data": {"type": "array"}
-                }
-              },
-              "estimated_completion": {"type": "string", "format": "date-time"}
-            }
-          }
-        }
-      }
-    },
-    "400": {"description": "File format không hợp lệ hoặc validation errors"}
-  }
-}
-```
-
-**GET /api/v1/barcodes/import/{job_id}/status**
-```json
-{
-  "summary": "Kiểm tra trạng thái import job",
-  "parameters": [
-    {
-      "name": "job_id",
-      "in": "path",
-      "required": true,
-      "schema": {"type": "string"}
-    }
-  ],
-  "responses": {
-    "200": {
-      "description": "Trạng thái import job",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "job_id": {"type": "string"},
-              "status": {"type": "string", "enum": ["processing", "completed", "failed"]},
-              "progress": {"type": "number", "minimum": 0, "maximum": 100},
-              "results": {
-                "type": "object",
-                "properties": {
-                  "total_processed": {"type": "integer"},
-                  "successful_imports": {"type": "integer"},
-                  "failed_imports": {"type": "integer"},
-                  "batch_id": {"type": "string"},
-                  "errors": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "row": {"type": "integer"},
-                        "error": {"type": "string"},
-                        "data": {"type": "object"}
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### 8.2.4 OTP Verification APIs (từ System_Feature_Tree_Grok.md 1.4)
-
-**POST /api/v1/otp/send**
-```json
-{
-  "summary": "Gửi OTP verification code",
-  "description": "Gửi 6-digit OTP qua SMS hoặc Email với fraud prevention",
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "phone": {"type": "string", "pattern": "^\\+[1-9]\\d{1,14}$", "example": "+84901234567"},
-            "email": {"type": "string", "format": "email"},
-            "method": {"type": "string", "enum": ["sms", "email"], "default": "sms"},
-            "campaign_id": {"type": "string"},
-            "recaptcha_token": {"type": "string", "description": "reCAPTCHA v3 token"}
-          },
-          "anyOf": [
-            {"required": ["phone"]},
-            {"required": ["email"]}
-          ],
-          "required": ["campaign_id", "recaptcha_token"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "200": {
-      "description": "OTP đã được gửi thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "session_id": {"type": "string"},
-              "expires_in": {"type": "integer", "example": 300},
-              "attempts_remaining": {"type": "integer", "example": 3},
-              "method_used": {"type": "string", "enum": ["sms", "email"]},
-              "masked_destination": {"type": "string", "example": "+84***123567"}
-            }
-          }
-        }
-      }
-    },
-    "429": {
-      "description": "Rate limit exceeded - quá nhiều OTP requests",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "error": {"type": "string", "example": "rate_limit_exceeded"},
-              "retry_after": {"type": "integer", "description": "Seconds until next attempt allowed"},
-              "daily_limit": {"type": "integer", "example": 10}
-            }
-          }
-        }
-      }
-    },
-    "400": {"description": "Invalid input hoặc fraud detection triggered"}
-  }
-}
-```
-
-**POST /api/v1/otp/verify**
-```json
-{
-  "summary": "Xác thực OTP code",
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "session_id": {"type": "string"},
-            "otp_code": {"type": "string", "pattern": "^[0-9]{6}$"},
-            "phone": {"type": "string"},
-            "email": {"type": "string", "format": "email"},
-            "campaign_id": {"type": "string"}
-          },
-          "required": ["session_id", "otp_code", "campaign_id"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "200": {
-      "description": "OTP xác thực thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "verified": {"type": "boolean", "example": true},
-              "user_token": {"type": "string", "description": "Token để claim barcode"},
-              "expires_in": {"type": "integer", "example": 1800},
-              "next_step": {"type": "string", "example": "barcode_assignment"}
-            }
-          }
-        }
-      }
-    },
-    "400": {
-      "description": "OTP không hợp lệ hoặc đã hết hạn",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "error": {"type": "string", "example": "invalid_otp"},
-              "attempts_remaining": {"type": "integer"},
-              "can_resend": {"type": "boolean"}
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### 8.2.5 Barcode Assignment APIs (từ System_Feature_Tree_Grok.md 1.6)
-
-**POST /api/v1/barcodes/assign**
-```json
-{
-  "summary": "Gán barcode cho user đã verified",
-  "description": "Tự động gán barcode từ pool available sau OTP verification",
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "user_token": {"type": "string", "description": "Token từ OTP verification"},
-            "campaign_id": {"type": "string"},
-            "user_preferences": {
-              "type": "object",
-              "properties": {
-                "product_categories": {"type": "array", "items": {"type": "string"}},
-                "dietary_restrictions": {"type": "array", "items": {"type": "string"}},
-                "location_preference": {"type": "string"}
-              }
-            },
-            "delivery_method": {"type": "string", "enum": ["sms", "email", "wallet"], "default": "sms"}
-          },
-          "required": ["user_token", "campaign_id"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "201": {
-      "description": "Barcode assigned thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "barcode_id": {"type": "string"},
-              "barcode_value": {"type": "string"},
-              "product_name": {"type": "string"},
-              "expires_at": {"type": "string", "format": "date-time"},
-              "qr_code_url": {"type": "string", "format": "uri"},
-              "wallet_pass": {
-                "type": "object",
-                "properties": {
-                  "apple_wallet_url": {"type": "string", "format": "uri"},
-                  "google_pay_url": {"type": "string", "format": "uri"}
-                }
-              },
-              "redemption_locations": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "location_id": {"type": "string"},
-                    "name": {"type": "string"},
-                    "address": {"type": "string"},
-                    "distance_km": {"type": "number"}
-                  }
-                }
-              },
-              "user_portal_url": {"type": "string", "format": "uri"}
-            }
-          }
-        }
-      }
-    },
-    "400": {"description": "User token invalid hoặc campaign không active"},
-    "409": {"description": "User đã nhận barcode cho campaign này"},
-    "503": {"description": "Không còn barcode available trong pool"}
-  }
-}
-```
-
-### 8.2.6 POS Redemption APIs (từ System_Feature_Tree_Grok.md 1.5)
-
-**POST /api/v1/pos/scan**
-```json
-{
-  "summary": "Scan barcode tại POS",
-  "description": "Serving Account scan barcode để validate trước khi redeem",
-  "security": [{"BearerAuth": ["pos_access"]}],
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "barcode_value": {"type": "string"},
-            "location_id": {"type": "string"},
-            "staff_id": {"type": "string"},
-            "scan_timestamp": {"type": "string", "format": "date-time"}
-          },
-          "required": ["barcode_value", "location_id", "staff_id"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "200": {
-      "description": "Barcode hợp lệ và ready để redeem",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "valid": {"type": "boolean", "example": true},
-              "barcode_info": {
-                "type": "object",
-                "properties": {
-                  "barcode_id": {"type": "string"},
-                  "product_name": {"type": "string"},
-                  "campaign_name": {"type": "string"},
-                  "expires_at": {"type": "string", "format": "date-time"},
-                  "assigned_user": {"type": "string", "description": "Masked user info"}
-                }
-              },
-              "redemption_token": {"type": "string", "description": "Token để complete redemption"},
-              "expires_in": {"type": "integer", "example": 300}
-            }
-          }
-        }
-      }
-    },
-    "400": {"description": "Barcode không hợp lệ hoặc đã được sử dụng"},
-    "403": {"description": "Location không được phép redeem barcode này"},
-    "410": {"description": "Barcode đã hết hạn"}
-  }
-}
-```
-
-**POST /api/v1/pos/redeem**
-```json
-{
-  "summary": "Hoàn tất redemption process",
-  "security": [{"BearerAuth": ["pos_access"]}],
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "redemption_token": {"type": "string"},
-            "location_id": {"type": "string"},
-            "staff_id": {"type": "string"},
-            "notes": {"type": "string", "maxLength": 500}
-          },
-          "required": ["redemption_token", "location_id", "staff_id"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "200": {
-      "description": "Redemption thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "redeemed": {"type": "boolean", "example": true},
-              "redemption_id": {"type": "string"},
-              "barcode_id": {"type": "string"},
-              "redeemed_at": {"type": "string", "format": "date-time"},
-              "receipt_data": {
-                "type": "object",
-                "properties": {
-                  "product_name": {"type": "string"},
-                  "location_name": {"type": "string"},
-                  "staff_name": {"type": "string"},
-                  "campaign_name": {"type": "string"}
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "400": {"description": "Redemption token invalid hoặc expired"},
-    "409": {"description": "Barcode đã được redeem"}
-  }
-}
-```
-
-### 8.2.7 Analytics APIs (từ System_Feature_Tree_Grok.md 1.6)
-
-**GET /api/v1/analytics/funnel**
-```json
-{
-  "summary": "Funnel conversion metrics",
-  "description": "Realtime funnel tracking: Scan → Submit → Verify → Issue → Redeem",
-  "security": [{"BearerAuth": []}],
-  "parameters": [
-    {
-      "name": "campaign_id",
-      "in": "query",
-      "schema": {"type": "string"}
-    },
-    {
-      "name": "start_date",
-      "in": "query",
-      "schema": {"type": "string", "format": "date"}
-    },
-    {
-      "name": "end_date",
-      "in": "query", 
-      "schema": {"type": "string", "format": "date"}
-    },
-    {
-      "name": "group_by",
-      "in": "query",
-      "schema": {"type": "string", "enum": ["day", "hour", "location", "ads_format"]}
-    }
-  ],
-  "responses": {
-    "200": {
-      "description": "Funnel metrics data",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "funnel_data": {
-                "type": "object",
-                "properties": {
-                  "scans": {"type": "integer"},
-                  "form_submissions": {"type": "integer"},
-                  "otp_verifications": {"type": "integer"},
-                  "barcode_assignments": {"type": "integer"},
-                  "redemptions": {"type": "integer"}
-                }
-              },
-              "conversion_rates": {
-                "type": "object",
-                "properties": {
-                  "scan_to_form": {"type": "number", "example": 0.85},
-                  "form_to_verify": {"type": "number", "example": 0.92},
-                  "verify_to_assign": {"type": "number", "example": 0.98},
-                  "assign_to_redeem": {"type": "number", "example": 0.73},
-                  "overall_conversion": {"type": "number", "example": 0.52}
-                }
-              },
-              "trends": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "date": {"type": "string", "format": "date"},
-                    "scans": {"type": "integer"},
-                    "conversions": {"type": "integer"},
-                    "rate": {"type": "number"}
-                  }
-                }
-              },
-              "cost_metrics": {
-                "type": "object",
-                "properties": {
-                  "cost_per_scan": {"type": "number"},
-                  "cost_per_verified_lead": {"type": "number"},
-                  "cost_per_redemption": {"type": "number"},
-                  "total_spend": {"type": "number"},
-                  "roi_estimate": {"type": "number"}
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-**POST /api/v1/analytics/export**
-```json
-{
-  "summary": "Export analytics data",
-  "description": "Xuất dữ liệu CSV/Excel cho analysis nâng cao",
-  "security": [{"BearerAuth": []}],
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "export_type": {"type": "string", "enum": ["users", "events", "funnel", "campaigns"]},
-            "format": {"type": "string", "enum": ["csv", "excel", "json"], "default": "csv"},
-            "filters": {
-              "type": "object",
-              "properties": {
-                "campaign_ids": {"type": "array", "items": {"type": "string"}},
-                "start_date": {"type": "string", "format": "date"},
-                "end_date": {"type": "string", "format": "date"},
-                "status": {"type": "string"},
-                "location_ids": {"type": "array", "items": {"type": "string"}}
-              }
-            },
-            "columns": {
-              "type": "array",
-              "items": {"type": "string"},
-              "description": "Columns to include in export"
-            },
-            "include_pii": {"type": "boolean", "default": false, "description": "Requires admin role"}
-          },
-          "required": ["export_type"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "202": {
-      "description": "Export job được tạo",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "job_id": {"type": "string"},
-              "status": {"type": "string", "enum": ["queued", "processing", "completed", "failed"]},
-              "estimated_completion": {"type": "string", "format": "date-time"},
-              "estimated_size": {"type": "string", "example": "2.5MB"}
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
----
-
-## 8.3 User Portal APIs (từ System_Feature_Tree_Grok.md 1.9)
-
-### 8.3.1 User Portal Authentication
-
-**POST /api/v1/portal/auth**
-```json
-{
-  "summary": "Đăng nhập User Portal bằng phone/email",
-  "description": "Passwordless authentication cho end users",
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "identifier": {"type": "string", "description": "Phone number or email"},
-            "otp_code": {"type": "string", "pattern": "^[0-9]{6}$"},
-            "session_id": {"type": "string", "description": "From OTP request"}
-          },
-          "required": ["identifier", "otp_code", "session_id"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "200": {
-      "description": "Login thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "access_token": {"type": "string"},
-              "user_id": {"type": "string"},
-              "profile": {
-                "type": "object",
-                "properties": {
-                  "first_name": {"type": "string"},
-                  "total_campaigns": {"type": "integer"},
-                  "total_redemptions": {"type": "integer"},
-                  "engagement_score": {"type": "integer"}
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### 8.3.2 User Dashboard APIs
-
-**GET /api/v1/portal/dashboard**
-```json
-{
-  "summary": "Dashboard data cho User Portal",
-  "security": [{"PortalAuth": []}],
-  "responses": {
-    "200": {
-      "description": "User dashboard data",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "user_stats": {
-                "type": "object",
-                "properties": {
-                  "total_barcodes_received": {"type": "integer"},
-                  "total_redeemed": {"type": "integer"},
-                  "pending_redemption": {"type": "integer"},
-                  "expired_unused": {"type": "integer"},
-                  "redemption_rate": {"type": "number"}
-                }
-              },
-              "recent_activity": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "activity_type": {"type": "string", "enum": ["barcode_received", "redeemed", "expired"]},
-                    "product_name": {"type": "string"},
-                    "campaign_name": {"type": "string"},
-                    "date": {"type": "string", "format": "date-time"},
-                    "location_name": {"type": "string"}
-                  }
-                }
-              },
-              "available_campaigns": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "campaign_id": {"type": "string"},
-                    "name": {"type": "string"},
-                    "description": {"type": "string"},
-                    "product_image": {"type": "string", "format": "uri"},
-                    "ends_at": {"type": "string", "format": "date-time"},
-                    "locations_nearby": {"type": "integer"}
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-**GET /api/v1/portal/barcodes**
-```json
-{
-  "summary": "Danh sách barcodes của user",
-  "security": [{"PortalAuth": []}],
-  "parameters": [
-    {
-      "name": "status",
-      "in": "query",
-      "schema": {"type": "string", "enum": ["available", "redeemed", "expired"]}
-    },
-    {
-      "name": "page",
-      "in": "query",
-      "schema": {"type": "integer", "default": 1}
-    }
-  ],
-  "responses": {
-    "200": {
-      "description": "User barcodes list",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "barcodes": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "barcode_id": {"type": "string"},
-                    "barcode_value": {"type": "string"},
-                    "product_name": {"type": "string"},
-                    "campaign_name": {"type": "string"},
-                    "status": {"type": "string"},
-                    "assigned_at": {"type": "string", "format": "date-time"},
-                    "expires_at": {"type": "string", "format": "date-time"},
-                    "redeemed_at": {"type": "string", "format": "date-time"},
-                    "redeemed_location": {"type": "string"},
-                    "qr_code_url": {"type": "string", "format": "uri"},
-                    "wallet_passes": {
-                      "type": "object",
-                      "properties": {
-                        "apple_wallet": {"type": "string", "format": "uri"},
-                        "google_pay": {"type": "string", "format": "uri"}
-                      }
-                    }
-                  }
-                }
-              },
-              "pagination": {"$ref": "#/components/schemas/Pagination"}
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### 8.3.3 Support và Feedback APIs
-
-**POST /api/v1/portal/tickets**
-```json
-{
-  "summary": "Tạo support ticket",
-  "security": [{"PortalAuth": []}],
-  "requestBody": {
-    "required": true,
-    "content": {
-      "multipart/form-data": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "subject": {"type": "string", "maxLength": 200},
-            "description": {"type": "string", "maxLength": 2000},
-            "category": {"type": "string", "enum": ["barcode_issue", "redemption_problem", "account_question", "other"]},
-            "barcode_id": {"type": "string", "description": "Optional - if related to specific barcode"},
-            "priority": {"type": "string", "enum": ["low", "medium", "high"], "default": "medium"},
-            "attachments": {
-              "type": "array",
-              "items": {"type": "string", "format": "binary"},
-              "maxItems": 3
-            }
-          },
-          "required": ["subject", "description", "category"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "201": {
-      "description": "Ticket created thành công",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "ticket_id": {"type": "string"},
-              "status": {"type": "string", "enum": ["open", "in_progress", "resolved", "closed"]},
-              "created_at": {"type": "string", "format": "date-time"},
-              "estimated_response_time": {"type": "string", "example": "24 hours"}
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
----
-
-## 8.4 Third-Party Integration APIs
-
-### 8.4.1 CRM Integration (từ System_Feature_Tree_Grok.md 1.7)
-
-**HubSpot Integration Webhook:**
-```json
-{
-  "webhook_url": "/api/v1/integrations/hubspot/webhook",
-  "method": "POST",
-  "description": "Nhận webhook từ HubSpot về contact updates",
-  "headers": {
-    "X-HubSpot-Signature": "sha256=signature",
-    "Content-Type": "application/json"
-  },
-  "payload_example": {
-    "subscriptionType": "contact.propertyChange",
-    "eventId": 123456789,
-    "portalId": 12345,
-    "appId": 54321,
-    "occurredAt": 1625097600000,
-    "subscriptionId": 987654,
-    "attemptNumber": 0,
-    "objectId": 12345,
-    "changeSource": "CRM_UI",
-    "propertyName": "email",
-    "propertyValue": "new-email@example.com"
-  },
-  "response": {
-    "status_code": 200,
-    "body": {
-      "received": true,
-      "processed_at": "2025-10-17T14:30:00Z"
-    }
-  }
-}
-```
-
-**Outbound CRM Sync API:**
-```json
-{
-  "endpoint": "POST /api/v1/integrations/crm/sync",
-  "summary": "Đồng bộ user data với CRM system",
-  "security": [{"BearerAuth": ["crm_integration"]}],
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "crm_provider": {"type": "string", "enum": ["hubspot", "salesforce", "pipedrive"]},
-            "sync_type": {"type": "string", "enum": ["full", "incremental", "specific_users"]},
-            "user_ids": {"type": "array", "items": {"type": "string"}},
-            "data_mapping": {
-              "type": "object",
-              "properties": {
-                "email_field": {"type": "string", "default": "email"},
-                "phone_field": {"type": "string", "default": "phone"},
-                "custom_fields": {"type": "object"}
-              }
-            },
-            "consent_only": {"type": "boolean", "default": true}
-          },
-          "required": ["crm_provider", "sync_type"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "202": {
-      "description": "Sync job được tạo",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "sync_job_id": {"type": "string"},
-              "status": {"type": "string", "enum": ["queued", "processing", "completed", "failed"]},
-              "estimated_records": {"type": "integer"},
-              "started_at": {"type": "string", "format": "date-time"}
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### 8.4.2 SMS/Email Provider Integration
-
-**Twilio SMS Integration:**
-```python
-# Internal service - không expose qua public API
-class TwilioService:
-    def send_otp_sms(self, phone: str, otp_code: str, template: str):
-        """
-        Gửi OTP SMS qua Twilio
-        - Rate limiting: 10 SMS/hour per phone
-        - Template: "Mã xác thực của bạn: {otp_code}. Có hiệu lực trong 5 phút."
-        - Fallback: MessageBird nếu Twilio failed
-        """
-        pass
-
-    def send_notification_sms(self, phone: str, message: str):
-        """
-        Gửi notification SMS
-        - Redemption reminders
-        - New campaign alerts
-        - Expiry warnings
-        """
-        pass
-```
-
-**SendGrid Email Integration:**
-```python
-class EmailService:
-    def send_otp_email(self, email: str, otp_code: str, template_id: str):
-        """
-        Gửi OTP email qua SendGrid
-        - Template-based emails
-        - Tracking: open rates, click rates
-        - Fallback: AWS SES
-        """
-        pass
-
-    def send_barcode_email(self, email: str, barcode_data: dict):
-        """
-        Gửi barcode qua email với PDF attachment
-        - PDF generation với QR code
-        - Apple Wallet pass attachment
-        - Redemption instructions
-        """
-        pass
-```
-
-### 8.4.3 Payment Integration (Future)
-
-**Stripe Integration cho Subscription:**
-```json
-{
-  "endpoint": "POST /api/v1/billing/subscribe",
-  "summary": "Tạo subscription cho brand",
-  "security": [{"BearerAuth": ["billing_admin"]}],
-  "requestBody": {
-    "required": true,
-    "content": {
-      "application/json": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "tenant_id": {"type": "string"},
-            "plan_id": {"type": "string", "enum": ["starter", "professional", "enterprise"]},
-            "billing_period": {"type": "string", "enum": ["monthly", "yearly"]},
-            "payment_method_id": {"type": "string"},
-            "tax_id": {"type": "string"},
-            "billing_address": {
-              "type": "object",
-              "properties": {
-                "line1": {"type": "string"},
-                "city": {"type": "string"},
-                "country": {"type": "string"},
-                "postal_code": {"type": "string"}
-              }
-            }
-          },
-          "required": ["tenant_id", "plan_id", "payment_method_id"]
-        }
-      }
-    }
-  },
-  "responses": {
-    "201": {
-      "description": "Subscription created",
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "subscription_id": {"type": "string"},
-              "status": {"type": "string", "enum": ["active", "trialing", "past_due"]},
-              "current_period_start": {"type": "string", "format": "date-time"},
-              "current_period_end": {"type": "string", "format": "date-time"},
-              "next_billing_date": {"type": "string", "format": "date-time"},
-              "amount": {"type": "number"},
-              "currency": {"type": "string", "example": "VND"}
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
----
-
-## 8.5 API Security và Error Handling
-
-### 8.5.1 Authentication & Authorization
-
-**JWT Token Structure:**
-```json
-{
-  "header": {
-    "alg": "RS256",
-    "typ": "JWT",
-    "kid": "key_id_2025"
-  },
-  "payload": {
-    "sub": "USER_2025_001",
-    "iss": "https://api.productsampling.com",
-    "aud": "product-sampling-platform",
-    "exp": 1729171200,
-    "iat": 1729167600,
-    "role": "customer_account",
-    "tenant_id": "brand_001",
-    "group_id": "group_001",
-    "permissions": [
-      "campaign.create",
-      "campaign.read:own",
-      "barcode.import:own",
-      "analytics.read:own"
-    ],
-    "scope": "api_access"
-  }
-}
-```
-
-**Permission Middleware:**
-```python
-def require_permission(permission: str, scope: str = None):
-    """
-    Decorator để check permissions động
-    Example: @require_permission("campaign.create", "own")
-    """
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            # Extract JWT token
-            # Validate permissions array
-            # Check scope restrictions
-            # Allow/deny request
-            pass
-        return wrapper
-    return decorator
-```
-
-### 8.5.2 Rate Limiting Strategy (từ System_Feature_Tree_Grok.md yêu cầu kỹ thuật)
-
-**Rate Limit Headers:**
-```
-X-RateLimit-Limit: 1000
-X-RateLimit-Remaining: 999
-X-RateLimit-Reset: 1729171200
-X-RateLimit-Window: 3600
-X-RateLimit-Scope: tenant
-```
-
-**Rate Limiting Rules:**
-```yaml
-rate_limits:
-  default:
-    requests_per_hour: 1000
-    burst_limit: 100
+# PostgreSQL PITR setup
+
+# Enable WAL archiving
+echo "archive_mode = on" >> postgresql.conf
+echo "archive_command = 'cp %p /archive/%f'" >> postgresql.conf  
+echo "wal_level = replica" >> postgresql.conf
+
+# Create base backup
+pg_basebackup -D /backup/base -Ft -z -P
+
+# Recovery script
+restore_to_point_in_time() {
+  local target_time=$1
   
-  endpoints:
-    "/api/v1/otp/send":
-      requests_per_hour: 10
-      per_identifier: phone_number
-    
-    "/api/v1/barcodes/import":
-      requests_per_hour: 5
-      file_size_limit: "100MB"
-    
-    "/api/v1/analytics/export":
-      requests_per_hour: 3
-      concurrent_limit: 1
+  # Stop PostgreSQL
+  systemctl stop postgresql
   
-  by_role:
-    admin: 5000
-    customer_account: 1000
-    serving_account: 500
-    user_role: 100
+  # Restore base backup
+  rm -rf /var/lib/postgresql/data/*
+  tar -xzf /backup/base/base.tar.gz -C /var/lib/postgresql/data/
+  
+  # Create recovery.conf
+  cat > /var/lib/postgresql/data/recovery.conf << EOF
+restore_command = 'cp /archive/%f %p'
+recovery_target_time = '$target_time'
+recovery_target_action = 'promote'
+EOF
+  
+  # Start recovery
+  systemctl start postgresql
+}
 ```
 
-### 8.5.3 Error Response Standards
+#### **MongoDB Backup & Restore**
+```bash
+#!/bin/bash
+# MongoDB backup script
 
-**Standard Error Schema:**
-```json
-{
-  "components": {
-    "schemas": {
-      "ErrorResponse": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "object",
-            "properties": {
-              "code": {"type": "string", "example": "VALIDATION_FAILED"},
-              "message": {"type": "string", "example": "Dữ liệu đầu vào không hợp lệ"},
-              "details": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "field": {"type": "string"},
-                    "error_code": {"type": "string"},
-                    "message": {"type": "string"}
-                  }
-                }
-              },
-              "request_id": {"type": "string", "example": "REQ_2025_001234"},
-              "timestamp": {"type": "string", "format": "date-time"}
-            }
-          }
+backup_mongodb() {
+  local backup_dir="/backups/mongodb/$(date +%Y%m%d_%H%M%S)"
+  mkdir -p $backup_dir
+  
+  # Create consistent backup
+  mongodump \
+    --host mongodb-replica-set/mongo1:27017,mongo2:27017,mongo3:27017 \
+    --username backup_user \
+    --password $MONGO_BACKUP_PASSWORD \
+    --authenticationDatabase admin \
+    --out $backup_dir \
+    --gzip
+    
+  # Upload to cloud storage
+  aws s3 sync $backup_dir s3://psp-backups/mongodb/$(date +%Y%m%d_%H%M%S)/
+}
+
+restore_mongodb() {
+  local backup_path=$1
+  local target_db=$2
+  
+  # Download from cloud if needed
+  if [[ $backup_path == s3://* ]]; then
+    local local_path="/tmp/mongodb_restore_$(date +%s)"
+    aws s3 sync $backup_path $local_path
+    backup_path=$local_path
+  fi
+  
+  # Restore database
+  mongorestore \
+    --host mongodb-replica-set/mongo1:27017,mongo2:27017,mongo3:27017 \
+    --username restore_user \
+    --password $MONGO_RESTORE_PASSWORD \
+    --authenticationDatabase admin \
+    --db $target_db \
+    --gzip \
+    $backup_path
+}
+```
+
+---
+
+## 7.11 Data Quality & Validation
+
+### 7.11.1 Data Validation Rules
+
+#### **Application-level Validation**
+```typescript
+// User data validation schema
+import { IsEmail, IsPhoneNumber, IsDateString, Length } from 'class-validator';
+
+export class CreateUserDto {
+  @Length(2, 100)
+  fullName: string;
+  
+  @IsEmail()
+  email: string;
+  
+  @IsPhoneNumber('VN')
+  phoneNumber: string;
+  
+  @IsDateString()
+  dateOfBirth?: string;
+  
+  // Custom validation
+  @IsValidGender()
+  gender?: 'M' | 'F' | 'Other' | 'Prefer_not_to_say';
+}
+
+// Custom validator
+function IsValidGender() {
+  return function (object: Object, propertyName: string) {
+    // Gender validation logic
+  };
+}
+```
+
+#### **Database Constraints**
+```sql
+-- PostgreSQL constraints
+ALTER TABLE barcodes 
+ADD CONSTRAINT check_code_format 
+CHECK (code ~ '^[A-Z]{3}[0-9]{4}[A-Z][0-9]{8}[A-Z]login:{userId}" = counter
+// TTL: 15 minutes, max 5 attempts
+
+"rate_limit:);
+
+ALTER TABLE redemptions
+ADD CONSTRAINT check_redemption_time
+CHECK (redeemed_at >= created_at);
+
+-- MongoDB validation
+db.createCollection("users", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["personalInfo", "verification", "status"],
+      properties: {
+        "personalInfo.email.encrypted": {
+          bsonType: "string",
+          minLength: 1
+        },
+        "verification.email.isVerified": {
+          bsonType: "bool"
+        },
+        status: {
+          enum: ["active", "inactive", "suspended", "deleted"]
         }
       }
     }
   }
-}
-```
-
-**HTTP Status Codes Usage:**
-```yaml
-status_codes:
-  200: "OK - Request thành công"
-  201: "Created - Resource được tạo thành công"
-  202: "Accepted - Request được accept cho background processing"
-  400: "Bad Request - Invalid input data"
-  401: "Unauthorized - Authentication required"
-  403: "Forbidden - Insufficient permissions"
-  404: "Not Found - Resource không tồn tại"
-  409: "Conflict - Resource conflict (duplicate, constraint violation)"
-  422: "Unprocessable Entity - Business logic validation failed"
-  429: "Too Many Requests - Rate limit exceeded"
-  500: "Internal Server Error - Server error"
-  503: "Service Unavailable - Temporary service unavailable"
-```
-
-### 8.5.4 Request/Response Logging
-
-**Audit Log Structure:**
-```json
-{
-  "request_id": "REQ_2025_001234",
-  "timestamp": "2025-10-17T14:30:00Z",
-  "method": "POST",
-  "endpoint": "/api/v1/campaigns",
-  "user_id": "USER_2025_001",
-  "tenant_id": "brand_001",
-  "ip_address_hash": "sha256_hash",
-  "user_agent": "Mozilla/5.0...",
-  "request_size": 2048,
-  "response_status": 201,
-  "response_size": 512,
-  "processing_time_ms": 150,
-  "errors": [],
-  "sensitive_data_accessed": false,
-  "compliance_flags": ["gdpr_relevant"]
-}
-```
-
----
-
-## 8.6 API Documentation và Testing
-
-### 8.6.1 OpenAPI 3.0 Specification
-
-**API Documentation Structure:**
-```yaml
-openapi: 3.0.3
-info:
-  title: Product Sampling Platform API
-  description: |
-    API cho hệ thống Product Sampling Platform
-    
-    ## Authentication
-    Sử dụng Bearer Token (JWT) trong header:
-    ```
-    Authorization: Bearer <jwt_token>
-    ```
-    
-    ## Rate Limiting
-    - Default: 1000 requests/hour
-    - OTP endpoints: 10 requests/hour
-    - Export endpoints: 3 requests/hour
-    
-    ## Error Handling
-    Tất cả errors trả về format chuẩn với error code và message.
-    
-  version: 1.0.0
-  contact:
-    name: API Support
-    email: api-support@productsampling.com
-  license:
-    name: Proprietary
-    
-servers:
-  - url: https://api.productsampling.com/api/v1
-    description: Production server
-  - url: https://staging-api.productsampling.com/api/v1  
-    description: Staging server
-
-security:
-  - BearerAuth: []
-
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-    
-  schemas:
-    # Standard schemas được define ở đây
-    Campaign: 
-      type: object
-      # ... schema definition
-      
-    Barcode:
-      type: object
-      # ... schema definition
-```
-
-### 8.6.2 API Testing Strategy
-
-**Unit Tests cho API Endpoints:**
-```python
-import pytest
-from fastapi.testclient import TestClient
-from app import app
-
-client = TestClient(app)
-
-class TestCampaignAPI:
-    def setup_method(self):
-        """Setup test data trước mỗi test"""
-        self.admin_token = self.get_admin_token()
-        self.test_campaign_data = {
-            "name": "Test Campaign",
-            "start_date": "2025-11-01T00:00:00Z",
-            "end_date": "2025-11-30T23:59:59Z",
-            "location_ids": ["TEST_LOC_001"]
-        }
-    
-    def test_create_campaign_success(self):
-        """Test tạo campaign thành công"""
-        response = client.post(
-            "/api/v1/campaigns",
-            json=self.test_campaign_data,
-            headers={"Authorization": f"Bearer {self.admin_token}"}
-        )
-        assert response.status_code == 201
-        data = response.json()
-        assert "campaign_id" in data
-        assert data["name"] == self.test_campaign_data["name"]
-    
-    def test_create_campaign_invalid_dates(self):
-        """Test validation lỗi khi end_date < start_date"""
-        invalid_data = self.test_campaign_data.copy()
-        invalid_data["end_date"] = "2025-10-01T00:00:00Z"  # Before start_date
-        
-        response = client.post(
-            "/api/v1/campaigns",
-            json=invalid_data,
-            headers={"Authorization": f"Bearer {self.admin_token}"}
-        )
-        assert response.status_code == 400
-        assert "end_date must be after start_date" in response.json()["error"]["message"]
-    
-    def test_get_campaigns_with_pagination(self):
-        """Test pagination cho campaigns list"""
-        response = client.get(
-            "/api/v1/campaigns?page=1&limit=10",
-            headers={"Authorization": f"Bearer {self.admin_token}"}
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "campaigns" in data
-        assert "pagination" in data
-        assert data["pagination"]["page"] == 1
-        assert data["pagination"]["limit"] == 10
-```
-
-**Integration Tests:**
-```python
-class TestCampaignWorkflow:
-    """Test end-to-end workflow cho campaign"""
-    
-    def test_complete_campaign_workflow(self):
-        """Test full workflow: Create → Import Barcodes → QR Scan → OTP → Assign → Redeem"""
-        
-        # Step 1: Tạo campaign
-        campaign_response = client.post("/api/v1/campaigns", json=campaign_data)
-        campaign_id = campaign_response.json()["campaign_id"]
-        
-        # Step 2: Import barcodes
-        barcode_file = self.create_test_barcode_csv()
-        import_response = client.post(
-            "/api/v1/barcodes/import",
-            files={"file": barcode_file},
-            data={"campaign_id": campaign_id}
-        )
-        assert import_response.status_code == 202
-        
-        # Step 3: Simulate user scan QR
-        # Step 4: OTP verification
-        # Step 5: Barcode assignment
-        # Step 6: POS redemption
-        # Assert final state
-```
-
-### 8.6.3 Performance Testing
-
-**Load Testing Script:**
-```python
-import asyncio
-import aiohttp
-import time
-from concurrent.futures import ThreadPoolExecutor
-
-class APILoadTester:
-    def __init__(self, base_url: str, concurrent_users: int = 100):
-        self.base_url = base_url
-        self.concurrent_users = concurrent_users
-        self.results = []
-    
-    async def test_otp_send_endpoint(self):
-        """Load test cho OTP send - critical endpoint"""
-        async with aiohttp.ClientSession() as session:
-            tasks = []
-            for i in range(self.concurrent_users):
-                task = self.send_otp_request(session, f"+8490123{i:04d}")
-                tasks.append(task)
-            
-            start_time = time.time()
-            responses = await asyncio.gather(*tasks, return_exceptions=True)
-            end_time = time.time()
-            
-            # Analyze results
-            success_count = sum(1 for r in responses if isinstance(r, dict) and r.get("status") == 200)
-            total_time = end_time - start_time
-            
-            print(f"OTP Load Test Results:")
-            print(f"Concurrent Users: {self.concurrent_users}")
-            print(f"Success Rate: {success_count}/{len(responses)} ({success_count/len(responses)*100:.1f}%)")
-            print(f"Total Time: {total_time:.2f}s")
-            print(f"Requests/second: {len(responses)/total_time:.1f}")
-    
-    async def send_otp_request(self, session, phone):
-        try:
-            async with session.post(
-                f"{self.base_url}/api/v1/otp/send",
-                json={
-                    "phone": phone,
-                    "campaign_id": "LOAD_TEST_CAMPAIGN",
-                    "recaptcha_token": "test_token"
-                }
-            ) as response:
-                return {"status": response.status, "response_time": response.headers.get("X-Response-Time")}
-        except Exception as e:
-            return {"error": str(e)}
-
-# Chạy load test
-if __name__ == "__main__":
-    tester = APILoadTester("https://staging-api.productsampling.com", concurrent_users=1000)
-    asyncio.run(tester.test_otp_send_endpoint())
-```
-
----
-
-**Nguồn tham khảo chính:**
-- System Feature Tree (System_Feature_Tree_Grok.md v4.0) - API requirements, rate limiting, technical specifications
-- Access Control Tree (Access_Control_Tree_Grok.md v2.2) - RBAC permissions, security requirements
-- Business Requirement Document (01-BRD.md v3.0) - Performance targets, SLA requirements
-- Problem Definition (Problem.md v1.0) - Integration requirements, third-party services
-
-**Tình trạng**: Part08 hoàn thành ✅  
-**Tiếp theo**: Part09 - Use Case chi tiết  
-**Người đánh giá**: API Architect, Security Engineer, Integration Specialist
-
-
-# 📋 SRS Part09 - Use Case chi tiết (Detailed Use Cases)
-**Hệ thống Product Sampling Platform**
-
-**Phiên bản**: 1.0  
-**Ngày**: 2025-10-17  
-**Tác giả**: Đội phân tích hệ thống  
-
----
-
-## 9.1 Tổng quan Use Cases
-
-### 9.1.1 Phân loại Use Cases (từ System_Feature_Tree_Grok.md v4.0)
-Dựa trên **flow vận hành** và **user stories** trong cây chức năng, hệ thống có 8 use cases chính:
-
-| UC ID | Tên Use Case | Actor chính | Mức độ ưu tiên | Nguồn tham chiếu |
-|-------|--------------|-------------|----------------|------------------|
-| UC-001 | Tạo và quản lý chiến dịch sampling | Admin/Brand Manager | Cao | Feature Tree 1.1 |
-| UC-002 | Quản lý barcode và inventory | Admin/Brand Manager | Cao | Feature Tree 1.2 |
-| UC-003 | Khách hàng quét QR và điền form | End User | Cao | Feature Tree 1.3 |
-| UC-004 | Xác thực OTP và chống gian lận | End User/System | Cao | Feature Tree 1.4 |
-| UC-005 | Cấp phát và quản lý voucher | System/End User | Cao | Feature Tree 1.5 |
-| UC-006 | Đổi quà tại điểm bán | Serving Staff/End User | Cao | Feature Tree 1.5 |
-| UC-007 | Phân tích và báo cáo chiến dịch | Brand Manager/Admin | Trung bình | Feature Tree 1.6 |
-| UC-008 | Quản lý User Portal và hỗ trợ | End User/Admin | Trung bình | Feature Tree 1.9 |
-
-### 9.1.2 Actors và vai trò (từ Access_Control_Tree_Grok.md v2.2)
-
-**Primary Actors:**
-- **Admin**: Toàn quyền hệ thống, thiết lập global configs
-- **Group Admin**: Quản lý campaigns trong group scope
-- **Customer Account (Brand Manager)**: Quản lý campaigns riêng
-- **Serving Account**: Staff tại retail nodes, xử lý redemption
-- **End User**: Khách hàng cuối sử dụng User Portal
-- **Auditor**: Giám sát compliance và audit logs
-
-**Secondary Actors:**
-- **SMS/Email Providers**: Twilio, SendGrid
-- **CRM Systems**: HubSpot, Salesforce
-- **POS Systems**: Circle K, GS25, Mini Stop
-- **Analytics Systems**: GA4, Meta Pixel
-
----
-
-## 9.2 UC-001: Tạo và quản lý chiến dịch sampling
-
-### 9.2.1 Mô tả Use Case
-**Mục tiêu**: Admin/Brand Manager tạo và quản lý chiến dịch phân phối mẫu sản phẩm với targeting địa lý, ngân sách và tracking UTM.
-
-**Phạm vi**: Campaign lifecycle từ tạo đến hoàn thành
-**Mức độ**: Chức năng chính (primary)
-**Stakeholder**: Brands, Marketing teams
-
-### 9.2.2 Preconditions
-- Actor đã đăng nhập với role Admin, Group Admin hoặc Customer Account
-- Có ít nhất 1 location được setup trong hệ thống
-- Có barcode pool sẵn sàng để gán (optional cho draft)
-
-### 9.2.3 Main Success Scenario
-1. **Actor truy cập Campaign Management**
-   - Đăng nhập vào dashboard
-   - Navigate đến Campaign Management module
-   - System hiển thị danh sách campaigns theo phân quyền
-
-2. **Tạo campaign mới**
-   - Click "Tạo Campaign Mới"
-   - Điền thông tin cơ bản:
-     * Tên campaign (bắt buộc, max 255 chars)
-     * Mô tả chi tiết (optional, max 1000 chars)
-     * Ngày bắt đầu/kết thúc (validate: end > start, future dates)
-   - System validate input và tạo campaign_id duy nhất
-
-3. **Cấu hình targeting và budget**
-   - Chọn locations từ dropdown (multi-select)
-   - Thiết lập targeting demographics:
-     * Age range (13-100)
-     * Gender filter (male/female/all)
-     * Interests (optional)
-   - Cài đặt budget limits:
-     * Max participants
-     * Total budget
-     * Cost per verified lead target (≤ 0.4 USD)
-
-4. **Setup tracking và UTM**
-   - Cấu hình UTM parameters:
-     * utm_source (e.g., "poster", "flyer")
-     * utm_medium (e.g., "qr", "digital")
-     * utm_campaign (auto-fill campaign_id)
-     * utm_term, utm_content (optional)
-   - System generate tracking URLs
-
-5. **Gán barcode pool (optional)**
-   - Select từ available barcode batches
-   - Hoặc skip để import sau
-   - System validate barcode availability
-
-6. **Preview và publish**
-   - Review tất cả settings
-   - Generate QR codes cho mỗi location
-   - Status: Draft → Active
-   - System gửi notification đến team
-
-### 9.2.4 Alternative Flows
-
-**A1: Validation errors**
-- 2a. Nếu validation thất bại:
-  - System hiển thị error messages chi tiết
-  - Highlight fields có lỗi
-  - Actor sửa và retry
-  - Continue từ step 2
-
-**A2: Insufficient permissions**
-- 1a. Nếu Customer Account cố tạo Global campaign:
-  - System reject với 403 Forbidden
-  - Show message "Bạn chỉ có thể tạo campaigns cho brand riêng"
-  - Redirect về dashboard
-
-**A3: No available locations**
-- 3a. Nếu không có locations available cho user scope:
-  - System hiển thị empty state
-  - Provide link đến Location Management
-  - Suggest contact Admin để setup locations
-
-### 9.2.5 Exception Flows
-
-**E1: System timeout**
-- Nếu campaign creation timeout (>30s):
-  - System save draft automatically
-  - Show "Campaign đã được lưu tạm, bạn có thể tiếp tục sau"
-  - Provide link để resume
-
-**E2: Database constraint violation**
-- Nếu campaign_id duplicate (rare):
-  - System retry với new ID generation
-  - Log incident cho investigation
-  - Continue normal flow
-
-### 9.2.6 Postconditions
-- Campaign được tạo với status "Active" hoặc "Draft"
-- QR codes được generate cho mỗi location
-- Analytics tracking được setup
-- Team notifications được gửi
-- Audit log ghi lại campaign creation
-
-### 9.2.7 Special Requirements
-- **Performance**: Campaign creation phải hoàn thành trong <2 ngày (business requirement từ System_Feature_Tree_Grok.md 1.1)
-- **Security**: Multi-tenant isolation theo tenant_id
-- **Audit**: Full audit trail cho compliance
-- **UTM accuracy**: 100% tracking accuracy requirement
-
----
-
-## 9.3 UC-002: Quản lý barcode và inventory
-
-### 9.3.1 Mô tả Use Case
-**Mục tiêu**: Admin/Brand Manager import, quản lý và đối soát barcode/voucher với single-use validation và lifecycle tracking.
-
-**Phạm vi**: Barcode lifecycle từ import đến reconciliation
-**Mức độ**: Chức năng chính (primary)
-**Stakeholder**: Brands, Operations team
-
-### 9.3.2 Preconditions
-- Actor có quyền barcode.import theo scope (từ Access_Control_Tree_Grok.md 2.2)
-- CSV file tuân thủ format: barcode, product_name, expiry_date, value, batch_code
-- File size ≤ 100MB, encoding UTF-8
-
-### 9.3.3 Main Success Scenario
-1. **Truy cập Barcode Management**
-   - Navigate đến Barcode Management module
-   - System hiển thị overview: total codes, assigned, redeemed, expired
-
-2. **Chuẩn bị import file**
-   - Download CSV template nếu cần
-   - Chuẩn bị file với columns bắt buộc:
-     * barcode (8-50 chars, alphanumeric)
-     * product_name (max 255 chars)
-     * expiry_date (ISO date format, future dates only)
-     * value (decimal, optional)
-     * batch_code (tracking purposes)
-
-3. **Upload và validate file**
-   - Click "Import Barcodes"
-   - Select campaign để gán (optional)
-   - Upload CSV file
-   - System validate:
-     * File format và encoding
-     * Column headers đúng
-     * Data types và constraints
-     * Barcode uniqueness (global unique)
-
-4. **Preview và confirm import**
-   - System hiển thị preview:
-     * Total rows: X
-     * Valid rows: Y
-     * Invalid rows: Z (với error details)
-   - Review sample data (first 10 rows)
-   - Option: "Validate Only" hoặc "Import"
-
-5. **Process import job**
-   - System tạo background job
-   - Return job_id cho tracking
-   - Process từng row với error handling
-   - Update progress real-time
-
-6. **Verify import results**
-   - Check job status via job_id
-   - Review import summary:
-     * Successful imports: X
-     * Failed imports: Y với error details
-     * Batch_id được tạo
-   - Download error report nếu có
-
-### 9.3.4 Alternative Flows
-
-**A1: File validation errors**
-- 3a. Nếu file format không hợp lệ:
-  - System show detailed error messages
-  - Highlight specific issues (missing columns, wrong encoding, etc.)
-  - Provide corrected template download
-  - Actor fix file và retry
-
-**A2: Duplicate barcodes detected**
-- 3b. Nếu có duplicate barcodes trong file hoặc với existing data:
-  - System list tất cả duplicates
-  - Options: Skip duplicates, Replace existing, Cancel import
-  - Actor chọn strategy và continue
-
-**A3: Large file processing**
-- 4a. Nếu file >10K rows:
-  - System suggest batch processing
-  - Option: Split file thành smaller batches
-  - Process từng batch sequentially
-
-### 9.3.5 Exception Flows
-
-**E1: Import job failure**
-- Nếu background job failed:
-  - System retry automatically (max 3 times)
-  - Log detailed error cho debugging
-  - Notify Actor về failure với error summary
-  - Option: Download partial results nếu có
-
-**E2: Database timeout**
-- Nếu large batch insert timeout:
-  - System switch sang chunked processing
-  - Continue từ last successful chunk
-  - Show progress với estimated completion time
-
-### 9.3.6 Barcode Lifecycle Management
-
-**Trạng thái lifecycle (từ System_Feature_Tree_Grok.md 1.2):**
-```
-Available → Assigned → Redeemed
-    ↓           ↓         ↓
-  Expired    Expired   [Final]
-    ↓           ↓
- Revoked    Revoked
-```
-
-**State transition rules:**
-- Available → Assigned: Khi user verify OTP
-- Assigned → Redeemed: Khi scan tại POS
-- Any → Expired: Khi qua expiry_date
-- Any → Revoked: Manual admin action (fraud cases)
-
-### 9.3.7 Reconciliation Process
-
-**Daily reconciliation workflow:**
-1. **System auto-check expiry**
-   - Cron job chạy daily 2AM
-   - Update status Available/Assigned → Expired nếu qua expiry_date
-   - Generate expiry report
-
-2. **Manual reconciliation**
-   - Admin import redemption logs từ external systems
-   - Cross-reference với internal redemption data
-   - Identify discrepancies
-   - Generate reconciliation report
-
-3. **Inventory accuracy check**
-   - Compare database counts với physical inventory
-   - Flag discrepancies >5% cho investigation
-   - Update inventory adjustments nếu cần
-
-### 9.3.8 Postconditions
-- Barcodes imported với status "Available"
-- Batch record created với tracking info
-- Inventory counts updated
-- Import job log saved với full audit trail
-- Notifications sent cho relevant stakeholders
-
-### 9.3.9 Special Requirements
-- **Performance**: Import <10MB file trong <30 giây
-- **Accuracy**: 100% barcode uniqueness enforcement
-- **Inventory**: >95% accuracy requirement
-- **Audit**: Immutable audit trail cho compliance
-
----
-
-## 9.4 UC-003: Khách hàng quét QR và điền form
-
-### 9.4.1 Mô tả Use Case
-**Mục tiêu**: End user quét QR code từ ads format, truy cập landing page và điền form thu thập dữ liệu với quiz preferences.
-
-**Phạm vi**: User journey từ QR scan đến form submission
-**Mức độ**: Chức năng chính (primary)  
-**Stakeholder**: End users, Brands
-
-### 9.4.2 Preconditions
-- Campaign đang active (status = "active")
-- QR code hợp lệ và chưa expired
-- User có smartphone/device với camera
-- Landing page accessible (99.9% uptime requirement)
-
-### 9.4.3 Main Success Scenario
-
-1. **Quét QR code**
-   - User thấy ads format (poster, flyer, digital banner) tại location
-   - Mở camera app hoặc QR scanner
-   - Quét QR code trên ads
-   - System redirect đến landing page với campaign_id, location_id, ads_format_id trong URL
-
-2. **Load landing page**
-   - System load landing page responsive (<2 giây trên mobile 3G)
-   - Hiển thị campaign info:
-     * Product image và description
-     * Brand information
-     * Value proposition
-     * Terms & conditions link
-   - Track analytics event: "qr_scan"
-
-3. **Điền form thông tin cơ bản**
-   - Form với fields bắt buộc:
-     * Họ tên (validation: không chứa số)
-     * Email (validation: format email hợp lệ)
-     * Số điện thoại (validation: VN format +84...)
-   - Fields optional:
-     * Tuổi (dropdown: <18, 18-24, 25-34, 35-44, 45-54, 55+)
-     * Giới tính (radio: Nam/Nữ/Khác)
-     * Thành phố (dropdown: major cities)
-
-4. **Tham gia quiz preferences**
-   - System hiển thị 5-10 câu hỏi multiple choice:
-     * "Bạn thường mua sắm ở đâu?" (Online/Store/Both)
-     * "Loại sản phẩm yêu thích?" (Food/Beauty/Tech/Fashion)
-     * "Frequency of trying new products?" (Weekly/Monthly/Rarely)
-     * "Preferred communication channel?" (SMS/Email/Social)
-   - Each answer có scoring để build user profile
-
-5. **Chấp nhận terms và consent**
-   - Checkboxes bắt buộc:
-     * "Tôi đồng ý với Terms & Conditions"
-     * "Tôi đồng ý xử lý dữ liệu cá nhân theo GDPR/PDPA"
-   - Checkboxes optional:
-     * "Nhận thông tin marketing qua email"
-     * "Nhận thông tin marketing qua SMS"
-     * "Chia sẻ data với partners"
-
-6. **Submit form với reCAPTCHA**
-   - System validate tất cả required fields
-   - reCAPTCHA v3 validation (score >0.5)
-   - Track analytics event: "form_submit"
-   - Show loading spinner
-
-7. **Xử lý submission**
-   - System hash PII data (phone, email)
-   - Encrypt sensitive fields (name, preferences)
-   - Store trong database với consent flags
-   - Generate session_id cho OTP step
-   - Redirect đến OTP verification page
-
-### 9.4.4 Alternative Flows
-
-**A1: Form validation errors**
-- 6a. Nếu có validation errors:
-  - Highlight fields có lỗi với error messages
-  - Scroll đến field đầu tiên có lỗi
-  - Keep existing data trong form
-  - User fix errors và re-submit
-
-**A2: Campaign inactive/expired**
-- 1a. Nếu campaign không active:
-  - Show message "Campaign đã kết thúc"
-  - Provide link đến other active campaigns
-  - Track event: "campaign_expired_access"
-
-**A3: Location restriction**
-- 1b. Nếu user location không match campaign targeting:
-  - Show message "Campaign không available tại khu vực này"
-  - Suggest nearby locations nếu có
-  - Option: Continue anyway với warning
-
-**A4: reCAPTCHA failed**
-- 6b. Nếu reCAPTCHA score <0.5:
-  - Show traditional CAPTCHA challenge
-  - User solve CAPTCHA
-  - Re-validate và continue
-
-### 9.4.5 Exception Flows
-
-**E1: Network connectivity issues**
-- Nếu form submit failed do network:
-  - Auto-save form data locally (localStorage)
-  - Show retry button
-  - Auto-retry khi connection restored
-  - Prevent data loss
-
-**E2: Server overload**
-- Nếu server response >10 giây:
-  - Show "High traffic, please wait" message
-  - Implement queue system
-  - Provide estimated wait time
-  - Option: Get notified when ready
-
-### 9.4.6 User Experience Requirements
-
-**Performance targets (từ System_Feature_Tree_Grok.md 1.3):**
-- Landing page load: <2 giây trên mobile 3G
-- Form completion time: <30 giây average
-- Form completion rate: >90%
-- Data quality score: >95%
-
-**Responsive design:**
-- Mobile-first PWA design
-- Touch-friendly inputs
-- Auto-complete enabled
-- Keyboard optimization
-- Accessibility WCAG 2.1 AA compliant
-
-**Progressive disclosure:**
-- Show form steps progressively
-- Progress indicator (Step 1/3)
-- Save progress locally
-- Clear next step instructions
-
-### 9.4.7 Data Collection Strategy
-
-**Profile scoring algorithm:**
-```python
-def calculate_profile_score(quiz_responses):
-    score = 0
-    
-    # Shopping frequency (0-20 points)
-    if quiz_responses.get('shopping_frequency') == 'weekly':
-        score += 20
-    elif quiz_responses.get('shopping_frequency') == 'monthly':
-        score += 10
-    
-    # Product trial willingness (0-25 points)
-    if quiz_responses.get('try_new_products') == 'always':
-        score += 25
-    elif quiz_responses.get('try_new_products') == 'sometimes':
-        score += 15
-    
-    # Brand loyalty (0-15 points)
-    if quiz_responses.get('brand_loyalty') == 'low':
-        score += 15  # More likely to try new brands
-    
-    # Communication preference (0-10 points)
-    if quiz_responses.get('communication') in ['email', 'sms']:
-        score += 10
-    
-    return min(score, 100)  # Cap at 100
-```
-
-### 9.4.8 Analytics Tracking
-
-**Events tracked:**
-```javascript
-// GA4 event tracking
-gtag('event', 'qr_scan', {
-  campaign_id: 'CAMP_2025_001',
-  location_id: 'HCM_CIRCLE_K_001',
-  ads_format_id: 'POSTER_A4_001',
-  user_agent: navigator.userAgent,
-  timestamp: new Date().toISOString()
-});
-
-gtag('event', 'form_start', {
-  campaign_id: 'CAMP_2025_001',
-  form_version: 'v1.2'
-});
-
-gtag('event', 'form_submit', {
-  campaign_id: 'CAMP_2025_001', 
-  completion_time: 45, // seconds
-  quiz_completed: true,
-  consent_marketing: true
 });
 ```
 
-### 9.4.9 Postconditions
-- User profile created với encrypted PII
-- Quiz responses scored và stored
-- Consent preferences recorded
-- Analytics events tracked
-- Session prepared cho OTP verification
-- User redirected đến OTP page
+### 7.11.2 Data Quality Monitoring
 
-### 9.4.10 Special Requirements
-- **GDPR/PDPA Compliance**: Explicit consent collection
-- **Data Quality**: >95% valid data requirement
-- **Fraud Prevention**: reCAPTCHA và device fingerprinting
-- **Accessibility**: Support screen readers và keyboard navigation
-
----
-
-## 9.5 UC-004: Xác thực OTP và chống gian lận
-
-### 9.5.1 Mô tả Use Case
-**Mục tiêu**: System gửi và verify OTP code để xác thực user thật, kết hợp với fraud detection để chống spam và bot attacks.
-
-**Phạm vi**: OTP generation, delivery, verification và fraud prevention
-**Mức độ**: Chức năng quan trọng (critical)
-**Stakeholder**: End users, Security team
-
-### 9.5.2 Preconditions
-- User đã complete form submission (UC-003)
-- Phone/email đã được validate format
-- Session_id hợp lệ từ form submission
-- SMS/Email providers (Twilio/SendGrid) online
-
-### 9.5.3 Main Success Scenario
-
-1. **Generate và gửi OTP**
-   - System receive OTP request với session_id
-   - Validate session (không expired, chưa verified)
-   - Generate 6-digit random code
-   - Store trong Redis với TTL 5 phút
-   - Determine delivery method (SMS priority, email fallback)
-
-2. **Fraud detection pre-check**
-   - Check rate limiting rules:
-     * Max 10 OTP requests/24h per phone number
-     * Max 3 requests/hour per session
-     * Max 100 requests/hour per IP
-   - Device fingerprinting analysis
-   - Disposable email detection
-   - VPN/proxy detection
-
-3. **Deliver OTP message**
-   - SMS via Twilio: "Mã xác thực của bạn: {code}. Có hiệu lực trong 5 phút."
-   - Email template với branding và instructions
-   - Track delivery status (sent/delivered/failed)
-   - Start 5-minute countdown timer
-
-4. **User nhập OTP code**
-   - User receive SMS/email
-   - Enter 6-digit code trong form
-   - System validate format (numeric, 6 digits)
-   - Submit verification request
-
-5. **Verify OTP code**
-   - Validate session_id và OTP code
-   - Check expiration (5 phút window)
-   - Compare với stored code trong Redis
-   - Track attempt count (max 3 attempts)
-
-6. **Successful verification**
-   - Mark session as verified
-   - Generate user_token cho barcode assignment
-   - Clear OTP từ Redis
-   - Track analytics: "otp_verified"
-   - Redirect đến barcode assignment page
-
-### 9.5.4 Alternative Flows
-
-**A1: Invalid OTP code**
-- 5a. Nếu OTP code sai:
-  - Increment attempt counter
-  - Show error: "Mã OTP không đúng"
-  - Display attempts remaining (3-current_attempts)
-  - If attempts < 3: Allow retry
-  - If attempts = 3: Block session, require new OTP
-
-**A2: Expired OTP**
-- 5b. Nếu OTP đã expired (>5 phút):
-  - Show error: "Mã OTP đã hết hạn"
-  - Clear expired code từ Redis
-  - Show "Gửi lại OTP" button
-  - User click để request new OTP
-
-**A3: Rate limit exceeded**
-- 1a. Nếu vượt rate limit:
-  - Show error: "Bạn đã yêu cầu quá nhiều OTP. Vui lòng thử lại sau X phút"
-  - Display countdown timer
-  - Block new requests until cooldown
-  - Log suspicious activity
-
-**A4: SMS delivery failed**
-- 3a. Nếu SMS failed (network issue, invalid number):
-  - Auto-fallback sang email delivery
-  - Update delivery method trong session
-  - Show message: "SMS không thể gửi, đã gửi qua email"
-  - Continue normal flow
-
-**A5: Disposable email detected**
-- 2a. Nếu detect disposable email:
-  - Require phone verification thay vì email
-  - Show message: "Vui lòng sử dụng email thường xuyên"
-  - Option: Update email address
-
-### 9.5.5 Exception Flows
-
-**E1: All delivery methods failed**
-- Nếu cả SMS và email đều failed:
-  - Log critical error cho investigation
-  - Show fallback message: "Hệ thống đang bảo trì, vui lòng thử lại sau"
-  - Queue retry job cho later processing
-  - Notify operations team
-
-**E2: Redis unavailable**
-- Nếu Redis cache down:
-  - Fallback sang database storage
-  - Continue OTP flow với slightly higher latency
-  - Alert DevOps team để fix Redis
-
-### 9.5.6 Fraud Detection Rules
-
-**Velocity checks:**
-```python
-class FraudDetection:
-    def check_otp_velocity(self, phone_number, ip_address):
-        rules = [
-            # Phone-based limits
-            ("phone_hourly", phone_number, 3, 3600),
-            ("phone_daily", phone_number, 10, 86400),
-            
-            # IP-based limits  
-            ("ip_hourly", ip_address, 100, 3600),
-            ("ip_daily", ip_address, 1000, 86400),
-        ]
-        
-        for rule_name, identifier, limit, window in rules:
-            count = redis.get(f"rate_limit:{rule_name}:{identifier}") or 0
-            if int(count) >= limit:
-                return False, f"Rate limit exceeded for {rule_name}"
-        
-        return True, None
-    
-    def check_suspicious_patterns(self, request_data):
-        suspicion_score = 0
-        
-        # Check device fingerprint
-        if self.is_known_bot_signature(request_data.user_agent):
-            suspicion_score += 50
-        
-        # Check request timing patterns
-        if self.detect_automated_timing(request_data.session_id):
-            suspicion_score += 30
-        
-        # Check geolocation inconsistency
-        if self.detect_geo_impossible_travel(request_data.ip_address):
-            suspicion_score += 40
-        
-        return suspicion_score > 70  # Threshold for blocking
-```
-
-**Device fingerprinting:**
+#### **Automated Data Quality Checks**
 ```javascript
-// Client-side fingerprinting
-function generateDeviceFingerprint() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillText('Device fingerprint', 2, 2);
+// Data quality monitoring job
+const dataQualityChecks = {
+  async checkBarcodeIntegrity() {
+    // Check for orphaned barcodes
+    const orphanedBarcodes = await db.query(`
+      SELECT COUNT(*) 
+      FROM barcodes b
+      LEFT JOIN barcode_pools bp ON b.pool_id = bp.id
+      WHERE bp.id IS NULL
+    `);
     
-    const fingerprint = {
-        screen: `${screen.width}x${screen.height}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        language: navigator.language,
-        platform: navigator.platform,
-        canvas_hash: btoa(canvas.toDataURL()),
-        user_agent_hash: btoa(navigator.userAgent).substring(0, 32)
-    };
-    
-    return btoa(JSON.stringify(fingerprint));
-}
-```
-
-### 9.5.7 Performance Requirements
-
-**Delivery SLA (từ System_Feature_Tree_Grok.md 1.4):**
-- OTP delivery time: <30 giây
-- Verification success rate: >95%
-- Fraud detection accuracy: >90%
-- System response time: <3 giây
-
-**Scalability:**
-- Support 20,000 OTP requests/phút during peak
-- Redis TTL management cho memory efficiency
-- Auto-scaling SMS/email provider capacity
-
-### 9.5.8 Security Measures
-
-**OTP generation security:**
-```python
-import secrets
-import hashlib
-
-def generate_secure_otp():
-    # Use cryptographically secure random
-    code = secrets.randbelow(1000000)
-    return f"{code:06d}"  # Pad with leading zeros
-
-def hash_otp_for_storage(otp_code, session_id):
-    # Hash OTP before storing in Redis
-    combined = f"{otp_code}:{session_id}"
-    return hashlib.sha256(combined.encode()).hexdigest()
-```
-
-**Anti-enumeration measures:**
-- Constant-time comparison cho OTP validation
-- No difference trong response time between valid/invalid codes
-- Rate limiting applies even for valid attempts
-- Log all verification attempts cho fraud analysis
-
-### 9.5.9 Monitoring và Alerting
-
-**Key metrics to monitor:**
-```yaml
-otp_metrics:
-  delivery_rate:
-    sms_success_rate: ">95%"
-    email_success_rate: ">98%"
-    delivery_time_p95: "<30s"
-  
-  verification_rate:
-    first_attempt_success: ">85%"
-    overall_success_rate: ">95%"
-    
-  fraud_detection:
-    blocked_attempts_ratio: "<5%"
-    false_positive_rate: "<1%"
-    
-  system_health:
-    redis_availability: ">99.9%"
-    provider_uptime: ">99.5%"
-```
-
-**Alerting rules:**
-- SMS delivery rate <90% → Alert SMS team
-- Fraud detection spike >10% → Alert security team
-- OTP delivery time >60s → Alert infrastructure team
-
-### 9.5.10 Postconditions
-- User successfully verified với valid phone/email
-- Session marked as verified trong database
-- User_token generated cho next step
-- Fraud score calculated và stored
-- Analytics events logged
-- Rate limiting counters updated
-
-### 9.5.11 Special Requirements
-- **Zero false positives** cho legitimate users
-- **Fraud rate <5%** requirement
-- **GDPR compliance** cho data retention
-- **Telco compliance** cho SMS regulations
-
----
-
-## 9.6 UC-005: Cấp phát và quản lý voucher
-
-### 9.6.1 Mô tả Use Case
-**Mục tiêu**: System tự động gán barcode từ available pool cho user đã verified, với personalization dựa trên preferences và support mobile wallet integration.
-
-**Phạm vi**: Barcode assignment từ pool đến user delivery
-**Mức độ**: Chức năng chính (primary)
-**Stakeholder**: End users, Brands
-
-### 9.6.2 Preconditions
-- User đã verify OTP thành công (UC-004)
-- User_token hợp lệ và chưa expired
-- Campaign có available barcodes trong pool
-- Barcode pool chưa exhausted
-- Mobile wallet services (Apple Wallet/Google Pay) available
-
-### 9.6.3 Main Success Scenario
-
-1. **Receive barcode assignment request**
-   - User redirect từ OTP verification với user_token
-   - System validate user_token (signature, expiration)
-   - Extract campaign_id, user_preferences từ token
-   - Check campaign status (still active, not expired)
-
-2. **Select optimal barcode từ pool**
-   - Query available barcodes trong campaign pool
-   - Apply personalization logic:
-     * Match product variant với user preferences
-     * Consider location proximity cho redemption
-     * Check expiry dates (prioritize shorter expiry)
-     * Apply any business rules (VIP users, etc.)
-
-3. **Atomic barcode assignment**
-   - Begin database transaction
-   - Lock selected barcode row
-   - Update status: Available → Assigned
-   - Store assignment metadata:
-     * assigned_to_user_hash (SHA-256 của phone/email)
-     * assigned_at timestamp
-     * assignment_campaign_id
-     * user_preferences_snapshot
-   - Commit transaction
-
-4. **Generate delivery assets**
-   - Create QR code image (PNG, 300x300px)
-   - Generate PDF voucher với branding
-   - Create Apple Wallet pass (.pkpass file)
-   - Generate Google Pay pass URL
-   - Prepare redemption instructions
-
-5. **Deliver barcode đến user**
-   - Primary method: Display trong browser với QR code
-   - Secondary: SMS với download link
-   - Optional: Email với PDF attachment
-   - Mobile wallet: Show "Add to Wallet" buttons
-   - Link đến User Portal cho future access
-
-6. **Update analytics và notifications**
-   - Track event: "barcode_assigned"
-   - Update campaign metrics (assigned_codes count)
-   - Send success notification đến user
-   - Queue background jobs (CRM sync, analytics processing)
-
-### 9.6.4 Alternative Flows
-
-**A1: No available barcodes**
-- 2a. Nếu campaign pool exhausted:
-  - Check other campaigns từ same brand
-  - Show waitlist signup option
-  - Offer alternative products/campaigns
-  - Notify brand về inventory shortage
-
-**A2: Personalization engine không tìm được match**
-- 2b. Nếu không có barcode match user preferences:
-  - Fall back sang random assignment từ available pool
-  - Log mismatch cho future optimization
-  - Continue normal flow
-
-**A3: User đã receive barcode cho campaign này**
-- 1a. Nếu detect duplicate assignment:
-  - Check existing assignment status
-  - If still valid: Redirect đến existing barcode display
-  - If expired: Allow new assignment
-  - If redeemed: Show completion message
-
-**A4: Mobile wallet generation failed**
-- 4a. Nếu Apple Wallet/Google Pay API failed:
-  - Continue với QR code và PDF
-  - Show message: "Mobile wallet tạm thời không khả dụng"
-  - Provide manual add instructions
-
-### 9.6.5 Exception Flows
-
-**E1: Database transaction failed**
-- Nếu assignment transaction failed:
-  - Rollback transaction
-  - Log error details cho investigation
-  - Retry với different barcode (up to 3 times)
-  - If all retries failed: Show error page với support contact
-
-**E2: QR code generation service down**
-- Nếu QR generation failed:
-  - Fall back sang text-based barcode display
-  - Queue QR generation job cho later processing
-  - Email QR code khi ready
-
-### 9.6.6 Personalization Algorithm
-
-**Barcode selection logic:**
-```python
-class BarcodePersonalization:
-    def select_optimal_barcode(self, user_preferences, available_barcodes):
-        scored_barcodes = []
-        
-        for barcode in available_barcodes:
-            score = 0
-            
-            # Product category matching (0-40 points)
-            if barcode.product_category in user_preferences.get('categories', []):
-                score += 40
-            
-            # Location proximity (0-20 points)
-            user_location = user_preferences.get('city')
-            if barcode.preferred_locations and user_location:
-                if user_location in barcode.preferred_locations:
-                    score += 20
-            
-            # Expiry urgency (0-15 points)
-            days_to_expiry = (barcode.expires_at - datetime.now()).days
-            if days_to_expiry <= 30:
-                score += 15  # Prioritize soon-to-expire items
-            elif days_to_expiry <= 60:
-                score += 10
-            
-            # Dietary restrictions (0-25 points)
-            user_restrictions = user_preferences.get('dietary_restrictions', [])
-            if not any(restriction in barcode.ingredients for restriction in user_restrictions):
-                score += 25
-            
-            scored_barcodes.append((barcode, score))
-        
-        # Sort by score descending, return top match
-        scored_barcodes.sort(key=lambda x: x[1], reverse=True)
-        return scored_barcodes[0][0] if scored_barcodes else None
-```
-
-### 9.6.7 Mobile Wallet Integration
-
-**Apple Wallet Pass Generation:**
-```python
-import passbook
-
-def create_apple_wallet_pass(barcode_data, user_info):
-    # Create pass structure
-    pass_info = {
-        'passTypeIdentifier': 'pass.com.productsampling.voucher',
-        'serialNumber': barcode_data.barcode_id,
-        'teamIdentifier': 'TEAM_ID',
-        'organizationName': barcode_data.brand_name,
-        'description': f'Voucher cho {barcode_data.product_name}',
-        'formatVersion': 1,
-        'backgroundColor': 'rgb(60, 165, 255)',
-        'foregroundColor': 'rgb(255, 255, 255)',
-        'barcode': {
-            'format': 'PKBarcodeFormatQR',
-            'message': barcode_data.barcode_value,
-            'messageEncoding': 'iso-8859-1'
-        },
-        'generic': {
-            'primaryFields': [{
-                'key': 'product',
-                'label': 'Sản phẩm',
-                'value': barcode_data.product_name
-            }],
-            'secondaryFields': [{
-                'key': 'expires',
-                'label': 'Hết hạn',
-                'value': barcode_data.expires_at.strftime('%d/%m/%Y')
-            }],
-            'auxiliaryFields': [{
-                'key': 'instructions',
-                'label': 'Hướng dẫn',
-                'value': 'Quét mã tại cửa hàng để nhận quà'
-            }]
-        },
-        'locations': [
-            {
-                'latitude': location.latitude,
-                'longitude': location.longitude,
-                'relevantText': f'Đổi quà tại {location.name}'
-            } for location in barcode_data.redemption_locations
-        ]
+    if (orphanedBarcodes.count > 0) {
+      await alertManager.send({
+        level: 'warning',
+        message: `Found ${orphanedBarcodes.count} orphaned barcodes`
+      });
     }
-    
-    # Generate signed .pkpass file
-    pass_file = passbook.Pass(pass_info, key='private_key.pem', cert='certificate.pem')
-    return pass_file.create()
-```
-
-**Google Pay Integration:**
-```python
-def create_google_pay_pass(barcode_data):
-    pass_object = {
-        'kind': 'walletobjects#genericObject',
-        'id': f'voucher_{barcode_data.barcode_id}',
-        'classId': 'ISSUER_ID.voucher_class',
-        'genericType': 'GENERIC_TYPE_UNSPECIFIED',
-        'hexBackgroundColor': '#3CA5FF',
-        'logo': {
-            'sourceUri': {
-                'uri': 'https://brand.com/logo.png'
-            }
-        },
-        'cardTitle': {
-            'defaultValue': {
-                'language': 'vi',
-                'value': barcode_data.product_name
-            }
-        },
-        'subheader': {
-            'defaultValue': {
-                'language': 'vi', 
-                'value': 'Voucher dùng thử'
-            }
-        },
-        'header': {
-            'defaultValue': {
-                'language': 'vi',
-                'value': barcode_data.brand_name
-            }
-        },
-        'barcode': {
-            'type': 'QR_CODE',
-            'value': barcode_data.barcode_value
-        },
-        'heroImage': {
-            'sourceUri': {
-                'uri': barcode_data.product_image_url
-            }
-        }
-    }
-    
-    return generate_google_pay_url(pass_object)
-```
-
-### 9.6.8 User Portal Integration
-
-**Redirect đến User Portal:**
-```javascript
-// After successful barcode assignment
-function redirectToUserPortal(barcode_data) {
-    const portal_url = `https://portal.productsampling.com/dashboard`;
-    const params = new URLSearchParams({
-        barcode_id: barcode_data.barcode_id,
-        first_time: 'true',
-        source: 'assignment'
-    });
-    
-    // Store barcode info trong localStorage cho offline access
-    localStorage.setItem('latest_barcode', JSON.stringify({
-        barcode_id: barcode_data.barcode_id,
-        product_name: barcode_data.product_name,
-        expires_at: barcode_data.expires_at,
-        qr_code_url: barcode_data.qr_code_url
-    }));
-    
-    window.location.href = `${portal_url}?${params.toString()}`;
-}
-```
-
-### 9.6.9 Performance Requirements
-
-**Assignment SLA (từ System_Feature_Tree_Grok.md 1.5):**
-- Assignment time: <2 giây post-verification
-- QR generation: <5 giây
-- Mobile wallet generation: <10 giây
-- 100% barcode uniqueness guarantee
-
-**Concurrency handling:**
-- Handle 1000 simultaneous assignments
-- Optimistic locking cho barcode selection
-- Retry logic cho race conditions
-- Queue overflow protection
-
-### 9.6.10 Analytics và Tracking
-
-**Assignment metrics:**
-```python
-def track_assignment_analytics(barcode_data, user_data, assignment_context):
-    analytics_event = {
-        'event_type': 'barcode_assigned',
-        'timestamp': datetime.now().isoformat(),
-        'campaign_id': barcode_data.campaign_id,
-        'barcode_id': barcode_data.barcode_id,
-        'user_id_hash': hashlib.sha256(user_data.phone.encode()).hexdigest(),
-        'assignment_method': assignment_context.method,  # 'automatic', 'manual', 'waitlist'
-        'personalization_score': assignment_context.personalization_score,
-        'time_from_verification': assignment_context.verification_delay_seconds,
-        'delivery_methods': assignment_context.delivery_methods,  # ['qr', 'sms', 'email', 'wallet']
-        'location_context': {
-            'user_city': user_data.city,
-            'nearest_redemption_location': barcode_data.nearest_location,
-            'distance_km': barcode_data.distance_to_nearest
-        }
-    }
-    
-    # Send to analytics pipeline
-    send_to_analytics_pipeline(analytics_event)
-    
-    # Update campaign metrics
-    update_campaign_metrics(barcode_data.campaign_id, {
-        'total_assignments': '+1',
-        'assignments_today': '+1',
-        'personalization_success_rate': calculate_personalization_success_rate()
-    })
-```
-
-### 9.6.11 Postconditions
-- Barcode status updated: Available → Assigned
-- User receives barcode qua multiple channels
-- Assignment logged trong audit trail
-- Campaign metrics updated
-- User Portal session initialized
-- Mobile wallet passes generated (if requested)
-- Analytics events tracked
-- CRM sync queued
-
-### 9.6.12 Special Requirements
-- **Atomicity**: Zero double-assignment guarantee
-- **Personalization**: >80% user satisfaction với matches
-- **Mobile-first**: PWA-optimized delivery experience
-- **Offline support**: QR codes work without internet
-
----
-
-## 9.7 UC-006: Đổi quà tại điểm bán
-
-### 9.7.1 Mô tả Use Case
-**Mục tiêu**: Serving Account (staff) tại retail location scan barcode của customer để validate và complete redemption process với offline capability.
-
-**Phạm vi**: POS redemption từ scan đến completion
-**Mức độ**: Chức năng chính (primary)
-**Stakeholder**: Store staff, End users, Retail partners
-
-### 9.7.2 Preconditions
-- Serving Account đã login với POS access permissions
-- Barcode status = "Assigned" và chưa expired
-- Staff có device với camera hoặc barcode scanner
-- Location có POS integration setup
-- Customer present tại store với barcode
-
-### 9.7.3 Main Success Scenario
-
-1. **Staff chuẩn bị redemption**
-   - Login vào POS tool hoặc web interface
-   - Select location (auto-detect hoặc manual)
-   - Verify staff_id và shift information
-   - Load redemption interface
-
-2. **Scan customer barcode**
-   - Customer show barcode (QR code, Apple Wallet, printed voucher)
-   - Staff scan bằng camera app hoặc barcode scanner
-   - System capture barcode_value và timestamp
-   - Validate barcode format (alphanumeric, length)
-
-3. **Validate barcode eligibility**
-   - System lookup barcode trong database
-   - Check barcode status (must be "Assigned")
-   - Verify expiry date (chưa expired)
-   - Confirm location permissions (store có thể redeem này không)
-   - Check business hours restrictions
-
-4. **Display redemption preview**
-   - Show product information:
-     * Product name và description
-     * Brand information
-     * Campaign name
-     * Assigned user (masked): "+84***123456"
-     * Expiry date
-   - Show redemption confirmation screen
-   - Provide "Confirm Redemption" button
-
-5. **Complete redemption process**
-   - Staff confirm redemption
-   - System begin atomic transaction:
-     * Update barcode status: Assigned → Redeemed
-     * Record redemption details (timestamp, location, staff)
-     * Update campaign statistics
-     * Generate receipt/confirmation
-   - Commit transaction
-
-6. **Provide confirmation**
-   - Show success message với receipt number
-   - Display redemption summary
-   - Option: Print receipt (if printer available)
-   - Update staff dashboard statistics
-   - Send confirmation đến customer (if contact available)
-
-### 9.7.4 Alternative Flows
-
-**A1: Invalid barcode**
-- 3a. Nếu barcode không tồn tại:
-  - Show error: "Mã barcode không hợp lệ"
-  - Suggest re-scan hoặc manual entry
-  - Option: Report counterfeit barcode
-  - Log suspicious activity
-
-**A2: Already redeemed barcode**
-- 3b. Nếu barcode đã redeemed:
-  - Show error: "Mã này đã được sử dụng"
-  - Display previous redemption info:
-    * Redeemed date/time
-    * Location name
-    * Staff who processed
-  - Option: Contact support nếu customer khiếu nại
-
-**A3: Expired barcode**
-- 3c. Nếu barcode đã expired:
-  - Show error: "Mã đã hết hạn vào [date]"
-  - Check if expiry extension possible
-  - Contact manager approval nếu cần
-  - Document exception nếu approved
-
-**A4: Location restriction**
-- 3d. Nếu barcode không thể redeem tại location này:
-  - Show error: "Mã này chỉ có thể đổi tại: [location_list]"
-  - Provide directions đến valid locations
-  - Option: Manager override với reason
-
-**A5: Network connectivity issues**
-- Nếu device offline:
-  - Switch sang offline mode
-  - Store redemption locally (IndexedDB)
-  - Show "Offline - will sync when connected"
-  - Process redemption based on local cache
-  - Auto-sync khi connection restored
-
-### 9.7.5 Exception Flows
-
-**E1: Database unavailable**
-- Nếu central database down:
-  - Fall back sang local verification
-  - Use cached valid barcode list
-  - Mark redemption as "pending_sync"
-  - Queue for reconciliation later
-
-**E2: Barcode scanner malfunction**
-- Nếu camera/scanner không work:
-  - Allow manual barcode entry
-  - Implement extra validation (checksum)
-  - Log manual entries cho audit
-  - Alert IT support về hardware issue
-
-### 9.7.6 Offline Capability
-
-**Local storage strategy:**
-```javascript
-// IndexedDB schema cho offline redemptions
-const offlineSchema = {
-  stores: ['redemptions', 'valid_barcodes', 'sync_queue'],
-  redemptions: {
-    keyPath: 'redemption_id',
-    indexes: ['barcode_value', 'timestamp', 'sync_status']
   },
-  valid_barcodes: {
-    keyPath: 'barcode_value', 
-    indexes: ['campaign_id', 'expires_at', 'status']
+  
+  async checkUserDataConsistency() {
+    // Check for users with unverified email but verified phone
+    const inconsistentUsers = await User.find({
+      'verification.email.isVerified': false,
+      'verification.phone.isVerified': true,
+      createdAt: { $lt: new Date(Date.now() - 24*60*60*1000) } // Older than 24h
+    }).countDocuments();
+    
+    if (inconsistentUsers > 100) {
+      await alertManager.send({
+        level: 'error',
+        message: `Found ${inconsistentUsers} users with inconsistent verification status`
+      });
+    }
+  },
+  
+  async checkRedemptionAccuracy() {
+    // Cross-check redemption counts
+    const pgRedemptions = await redemptionService.getCount();
+    const mongoEvents = await analyticsService.getRedemptionEventCount();
+    
+    const discrepancy = Math.abs(pgRedemptions - mongoEvents);
+    if (discrepancy > 10) {
+      await alertManager.send({
+        level: 'critical',
+        message: `Redemption count discrepancy: PG=${pgRedemptions}, Mongo=${mongoEvents}`
+      });
+    }
   }
 };
 
-// Offline redemption process
-class OfflineRedemption {
-  async processRedemption(barcode_value, staff_id, location_id) {
-    // Check local valid barcode cache
-    const barcode = await this.lookupLocalBarcode(barcode_value);
-    if (!barcode || barcode.status !== 'assigned') {
-      throw new Error('Invalid barcode or already used');
-    }
+// Schedule checks
+cron.schedule('0 */6 * * *', dataQualityChecks.checkBarcodeIntegrity);
+cron.schedule('0 2 * * *', dataQualityChecks.checkUserDataConsistency);
+cron.schedule('0 */2 * * *', dataQualityChecks.checkRedemptionAccuracy);
+```
+
+---
+
+## 7.12 Database Performance Benchmarks
+
+### 7.12.1 Expected Performance Metrics
+
+| Operation | Database | Target Performance | Measurement Method |
+|-----------|----------|-------------------|-------------------|
+| **Barcode Reservation** | PostgreSQL | <800ms (p95) | Application metrics |
+| **User Profile Read** | MongoDB | <200ms (p95) | Application metrics |
+| **Campaign Analytics** | MongoDB | <3s (p95) | Dashboard response time |
+| **Session Lookup** | Redis | <10ms (p95) | Application metrics |
+| **Bulk Barcode Insert** | PostgreSQL | 1000 records/second | ETL job metrics |
+| **Event Ingestion** | MongoDB | 10,000 events/second | Analytics pipeline |
+
+### 7.12.2 Performance Testing Scripts
+
+#### **PostgreSQL Load Testing**
+```sql
+-- Load test script for barcode reservation
+DO $
+DECLARE
+  i INTEGER;
+  start_time TIMESTAMP;
+  end_time TIMESTAMP;
+  pool_uuid UUID := 'your-pool-id';
+  user_uuid UUID;
+BEGIN
+  start_time := clock_timestamp();
+  
+  FOR i IN 1..1000 LOOP
+    user_uuid := gen_random_uuid();
     
-    // Create offline redemption record
-    const redemption = {
-      redemption_id: this.generateOfflineId(),
-      barcode_value: barcode_value,
-      staff_id: staff_id,
-      location_id: location_id,
-      timestamp: new Date().toISOString(),
-      sync_status: 'pending',
-      offline_processed: true
-    };
+    PERFORM reserve_barcode(pool_uuid, user_uuid);
     
-    // Store locally
-    await this.storeOfflineRedemption(redemption);
-    
-    // Update local barcode status
-    await this.updateLocalBarcodeStatus(barcode_value, 'redeemed');
-    
-    return redemption;
+    IF i % 100 = 0 THEN
+      RAISE NOTICE 'Completed % reservations', i;
+    END IF;
+  END LOOP;
+  
+  end_time := clock_timestamp();
+  RAISE NOTICE 'Total time: % seconds', EXTRACT(EPOCH FROM (end_time - start_time));
+END $;
+```
+
+#### **MongoDB Performance Testing**
+```javascript
+// Load test script for user queries
+const loadTestUserQueries = async () => {
+  const startTime = Date.now();
+  const concurrency = 100;
+  const totalQueries = 10000;
+  
+  const promises = [];
+  
+  for (let i = 0; i < concurrency; i++) {
+    promises.push(
+      (async () => {
+        for (let j = 0; j < totalQueries / concurrency; j++) {
+          const randomUserId = new ObjectId();
+          
+          await db.users.findOne({
+            _id: randomUserId
+          });
+        }
+      })()
+    );
   }
   
-  async syncWhenOnline() {
-    const pending = await this.getPendingRedemptions();
-    for (const redemption of pending) {
-      try {
-        await this.syncRedemptionToServer(redemption);
-        await this.markAsSynced(redemption.redemption_id);
-      } catch (error) {
-        // Handle sync conflicts
-        await this.handleSyncConflict(redemption, error);
-      }
-    }
-  }
-}
-```
-
-### 9.7.7 POS Integration Variants
-
-**Web-based POS tool:**
-- Responsive web app works on tablets/phones
-- Barcode scanning via camera API
-- Works với or without dedicated scanner hardware
-- Real-time sync với central database
-
-**API integration với existing POS systems:**
-```python
-# Circle K POS Integration
-class CircleKPOSAdapter:
-    def __init__(self, api_endpoint, api_key):
-        self.endpoint = api_endpoint
-        self.api_key = api_key
-    
-    def validate_redemption(self, barcode, store_id):
-        # Call Circle K validation API
-        response = requests.post(f"{self.endpoint}/validate", {
-            'barcode': barcode,
-            'store_id': store_id,
-            'api_key': self.api_key
-        })
-        return response.json()
-    
-    def complete_redemption(self, barcode, transaction_id):
-        # Mark as redeemed trong Circle K system
-        response = requests.post(f"{self.endpoint}/redeem", {
-            'barcode': barcode,
-            'transaction_id': transaction_id,
-            'api_key': self.api_key
-        })
-        return response.json()
-
-# GS25 POS Integration  
-class GS25POSAdapter:
-    def process_redemption(self, barcode_data):
-        # Different API structure for GS25
-        # Handle format differences và error codes
-        pass
-```
-
-### 9.7.8 Fraud Prevention
-
-**Redemption validation rules:**
-```python
-class RedemptionValidator:
-    def validate_redemption(self, barcode, location, staff, timestamp):
-        checks = []
-        
-        # Time-based validation
-        if self.is_outside_business_hours(location, timestamp):
-            checks.append("Redemption outside business hours")
-        
-        # Location validation
-        if not self.is_valid_location_for_barcode(barcode, location):
-            checks.append("Invalid location for this barcode")
-        
-        # Staff validation
-        if not self.is_staff_authorized(staff, location):
-            checks.append("Staff not authorized for this location")
-        
-        # Velocity checks
-        if self.detect_rapid_redemptions(staff, timestamp):
-            checks.append("Suspicious redemption velocity")
-        
-        # Geographic impossibility
-        if self.detect_impossible_travel(barcode.last_activity, location, timestamp):
-            checks.append("Impossible travel between activities")
-        
-        return len(checks) == 0, checks
-```
-
-### 9.7.9 Receipt và Confirmation
-
-**Receipt template:**
-```
-=================================
-    [BRAND LOGO]
-=================================
-VOUCHER REDEMPTION RECEIPT
-
-Product: [PRODUCT_NAME]
-Campaign: [CAMPAIGN_NAME]
-Barcode: [BARCODE_VALUE]
-
-Redeemed at: [LOCATION_NAME]
-Address: [LOCATION_ADDRESS]
-Date: [DATE] [TIME]
-Staff: [STAFF_NAME]
-
-Receipt #: [RECEIPT_NUMBER]
-
-Thank you for participating!
-Visit: portal.productsampling.com
-for more offers.
-=================================
-```
-
-**Digital confirmation:**
-```python
-def send_redemption_confirmation(redemption_data):
-    # SMS confirmation
-    if redemption_data.user_phone:
-        message = f"Bạn đã đổi thành công {redemption_data.product_name} tại {redemption_data.location_name}. Cảm ơn bạn đã tham gia!"
-        send_sms(redemption_data.user_phone, message)
-    
-    # Email confirmation với receipt
-    if redemption_data.user_email:
-        send_email_receipt(redemption_data.user_email, redemption_data)
-    
-    # User Portal notification
-    create_portal_notification(redemption_data.user_id, {
-        'type': 'redemption_success',
-        'product_name': redemption_data.product_name,
-        'location': redemption_data.location_name,
-        'timestamp': redemption_data.timestamp
-    })
-```
-
-### 9.7.10 Performance Requirements
-
-**Redemption SLA (từ System_Feature_Tree_Grok.md 1.5):**
-- Scan validation: <3 giây
-- Redemption completion: <5 giây total
-- Offline sync: 24-hour capability
-- Success rate: >98%
-
-**Concurrent redemptions:**
-- Support 100 simultaneous redemptions per location
-- Handle peak times (lunch hours, weekends)
-- Queue management cho high traffic
-
-### 9.7.11 Analytics và Reporting
-
-**Real-time redemption tracking:**
-```python
-def track_redemption_analytics(redemption_data):
-    analytics_event = {
-        'event_type': 'redemption_completed',
-        'timestamp': redemption_data.timestamp,
-        'campaign_id': redemption_data.campaign_id,
-        'location_id': redemption_data.location_id,
-        'staff_id': redemption_data.staff_id,
-        'processing_time_seconds': redemption_data.processing_time,
-        'redemption_method': redemption_data.method,  # 'scan', 'manual_entry'
-        'offline_processed': redemption_data.offline,
-        'time_from_assignment_hours': redemption_data.assignment_delay,
-        'day_of_week': redemption_data.timestamp.strftime('%A'),
-        'hour_of_day': redemption_data.timestamp.hour
-    }
-    
-    # Update real-time dashboards
-    update_location_dashboard(redemption_data.location_id, analytics_event)
-    update_campaign_dashboard(redemption_data.campaign_id, analytics_event)
-    
-    # Send to data warehouse
-    send_to_analytics_pipeline(analytics_event)
-```
-
-### 9.7.12 Postconditions
-- Barcode status updated: Assigned → Redeemed
-- Redemption record created với audit trail
-- Campaign statistics updated
-- Customer confirmation sent
-- Receipt generated
-- Staff dashboard updated
-- Analytics events tracked
-- Inventory adjustments (if applicable)
-
-### 9.7.13 Special Requirements
-- **Offline capability**: 24-hour operation without internet
-- **Audit compliance**: Immutable redemption logs
-- **Real-time sync**: <5 minute delay cho online operations
-- **Multi-location support**: Staff có thể work tại multiple stores
-
----
----
-
-## 9.8 UC-007: Phân tích và báo cáo chiến dịch
-
-### 9.8.1 Mô tả Use Case
-**Mục tiêu**: Brand Manager/Admin xem funnel analytics, ROI metrics và export data để đánh giá hiệu quả campaign và tối ưu chiến lược.
-
-**Phạm vi**: Analytics dashboard từ real-time metrics đến export reports
-**Mức độ**: Chức năng quan trọng (important)
-**Stakeholder**: Brand managers, Marketing teams, Executives
-
-### 9.8.2 Preconditions
-- User có quyền analytics theo scope (Own campaigns hoặc Group/Global)
-- Campaign đã có data (ít nhất vài events được track)
-- Analytics pipeline đang hoạt động
-- Dashboard service online với <3s response time requirement
-
-### 9.8.3 Main Success Scenario
-
-1. **Truy cập Analytics Dashboard**
-   - Login và navigate đến Analytics module
-   - System hiển thị campaign list theo permissions
-   - Select campaign hoặc view aggregated data
-   - Choose date range (default: last 30 days)
-
-2. **Xem Funnel Analytics**
-   - System load real-time funnel data:
-     * QR Scans: Số lượng QR được scan
-     * Form Submissions: Users điền form
-     * OTP Verifications: Successful verifications
-     * Barcode Assignments: Vouchers được cấp
-     * Redemptions: Actual product pickups
-   - Display conversion rates giữa các steps
-   - Show drop-off points và bottlenecks
-
-3. **Phân tích ROI Metrics**
-   - Cost metrics:
-     * Total campaign cost
-     * Cost per scan
-     * Cost per verified lead (target: <0.4 USD)
-     * Cost per redemption
-   - Revenue impact:
-     * Estimated revenue from redemptions
-     * Customer lifetime value uplift
-     * ROI percentage
-   - Efficiency metrics:
-     * Campaign reach vs target
-     * Redemption rate by location
-     * Time to redemption distribution
-
-4. **Geographic và Demographic Analysis**
-   - Location performance:
-     * Top performing locations
-     * Geographic heat map
-     * Urban vs suburban performance
-   - User demographics:
-     * Age group breakdown
-     * Gender distribution
-     * User preferences trends
-   - Time-based analysis:
-     * Peak activity hours
-     * Day of week patterns
-     * Seasonal trends
-
-5. **Interactive Dashboard Features**
-   - Drill-down capabilities:
-     * Click location để xem chi tiết
-     * Filter theo demographics
-     * Compare multiple campaigns
-   - Real-time updates (refresh every 5 minutes)
-   - Custom date range selection
-   - Save favorite views
-
-6. **Export và Reporting**
-   - Quick export options:
-     * CSV cho raw data
-     * Excel với charts
-     * PDF executive summary
-   - Scheduled reports:
-     * Daily/weekly/monthly automation
-     * Email delivery đến stakeholders
-   - API access cho custom integrations
-
-### 9.8.4 Alternative Flows
-
-**A1: Insufficient data**
-- 2a. Nếu campaign chưa có sufficient data:
-  - Show message: "Chưa đủ dữ liệu để hiển thị analytics"
-  - Provide estimated time cho meaningful data
-  - Show preliminary metrics nếu có
-  - Link đến campaign promotion tips
-
-**A2: Data processing delay**
-- 2b. Nếu analytics pipeline delayed:
-  - Show last update timestamp
-  - Display cached data với warning
-  - Provide refresh button
-  - Estimate real-time data availability
-
-**A3: Export job queue full**
-- 6a. Nếu export system overloaded:
-  - Show queue position và estimated wait time
-  - Option: Priority export (for premium users)
-  - Email notification khi ready
-  - Download link expiry information
-
-### 9.8.5 Exception Flows
-
-**E1: Analytics service down**
-- Nếu analytics service unavailable:
-  - Show cached dashboard data
-  - Display service status message
-  - Provide basic metrics từ primary database
-  - Alert operations team
-
-**E2: Large dataset timeout**
-- Nếu query timeout cho large campaigns:
-  - Suggest narrower date range
-  - Offer sampled data analysis
-  - Background processing option
-  - Pre-aggregated report suggestions
-
-### 9.8.6 Dashboard Components
-
-**Funnel Visualization:**
-```javascript
-// Funnel chart configuration
-const funnelConfig = {
-  data: {
-    scans: 10000,
-    form_submissions: 8500, // 85% conversion
-    otp_verifications: 8075, // 95% conversion  
-    barcode_assignments: 7912,# 📋 SRS Part09 - Use Case chi tiết (Detailed Use Cases)
-**Hệ thống Product Sampling Platform**
-
-**Phiên bản**: 1.0  
-**Ngày**: 2025-10-17  
-**Tác giả**: Đội phân tích hệ thống  
-
----
-
-## 9.1 Tổng quan Use Cases
-
-### 9.1.1 Phân loại Use Cases (từ System_Feature_Tree_Grok.md v4.0)
-Dựa trên **flow vận hành** và **user stories** trong cây chức năng, hệ thống có 8 use cases chính:
-
-| UC ID | Tên Use Case | Actor chính | Mức độ ưu tiên | Nguồn tham chiếu |
-|-------|--------------|-------------|----------------|------------------|
-| UC-001 | Tạo và quản lý chiến dịch sampling | Admin/Brand Manager | Cao | Feature Tree 1.1 |
-| UC-002 | Quản lý barcode và inventory | Admin/Brand Manager | Cao | Feature Tree 1.2 |
-| UC-003 | Khách hàng quét QR và điền form | End User | Cao | Feature Tree 1.3 |
-| UC-004 | Xác thực OTP và chống gian lận | End User/System | Cao | Feature Tree 1.4 |
-| UC-005 | Cấp phát và quản lý voucher | System/End User | Cao | Feature Tree 1.5 |
-| UC-006 | Đổi quà tại điểm bán | Serving Staff/End User | Cao | Feature Tree 1.5 |
-| UC-007 | Phân tích và báo cáo chiến dịch | Brand Manager/Admin | Trung bình | Feature Tree 1.6 |
-| UC-008 | Quản lý User Portal và hỗ trợ | End User/Admin | Trung bình | Feature Tree 1.9 |
-
-### 9.1.2 Actors và vai trò (từ Access_Control_Tree_Grok.md v2.2)
-
-**Primary Actors:**
-- **Admin**: Toàn quyền hệ thống, thiết lập global configs
-- **Group Admin**: Quản lý campaigns trong group scope
-- **Customer Account (Brand Manager)**: Quản lý campaigns riêng
-- **Serving Account**: Staff tại retail nodes, xử lý redemption
-- **End User**: Khách hàng cuối sử dụng User Portal
-- **Auditor**: Giám sát compliance và audit logs
-
-**Secondary Actors:**
-- **SMS/Email Providers**: Twilio, SendGrid
-- **CRM Systems**: HubSpot, Salesforce
-- **POS Systems**: Circle K, GS25, Mini Stop
-- **Analytics Systems**: GA4, Meta Pixel
-
----
-
-## 9.2 UC-001: Tạo và quản lý chiến dịch sampling
-
-### 9.2.1 Mô tả Use Case
-**Mục tiêu**: Admin/Brand Manager tạo và quản lý chiến dịch phân phối mẫu sản phẩm với targeting địa lý, ngân sách và tracking UTM.
-
-**Phạm vi**: Campaign lifecycle từ tạo đến hoàn thành
-**Mức độ**: Chức năng chính (primary)
-**Stakeholder**: Brands, Marketing teams
-
-### 9.2.2 Preconditions
-- Actor đã đăng nhập với role Admin, Group Admin hoặc Customer Account
-- Có ít nhất 1 location được setup trong hệ thống
-- Có barcode pool sẵn sàng để gán (optional cho draft)
-
-### 9.2.3 Main Success Scenario
-1. **Actor truy cập Campaign Management**
-   - Đăng nhập vào dashboard
-   - Navigate đến Campaign Management module
-   - System hiển thị danh sách campaigns theo phân quyền
-
-2. **Tạo campaign mới**
-   - Click "Tạo Campaign Mới"
-   - Điền thông tin cơ bản:
-     * Tên campaign (bắt buộc, max 255 chars)
-     * Mô tả chi tiết (optional, max 1000 chars)
-     * Ngày bắt đầu/kết thúc (validate: end > start, future dates)
-   - System validate input và tạo campaign_id duy nhất
-
-3. **Cấu hình targeting và budget**
-   - Chọn locations từ dropdown (multi-select)
-   - Thiết lập targeting demographics:
-     * Age range (13-100)
-     * Gender filter (male/female/all)
-     * Interests (optional)
-   - Cài đặt budget limits:
-     * Max participants
-     * Total budget
-     * Cost per verified lead target (≤ 0.4 USD)
-
-4. **Setup tracking và UTM**
-   - Cấu hình UTM parameters:
-     * utm_source (e.g., "poster", "flyer")
-     * utm_medium (e.g., "qr", "digital")
-     * utm_campaign (auto-fill campaign_id)
-     * utm_term, utm_content (optional)
-   - System generate tracking URLs
-
-5. **Gán barcode pool (optional)**
-   - Select từ available barcode batches
-   - Hoặc skip để import sau
-   - System validate barcode availability
-
-6. **Preview và publish**
-   - Review tất cả settings
-   - Generate QR codes cho mỗi location
-   - Status: Draft → Active
-   - System gửi notification đến team
-
-### 9.2.4 Alternative Flows
-
-**A1: Validation errors**
-- 2a. Nếu validation thất bại:
-  - System hiển thị error messages chi tiết
-  - Highlight fields có lỗi
-  - Actor sửa và retry
-  - Continue từ step 2
-
-**A2: Insufficient permissions**
-- 1a. Nếu Customer Account cố tạo Global campaign:
-  - System reject với 403 Forbidden
-  - Show message "Bạn chỉ có thể tạo campaigns cho brand riêng"
-  - Redirect về dashboard
-
-**A3: No available locations**
-- 3a. Nếu không có locations available cho user scope:
-  - System hiển thị empty state
-  - Provide link đến Location Management
-  - Suggest contact Admin để setup locations
-
-### 9.2.5 Exception Flows
-
-**E1: System timeout**
-- Nếu campaign creation timeout (>30s):
-  - System save draft automatically
-  - Show "Campaign đã được lưu tạm, bạn có thể tiếp tục sau"
-  - Provide link để resume
-
-**E2: Database constraint violation**
-- Nếu campaign_id duplicate (rare):
-  - System retry với new ID generation
-  - Log incident cho investigation
-  - Continue normal flow
-
-### 9.2.6 Postconditions
-- Campaign được tạo với status "Active" hoặc "Draft"
-- QR codes được generate cho mỗi location
-- Analytics tracking được setup
-- Team notifications được gửi
-- Audit log ghi lại campaign creation
-
-### 9.2.7 Special Requirements
-- **Performance**: Campaign creation phải hoàn thành trong <2 ngày (business requirement từ System_Feature_Tree_Grok.md 1.1)
-- **Security**: Multi-tenant isolation theo tenant_id
-- **Audit**: Full audit trail cho compliance
-- **UTM accuracy**: 100% tracking accuracy requirement
-
----
-
-## 9.3 UC-002: Quản lý barcode và inventory
-
-### 9.3.1 Mô tả Use Case
-**Mục tiêu**: Admin/Brand Manager import, quản lý và đối soát barcode/voucher với single-use validation và lifecycle tracking.
-
-**Phạm vi**: Barcode lifecycle từ import đến reconciliation
-**Mức độ**: Chức năng chính (primary)
-**Stakeholder**: Brands, Operations team
-
-### 9.3.2 Preconditions
-- Actor có quyền barcode.import theo scope (từ Access_Control_Tree_Grok.md 2.2)
-- CSV file tuân thủ format: barcode, product_name, expiry_date, value, batch_code
-- File size ≤ 100MB, encoding UTF-8
-
-### 9.3.3 Main Success Scenario
-1. **Truy cập Barcode Management**
-   - Navigate đến Barcode Management module
-   - System hiển thị overview: total codes, assigned, redeemed, expired
-
-2. **Chuẩn bị import file**
-   - Download CSV template nếu cần
-   - Chuẩn bị file với columns bắt buộc:
-     * barcode (8-50 chars, alphanumeric)
-     * product_name (max 255 chars)
-     * expiry_date (ISO date format, future dates only)
-     * value (decimal, optional)
-     * batch_code (tracking purposes)
-
-3. **Upload và validate file**
-   - Click "Import Barcodes"
-   - Select campaign để gán (optional)
-   - Upload CSV file
-   - System validate:
-     * File format và encoding
-     * Column headers đúng
-     * Data types và constraints
-     * Barcode uniqueness (global unique)
-
-4. **Preview và confirm import**
-   - System hiển thị preview:
-     * Total rows: X
-     * Valid rows: Y
-     * Invalid rows: Z (với error details)
-   - Review sample data (first 10 rows)
-   - Option: "Validate Only" hoặc "Import"
-
-5. **Process import job**
-   - System tạo background job
-   - Return job_id cho tracking
-   - Process từng row với error handling
-   - Update progress real-time
-
-6. **Verify import results**
-   - Check job status via job_id
-   - Review import summary:
-     * Successful imports: X
-     * Failed imports: Y với error details
-     * Batch_id được tạo
-   - Download error report nếu có
-
-### 9.3.4 Alternative Flows
-
-**A1: File validation errors**
-- 3a. Nếu file format không hợp lệ:
-  - System show detailed error messages
-  - Highlight specific issues (missing columns, wrong encoding, etc.)
-  - Provide corrected template download
-  - Actor fix file và retry
-
-**A2: Duplicate barcodes detected**
-- 3b. Nếu có duplicate barcodes trong file hoặc với existing data:
-  - System list tất cả duplicates
-  - Options: Skip duplicates, Replace existing, Cancel import
-  - Actor chọn strategy và continue
-
-**A3: Large file processing**
-- 4a. Nếu file >10K rows:
-  - System suggest batch processing
-  - Option: Split file thành smaller batches
-  - Process từng batch sequentially
-
-### 9.3.5 Exception Flows
-
-**E1: Import job failure**
-- Nếu background job failed:
-  - System retry automatically (max 3 times)
-  - Log detailed error cho debugging
-  - Notify Actor về failure với error summary
-  - Option: Download partial results nếu có
-
-**E2: Database timeout**
-- Nếu large batch insert timeout:
-  - System switch sang chunked processing
-  - Continue từ last successful chunk
-  - Show progress với estimated completion time
-
-### 9.3.6 Barcode Lifecycle Management
-
-**Trạng thái lifecycle (từ System_Feature_Tree_Grok.md 1.2):**
-```
-Available → Assigned → Redeemed
-    ↓           ↓         ↓
-  Expired    Expired   [Final]
-    ↓           ↓
- Revoked    Revoked
-```
-
-**State transition rules:**
-- Available → Assigned: Khi user verify OTP
-- Assigned → Redeemed: Khi scan tại POS
-- Any → Expired: Khi qua expiry_date
-- Any → Revoked: Manual admin action (fraud cases)
-
-### 9.3.7 Reconciliation Process
-
-**Daily reconciliation workflow:**
-1. **System auto-check expiry**
-   - Cron job chạy daily 2AM
-   - Update status Available/Assigned → Expired nếu qua expiry_date
-   - Generate expiry report
-
-2. **Manual reconciliation**
-   - Admin import redemption logs từ external systems
-   - Cross-reference với internal redemption data
-   - Identify discrepancies
-   - Generate reconciliation report
-
-3. **Inventory accuracy check**
-   - Compare database counts với physical inventory
-   - Flag discrepancies >5% cho investigation
-   - Update inventory adjustments nếu cần
-
-### 9.3.8 Postconditions
-- Barcodes imported với status "Available"
-- Batch record created với tracking info
-- Inventory counts updated
-- Import job log saved với full audit trail
-- Notifications sent cho relevant stakeholders
-
-### 9.3.9 Special Requirements
-- **Performance**: Import <10MB file trong <30 giây
-- **Accuracy**: 100% barcode uniqueness enforcement
-- **Inventory**: >95% accuracy requirement
-- **Audit**: Immutable audit trail cho compliance
-
----
-
-## 9.4 UC-003: Khách hàng quét QR và điền form
-
-### 9.4.1 Mô tả Use Case
-**Mục tiêu**: End user quét QR code từ ads format, truy cập landing page và điền form thu thập dữ liệu với quiz preferences.
-
-**Phạm vi**: User journey từ QR scan đến form submission
-**Mức độ**: Chức năng chính (primary)  
-**Stakeholder**: End users, Brands
-
-### 9.4.2 Preconditions
-- Campaign đang active (status = "active")
-- QR code hợp lệ và chưa expired
-- User có smartphone/device với camera
-- Landing page accessible (99.9% uptime requirement)
-
-### 9.4.3 Main Success Scenario
-
-1. **Quét QR code**
-   - User thấy ads format (poster, flyer, digital banner) tại location
-   - Mở camera app hoặc QR scanner
-   - Quét QR code trên ads
-   - System redirect đến landing page với campaign_id, location_id, ads_format_id trong URL
-
-2. **Load landing page**
-   - System load landing page responsive (<2 giây trên mobile 3G)
-   - Hiển thị campaign info:
-     * Product image và description
-     * Brand information
-     * Value proposition
-     * Terms & conditions link
-   - Track analytics event: "qr_scan"
-
-3. **Điền form thông tin cơ bản**
-   - Form với fields bắt buộc:
-     * Họ tên (validation: không chứa số)
-     * Email (validation: format email hợp lệ)
-     * Số điện thoại (validation: VN format +84...)
-   - Fields optional:
-     * Tuổi (dropdown: <18, 18-24, 25-34, 35-44, 45-54, 55+)
-     * Giới tính (radio: Nam/Nữ/Khác)
-     * Thành phố (dropdown: major cities)
-
-4. **Tham gia quiz preferences**
-   - System hiển thị 5-10 câu hỏi multiple choice:
-     * "Bạn thường mua sắm ở đâu?" (Online/Store/Both)
-     * "Loại sản phẩm yêu thích?" (Food/Beauty/Tech/Fashion)
-     * "Frequency of trying new products?" (Weekly/Monthly/Rarely)
-     * "Preferred communication channel?" (SMS/Email/Social)
-   - Each answer có scoring để build user profile
-
-5. **Chấp nhận terms và consent**
-   - Checkboxes bắt buộc:
-     * "Tôi đồng ý với Terms & Conditions"
-     * "Tôi đồng ý xử lý dữ liệu cá nhân theo GDPR/PDPA"
-   - Checkboxes optional:
-     * "Nhận thông tin marketing qua email"
-     * "Nhận thông tin marketing qua SMS"
-     * "Chia sẻ data với partners"
-
-6. **Submit form với reCAPTCHA**
-   - System validate tất cả required fields
-   - reCAPTCHA v3 validation (score >0.5)
-   - Track analytics event: "form_submit"
-   - Show loading spinner
-
-7. **Xử lý submission**
-   - System hash PII data (phone, email)
-   - Encrypt sensitive fields (name, preferences)
-   - Store trong database với consent flags
-   - Generate session_id cho OTP step
-   - Redirect đến OTP verification page
-
-### 9.4.4 Alternative Flows
-
-**A1: Form validation errors**
-- 6a. Nếu có validation errors:
-  - Highlight fields có lỗi với error messages
-  - Scroll đến field đầu tiên có lỗi
-  - Keep existing data trong form
-  - User fix errors và re-submit
-
-**A2: Campaign inactive/expired**
-- 1a. Nếu campaign không active:
-  - Show message "Campaign đã kết thúc"
-  - Provide link đến other active campaigns
-  - Track event: "campaign_expired_access"
-
-**A3: Location restriction**
-- 1b. Nếu user location không match campaign targeting:
-  - Show message "Campaign không available tại khu vực này"
-  - Suggest nearby locations nếu có
-  - Option: Continue anyway với warning
-
-**A4: reCAPTCHA failed**
-- 6b. Nếu reCAPTCHA score <0.5:
-  - Show traditional CAPTCHA challenge
-  - User solve CAPTCHA
-  - Re-validate và continue
-
-### 9.4.5 Exception Flows
-
-**E1: Network connectivity issues**
-- Nếu form submit failed do network:
-  - Auto-save form data locally (localStorage)
-  - Show retry button
-  - Auto-retry khi connection restored
-  - Prevent data loss
-
-**E2: Server overload**
-- Nếu server response >10 giây:
-  - Show "High traffic, please wait" message
-  - Implement queue system
-  - Provide estimated wait time
-  - Option: Get notified when ready
-
-### 9.4.6 User Experience Requirements
-
-**Performance targets (từ System_Feature_Tree_Grok.md 1.3):**
-- Landing page load: <2 giây trên mobile 3G
-- Form completion time: <30 giây average
-- Form completion rate: >90%
-- Data quality score: >95%
-
-**Responsive design:**
-- Mobile-first PWA design
-- Touch-friendly inputs
-- Auto-complete enabled
-- Keyboard optimization
-- Accessibility WCAG 2.1 AA compliant
-
-**Progressive disclosure:**
-- Show form steps progressively
-- Progress indicator (Step 1/3)
-- Save progress locally
-- Clear next step instructions
-
-### 9.4.7 Data Collection Strategy
-
-**Profile scoring algorithm:**
-```python
-def calculate_profile_score(quiz_responses):
-    score = 0
-    
-    # Shopping frequency (0-20 points)
-    if quiz_responses.get('shopping_frequency') == 'weekly':
-        score += 20
-    elif quiz_responses.get('shopping_frequency') == 'monthly':
-        score += 10
-    
-    # Product trial willingness (0-25 points)
-    if quiz_responses.get('try_new_products') == 'always':
-        score += 25
-    elif quiz_responses.get('try_new_products') == 'sometimes':
-        score += 15
-    
-    # Brand loyalty (0-15 points)
-    if quiz_responses.get('brand_loyalty') == 'low':
-        score += 15  # More likely to try new brands
-    
-    # Communication preference (0-10 points)
-    if quiz_responses.get('communication') in ['email', 'sms']:
-        score += 10
-    
-    return min(score, 100)  # Cap at 100
-```
-
-### 9.4.8 Analytics Tracking
-
-**Events tracked:**
-```javascript
-// GA4 event tracking
-gtag('event', 'qr_scan', {
-  campaign_id: 'CAMP_2025_001',
-  location_id: 'HCM_CIRCLE_K_001',
-  ads_format_id: 'POSTER_A4_001',
-  user_agent: navigator.userAgent,
-  timestamp: new Date().toISOString()
-});
-
-gtag('event', 'form_start', {
-  campaign_id: 'CAMP_2025_001',
-  form_version: 'v1.2'
-});
-
-gtag('event', 'form_submit', {
-  campaign_id: 'CAMP_2025_001', 
-  completion_time: 45, // seconds
-  quiz_completed: true,
-  consent_marketing: true
-});
-```
-
-### 9.4.9 Postconditions
-- User profile created với encrypted PII
-- Quiz responses scored và stored
-- Consent preferences recorded
-- Analytics events tracked
-- Session prepared cho OTP verification
-- User redirected đến OTP page
-
-### 9.4.10 Special Requirements
-- **GDPR/PDPA Compliance**: Explicit consent collection
-- **Data Quality**: >95% valid data requirement
-- **Fraud Prevention**: reCAPTCHA và device fingerprinting
-- **Accessibility**: Support screen readers và keyboard navigation
-
----
-
-## 9.5 UC-004: Xác thực OTP và chống gian lận
-
-### 9.5.1 Mô tả Use Case
-**Mục tiêu**: System gửi và verify OTP code để xác thực user thật, kết hợp với fraud detection để chống spam và bot attacks.
-
-**Phạm vi**: OTP generation, delivery, verification và fraud prevention
-**Mức độ**: Chức năng quan trọng (critical)
-**Stakeholder**: End users, Security team
-
-### 9.5.2 Preconditions
-- User đã complete form submission (UC-003)
-- Phone/email đã được validate format
-- Session_id hợp lệ từ form submission
-- SMS/Email providers (Twilio/SendGrid) online
-
-### 9.5.3 Main Success Scenario
-
-1. **Generate và gửi OTP**
-   - System receive OTP request với session_id
-   - Validate session (không expired, chưa verified)
-   - Generate 6-digit random code
-   - Store trong Redis với TTL 5 phút
-   - Determine delivery method (SMS priority, email fallback)
-
-2. **Fraud detection pre-check**
-   - Check rate limiting rules:
-     * Max 10 OTP requests/24h per phone number
-     * Max 3 requests/hour per session
-     * Max 100 requests/hour per IP
-   - Device fingerprinting analysis
-   - Disposable email detection
-   - VPN/proxy detection
-
-3. **Deliver OTP message**
-   - SMS via Twilio: "Mã xác thực của bạn: {code}. Có hiệu lực trong 5 phút."
-   - Email template với branding và instructions
-   - Track delivery status (sent/delivered/failed)
-   - Start 5-minute countdown timer
-
-4. **User nhập OTP code**
-   - User receive SMS/email
-   - Enter 6-digit code trong form
-   - System validate format (numeric, 6 digits)
-   - Submit verification request
-
-5. **Verify OTP code**
-   - Validate session_id và OTP code
-   - Check expiration (5 phút window)
-   - Compare với stored code trong Redis
-   - Track attempt count (max 3 attempts)
-
-6. **Successful verification**
-   - Mark session as verified
-   - Generate user_token cho barcode assignment
-   - Clear OTP từ Redis
-   - Track analytics: "otp_verified"
-   - Redirect đến barcode assignment page
-
-### 9.5.4 Alternative Flows
-
-**A1: Invalid OTP code**
-- 5a. Nếu OTP code sai:
-  - Increment attempt counter
-  - Show error: "Mã OTP không đúng"
-  - Display attempts remaining (3-current_attempts)
-  - If attempts < 3: Allow retry
-  - If attempts = 3: Block session, require new OTP
-
-**A2: Expired OTP**
-- 5b. Nếu OTP đã expired (>5 phút):
-  - Show error: "Mã OTP đã hết hạn"
-  - Clear expired code từ Redis
-  - Show "Gửi lại OTP" button
-  - User click để request new OTP
-
-**A3: Rate limit exceeded**
-- 1a. Nếu vượt rate limit:
-  - Show error: "Bạn đã yêu cầu quá nhiều OTP. Vui lòng thử lại sau X phút"
-  - Display countdown timer
-  - Block new requests until cooldown
-  - Log suspicious activity
-
-**A4: SMS delivery failed**
-- 3a. Nếu SMS failed (network issue, invalid number):
-  - Auto-fallback sang email delivery
-  - Update delivery method trong session
-  - Show message: "SMS không thể gửi, đã gửi qua email"
-  - Continue normal flow
-
-**A5: Disposable email detected**
-- 2a. Nếu detect disposable email:
-  - Require phone verification thay vì email
-  - Show message: "Vui lòng sử dụng email thường xuyên"
-  - Option: Update email address
-
-### 9.5.5 Exception Flows
-
-**E1: All delivery methods failed**
-- Nếu cả SMS và email đều failed:
-  - Log critical error cho investigation
-  - Show fallback message: "Hệ thống đang bảo trì, vui lòng thử lại sau"
-  - Queue retry job cho later processing
-  - Notify operations team
-
-**E2: Redis unavailable**
-- Nếu Redis cache down:
-  - Fallback sang database storage
-  - Continue OTP flow với slightly higher latency
-  - Alert DevOps team để fix Redis
-
-### 9.5.6 Fraud Detection Rules
-
-**Velocity checks:**
-```python
-class FraudDetection:
-    def check_otp_velocity(self, phone_number, ip_address):
-        rules = [
-            # Phone-based limits
-            ("phone_hourly", phone_number, 3, 3600),
-            ("phone_daily", phone_number, 10, 86400),
-            
-            # IP-based limits  
-            ("ip_hourly", ip_address, 100, 3600),
-            ("ip_daily", ip_address, 1000, 86400),
-        ]
-        
-        for rule_name, identifier, limit, window in rules:
-            count = redis.get(f"rate_limit:{rule_name}:{identifier}") or 0
-            if int(count) >= limit:
-                return False, f"Rate limit exceeded for {rule_name}"
-        
-        return True, None
-    
-    def check_suspicious_patterns(self, request_data):
-        suspicion_score = 0
-        
-        # Check device fingerprint
-        if self.is_known_bot_signature(request_data.user_agent):
-            suspicion_score += 50
-        
-        # Check request timing patterns
-        if self.detect_automated_timing(request_data.session_id):
-            suspicion_score += 30
-        
-        # Check geolocation inconsistency
-        if self.detect_geo_impossible_travel(request_data.ip_address):
-            suspicion_score += 40
-        
-        return suspicion_score > 70  # Threshold for blocking
-```
-
-**Device fingerprinting:**
-```javascript
-// Client-side fingerprinting
-function generateDeviceFingerprint() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillText('Device fingerprint', 2, 2);
-    
-    const fingerprint = {
-        screen: `${screen.width}x${screen.height}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        language: navigator.language,
-        platform: navigator.platform,
-        canvas_hash: btoa(canvas.toDataURL()),
-        user_agent_hash: btoa(navigator.userAgent).substring(0, 32)
-    };
-    
-    return btoa(JSON.stringify(fingerprint));
-}
-```
-
-### 9.5.7 Performance Requirements
-
-**Delivery SLA (từ System_Feature_Tree_Grok.md 1.4):**
-- OTP delivery time: <30 giây
-- Verification success rate: >95%
-- Fraud detection accuracy: >90%
-- System response time: <3 giây
-
-**Scalability:**
-- Support 20,000 OTP requests/phút during peak
-- Redis TTL management cho memory efficiency
-- Auto-scaling SMS/email provider capacity
-
-### 9.5.8 Security Measures
-
-**OTP generation security:**
-```python
-import secrets
-import hashlib
-
-def generate_secure_otp():
-    # Use cryptographically secure random
-    code = secrets.randbelow(1000000)
-    return f"{code:06d}"  # Pad with leading zeros
-
-def hash_otp_for_storage(otp_code, session_id):
-    # Hash OTP before storing in Redis
-    combined = f"{otp_code}:{session_id}"
-    return hashlib.sha256(combined.encode()).hexdigest()
-```
-
-**Anti-enumeration measures:**
-- Constant-time comparison cho OTP validation
-- No difference trong response time between valid/invalid codes
-- Rate limiting applies even for valid attempts
-- Log all verification attempts cho fraud analysis
-
-### 9.5.9 Monitoring và Alerting
-
-**Key metrics to monitor:**
-```yaml
-otp_metrics:
-  delivery_rate:
-    sms_success_rate: ">95%"
-    email_success_rate: ">98%"
-    delivery_time_p95: "<30s"
+  await Promise.all(promises);
   
-  verification_rate:
-    first_attempt_success: ">85%"
-    overall_success_rate: ">95%"
-    
-  fraud_detection:
-    blocked_attempts_ratio: "<5%"
-    false_positive_rate: "<1%"
-    
-  system_health:
-    redis_availability: ">99.9%"
-    provider_uptime: ">99.5%"
-```
-
-**Alerting rules:**
-- SMS delivery rate <90% → Alert SMS team
-- Fraud detection spike >10% → Alert security team
-- OTP delivery time >60s → Alert infrastructure team
-
-### 9.5.10 Postconditions
-- User successfully verified với valid phone/email
-- Session marked as verified trong database
-- User_token generated cho next step
-- Fraud score calculated và stored
-- Analytics events logged
-- Rate limiting counters updated
-
-### 9.5.11 Special Requirements
-- **Zero false positives** cho legitimate users
-- **Fraud rate <5%** requirement
-- **GDPR compliance** cho data retention
-- **Telco compliance** cho SMS regulations
-
----
-
-## 9.6 UC-005: Cấp phát và quản lý voucher
-
-### 9.6.1 Mô tả Use Case
-**Mục tiêu**: System tự động gán barcode từ available pool cho user đã verified, với personalization dựa trên preferences và support mobile wallet integration.
-
-**Phạm vi**: Barcode assignment từ pool đến user delivery
-**Mức độ**: Chức năng chính (primary)
-**Stakeholder**: End users, Brands
-
-### 9.6.2 Preconditions
-- User đã verify OTP thành công (UC-004)
-- User_token hợp lệ và chưa expired
-- Campaign có available barcodes trong pool
-- Barcode pool chưa exhausted
-- Mobile wallet services (Apple Wallet/Google Pay) available
-
-### 9.6.3 Main Success Scenario
-
-1. **Receive barcode assignment request**
-   - User redirect từ OTP verification với user_token
-   - System validate user_token (signature, expiration)
-   - Extract campaign_id, user_preferences từ token
-   - Check campaign status (still active, not expired)
-
-2. **Select optimal barcode từ pool**
-   - Query available barcodes trong campaign pool
-   - Apply personalization logic:
-     * Match product variant với user preferences
-     * Consider location proximity cho redemption
-     * Check expiry dates (prioritize shorter expiry)
-     * Apply any business rules (VIP users, etc.)
-
-3. **Atomic barcode assignment**
-   - Begin database transaction
-   - Lock selected barcode row
-   - Update status: Available → Assigned
-   - Store assignment metadata:
-     * assigned_to_user_hash (SHA-256 của phone/email)
-     * assigned_at timestamp
-     * assignment_campaign_id
-     * user_preferences_snapshot
-   - Commit transaction
-
-4. **Generate delivery assets**
-   - Create QR code image (PNG, 300x300px)
-   - Generate PDF voucher với branding
-   - Create Apple Wallet pass (.pkpass file)
-   - Generate Google Pay pass URL
-   - Prepare redemption instructions
-
-5. **Deliver barcode đến user**
-   - Primary method: Display trong browser với QR code
-   - Secondary: SMS với download link
-   - Optional: Email với PDF attachment
-   - Mobile wallet: Show "Add to Wallet" buttons
-   - Link đến User Portal cho future access
-
-6. **Update analytics và notifications**
-   - Track event: "barcode_assigned"
-   - Update campaign metrics (assigned_codes count)
-   - Send success notification đến user
-   - Queue background jobs (CRM sync, analytics processing)
-
-### 9.6.4 Alternative Flows
-
-**A1: No available barcodes**
-- 2a. Nếu campaign pool exhausted:
-  - Check other campaigns từ same brand
-  - Show waitlist signup option
-  - Offer alternative products/campaigns
-  - Notify brand về inventory shortage
-
-**A2: Personalization engine không tìm được match**
-- 2b. Nếu không có barcode match user preferences:
-  - Fall back sang random assignment từ available pool
-  - Log mismatch cho future optimization
-  - Continue normal flow
-
-**A3: User đã receive barcode cho campaign này**
-- 1a. Nếu detect duplicate assignment:
-  - Check existing assignment status
-  - If still valid: Redirect đến existing barcode display
-  - If expired: Allow new assignment
-  - If redeemed: Show completion message
-
-**A4: Mobile wallet generation failed**
-- 4a. Nếu Apple Wallet/Google Pay API failed:
-  - Continue với QR code và PDF
-  - Show message: "Mobile wallet tạm thời không khả dụng"
-  - Provide manual add instructions
-
-### 9.6.5 Exception Flows
-
-**E1: Database transaction failed**
-- Nếu assignment transaction failed:
-  - Rollback transaction
-  - Log error details cho investigation
-  - Retry với different barcode (up to 3 times)
-  - If all retries failed: Show error page với support contact
-
-**E2: QR code generation service down**
-- Nếu QR generation failed:
-  - Fall back sang text-based barcode display
-  - Queue QR generation job cho later processing
-  - Email QR code khi ready
-
-### 9.6.6 Personalization Algorithm
-
-**Barcode selection logic:**
-```python
-class BarcodePersonalization:
-    def select_optimal_barcode(self, user_preferences, available_barcodes):
-        scored_barcodes = []
-        
-        for barcode in available_barcodes:
-            score = 0
-            
-            # Product category matching (0-40 points)
-            if barcode.product_category in user_preferences.get('categories', []):
-                score += 40
-            
-            # Location proximity (0-20 points)
-            user_location = user_preferences.get('city')
-            if barcode.preferred_locations and user_location:
-                if user_location in barcode.preferred_locations:
-                    score += 20
-            
-            # Expiry urgency (0-15 points)
-            days_to_expiry = (barcode.expires_at - datetime.now()).days
-            if days_to_expiry <= 30:
-                score += 15  # Prioritize soon-to-expire items
-            elif days_to_expiry <= 60:
-                score += 10
-            
-            # Dietary restrictions (0-25 points)
-            user_restrictions = user_preferences.get('dietary_restrictions', [])
-            if not any(restriction in barcode.ingredients for restriction in user_restrictions):
-                score += 25
-            
-            scored_barcodes.append((barcode, score))
-        
-        # Sort by score descending, return top match
-        scored_barcodes.sort(key=lambda x: x[1], reverse=True)
-        return scored_barcodes[0][0] if scored_barcodes else None
-```
-
-### 9.6.7 Mobile Wallet Integration
-
-**Apple Wallet Pass Generation:**
-```python
-import passbook
-
-def create_apple_wallet_pass(barcode_data, user_info):
-    # Create pass structure
-    pass_info = {
-        'passTypeIdentifier': 'pass.com.productsampling.voucher',
-        'serialNumber': barcode_data.barcode_id,
-        'teamIdentifier': 'TEAM_ID',
-        'organizationName': barcode_data.brand_name,
-        'description': f'Voucher cho {barcode_data.product_name}',
-        'formatVersion': 1,
-        'backgroundColor': 'rgb(60, 165, 255)',
-        'foregroundColor': 'rgb(255, 255, 255)',
-        'barcode': {
-            'format': 'PKBarcodeFormatQR',
-            'message': barcode_data.barcode_value,
-            'messageEncoding': 'iso-8859-1'
-        },
-        'generic': {
-            'primaryFields': [{
-                'key': 'product',
-                'label': 'Sản phẩm',
-                'value': barcode_data.product_name
-            }],
-            'secondaryFields': [{
-                'key': 'expires',
-                'label': 'Hết hạn',
-                'value': barcode_data.expires_at.strftime('%d/%m/%Y')
-            }],
-            'auxiliaryFields': [{
-                'key': 'instructions',
-                'label': 'Hướng dẫn',
-                'value': 'Quét mã tại cửa hàng để nhận quà'
-            }]
-        },
-        'locations': [
-            {
-                'latitude': location.latitude,
-                'longitude': location.longitude,
-                'relevantText': f'Đổi quà tại {location.name}'
-            } for location in barcode_data.redemption_locations
-        ]
-    }
-    
-    # Generate signed .pkpass file
-    pass_file = passbook.Pass(pass_info, key='private_key.pem', cert='certificate.pem')
-    return pass_file.create()
-```
-
-**Google Pay Integration:**
-```python
-def create_google_pay_pass(barcode_data):
-    pass_object = {
-        'kind': 'walletobjects#genericObject',
-        'id': f'voucher_{barcode_data.barcode_id}',
-        'classId': 'ISSUER_ID.voucher_class',
-        'genericType': 'GENERIC_TYPE_UNSPECIFIED',
-        'hexBackgroundColor': '#3CA5FF',
-        'logo': {
-            'sourceUri': {
-                'uri': 'https://brand.com/logo.png'
-            }
-        },
-        'cardTitle': {
-            'defaultValue': {
-                'language': 'vi',
-                'value': barcode_data.product_name
-            }
-        },
-        'subheader': {
-            'defaultValue': {
-                'language': 'vi', 
-                'value': 'Voucher dùng thử'
-            }
-        },
-        'header': {
-            'defaultValue': {
-                'language': 'vi',
-                'value': barcode_data.brand_name
-            }
-        },
-        'barcode': {
-            'type': 'QR_CODE',
-            'value': barcode_data.barcode_value
-        },
-        'heroImage': {
-            'sourceUri': {
-                'uri': barcode_data.product_image_url
-            }
-        }
-    }
-    
-    return generate_google_pay_url(pass_object)
-```
-
-### 9.6.8 User Portal Integration
-
-**Redirect đến User Portal:**
-```javascript
-// After successful barcode assignment
-function redirectToUserPortal(barcode_data) {
-    const portal_url = `https://portal.productsampling.com/dashboard`;
-    const params = new URLSearchParams({
-        barcode_id: barcode_data.barcode_id,
-        first_time: 'true',
-        source: 'assignment'
-    });
-    
-    // Store barcode info trong localStorage cho offline access
-    localStorage.setItem('latest_barcode', JSON.stringify({
-        barcode_id: barcode_data.barcode_id,
-        product_name: barcode_data.product_name,
-        expires_at: barcode_data.expires_at,
-        qr_code_url: barcode_data.qr_code_url
-    }));
-    
-    window.location.href = `${portal_url}?${params.toString()}`;
-}
-```
-
-### 9.6.9 Performance Requirements
-
-**Assignment SLA (từ System_Feature_Tree_Grok.md 1.5):**
-- Assignment time: <2 giây post-verification
-- QR generation: <5 giây
-- Mobile wallet generation: <10 giây
-- 100% barcode uniqueness guarantee
-
-**Concurrency handling:**
-- Handle 1000 simultaneous assignments
-- Optimistic locking cho barcode selection
-- Retry logic cho race conditions
-- Queue overflow protection
-
-### 9.6.10 Analytics và Tracking
-
-**Assignment metrics:**
-```python
-def track_assignment_analytics(barcode_data, user_data, assignment_context):
-    analytics_event = {
-        'event_type': 'barcode_assigned',
-        'timestamp': datetime.now().isoformat(),
-        'campaign_id': barcode_data.campaign_id,
-        'barcode_id': barcode_data.barcode_id,
-        'user_id_hash': hashlib.sha256(user_data.phone.encode()).hexdigest(),
-        'assignment_method': assignment_context.method,  # 'automatic', 'manual', 'waitlist'
-        'personalization_score': assignment_context.personalization_score,
-        'time_from_verification': assignment_context.verification_delay_seconds,
-        'delivery_methods': assignment_context.delivery_methods,  # ['qr', 'sms', 'email', 'wallet']
-        'location_context': {
-            'user_city': user_data.city,
-            'nearest_redemption_location': barcode_data.nearest_location,
-            'distance_km': barcode_data.distance_to_nearest
-        }
-    }
-    
-    # Send to analytics pipeline
-    send_to_analytics_pipeline(analytics_event)
-    
-    # Update campaign metrics
-    update_campaign_metrics(barcode_data.campaign_id, {
-        'total_assignments': '+1',
-        'assignments_today': '+1',
-        'personalization_success_rate': calculate_personalization_success_rate()
-    })
-```
-
-### 9.6.11 Postconditions
-- Barcode status updated: Available → Assigned
-- User receives barcode qua multiple channels
-- Assignment logged trong audit trail
-- Campaign metrics updated
-- User Portal session initialized
-- Mobile wallet passes generated (if requested)
-- Analytics events tracked
-- CRM sync queued
-
-### 9.6.12 Special Requirements
-- **Atomicity**: Zero double-assignment guarantee
-- **Personalization**: >80% user satisfaction với matches
-- **Mobile-first**: PWA-optimized delivery experience
-- **Offline support**: QR codes work without internet
-
----
-
-## 9.7 UC-006: Đổi quà tại điểm bán
-
-### 9.7.1 Mô tả Use Case
-**Mục tiêu**: Serving Account (staff) tại retail location scan barcode của customer để validate và complete redemption process với offline capability.
-
-**Phạm vi**: POS redemption từ scan đến completion
-**Mức độ**: Chức năng chính (primary)
-**Stakeholder**: Store staff, End users, Retail partners
-
-### 9.7.2 Preconditions
-- Serving Account đã login với POS access permissions
-- Barcode status = "Assigned" và chưa expired
-- Staff có device với camera hoặc barcode scanner
-- Location có POS integration setup
-- Customer present tại store với barcode
-
-### 9.7.3 Main Success Scenario
-
-1. **Staff chuẩn bị redemption**
-   - Login vào POS tool hoặc web interface
-   - Select location (auto-detect hoặc manual)
-   - Verify staff_id và shift information
-   - Load redemption interface
-
-2. **Scan customer barcode**
-   - Customer show barcode (QR code, Apple Wallet, printed voucher)
-   - Staff scan bằng camera app hoặc barcode scanner
-   - System capture barcode_value và timestamp
-   - Validate barcode format (alphanumeric, length)
-
-3. **Validate barcode eligibility**
-   - System lookup barcode trong database
-   - Check barcode status (must be "Assigned")
-   - Verify expiry date (chưa expired)
-   - Confirm location permissions (store có thể redeem này không)
-   - Check business hours restrictions
-
-4. **Display redemption preview**
-   - Show product information:
-     * Product name và description
-     * Brand information
-     * Campaign name
-     * Assigned user (masked): "+84***123456"
-     * Expiry date
-   - Show redemption confirmation screen
-   - Provide "Confirm Redemption" button
-
-5. **Complete redemption process**
-   - Staff confirm redemption
-   - System begin atomic transaction:
-     * Update barcode status: Assigned → Redeemed
-     * Record redemption details (timestamp, location, staff)
-     * Update campaign statistics
-     * Generate receipt/confirmation
-   - Commit transaction
-
-6. **Provide confirmation**
-   - Show success message với receipt number
-   - Display redemption summary
-   - Option: Print receipt (if printer available)
-   - Update staff dashboard statistics
-   - Send confirmation đến customer (if contact available)
-
-### 9.7.4 Alternative Flows
-
-**A1: Invalid barcode**
-- 3a. Nếu barcode không tồn tại:
-  - Show error: "Mã barcode không hợp lệ"
-  - Suggest re-scan hoặc manual entry
-  - Option: Report counterfeit barcode
-  - Log suspicious activity
-
-**A2: Already redeemed barcode**
-- 3b. Nếu barcode đã redeemed:
-  - Show error: "Mã này đã được sử dụng"
-  - Display previous redemption info:
-    * Redeemed date/time
-    * Location name
-    * Staff who processed
-  - Option: Contact support nếu customer khiếu nại
-
-**A3: Expired barcode**
-- 3c. Nếu barcode đã expired:
-  - Show error: "Mã đã hết hạn vào [date]"
-  - Check if expiry extension possible
-  - Contact manager approval nếu cần
-  - Document exception nếu approved
-
-**A4: Location restriction**
-- 3d. Nếu barcode không thể redeem tại location này:
-  - Show error: "Mã này chỉ có thể đổi tại: [location_list]"
-  - Provide directions đến valid locations
-  - Option: Manager override với reason
-
-**A5: Network connectivity issues**
-- Nếu device offline:
-  - Switch sang offline mode
-  - Store redemption locally (IndexedDB)
-  - Show "Offline - will sync when connected"
-  - Process redemption based on local cache
-  - Auto-sync khi connection restored
-
-### 9.7.5 Exception Flows
-
-**E1: Database unavailable**
-- Nếu central database down:
-  - Fall back sang local verification
-  - Use cached valid barcode list
-  - Mark redemption as "pending_sync"
-  - Queue for reconciliation later
-
-**E2: Barcode scanner malfunction**
-- Nếu camera/scanner không work:
-  - Allow manual barcode entry
-  - Implement extra validation (checksum)
-  - Log manual entries cho audit
-  - Alert IT support về hardware issue
-
-### 9.7.6 Offline Capability
-
-**Local storage strategy:**
-```javascript
-// IndexedDB schema cho offline redemptions
-const offlineSchema = {
-  stores: ['redemptions', 'valid_barcodes', 'sync_queue'],
-  redemptions: {
-    keyPath: 'redemption_id',
-    indexes: ['barcode_value', 'timestamp', 'sync_status']
-  },
-  valid_barcodes: {
-    keyPath: 'barcode_value', 
-    indexes: ['campaign_id', 'expires_at', 'status']
-  }
+  const endTime = Date.now();
+  const duration = (endTime - startTime) / 1000;
+  const qps = totalQueries / duration;
+  
+  console.log(`Completed ${totalQueries} queries in ${duration}s`);
+  console.log(`Average QPS: ${qps.toFixed(2)}`);
 };
-
-// Offline redemption process
-class OfflineRedemption {
-  async processRedemption(barcode_value, staff_id, location_id) {
-    // Check local valid barcode cache
-    const barcode = await this.lookupLocalBarcode(barcode_value);
-    if (!barcode || barcode.status !== 'assigned') {
-      throw new Error('Invalid barcode or already used');
-    }
-    
-    // Create offline redemption record
-    const redemption = {
-      redemption_id: this.generateOfflineId(),
-      barcode_value: barcode_value,
-      staff_id: staff_id,
-      location_id: location_id,
-      timestamp: new Date().toISOString(),
-      sync_status: 'pending',
-      offline_processed: true
-    };
-    
-    // Store locally
-    await this.storeOfflineRedemption(redemption);
-    
-    // Update local barcode status
-    await this.updateLocalBarcodeStatus(barcode_value, 'redeemed');
-    
-    return redemption;
-  }
-  
-  async syncWhenOnline() {
-    const pending = await this.getPendingRedemptions();
-    for (const redemption of pending) {
-      try {
-        await this.syncRedemptionToServer(redemption);
-        await this.markAsSynced(redemption.redemption_id);
-      } catch (error) {
-        // Handle sync conflicts
-        await this.handleSyncConflict(redemption, error);
-      }
-    }
-  }
-}
 ```
-
-### 9.7.7 POS Integration Variants
-
-**Web-based POS tool:**
-- Responsive web app works on tablets/phones
-- Barcode scanning via camera API
-- Works với or without dedicated scanner hardware
-- Real-time sync với central database
-
-**API integration với existing POS systems:**
-```python
-# Circle K POS Integration
-class CircleKPOSAdapter:
-    def __init__(self, api_endpoint, api_key):
-        self.endpoint = api_endpoint
-        self.api_key = api_key
-    
-    def validate_redemption(self, barcode, store_id):
-        # Call Circle K validation API
-        response = requests.post(f"{self.endpoint}/validate", {
-            'barcode': barcode,
-            'store_id': store_id,
-            'api_key': self.api_key
-        })
-        return response.json()
-    
-    def complete_redemption(self, barcode, transaction_id):
-        # Mark as redeemed trong Circle K system
-        response = requests.post(f"{self.endpoint}/redeem", {
-            'barcode': barcode,
-            'transaction_id': transaction_id,
-            'api_key': self.api_key
-        })
-        return response.json()
-
-# GS25 POS Integration  
-class GS25POSAdapter:
-    def process_redemption(self, barcode_data):
-        # Different API structure for GS25
-        # Handle format differences và error codes
-        pass
-```
-
-### 9.7.8 Fraud Prevention
-
-**Redemption validation rules:**
-```python
-class RedemptionValidator:
-    def validate_redemption(self, barcode, location, staff, timestamp):
-        checks = []
-        
-        # Time-based validation
-        if self.is_outside_business_hours(location, timestamp):
-            checks.append("Redemption outside business hours")
-        
-        # Location validation
-        if not self.is_valid_location_for_barcode(barcode, location):
-            checks.append("Invalid location for this barcode")
-        
-        # Staff validation
-        if not self.is_staff_authorized(staff, location):
-            checks.append("Staff not authorized for this location")
-        
-        # Velocity checks
-        if self.detect_rapid_redemptions(staff, timestamp):
-            checks.append("Suspicious redemption velocity")
-        
-        # Geographic impossibility
-        if self.detect_impossible_travel(barcode.last_activity, location, timestamp):
-            checks.append("Impossible travel between activities")
-        
-        return len(checks) == 0, checks
-```
-
-### 9.7.9 Receipt và Confirmation
-
-**Receipt template:**
-```
-=================================
-    [BRAND LOGO]
-=================================
-VOUCHER REDEMPTION RECEIPT
-
-Product: [PRODUCT_NAME]
-Campaign: [CAMPAIGN_NAME]
-Barcode: [BARCODE_VALUE]
-
-Redeemed at: [LOCATION_NAME]
-Address: [LOCATION_ADDRESS]
-Date: [DATE] [TIME]
-Staff: [STAFF_NAME]
-
-Receipt #: [RECEIPT_NUMBER]
-
-Thank you for participating!
-Visit: portal.productsampling.com
-for more offers.
-=================================
-```
-
-**Digital confirmation:**
-```python
-def send_redemption_confirmation(redemption_data):
-    # SMS confirmation
-    if redemption_data.user_phone:
-        message = f"Bạn đã đổi thành công {redemption_data.product_name} tại {redemption_data.location_name}. Cảm ơn bạn đã tham gia!"
-        send_sms(redemption_data.user_phone, message)
-    
-    # Email confirmation với receipt
-    if redemption_data.user_email:
-        send_email_receipt(redemption_data.user_email, redemption_data)
-    
-    # User Portal notification
-    create_portal_notification(redemption_data.user_id, {
-        'type': 'redemption_success',
-        'product_name': redemption_data.product_name,
-        'location': redemption_data.location_name,
-        'timestamp': redemption_data.timestamp
-    })
-```
-
-### 9.7.10 Performance Requirements
-
-**Redemption SLA (từ System_Feature_Tree_Grok.md 1.5):**
-- Scan validation: <3 giây
-- Redemption completion: <5 giây total
-- Offline sync: 24-hour capability
-- Success rate: >98%
-
-**Concurrent redemptions:**
-- Support 100 simultaneous redemptions per location
-- Handle peak times (lunch hours, weekends)
-- Queue management cho high traffic
-
-### 9.7.11 Analytics và Reporting
-
-**Real-time redemption tracking:**
-```python
-def track_redemption_analytics(redemption_data):
-    analytics_event = {
-        'event_type': 'redemption_completed',
-        'timestamp': redemption_data.timestamp,
-        'campaign_id': redemption_data.campaign_id,
-        'location_id': redemption_data.location_id,
-        'staff_id': redemption_data.staff_id,
-        'processing_time_seconds': redemption_data.processing_time,
-        'redemption_method': redemption_data.method,  # 'scan', 'manual_entry'
-        'offline_processed': redemption_data.offline,
-        'time_from_assignment_hours': redemption_data.assignment_delay,
-        'day_of_week': redemption_data.timestamp.strftime('%A'),
-        'hour_of_day': redemption_data.timestamp.hour
-    }
-    
-    # Update real-time dashboards
-    update_location_dashboard(redemption_data.location_id, analytics_event)
-    update_campaign_dashboard(redemption_data.campaign_id, analytics_event)
-    
-    # Send to data warehouse
-    send_to_analytics_pipeline(analytics_event)
-```
-
-### 9.7.12 Postconditions
-- Barcode status updated: Assigned → Redeemed
-- Redemption record created với audit trail
-- Campaign statistics updated
-- Customer confirmation sent
-- Receipt generated
-- Staff dashboard updated
-- Analytics events tracked
-- Inventory adjustments (if applicable)
-
-### 9.7.13 Special Requirements
-- **Offline capability**: 24-hour operation without internet
-- **Audit compliance**: Immutable redemption logs
-- **Real-time sync**: <5 minute delay cho online operations
-- **Multi-location support**: Staff có thể work tại multiple stores
 
 ---
 
-**Nguồn tham khảo chính:**
-- System Feature Tree (System_Feature_Tree_Grok.md v4.0) - User stories, flow vận hành, KPI requirements
-- Access Control Tree (Access_Control_Tree_Grok.md v2.2) - Role permissions, security requirements  
-- Business Requirement Document (01-BRD.md v3.0) - Performance targets, SLA requirements
-- Problem Definition (Problem.md v1.0) - Business context, technical constraints
+## 7.13 Disaster Recovery Testing
 
-**Tình trạng**: Part09 đang hoàn thành ✅ (UC-001 đến UC-006 complete)  
-**Tiếp theo**: UC-007 và UC-008  
-**Người đánh giá**: Business Analyst, UX Designer, QA Lead
+### 7.13.1 DR Test Scenarios
+
+#### **Database Failover Test**
+```bash
+#!/bin/bash
+# PostgreSQL failover test script
+
+test_postgresql_failover() {
+  echo "Starting PostgreSQL failover test..."
+  
+  # Record current primary
+  local primary_host=$(pg_isready -h postgres-primary -p 5432 && echo "postgres-primary" || echo "none")
+  echo "Current primary: $primary_host"
+  
+  # Simulate primary failure
+  echo "Simulating primary failure..."
+  docker stop postgres-primary
+  
+  # Wait for failover
+  echo "Waiting for failover..."
+  local attempts=0
+  local max_attempts=30
+  
+  while [ $attempts -lt $max_attempts ]; do
+    if pg_isready -h postgres-replica -p 5432; then
+      echo "Failover successful after $((attempts * 10)) seconds"
+      break
+    fi
+    
+    sleep 10
+    attempts=$((attempts + 1))
+  done
+  
+  if [ $attempts -eq $max_attempts ]; then
+    echo "Failover failed - timeout after 300 seconds"
+    exit 1
+  fi
+  
+  # Test write operations on new primary
+  echo "Testing write operations..."
+  psql -h postgres-replica -c "INSERT INTO health_check (timestamp) VALUES (NOW());"
+  
+  if [ $? -eq 0 ]; then
+    echo "Write test successful"
+  else
+    echo "Write test failed"
+    exit 1
+  fi
+  
+  # Restart original primary as replica
+  echo "Restarting original primary as replica..."
+  docker start postgres-primary
+  
+  echo "Failover test completed successfully"
+}
+
+test_mongodb_replica_failover() {
+  echo "Starting MongoDB replica set failover test..."
+  
+  # Get current primary
+  local primary=$(mongo --quiet --eval "rs.isMaster().primary")
+  echo "Current primary: $primary"
+  
+  # Step down primary
+  mongo --host $primary --eval "rs.stepDown(60)"
+  
+  # Wait for new primary election
+  sleep 30
+  
+  # Verify new primary
+  local new_primary=$(mongo --quiet --eval "rs.isMaster().primary")
+  echo "New primary: $new_primary"
+  
+  if [ "$primary" != "$new_primary" ]; then
+    echo "MongoDB failover successful"
+  else
+    echo "MongoDB failover failed"
+    exit 1
+  fi
+}
+```
+
+### 7.13.2 Data Consistency Verification
+
+#### **Cross-Database Consistency Check**
+```javascript
+// Data consistency verification after DR
+const verifyDataConsistency = async () => {
+  console.log('Starting data consistency verification...');
+  
+  // Check barcode counts
+  const pgBarcodeCount = await db.query('SELECT COUNT(*) FROM barcodes WHERE status = $1', ['issued']);
+  const mongoBarcodeEvents = await db.events.countDocuments({
+    eventType: 'barcode_issued',
+    timestamp: { $gte: new Date('2025-01-01') }
+  });
+  
+  console.log(`PostgreSQL issued barcodes: ${pgBarcodeCount.rows[0].count}`);
+  console.log(`MongoDB barcode events: ${mongoBarcodeEvents}`);
+  
+  // Check user verification counts
+  const pgUserCount = await db.query('SELECT COUNT(DISTINCT assigned_user_id) FROM barcodes WHERE assigned_user_id IS NOT NULL');
+  const mongoVerifiedUsers = await db.users.countDocuments({
+    'verification.phone.isVerified': true
+  });
+  
+  console.log(`PostgreSQL assigned users: ${pgUserCount.rows[0].count}`);
+  console.log(`MongoDB verified users: ${mongoVerifiedUsers}`);
+  
+  // Check redemption consistency
+  const pgRedemptions = await db.query('SELECT COUNT(*) FROM redemptions');
+  const mongoRedemptionEvents = await db.events.countDocuments({
+    eventType: 'redemption'
+  });
+  
+  console.log(`PostgreSQL redemptions: ${pgRedemptions.rows[0].count}`);
+  console.log(`MongoDB redemption events: ${mongoRedemptionEvents}`);
+  
+  // Calculate discrepancies
+  const barcodeDiscrepancy = Math.abs(pgBarcodeCount.rows[0].count - mongoBarcodeEvents);
+  const redemptionDiscrepancy = Math.abs(pgRedemptions.rows[0].count - mongoRedemptionEvents);
+  
+  if (barcodeDiscrepancy > 10 || redemptionDiscrepancy > 5) {
+    throw new Error(`Data consistency check failed: barcode=${barcodeDiscrepancy}, redemption=${redemptionDiscrepancy}`);
+  }
+  
+  console.log('Data consistency verification passed');
+};
+```
+
+---
+
+## 7.14 Database Optimization Roadmap
+
+### 7.14.1 Phase 1 Optimizations (MVP)
+
+| Optimization | Target | Implementation | Expected Gain |
+|--------------|--------|----------------|---------------|
+| **Connection Pooling** | Reduce connection overhead | PgBouncer, MongoDB connection limits | 2-3x throughput |
+| **Basic Indexing** | Fast queries | Strategic index creation | 5-10x query speed |
+| **Query Optimization** | Efficient operations | Query plan analysis | 2-5x specific queries |
+| **Redis Caching** | Reduce database load | Frequently accessed data | 10-50x read performance |
+
+### 7.14.2 Phase 2 Optimizations (Scale)
+
+| Optimization | Target | Implementation | Expected Gain |
+|--------------|--------|----------------|---------------|
+| **Read Replicas** | Scale read operations | PostgreSQL streaming replication | 2-3x read capacity |
+| **MongoDB Sharding** | Horizontal scaling | Shard key design, cluster setup | 5-10x write capacity |
+| **Partitioning** | Large table performance | Time-based partitioning | 3-5x large table queries |
+| **Advanced Caching** | Complex query caching | Redis Cluster, cache strategies | 5-20x complex queries |
+
+### 7.14.3 Phase 3 Optimizations (Enterprise)
+
+| Optimization | Target | Implementation | Expected Gain |
+|--------------|--------|----------------|---------------|
+| **Multi-Region** | Global performance | Cross-region replication | Reduced latency globally |
+| **Analytics DB** | Separate OLAP workload | Data warehouse, ETL pipelines | Isolated analytics performance |
+| **Time-Series DB** | Event data optimization | InfluxDB/TimescaleDB | 10x time-series queries |
+| **Graph Database** | Relationship queries | Neo4j for user connections | Specialized graph performance |
+
+---
+
+## 7.15 Summary & Next Steps
+
+### 7.15.1 Database Architecture Summary
+
+**Polyglot Persistence Strategy:**
+- ✅ **PostgreSQL**: Transactional integrity cho barcodes và redemptions
+- ✅ **MongoDB**: Flexible schema cho campaigns, users, analytics  
+- ✅ **Redis**: High-performance caching và messaging
+
+**Key Design Decisions:**
+- Database per service cho independence
+- Event-driven consistency cho cross-service data
+- Field-level encryption cho PII protection
+- Multi-level caching cho performance
+- Comprehensive backup và DR strategy
+
+### 7.15.2 Implementation Priority
+
+```mermaid
+gantt
+    title Database Implementation Timeline
+    dateFormat  YYYY-MM-DD
+    section Phase 1 (MVP)
+    PostgreSQL Setup    :done, pg1, 2025-01-01, 15d
+    MongoDB Setup       :done, mg1, 2025-01-01, 15d
+    Redis Setup         :done, rd1, 2025-01-01, 10d
+    Basic Schemas       :active, bs1, 2025-01-15, 20d
+    Indexes & Optimization :bs2, 2025-02-01, 15d
+    
+    section Phase 2 (Scale)
+    Read Replicas       :rr1, 2025-06-01, 20d
+    Advanced Indexing   :ai1, 2025-06-15, 15d
+    Sharding Setup      :ss1, 2025-07-01, 30d
+    Performance Tuning  :pt1, 2025-07-15, 20d
+    
+    section Phase 3 (Enterprise)
+    Multi-Region Setup  :mr1, 2025-12-01, 45d
+    Analytics DB        :ad1, 2025-12-15, 30d
+    Advanced Security   :as1, 2026-01-01, 20d
+```
+
+### 7.15.3 Success Criteria
+
+**Performance Targets:**
+- [ ] Barcode reservation: <800ms (p95)
+- [ ] User profile read: <200ms (p95)  
+- [ ] Campaign analytics: <3s (p95)
+- [ ] Session lookup: <10ms (p95)
+
+**Reliability Targets:**
+- [ ] 99.9% database uptime
+- [ ] RPO: 15 minutes
+- [ ] RTO: 4 hours
+- [ ] Zero data loss incidents
+
+**Security Targets:**
+- [ ] 100% PII field encryption
+- [ ] GDPR/PDPA compliance
+- [ ] Zero unauthorized access
+- [ ] Complete audit trails
+
+---
+
+**Trạng thái tài liệu**: ✅ Sẵn sàng cho Part08  
+**Hành động tiếp theo**: Thiết kế API & Integration specifications  
+**Dependencies**: Database schemas confirmed và approved  
+**Người sở hữu**: Đội thiết kế dữ liệulogin:{userId}" = counter
+// TTL: 15 minutes, max 5 attempts
+
+"rate_limit:
