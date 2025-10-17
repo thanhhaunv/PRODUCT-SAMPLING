@@ -80,20 +80,22 @@ Hệ thống **Product Sampling System** (gọi tắt: PSS) là một nền tả
 * Quản lý mạng lưới retail partners (Sampling Network-as-a-Service) để giảm chi phí logistics cho brand.
 * Phát hiện và ngăn chặn gian lận (fraud detection) qua rules + scoring.
 * Hỗ trợ tích hợp (API/Webhook) với hệ thống bên thứ ba (CRM, POS, SMS provider).
-* Hỗ trợ module quảng bá (banner ads / mini widget) trên landing page hoặc app tích hợp.
-* Cung cấp dashboard trực quan và realtime analytics cho brand và admin.
-* Cho phép xuất dữ liệu người dùng và kết quả chiến dịch (CSV/Excel/API).
-* (Tùy chọn) Hỗ trợ gamification hoặc cơ chế điểm thưởng để tăng tương tác người dùng.
-
+* **[BỔ SUNG]** Hỗ trợ module quảng bá (banner ads / mini widget) trên landing page hoặc app tích hợp.
+* **[BỔ SUNG]** Cung cấp dashboard trực quan và realtime analytics cho brand và admin.
+* **[BỔ SUNG]** Cho phép xuất dữ liệu người dùng và kết quả chiến dịch (CSV/Excel/API).
+* **[BỔ SUNG]** Hỗ trợ gamification và cơ chế điểm thưởng để tăng tương tác người dùng.
+* **[BỔ SUNG]** User Portal cho end users với PWA, quản lý profile, lịch sử redemption, và hệ thống notification.
 
 **Giới hạn phạm vi:**
 
-* Hệ thống không bao gồm logistics thực tế (vận chuyển hàng mẫu) — brand chịu trách nhiệm vận chuyển đến retail node; hệ thống chỉ quản lý phân phối mã và reconciliation.
-* Hệ thống không cung cấp dịch vụ thanh toán; chỉ xử lý voucher/redenption và báo cáo.
+* Hệ thống không bao gồm logistics thực tế (vận chuyển hàng mẫu) – brand chịu trách nhiệm vận chuyển đến retail node; hệ thống chỉ quản lý phân phối mã và reconciliation.
+* Hệ thống không cung cấp dịch vụ thanh toán; chỉ xử lý voucher/redemption và báo cáo.
+
+---
 
 ### 1.3 Stakeholders (Các bên liên quan)
 
-| Vai trò               | Mô tả                                     | Phụ trách/Quan tâm                 |
+| Vai trò | Mô tả | Phụ trách/Quan tâm |
 | --------------------- | ----------------------------------------- | ---------------------------------- |
 | Project Manager (PM)  | Quản lý tiến độ dự án, phê duyệt tài liệu | Tiến độ, phạm vi, quality          |
 | System Analyst / BA   | Soạn SRS, mapping BRD -> FR               | Độ chính xác yêu cầu               |
@@ -104,6 +106,7 @@ Hệ thống **Product Sampling System** (gọi tắt: PSS) là một nền tả
 | Admin / Ops           | Vận hành hệ thống, xử lý dispute          | Logs, monitoring, security         |
 | CRM Provider          | Hệ thống bên thứ ba nhận webhook          | Payload mapping, delivery SLA      |
 | SMS/Email Provider    | Gửi OTP/Notification                      | Throughput, delivery rate          |
+| **[BỔ SUNG]** End User | Người nhận mẫu                            | Trải nghiệm gamification, reward points, dashboard cá nhân |
 
 ### 1.4 Các giả định (Assumptions)
 
@@ -119,6 +122,7 @@ Hệ thống **Product Sampling System** (gọi tắt: PSS) là một nền tả
 * Phải đảm bảo OTP/Rate-limit để chống spam/bot.
 * Voucher phải là single-use, atomic redeem để tránh double-claim.
 * Redis sẽ là cache/queue; cần có fallback khi Redis down.
+* **[CẬP NHẬT]** Ngân sách development: 122.64 tỷ VND trong 3 năm, đội dev scale từ 8 → 37 người.
 
 ### 1.6 Tiêu chuẩn & Quy ước
 
@@ -129,7 +133,25 @@ Hệ thống **Product Sampling System** (gọi tắt: PSS) là một nền tả
 
 ---
 
-### 1.7 Kế hoạch kiểm soát thay đổi
+### 1.7 Mục tiêu chiến lược & KPI
+
+**Ngắn hạn (2025)**
+* Triển khai MVP tại VN, ký 25 brands, xử lý 1M mẫu, thu 5.76 tỷ VND revenue.
+
+**Trung hạn (2026)**
+* Mở rộng Thái/Indo, 80 brands, 3M users, 26.88 tỷ VND revenue.
+
+**Dài hạn (2027)**
+* Dẫn đầu SEA, 200 brands, 10M users, 67.2 tỷ VND revenue; 21.312 tỷ VND net profit.
+
+**KPI:**
+* Cost per verified user ≤ 9.6K VND (≤ 0.4 USD)
+* Conversion rate ≥ 90%
+* Fraud rate ≤ 5%
+* User engagement (gamification) ≥ 70%
+* Dashboard realtime latency ≤ 3s
+
+### 1.8 Kế hoạch kiểm soát thay đổi
 
 Mọi thay đổi yêu cầu phải được ghi vào Change Log (Part00) và được duyệt bởi PM trước khi merge. Các update cần kèm theo: mô tả thay đổi, impact analysis, và regression test plan.
 
@@ -145,10 +167,11 @@ Mọi thay đổi yêu cầu phải được ghi vào Change Log (Part00) và đ
 
 | Mã | Tên tài liệu | Mô tả | Phiên bản | Người soạn |
 |:----|:-----------------------------|:----------------------------------------|:------------|:--------------|
-| BRD-01 | Business Requirement Document (`01-BRD.md`) | Mô tả yêu cầu nghiệp vụ tổng thể, phạm vi kinh doanh, stakeholders và mục tiêu sản phẩm. | 1.0 | Mark Nguyen |
-| FEAT-01 | System Feature Tree & User Stories (`System_Feature_Tree_Grok.md`) | Phân rã chức năng hệ thống, user stories, và mapping MoSCoW. | 1.0 | Mark Nguyen |
+| BRD-01 | Business Requirement Document (`01-BRD.md`) | Mô tả yêu cầu nghiệp vụ tổng thể, phạm vi kinh doanh, stakeholders, financial model và mục tiêu sản phẩm. | 3.0 | Mark Nguyen |
+| FEAT-01 | System Feature Tree & User Stories (`System_Feature_Tree_Grok.md`) | Phân rã chức năng hệ thống, user stories, và mapping MoSCoW. | 4.0 | Mark Nguyen |
 | VISION-01 | Vision & Strategy Document (`Product-Sampling-Vision-and-Strategy Document.md`) | Định hướng chiến lược, tầm nhìn dài hạn, phân khúc khách hàng và giá trị hệ thống. | 1.0 | Mark Nguyen |
 | PROB-01 | Problem Statement (`Problem.md`) | Mô tả bài toán, khó khăn hiện tại của thị trường sampling và insight người dùng. | 1.0 | Mark Nguyen |
+| **[BỔ SUNG]** ACCESS-01 | Access Control Tree (`Access_Control_Tree_Grok.md`) | Cây thư mục phân quyền hệ thống, role mapping và RBAC chi tiết. | 2.2 | Mark Nguyen |
 | SRS-00 | Change Log (`02-SRS-Part00-ChangeLog.md`) | Theo dõi các thay đổi của SRS. | 0.1 | Mark Nguyen |
 
 ---
@@ -170,10 +193,13 @@ Mọi thay đổi yêu cầu phải được ghi vào Change Log (Part00) và đ
 
 | Nhóm | Tài liệu / Hệ thống | Mục đích tích hợp | Ghi chú |
 |:------|:----------------------|:-----------------|:---------|
-| CRM | HubSpot / Salesforce API Docs | Nhận webhook khi người dùng xác thực thành công | Mapping theo JSON payload |
-| SMS Provider | Twilio / Local SMS Gateway API | Gửi mã OTP, notification | Throughput ≥ 100 msg/s |
-| Analytics | Google Analytics / Mixpanel | Ghi nhận event tương tác người dùng | Dạng optional |
-| Cloud / Infra | Docker, Nginx, Redis, PostgreSQL, MongoDB | Cấu trúc hạ tầng triển khai | DevOps reference |
+| **CRM** | HubSpot / Salesforce API Docs | Nhận webhook khi người dùng xác thực thành công | Mapping theo JSON payload |
+| **SMS Provider** | Twilio / Local SMS Gateway API | Gửi mã OTP, notification | Throughput ≥ 100 msg/s |
+| **Analytics** | Google Analytics / Mixpanel | Ghi nhận event tương tác người dùng | Dạng optional |
+| **Cloud / Infra** | Docker, Nginx, Redis, PostgreSQL, MongoDB | Cấu trúc hạ tầng triển khai | DevOps reference |
+| **[BỔ SUNG] Gamification** | Achievement/Badge APIs, Leaderboard services | Tích hợp hệ thống điểm thưởng và xếp hạng | Point calculation, reward redemption |
+| **[BỔ SUNG] Export** | CSV/Excel libraries, Scheduled job frameworks | Xuất dữ liệu tự động theo lịch trình | Batch processing, data formatting |
+| **[BỔ SUNG] Widget/Banner** | Ad serving platforms, Click tracking services | Hiển thị và theo dõi hiệu quả quảng cáo | Impression counting, conversion tracking |
 
 ---
 
@@ -191,11 +217,17 @@ Mọi thay đổi yêu cầu phải được ghi vào Change Log (Part00) và đ
 | **POS** | Point of Sale | Điểm bán hàng |
 | **ROI** | Return on Investment | Lợi tức đầu tư |
 | **API** | Application Programming Interface | Giao diện lập trình ứng dụng |
+| **[BỔ SUNG]** **PWA** | Progressive Web App | Ứng dụng web tiến bộ |
+| **[BỔ SUNG]** **RBAC** | Role-Based Access Control | Kiểm soát truy cập dựa trên vai trò |
+| **[BỔ SUNG]** **CPL** | Cost Per Lead | Chi phí mỗi khách hàng tiềm năng |
+| **[BỔ SUNG]** **LTV** | Lifetime Value | Giá trị khách hàng trọn đời |
+| **[BỔ SUNG]** **CAC** | Customer Acquisition Cost | Chi phí thu hút khách hàng |
+| **[BỔ SUNG]** **ARPU** | Average Revenue Per User | Doanh thu trung bình mỗi người dùng |
 
 ---
 
 **Tình trạng:**  
-> Phần 02 - References hoàn tất. Đủ thông tin để trích dẫn cho toàn bộ các phần FR, NFR và Architecture sau.
+> Phần 02 - References hoàn tất với bổ sung tài liệu Access Control Tree, thuật ngữ financial KPIs và third-party services mới.
 
 # 02-SRS-Part03-OverallDescription.md
 
@@ -220,6 +252,9 @@ Hệ thống **PSS** là nền tảng "Sampling Network-as-a-Service", gồm cá
 7. **Fraud Detection** – Phát hiện hành vi gian lận, duplicate, spoof location.
 8. **Dashboard & Analytics** – Hiển thị hiệu quả, ROI, top-performing nodes.
 9. **Admin & Operation Console** – Quản trị hệ thống, logs, phân quyền, xử lý dispute.
+10. **[BỔ SUNG] User Portal & Gamification** – PWA cho end users, quản lý profile, điểm thưởng, lịch sử redemption.
+11. **[BỔ SUNG] Banner Ads & Widget Management** – Tạo và quản lý quảng cáo tích hợp, tracking click/impression.
+12. **[BỔ SUNG] Gift & Reward Management** – Catalog quà tặng, inventory tracking, redemption workflow.
 
 ---
 
@@ -230,6 +265,7 @@ flowchart LR
     subgraph Brand_Side[Brand / Advertiser]
         A1[Campaign Config Portal] -->|Tạo chiến dịch| S1
         A2[CRM System] -->|Webhook nhận dữ liệu user| S4
+        A3[Marketing Tools] -->|UTM tracking, analytics| S6
     end
 
     subgraph PSS[Product Sampling System]
@@ -241,14 +277,25 @@ flowchart LR
         S6[Analytics & Dashboard]
         S7[Fraud Detection Engine]
         S8[Admin Console]
+        S9[User Portal & Gamification]
+        S10[Banner/Widget Service]
+        S11[Gift Management]
     end
 
     subgraph UserSide[End User / Retail Node]
-        U1[Landing Page / Mini App]
+        U1[Landing Page / PWA]
         U2[Retail POS / Node App]
+        U3[User Portal]
+    end
+
+    subgraph ThirdParty[Third Party Services]
+        T1[SMS/Email Provider]
+        T2[Analytics Platforms]
+        T3[Payment Gateways]
     end
 
     U1 -->|Đăng ký / Nhận OTP| S2
+    S2 -->|SMS/Email OTP| T1
     S2 -->|Xác minh thành công| S3
     S3 -->|Gửi mã QR / Voucher| U1
     U1 -->|Redeem tại điểm bán| U2
@@ -257,38 +304,54 @@ flowchart LR
     S5 -->|Sync CRM| S4
     S7 -->|Giám sát hành vi bất thường| S6
     S8 -->|Giám sát / Quản trị| S6
+    U3 -->|Gamification, rewards| S9
+    S9 -->|Point tracking| S11
+    S10 -->|Banner tracking| T2
+    S6 -->|Export analytics| A2
 ```
 
 ---
 
 ### 3.4 Các actor trong hệ thống
 
-| Actor                           | Vai trò                             | Mô tả chi tiết                                                                |
+| Actor | Vai trò | Mô tả chi tiết |
 | :------------------------------ | :---------------------------------- | :---------------------------------------------------------------------------- |
-| **End User**                    | Người nhận mẫu                      | Truy cập landing page, nhập thông tin, xác thực OTP, redeem quà tại điểm bán. |
-| **Retail Node (POS)**           | Điểm phân phối mẫu                  | Quét QR / mã voucher, xác nhận phát quà, xử lý offline queue.                 |
-| **Brand / Advertiser**          | Chủ chiến dịch                      | Tạo campaign, cấu hình form đăng ký, nhận dữ liệu người dùng.                 |
-| **CRM System (3rd party)**      | Hệ thống lưu trữ dữ liệu người dùng | Nhận webhook chứa thông tin đã xác thực.                                      |
-| **Admin / Operator**            | Quản trị hệ thống                   | Giám sát logs, báo cáo, phân quyền, xử lý khiếu nại.                          |
-| **Fraud Monitor**               | Engine hoặc nhân viên vận hành      | Theo dõi pattern hành vi gian lận, rule-based + ML-based scoring.             |
-| **SMS / Notification Provider** | Dịch vụ bên thứ ba                  | Gửi OTP / thông báo chiến dịch.                                               |
-| **Analytics Engine**            | Hệ thống BI / thống kê              | Tính ROI, CTR, conversion, và báo cáo cho brand.                              |
+| **End User** | Người nhận mẫu | Truy cập landing page, nhập thông tin, xác thực OTP, redeem quà tại điểm bán, sử dụng User Portal. |
+| **Retail Node (POS)** | Điểm phân phối mẫu | Quét QR / mã voucher, xác nhận phát quà, xử lý offline queue. |
+| **Brand / Advertiser** | Chủ chiến dịch | Tạo campaign, cấu hình form đăng ký, nhận dữ liệu người dùng, quản lý banner ads. |
+| **CRM System (3rd party)** | Hệ thống lưu trữ dữ liệu người dùng | Nhận webhook chứa thông tin đã xác thực. |
+| **Admin / Operator** | Quản trị hệ thống | Giám sát logs, báo cáo, phân quyền, xử lý khiếu nại, quản lý gifts. |
+| **Fraud Monitor** | Engine hoặc nhân viên vận hành | Theo dõi pattern hành vi gian lận, rule-based + ML-based scoring. |
+| **[BỔ SUNG] Group Admin** | Quản lý nhóm campaigns | Quản lý Campaign/Barcode/Ads trong Group, không xóa Global resources. |
+| **[BỔ SUNG] Customer Account** | Tài khoản brand riêng lẻ | Quản lý Campaign riêng, preview Landing Page, xuất data. |
+| **[BỔ SUNG] Serving Account** | Nhân viên tại điểm bán | Scan/redeem barcode tại POS, xem ticket liên quan redeem. |
+| **[BỔ SUNG] Auditor** | Kiểm toán compliance | Xem logs/reports để audit compliance (GDPR/PDPA). |
+| **SMS / Notification Provider** | Dịch vụ bên thứ ba | Gửi OTP / thông báo chiến dịch. |
+| **Analytics Engine** | Hệ thống BI / thống kê | Tính ROI, CTR, conversion, và báo cáo cho brand. |
 
 ---
 
 ### 3.5 Biên giới hệ thống (System Boundaries)
 
-| Thành phần                   | Nội bộ PSS | Ngoại vi / Tích hợp | Mô tả                                          |
+| Thành phần | Nội bộ PSS | Ngoại vi / Tích hợp | Mô tả |
 | :--------------------------- | :--------- | :------------------ | :--------------------------------------------- |
-| Landing Page                 | ✔️         |                     | Host bởi PSS, giao diện cho người dùng đăng ký |
-| Campaign Service             | ✔️         |                     | Quản lý chiến dịch sampling                    |
-| OTP Service                  | ✔️         | SMS Provider        | Gửi mã OTP qua API                             |
-| Voucher Service              | ✔️         |                     | Sinh và quản lý mã QR/Voucher                  |
-| Retail Node App              | ✔️         | POS Hardware        | Kết nối qua HTTPS hoặc local app bridge        |
-| CRM Integration              |            | ✔️                  | Gửi webhook về hệ thống CRM brand              |
-| Analytics Service            | ✔️         |                     | Tính toán và hiển thị báo cáo                  |
-| Admin Console                | ✔️         |                     | Quản trị và vận hành hệ thống                  |
-| Redis / PostgreSQL / MongoDB | ✔️         |                     | Hạ tầng lưu trữ & cache                        |
+| **Landing Page** | ✔️ | | Host bởi PSS, giao diện cho người dùng đăng ký |
+| **Campaign Service** | ✔️ | | Quản lý chiến dịch sampling |
+| **OTP Service** | ✔️ | SMS Provider | Gửi mã OTP qua API |
+| **Voucher Service** | ✔️ | | Sinh và quản lý mã QR/Voucher |
+| **User Portal (PWA)** | ✔️ | | **[BỔ SUNG]** Interface cho end users |
+| **Gamification Engine** | ✔️ | | **[BỔ SUNG]** Point system, achievements, leaderboard |
+| **Gift Management** | ✔️ | | **[BỔ SUNG]** Catalog, inventory, redemption |
+| **Banner/Widget Service** | ✔️ | Ad Networks | **[BỔ SUNG]** Create và track banner ads |
+| **Retail Node App** | ✔️ | POS Hardware | Kết nối qua HTTPS hoặc local app bridge |
+| **CRM Integration** | | ✔️ | Gửi webhook về hệ thống CRM brand |
+| **Analytics Service** | ✔️ | Google Analytics | Tính toán và hiển thị báo cáo |
+| **Admin Console** | ✔️ | | Quản trị và vận hành hệ thống |
+| **Data Export** | ✔️ | Brand Systems | **[BỔ SUNG]** CSV/Excel/API export |
+| **Redis / PostgreSQL / MongoDB** | ✔️ | | Hạ tầng lưu trữ & cache |
+| **Payment Processing** | | ✔️ | **[NGOÀI PHẠM VI]** Chỉ khi có premium features |
+| **Physical Logistics** | | ✔️ | **[NGOÀI PHẠM VI]** Brand chịu trách nhiệm vận chuyển |
+| **Native Mobile Apps** | | ✔️ | **[NGOÀI PHẠM VI]** Chỉ PWA trong scope |
 
 ---
 
@@ -297,32 +360,73 @@ flowchart LR
 1. Người dùng chỉ được nhận **01 sample / chiến dịch / số điện thoại**.
 2. Các node (POS) hoạt động trong môi trường không ổn định, hệ thống phải **tự động đồng bộ khi online trở lại**.
 3. Tất cả thông tin user thu thập phải tuân thủ **PDPA / GDPR**.
-4. Hệ thống phục vụ **≥10 brands đồng thời**, mỗi brand có hàng trăm nodes.
+4. Hệ thống phục vụ **≥25 brands đồng thời** (năm 1), mỗi brand có hàng trăm nodes.
 5. Redis là cache/queue; dữ liệu master nằm trong MongoDB và backup sang PostgreSQL.
-6. Khi Redis lỗi, hệ thống chuyển sang “degraded mode” và sync lại khi Redis khôi phục.
+6. Khi Redis lỗi, hệ thống chuyển sang "degraded mode" và sync lại khi Redis khôi phục.
 7. API hoạt động stateless, hỗ trợ scale ngang.
+8. **[BỔ SUNG]** User engagement qua gamification là key differentiator với competitors.
+9. **[BỔ SUNG]** Banner ads revenue sharing model với retail partners.
+10. **[BỔ SUNG]** Gift inventory được quản lý real-time để avoid overselling.
 
 ---
 
-### 3.7 Giới hạn và phụ thuộc
+### 3.7 Phân tích hiệu suất hệ thống
 
+#### **Workload dự kiến:**
+- **Năm 1**: 25 brands, 50K verified leads/month, 100 campaigns đồng thời
+- **Năm 2**: 80 brands, 200K verified leads/month, 500 campaigns đồng thời  
+- **Năm 3**: 200 brands, 500K verified leads/month, 1,500 campaigns đồng thời
+
+#### **Peak load scenarios:**
+- **Campaign launch**: 10,000 concurrent users trong 30 phút đầu
+- **Flash sampling**: 50,000 QR scans trong 1 giờ
+- **Redemption rush**: 20,000 POS transactions trong 2 giờ
+- **[BỔ SUNG] Gamification events**: 100,000 point transactions trong 24h
+
+#### **System capacity requirements:**
+- **API throughput**: 100,000 requests/phút
+- **Database operations**: 50,000 read/write operations/giây
+- **Storage growth**: 1TB/năm cho logs và user data
+- **CDN bandwidth**: 10GB/tháng cho static assets
+- **[BỔ SUNG] Real-time notifications**: 1M push notifications/ngày
+
+---
+
+### 3.8 Giới hạn và phụ thuộc
+
+#### **Phụ thuộc external services:**
 * Không chịu trách nhiệm vận chuyển hàng mẫu (logistics).
-* Không bao gồm thanh toán hoặc refund.
+* Không bao gồm thanh toán hoặc refund (trừ premium features).
 * Phụ thuộc chất lượng dịch vụ SMS gateway và CRM webhook.
+* Phụ thuộc tính ổn định của cloud infrastructure (AWS/GCP).
+* **[BỔ SUNG]** Phụ thuộc ad networks cho banner monetization.
+
+#### **Technical constraints:**
 * Môi trường hoạt động: Cloud-native (Dockerized) – Redis, MongoDB, PostgreSQL, Nginx, Node.js.
+* Browser support: Chrome 90+, Safari 14+, Firefox 88+ cho PWA features.
+* Mobile compatibility: iOS 14+, Android 8+ cho optimal experience.
+* **[BỔ SUNG]** PWA requirements: Service Worker, Push API, Cache API support.
+
+#### **Business constraints:**
+* Multi-tenant isolation phải đảm bảo 100% data separation between brands.
+* Audit trail phải immutable để compliance requirements.
+* Export functionality bị giới hạn theo GDPR "right to data portability".
+* **[BỔ SUNG]** Gamification anti-abuse mechanisms để prevent point farming.
+* **[BỔ SUNG]** Gift redemption limits theo inventory availability.
 
 ---
 
-### 3.8 Tổng kết phần này
+### 3.9 Tổng kết phần này
 
-Phần này cung cấp góc nhìn tổng thể về cấu trúc, bối cảnh, các actor và biên giới hệ thống.
-Các phần tiếp theo (FR, NFR, Architecture) sẽ chi tiết hóa từng module tương ứng trong sơ đồ context.
+Phần này cung cấp góc nhìn tổng thể về cấu trúc, bối cảnh, các actor và biên giới hệ thống. Đặc biệt chú trọng đến việc xác định rõ **System Boundaries** - phân biệt thành phần nào thuộc PSS, thành phần nào là external integration, và thành phần nào nằm ngoài phạm vi.
+
+Các phần tiếp theo (FR, NFR, Architecture) sẽ chi tiết hóa từng module tương ứng trong sơ đồ context, với đặc biệt chú trọng đến các module mới: User Portal & Gamification, Banner Management, và Gift Management.
 
 ---
 
 **Tình trạng:**
 
-> Hoàn tất phần 03 – Tổng quan hệ thống. Đã xác định đầy đủ actor, boundary, flow, và assumption nghiệp vụ.
+> Hoàn tất phần 03 – Tổng quan hệ thống. Đã bổ sung đầy đủ System Boundaries, actor mới, workload projections và constraints cập nhật theo BRD v3.0.
 
 # 02-SRS-Part04-FunctionalRequirements.md
 
