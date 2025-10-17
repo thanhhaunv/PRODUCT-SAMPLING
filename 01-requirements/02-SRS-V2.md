@@ -1,3 +1,21 @@
+Từ các PartXX sau bạn làm ơn:
+
+1. Viết nội dung bằng tiếng Việt
+
+Các sơ đồ, biểu đồ thì dùng chuẩn mermaid
+
+Chỗ nào liên quan đến code hay kiến trúc dự án (phần teach lead) thì hỏi mình trước khi thực hiện
+
+Nội dung sau đảm bảo tham khảo các file mình đã upload, và tham khảo chính nội dung trước bạn đã tạo.
+
+Giờ thì hãy bắt đầu Part01 với rule trên nhé
+
+Người thì mình vô biên nên bạn không phải lo, mình muốn làm design pattern thật chuẩn(kể cả phần tài liệu), để các sub-project độc lập build, độc lập test, cũng như ai cũng có thể code được. Người sau không phụ thuộc vào code người trước, không hiểu function nào đập đi làm mới không sao.
+
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
 # 📋 Part00 - SRS Checklist & Overview
 **System Requirement Specification (SRS) - Product Sampling Platform**
 
@@ -5694,10 +5712,6412 @@ gantt
 
 ---
 
-**Trạng thái tài liệu**: ✅ Sẵn sàng cho Part08  
-**Hành động tiếp theo**: Thiết kế API & Integration specifications  
-**Dependencies**: Database schemas confirmed và approved  
-**Người sở hữu**: Đội thiết kế dữ liệulogin:{userId}" = counter
+## 7.16 ERD Tổng thể Hệ thống
+
+### 7.16.1 Entity Relationship Diagram Hoàn chỉnh
+
+```mermaid
+erDiagram
+    %% PostgreSQL Entities
+    BARCODE_POOLS ||--o{ BARCODES : "chứa"
+    BARCODES ||--o| REDEMPTIONS : "được đổi bởi"
+    LOCATIONS ||--o{ REDEMPTIONS : "xử lý tại"
+    
+    %% Cross-database relationships (logical)
+    CAMPAIGNS ||--o{ BARCODE_POOLS : "có"
+    USERS ||--o{ BARCODES : "được gán"
+    USERS ||--o{ REDEMPTIONS : "thực hiện"
+    CAMPAIGNS ||--o{ EVENTS : "tạo ra"
+    USERS ||--o{ EVENTS : "thực hiện"
+    
+    %% PostgreSQL Tables
+    BARCODE_POOLS {
+        uuid id PK
+        string name
+        uuid campaign_id FK "MongoDB campaigns._id"
+        integer total_quantity
+        integer available_quantity
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    BARCODES {
+        uuid id PK
+        string code UK
+        uuid pool_id FK
+        string product_name
+        decimal value
+        date expiry_date
+        string batch_code
+        enum status
+        uuid assigned_user_id FK "MongoDB users._id"
+        timestamp reserved_at
+        timestamp issued_at
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    REDEMPTIONS {
+        uuid id PK
+        uuid barcode_id FK
+        uuid user_id FK "MongoDB users._id"
+        uuid location_id FK
+        uuid staff_id FK "MongoDB users._id"
+        decimal transaction_amount
+        timestamp redeemed_at
+        json metadata
+        boolean is_offline_sync
+        timestamp synced_at
+        timestamp created_at
+    }
+    
+    LOCATIONS {
+        uuid id PK
+        string name
+        string type
+        string address
+        decimal latitude
+        decimal longitude
+        json contact_info
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    %% MongoDB Collections (logical representation)
+    CAMPAIGNS {
+        objectId _id PK
+        string name
+        string description
+        string slug UK
+        date startDate
+        date endDate
+        array products
+        object config
+        object tracking
+        object targeting
+        string status
+        array barcodePoolIds
+        array adsFormatIds
+        objectId createdBy
+        string tenantId
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    
+    USERS {
+        objectId _id PK
+        object personalInfo
+        string emailHash UK
+        string phoneHash UK
+        object address
+        object verification
+        object preferences
+        object activity
+        object riskProfile
+        object compliance
+        string status
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    
+    EVENTS {
+        objectId _id PK
+        string eventType
+        string eventId UK
+        string sessionId
+        objectId userId FK
+        objectId campaignId FK
+        objectId adsFormatId
+        string locationId
+        object data
+        object tracking
+        object location
+        object device
+        timestamp timestamp
+        timestamp receivedAt
+        timestamp processedAt
+    }
+    
+    ADS_FORMATS {
+        objectId _id PK
+        string name
+        string type
+        object dimensions
+        array designFiles
+        object qrConfig
+        object printSpecs
+        objectId campaignId FK
+        object usage
+        objectId createdBy
+        string tenantId
+        timestamp createdAt
+        timestamp updatedAt
+    }
+```
+
+### 7.16.2 Data Relationship Mapping
+
+**Cross-Database References:**
+
+| Source DB | Source Table/Collection | Target DB | Target Table/Collection | Relationship Type |
+|-----------|------------------------|-----------|------------------------|-------------------|
+| MongoDB | campaigns._id | PostgreSQL | barcode_pools.campaign_id | One-to-Many |
+| MongoDB | users._id | PostgreSQL | barcodes.assigned_user_id | One-to-Many |
+| MongoDB | users._id | PostgreSQL | redemptions.user_id | One-to-Many |
+| MongoDB | users._id | PostgreSQL | redemptions.staff_id | One-to-Many |
+| PostgreSQL | locations.id | PostgreSQL | redemptions.location_id | One-to-Many |
+| MongoDB | campaigns._id | MongoDB | events.campaignId | One-to-Many |
+| MongoDB | users._id | MongoDB | events.userId | One-to-Many |
+| MongoDB | campaigns._id | MongoDB | ads_formats.campaignId | One-to-Many |
+
+---
+
+## 7.17 Database Migration Scripts
+
+### 7.17.1 PostgreSQL Migration Scripts
+
+#### **V1.0.0__initial_schema.sql**
+```sql
+-- Version 1.0.0: Initial database schema
+BEGIN;
+
+-- Create extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Create custom types
+CREATE TYPE barcode_status AS ENUM (
+    'available', 'reserved', 'issued', 'redeemed', 'expired'
+);
+
+CREATE TYPE location_type AS ENUM (
+    'store', 'booth', 'event', 'online'
+);
+
+-- Locations table
+CREATE TABLE locations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    type location_type NOT NULL DEFAULT 'store',
+    address TEXT,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    contact_info JSONB,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Barcode pools table
+CREATE TABLE barcode_pools (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    campaign_id UUID NOT NULL, -- Reference to MongoDB campaigns
+    total_quantity INTEGER NOT NULL CHECK (total_quantity > 0),
+    available_quantity INTEGER NOT NULL CHECK (available_quantity >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    CONSTRAINT check_pool_quantity CHECK (available_quantity <= total_quantity)
+);
+
+-- Barcodes table
+CREATE TABLE barcodes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) NOT NULL UNIQUE,
+    pool_id UUID NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    value DECIMAL(10,2),
+    expiry_date DATE NOT NULL,
+    batch_code VARCHAR(100),
+    status barcode_status DEFAULT 'available',
+    assigned_user_id UUID, -- Reference to MongoDB users
+    reserved_at TIMESTAMP WITH TIME ZONE,
+    issued_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    CONSTRAINT fk_pool FOREIGN KEY (pool_id) 
+        REFERENCES barcode_pools(id) ON DELETE CASCADE,
+    CONSTRAINT check_expiry CHECK (expiry_date > CURRENT_DATE),
+    CONSTRAINT check_status_flow CHECK (
+        (status = 'available' AND assigned_user_id IS NULL) OR
+        (status IN ('reserved', 'issued', 'redeemed') AND assigned_user_id IS NOT NULL)
+    )
+);
+
+-- Redemptions table
+CREATE TABLE redemptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    barcode_id UUID NOT NULL,
+    user_id UUID NOT NULL, -- Reference to MongoDB users
+    location_id UUID NOT NULL,
+    staff_id UUID, -- Reference to MongoDB users (staff)
+    transaction_amount DECIMAL(10,2),
+    redeemed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    metadata JSONB,
+    is_offline_sync BOOLEAN DEFAULT FALSE,
+    synced_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    CONSTRAINT fk_barcode FOREIGN KEY (barcode_id) 
+        REFERENCES barcodes(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_location FOREIGN KEY (location_id) 
+        REFERENCES locations(id) ON DELETE RESTRICT,
+    CONSTRAINT check_sync_logic CHECK (
+        (is_offline_sync = FALSE AND synced_at IS NULL) OR
+        (is_offline_sync = TRUE AND synced_at IS NOT NULL)
+    )
+);
+
+-- Schema migrations tracking
+CREATE TABLE schema_migrations (
+    version VARCHAR(50) PRIMARY KEY,
+    applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    description TEXT
+);
+
+-- Insert initial version
+INSERT INTO schema_migrations (version, description) 
+VALUES ('1.0.0', 'Initial schema setup');
+
+COMMIT;
+```
+
+#### **V1.1.0__add_indexes.sql**
+```sql
+-- Version 1.1.0: Add performance indexes
+BEGIN;
+
+-- Barcode pools indexes
+CREATE INDEX idx_barcode_pools_campaign_id ON barcode_pools(campaign_id);
+CREATE INDEX idx_barcode_pools_available ON barcode_pools(available_quantity) 
+    WHERE available_quantity > 0;
+
+-- Barcodes indexes
+CREATE UNIQUE INDEX idx_barcodes_code ON barcodes(code);
+CREATE INDEX idx_barcodes_pool_status ON barcodes(pool_id, status);
+CREATE INDEX idx_barcodes_user_status ON barcodes(assigned_user_id, status) 
+    WHERE assigned_user_id IS NOT NULL;
+CREATE INDEX idx_barcodes_expiry ON barcodes(expiry_date) 
+    WHERE status IN ('available', 'reserved', 'issued');
+CREATE INDEX idx_barcodes_pool_available ON barcodes(pool_id) 
+    WHERE status = 'available';
+
+-- Redemptions indexes
+CREATE UNIQUE INDEX idx_redemptions_barcode ON redemptions(barcode_id);
+CREATE INDEX idx_redemptions_user_date ON redemptions(user_id, redeemed_at);
+CREATE INDEX idx_redemptions_location_date ON redemptions(location_id, redeemed_at);
+CREATE INDEX idx_redemptions_offline_sync ON redemptions(is_offline_sync, synced_at) 
+    WHERE is_offline_sync = TRUE;
+CREATE INDEX idx_redemptions_staff_date ON redemptions(staff_id, redeemed_at)
+    WHERE staff_id IS NOT NULL;
+
+-- Locations indexes
+CREATE INDEX idx_locations_type_active ON locations(type, is_active);
+CREATE INDEX idx_locations_coordinates ON locations(latitude, longitude)
+    WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
+
+-- Record migration
+INSERT INTO schema_migrations (version, description) 
+VALUES ('1.1.0', 'Add performance indexes');
+
+COMMIT;
+```
+
+#### **V1.2.0__add_triggers_and_functions.sql**
+```sql
+-- Version 1.2.0: Add business logic triggers and functions
+BEGIN;
+
+-- Function to update pool quantity
+CREATE OR REPLACE FUNCTION update_pool_quantity()
+RETURNS TRIGGER AS $
+BEGIN
+    IF TG_OP = 'UPDATE' THEN
+        -- Barcode status changed
+        IF OLD.status = 'available' AND NEW.status != 'available' THEN
+            UPDATE barcode_pools 
+            SET available_quantity = available_quantity - 1,
+                updated_at = NOW()
+            WHERE id = NEW.pool_id;
+        ELSIF OLD.status != 'available' AND NEW.status = 'available' THEN
+            UPDATE barcode_pools 
+            SET available_quantity = available_quantity + 1,
+                updated_at = NOW()
+            WHERE id = NEW.pool_id;
+        END IF;
+    ELSIF TG_OP = 'INSERT' THEN
+        -- New barcode added
+        UPDATE barcode_pools 
+        SET total_quantity = total_quantity + 1,
+            available_quantity = CASE 
+                WHEN NEW.status = 'available' THEN available_quantity + 1 
+                ELSE available_quantity 
+            END,
+            updated_at = NOW()
+        WHERE id = NEW.pool_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        -- Barcode deleted
+        UPDATE barcode_pools 
+        SET total_quantity = total_quantity - 1,
+            available_quantity = CASE 
+                WHEN OLD.status = 'available' THEN available_quantity - 1 
+                ELSE available_quantity 
+            END,
+            updated_at = NOW()
+        WHERE id = OLD.pool_id;
+    END IF;
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$ LANGUAGE plpgsql;
+
+-- Triggers
+CREATE TRIGGER trigger_update_pool_quantity
+    AFTER INSERT OR UPDATE OR DELETE ON barcodes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_pool_quantity();
+
+-- Function to auto-update timestamps
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$ LANGUAGE plpgsql;
+
+-- Auto-update triggers
+CREATE TRIGGER trigger_barcode_pools_updated_at
+    BEFORE UPDATE ON barcode_pools
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER trigger_barcodes_updated_at
+    BEFORE UPDATE ON barcodes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER trigger_locations_updated_at
+    BEFORE UPDATE ON locations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Business logic functions
+CREATE OR REPLACE FUNCTION reserve_barcode(
+    p_pool_id UUID,
+    p_user_id UUID,
+    p_product_preference TEXT DEFAULT NULL
+)
+RETURNS TABLE(barcode_id UUID, barcode_code TEXT) AS $
+DECLARE
+    selected_barcode barcodes%ROWTYPE;
+BEGIN
+    -- Lock pool để tránh race condition
+    PERFORM 1 FROM barcode_pools 
+    WHERE id = p_pool_id AND available_quantity > 0
+    FOR UPDATE;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Pool % không có barcode available', p_pool_id;
+    END IF;
+    
+    -- Chọn barcode available
+    SELECT * INTO selected_barcode
+    FROM barcodes 
+    WHERE pool_id = p_pool_id 
+        AND status = 'available'
+        AND expiry_date > CURRENT_DATE
+        AND (p_product_preference IS NULL OR product_name ILIKE '%' || p_product_preference || '%')
+    ORDER BY expiry_date ASC, created_at ASC
+    LIMIT 1
+    FOR UPDATE;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không có barcode available trong pool %', p_pool_id;
+    END IF;
+    
+    -- Update barcode status
+    UPDATE barcodes 
+    SET status = 'reserved',
+        assigned_user_id = p_user_id,
+        reserved_at = NOW(),
+        updated_at = NOW()
+    WHERE id = selected_barcode.id;
+    
+    RETURN QUERY SELECT selected_barcode.id, selected_barcode.code;
+END;
+$ LANGUAGE plpgsql;
+
+-- Record migration
+INSERT INTO schema_migrations (version, description) 
+VALUES ('1.2.0', 'Add triggers and business functions');
+
+COMMIT;
+```
+
+### 7.17.2 MongoDB Migration Scripts
+
+#### **migrations/001_initial_collections.js**
+```javascript
+// Migration 001: Initial collections setup
+db = db.getSiblingDB('psp_main');
+
+// Campaigns collection
+db.createCollection("campaigns", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name", "startDate", "endDate", "status", "tenantId"],
+      properties: {
+        name: {
+          bsonType: "string",
+          minLength: 1,
+          maxLength: 255
+        },
+        slug: {
+          bsonType: "string",
+          pattern: "^[a-z0-9-]+$"
+        },
+        startDate: { bsonType: "date" },
+        endDate: { bsonType: "date" },
+        status: {
+          enum: ["draft", "active", "paused", "completed", "cancelled"]
+        },
+        tenantId: { bsonType: "string" }
+      }
+    }
+  }
+});
+
+// Users collection
+db.createCollection("users", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["emailHash", "phoneHash", "verification", "status"],
+      properties: {
+        "personalInfo.fullName": { bsonType: "string" },
+        emailHash: { bsonType: "string" },
+        phoneHash: { bsonType: "string" },
+        "verification.email.isVerified": { bsonType: "bool" },
+        "verification.phone.isVerified": { bsonType: "bool" },
+        status: {
+          enum: ["active", "inactive", "suspended", "deleted"]
+        }
+      }
+    }
+  }
+});
+
+// Events collection
+db.createCollection("events", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["eventType", "eventId", "timestamp"],
+      properties: {
+        eventType: {
+          enum: ["qr_scan", "form_submit", "otp_sent", "otp_verified", 
+                 "barcode_issued", "redemption", "survey_complete"]
+        },
+        eventId: { bsonType: "string" },
+        timestamp: { bsonType: "date" }
+      }
+    }
+  }
+});
+
+// Ads formats collection
+db.createCollection("ads_formats", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name", "type", "campaignId"],
+      properties: {
+        name: { bsonType: "string" },
+        type: {
+          enum: ["flyer", "poster", "banner", "digital", "social", "email"]
+        },
+        campaignId: { bsonType: "objectId" }
+      }
+    }
+  }
+});
+
+// Create indexes
+db.campaigns.createIndex({ "slug": 1 }, { unique: true });
+db.campaigns.createIndex({ "tenantId": 1, "status": 1 });
+db.campaigns.createIndex({ "startDate": 1, "endDate": 1 });
+
+db.users.createIndex({ "emailHash": 1 }, { unique: true });
+db.users.createIndex({ "phoneHash": 1 }, { unique: true });
+db.users.createIndex({ "verification.email.isVerified": 1, "verification.phone.isVerified": 1 });
+
+db.events.createIndex({ "campaignId": 1, "timestamp": -1 });
+db.events.createIndex({ "eventType": 1, "timestamp": -1 });
+db.events.createIndex({ "sessionId": 1, "timestamp": 1 });
+
+db.ads_formats.createIndex({ "campaignId": 1, "type": 1 });
+
+print("Migration 001: Initial collections created successfully");
+```
+
+#### **migrations/002_add_ttl_indexes.js**
+```javascript
+// Migration 002: Add TTL indexes for data lifecycle
+db = db.getSiblingDB('psp_main');
+
+// TTL index cho events - xóa sau 1 năm
+db.events.createIndex(
+  { "timestamp": 1 },
+  { 
+    name: "events_ttl",
+    expireAfterSeconds: 31536000 // 1 year
+  }
+);
+
+// TTL index cho user sessions (nếu lưu trong MongoDB)
+db.user_sessions.createIndex(
+  { "expiresAt": 1 },
+  { 
+    name: "sessions_ttl",
+    expireAfterSeconds: 0 // Expire at specified time
+  }
+);
+
+// Compound indexes cho performance
+db.campaigns.createIndex(
+  { "tenantId": 1, "status": 1, "startDate": -1 },
+  { name: "campaigns_tenant_status_date" }
+);
+
+db.events.createIndex(
+  { "campaignId": 1, "eventType": 1, "timestamp": -1 },
+  { name: "events_campaign_type_time" }
+);
+
+// Text search index
+db.campaigns.createIndex(
+  { "name": "text", "description": "text" },
+  { name: "campaigns_text_search" }
+);
+
+print("Migration 002: TTL and performance indexes added");
+```
+
+---
+
+## 7.18 Database Monitoring & Health Checks
+
+### 7.18.1 PostgreSQL Monitoring Queries
+
+#### **Database Health Monitoring**
+```sql
+-- Connection monitoring
+CREATE VIEW v_connection_stats AS
+SELECT 
+  datname as database_name,
+  state,
+  COUNT(*) as connection_count,
+  MAX(NOW() - state_change) as longest_idle_time
+FROM pg_stat_activity 
+WHERE state IS NOT NULL
+GROUP BY datname, state;
+
+-- Slow query monitoring
+CREATE VIEW v_slow_queries AS
+SELECT 
+  query,
+  mean_time,
+  calls,
+  total_time,
+  rows,
+  100.0 * shared_blks_hit / nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent
+FROM pg_stat_statements 
+ORDER BY mean_time DESC 
+LIMIT 20;
+
+-- Table statistics
+CREATE VIEW v_table_stats AS
+SELECT 
+  schemaname,
+  tablename,
+  n_tup_ins + n_tup_upd + n_tup_del as total_operations,
+  n_tup_ins as inserts,
+  n_tup_upd as updates,
+  n_tup_del as deletes,
+  n_dead_tup as dead_tuples,
+  last_vacuum,
+  last_autovacuum,
+  last_analyze,
+  last_autoanalyze
+FROM pg_stat_user_tables
+ORDER BY total_operations DESC;
+
+-- Index usage monitoring
+CREATE VIEW v_index_usage AS
+SELECT 
+  schemaname,
+  tablename,
+  indexname,
+  idx_tup_read as index_reads,
+  idx_tup_fetch as index_fetches,
+  idx_scan as index_scans,
+  pg_size_pretty(pg_relation_size(indexrelid)) as index_size
+FROM pg_stat_user_indexes
+ORDER BY idx_scan DESC;
+
+-- Lock monitoring
+CREATE VIEW v_lock_monitoring AS
+SELECT 
+  l.pid,
+  l.mode,
+  l.locktype,
+  l.relation::regclass as table_name,
+  l.granted,
+  a.state,
+  a.query_start,
+  NOW() - a.query_start as duration
+FROM pg_locks l
+JOIN pg_stat_activity a ON l.pid = a.pid
+WHERE l.granted = false
+ORDER BY duration DESC;
+```
+
+#### **Automated Health Check Functions**
+```sql
+-- Health check function
+CREATE OR REPLACE FUNCTION check_database_health()
+RETURNS TABLE(
+  check_name TEXT,
+  status TEXT,
+  value NUMERIC,
+  threshold NUMERIC,
+  message TEXT
+) AS $
+BEGIN
+  -- Connection count check
+  RETURN QUERY
+  SELECT 
+    'connection_count'::TEXT,
+    CASE WHEN count(*) > 80 THEN 'WARNING'::TEXT ELSE 'OK'::TEXT END,
+    count(*)::NUMERIC,
+    80::NUMERIC,
+    'Current database connections'::TEXT
+  FROM pg_stat_activity;
+  
+  -- Dead tuple check
+  RETURN QUERY
+  SELECT 
+    'dead_tuples'::TEXT,
+    CASE WHEN SUM(n_dead_tup) > 10000 THEN 'WARNING'::TEXT ELSE 'OK'::TEXT END,
+    SUM(n_dead_tup)::NUMERIC,
+    10000::NUMERIC,
+    'Total dead tuples across all tables'::TEXT
+  FROM pg_stat_user_tables;
+  
+  -- Long running queries
+  RETURN QUERY
+  SELECT 
+    'long_running_queries'::TEXT,
+    CASE WHEN COUNT(*) > 5 THEN 'WARNING'::TEXT ELSE 'OK'::TEXT END,
+    COUNT(*)::NUMERIC,
+    5::NUMERIC,
+    'Queries running longer than 10 minutes'::TEXT
+  FROM pg_stat_activity 
+  WHERE state = 'active' 
+    AND NOW() - query_start > INTERVAL '10 minutes';
+    
+  -- Replication lag (if applicable)
+  IF EXISTS (SELECT 1 FROM pg_stat_replication) THEN
+    RETURN QUERY
+    SELECT 
+      'replication_lag'::TEXT,
+      CASE WHEN MAX(replay_lag) > INTERVAL '1 minute' THEN 'WARNING'::TEXT ELSE 'OK'::TEXT END,
+      EXTRACT(EPOCH FROM MAX(replay_lag))::NUMERIC,
+      60::NUMERIC,
+      'Maximum replication lag in seconds'::TEXT
+    FROM pg_stat_replication;
+  END IF;
+END;
+$ LANGUAGE plpgsql;
+```
+
+### 7.18.2 MongoDB Monitoring Scripts
+
+#### **MongoDB Health Check Script**
+```javascript
+// MongoDB health monitoring functions
+function checkMongoDBHealth() {
+  const db = db.getSiblingDB('psp_main');
+  const health = {
+    timestamp: new Date(),
+    checks: []
+  };
+  
+  // Database stats
+  const dbStats = db.runCommand({dbStats: 1});
+  health.checks.push({
+    name: 'database_size',
+    status: dbStats.dataSize > 10 * 1024 * 1024 * 1024 ? 'WARNING' : 'OK', // 10GB
+    value: dbStats.dataSize,
+    threshold: 10 * 1024 * 1024 * 1024,
+    message: 'Database size in bytes'
+  });
+  
+  // Collection stats
+  const collections = ['campaigns', 'users', 'events', 'ads_formats'];
+  collections.forEach(collName => {
+    const stats = db[collName].stats();
+    health.checks.push({
+      name: `${collName}_size`,
+      status: stats.size > 1024 * 1024 * 1024 ? 'WARNING' : 'OK', // 1GB per collection
+      value: stats.size,
+      threshold: 1024 * 1024 * 1024,
+      message: `${collName} collection size`
+    });
+  });
+  
+  // Index usage
+  const indexStats = db.events.aggregate([
+    {$indexStats: {}}
+  ]).toArray();
+  
+  const unusedIndexes = indexStats.filter(idx => 
+    idx.accesses.ops === 0 && idx.name !== '_id_'
+  );
+  
+  health.checks.push({
+    name: 'unused_indexes',
+    status: unusedIndexes.length > 3 ? 'WARNING' : 'OK',
+    value: unusedIndexes.length,
+    threshold: 3,
+    message: 'Number of unused indexes'
+  });
+  
+  // Replica set status (if applicable)
+  try {
+    const rsStatus = rs.status();
+    const unhealthyMembers = rsStatus.members.filter(member => 
+      member.health !== 1 || member.state !== 1
+    );
+    
+    health.checks.push({
+      name: 'replica_health',
+      status: unhealthyMembers.length > 0 ? 'CRITICAL' : 'OK',
+      value: unhealthyMembers.length,
+      threshold: 0,
+      message: 'Unhealthy replica set members'
+    });
+  } catch (e) {
+    // Not a replica set
+  }
+  
+  return health;
+}
+
+// Slow operations monitoring
+function checkSlowOperations() {
+  const db = db.getSiblingDB('psp_main');
+  
+  // Enable profiling for slow operations (>1000ms)
+  db.setProfilingLevel(1, {slowms: 1000});
+  
+  // Get recent slow operations
+  const slowOps = db.system.profile.find().sort({ts: -1}).limit(10).toArray();
+  
+  return {
+    timestamp: new Date(),
+    slowOperations: slowOps.map(op => ({
+      ns: op.ns,
+      op: op.op,
+      duration: op.millis,
+      command: op.command,
+      timestamp: op.ts
+    }))
+  };
+}
+```
+
+### 7.18.3 Redis Monitoring Commands
+
+#### **Redis Health Check Script**
+```bash
+#!/bin/bash
+# Redis health monitoring script
+
+REDIS_HOST=${REDIS_HOST:-localhost}
+REDIS_PORT=${REDIS_PORT:-6379}
+REDIS_PASSWORD=${REDIS_PASSWORD:-""}
+
+check_redis_health() {
+  echo "=== Redis Health Check ==="
+  echo "Timestamp: $(date)"
+  
+  # Basic connectivity
+  if redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" ping > /dev/null 2>&1; then
+    echo "✅ Redis connectivity: OK"
+  else
+    echo "❌ Redis connectivity: FAILED"
+    return 1
+  fi
+  
+  # Memory usage
+  local memory_used=$(redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" info memory | grep used_memory_human | cut -d: -f2 | tr -d '\r')
+  local max_memory=$(redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" config get maxmemory | tail -1)
+  echo "📊 Memory usage: $memory_used"
+  
+  # Connected clients
+  local connected_clients=$(redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" info clients | grep connected_clients | cut -d: -f2 | tr -d '\r')
+  echo "👥 Connected clients: $connected_clients"
+  
+  # Keyspace info
+  redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" info keyspace
+  
+  # Slow log
+  echo "🐌 Recent slow commands:"
+  redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" slowlog get 5
+  
+  # Check key expiration patterns
+  echo "🔑 Sample key TTLs:"
+  for pattern in "session:*" "otp:*" "cache:*"; do
+    local sample_key=$(redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" --scan --pattern "$pattern" | head -1)
+    if [ ! -z "$sample_key" ]; then
+      local ttl=$(redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" ttl "$sample_key")
+      echo "  $pattern -> TTL: $ttl seconds"
+    fi
+  done
+}
+
+check_redis_health
+```
+
+---
+
+## 7.19 Database Sharding Strategies
+
+### 7.19.1 MongoDB Sharding Configuration
+
+#### **Shard Key Design cho Collections**
+
+```javascript
+// Campaigns collection sharding
+sh.enableSharding("psp_main");
+
+// Shard campaigns by tenantId (compound với _id để ensure uniqueness)
+sh.shardCollection("psp_main.campaigns", { "tenantId": 1, "_id": 1 });
+
+// Users collection - shard by emailHash để distribute evenly
+sh.shardCollection("psp_main.users", { "emailHash": 1 });
+
+// Events collection - shard by campaignId và timestamp cho time-series data
+sh.shardCollection("psp_main.events", { "campaignId": 1, "timestamp": 1 });
+
+// Analytics collections - shard by date range
+sh.shardCollection("psp_main.campaign_reports", { "reportDate": 1, "campaignId": 1 });
+```
+
+#### **Shard Zone Configuration**
+```javascript
+// Configure shard zones cho geographic distribution
+sh.addShardToZone("shard01", "vietnam");
+sh.addShardToZone("shard02", "thailand"); 
+sh.addShardToZone("shard03", "indonesia");
+
+// Define zone ranges cho campaigns by tenantId prefix
+sh.updateZoneKeyRange(
+  "psp_main.campaigns",
+  { "tenantId": "vn_", "_id": MinKey },
+  { "tenantId": "vn_z", "_id": MaxKey },
+  "vietnam"
+);
+
+sh.updateZoneKeyRange(
+  "psp_main.campaigns", 
+  { "tenantId": "th_", "_id": MinKey },
+  { "tenantId": "th_z", "_id": MaxKey },
+  "thailand"
+);
+```
+
+### 7.19.2 PostgreSQL Partitioning Strategy
+
+#### **Time-based Partitioning cho Redemptions**
+```sql
+-- Create partitioned redemptions table
+CREATE TABLE redemptions_partitioned (
+    id UUID DEFAULT gen_random_uuid(),
+    barcode_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    location_id UUID NOT NULL,
+    staff_id UUID,
+    transaction_amount DECIMAL(10,2),
+    redeemed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    metadata JSONB,
+    is_offline_sync BOOLEAN DEFAULT FALSE,
+    synced_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    PRIMARY KEY (id, redeemed_at)
+) PARTITION BY RANGE (redeemed_at);
+
+-- Create monthly partitions
+CREATE TABLE redemptions_2025_01 PARTITION OF redemptions_partitioned
+    FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
+
+CREATE TABLE redemptions_2025_02 PARTITION OF redemptions_partitioned
+    FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
+
+-- Function để tự động tạo partitions
+CREATE OR REPLACE FUNCTION create_monthly_partition(table_name text, start_date date)
+RETURNS void AS $
+DECLARE
+    partition_name text;
+    end_date date;
+BEGIN
+    partition_name := table_name || '_' || to_char(start_date, 'YYYY_MM');
+    end_date := start_date + interval '1 month';
+    
+    EXECUTE format('CREATE TABLE %I PARTITION OF %I 
+                    FOR VALUES FROM (%L) TO (%L)',
+                   partition_name, table_name, start_date, end_date);
+    
+    -- Add indexes to partition
+    EXECUTE format('CREATE INDEX %I ON %I (user_id, redeemed_at)',
+                   partition_name || '_user_date_idx', partition_name);
+    EXECUTE format('CREATE INDEX %I ON %I (location_id, redeemed_at)', 
+                   partition_name || '_location_date_idx', partition_name);
+END;
+$ LANGUAGE plpgsql;
+
+-- Scheduled job để tạo partition mới
+CREATE OR REPLACE FUNCTION maintain_partitions()
+RETURNS void AS $
+DECLARE
+    next_month date;
+BEGIN
+    -- Tạo partition cho 3 tháng tới
+    FOR i IN 0..2 LOOP
+        next_month := date_trunc('month', CURRENT_DATE + interval '1 month' * i);
+        
+        -- Check if partition exists
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_tables 
+            WHERE tablename = 'redemptions_' || to_char(next_month, 'YYYY_MM')
+        ) THEN
+            PERFORM create_monthly_partition('redemptions_partitioned', next_month);
+        END IF;
+    END LOOP;
+    
+    -- Drop old partitions (older than 2 years)
+    FOR partition_name IN 
+        SELECT tablename FROM pg_tables 
+        WHERE tablename LIKE 'redemptions_____' 
+        AND tablename < 'redemptions_' || to_char(CURRENT_DATE - interval '2 years', 'YYYY_MM')
+    LOOP
+        EXECUTE format('DROP TABLE %I', partition_name);
+    END LOOP;
+END;
+$ LANGUAGE plpgsql;
+```
+
+---
+
+## 7.20 Connection Pooling Configuration
+
+### 7.20.1 PostgreSQL Connection Pooling
+
+#### **PgBouncer Configuration**
+```ini
+# /etc/pgbouncer/pgbouncer.ini
+[databases]
+psp_main = host=postgres-master port=5432 dbname=psp_main
+psp_readonly = host=postgres-replica port=5432 dbname=psp_main
+
+[pgbouncer]
+# Pool settings
+pool_mode = transaction
+max_client_conn = 1000
+default_pool_size = 25
+min_pool_size = 5
+reserve_pool_size = 5
+reserve_pool_timeout = 3
+
+# Connection limits
+max_db_connections = 50
+max_user_connections = 50
+
+# Timeouts
+server_round_robin = 1
+ignore_startup_parameters = extra_float_digits
+
+# Authentication
+auth_type = md5
+auth_file = /etc/pgbouncer/userlist.txt
+
+# Logging
+admin_users = pgbouncer_admin
+stats_users = pgbouncer_stats
+log_connections = 1
+log_disconnections = 1
+log_pooler_errors = 1
+
+# Performance
+server_lifetime = 3600
+server_idle_timeout = 600
+client_idle_timeout = 0
+```
+
+#### **Application Connection Pool**
+```typescript
+// PostgreSQL connection pool trong NestJS
+import { Pool } from 'pg';
+
+const pgPool = new Pool({
+  host: process.env.PG_HOST,
+  port: parseInt(process.env.PG_PORT || '5432'),
+  database: process.env.PG_DATABASE,
+  user: process.env.PG_USER,
+  password: process.env.PG_PASSWORD,
+  
+  // Pool configuration
+  max: 20,                    // Maximum pool size
+  min: 5,                     // Minimum pool size  
+  idleTimeoutMillis: 30000,   // Close idle connections after 30s
+  connectionTimeoutMillis: 5000, // Timeout for new connections
+  
+  // Health check
+  application_name: 'psp-barcode-service',
+  
+  // SSL configuration
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false
+  } : false
+});
+
+// Connection health monitoring
+pgPool.on('connect', (client) => {
+  console.log('New PostgreSQL client connected');
+});
+
+pgPool.on('error', (err, client) => {
+  console.error('PostgreSQL client error:', err);
+});
+
+export default pgPool;
+```
+
+### 7.20.2 MongoDB Connection Pooling
+
+#### **MongoDB Driver Configuration**
+```typescript
+import { MongoClient } from 'mongodb';
+
+const mongoOptions = {
+  // Connection pool settings
+  maxPoolSize: 50,          // Maximum connections
+  minPoolSize: 5,           // Minimum connections
+  maxIdleTimeMS: 30000,     // Close idle connections after 30s
+  maxConnecting: 10,        // Maximum simultaneous connections
+  
+  // Timeouts
+  serverSelectionTimeoutMS: 5000,   // Timeout for server selection
+  socketTimeoutMS: 45000,           // Socket timeout
+  connectTimeoutMS: 10000,          // Connection timeout
+  
+  // Retry logic
+  retryWrites: true,
+  retryReads: true,
+  
+  // Read preferences
+  readPreference: 'primaryPreferred',
+  readConcern: { level: 'majority' },
+  
+  // Write concern
+  writeConcern: {
+    w: 'majority',
+    j: true,
+    wtimeout: 10000
+  },
+  
+  // Monitoring
+  monitorCommands: true,
+  
+  // Compression
+  compressors: ['zstd', 'zlib']
+};
+
+const mongoClient = new MongoClient(process.env.MONGODB_URI, mongoOptions);
+
+// Connection event monitoring
+mongoClient.on('connectionPoolCreated', () => {
+  console.log('MongoDB connection pool created');
+});
+
+mongoClient.on('connectionPoolClosed', () => {
+  console.log('MongoDB connection pool closed');
+});
+
+mongoClient.on('connectionCreated', (event) => {
+  console.log(`MongoDB connection created: ${event.connectionId}`);
+});
+
+mongoClient.on('connectionClosed', (event) => {
+  console.log(`MongoDB connection closed: ${event.connectionId}`);
+});
+
+export default mongoClient;
+```
+
+### 7.20.3 Redis Connection Pooling
+
+#### **Redis Cluster Configuration**
+```typescript
+import { Cluster } from 'ioredis';
+
+const redisCluster = new Cluster([
+  { host: 'redis-node-1', port: 6379 },
+  { host: 'redis-node-2', port: 6379 },
+  { host: 'redis-node-3', port: 6379 }
+], {
+  // Cluster options
+  enableOfflineQueue: false,
+  retryDelayOnFailover: 100,
+  retryDelayOnClusterDown: 300,
+  maxRetriesPerRequest: 3,
+  
+  // Redis options
+  redisOptions: {
+    password: process.env.REDIS_PASSWORD,
+    
+    // Connection pool
+    connectTimeout: 10000,
+    commandTimeout: 5000,
+    retryDelayOnFailover: 100,
+    
+    // Keepalive
+    keepAlive: 30000,
+    
+    // Lazy connect
+    lazyConnect: true
+  },
+  
+  // Scaling
+  scaleReads: 'slave',
+  
+  // Health check
+  enableReadyCheck: true,
+  redisOptions: {
+    // Pool size per node
+    family: 4,
+    keyPrefix: 'psp:',
+    
+    // Performance
+    enableAutoPipelining: true
+  }
+});
+
+// Error handling
+redisCluster.on('error', (err) => {
+  console.error('Redis cluster error:', err);
+});
+
+redisCluster.on('connect', () => {
+  console.log('Redis cluster connected');
+});
+
+redisCluster.on('ready', () => {
+  console.log('Redis cluster ready');
+});
+
+export default redisCluster;
+```
+
+---
+
+## 7.21 Database Performance Benchmarking
+
+### 7.21.1 PostgreSQL Performance Tests
+
+#### **Barcode Reservation Load Test**
+```sql
+-- Load test function cho barcode reservation
+CREATE OR REPLACE FUNCTION benchmark_barcode_reservation(
+    test_pool_id UUID,
+    concurrent_users INTEGER DEFAULT 100,
+    total_reservations INTEGER DEFAULT 1000
+)
+RETURNS TABLE(
+    total_time INTERVAL,
+    avg_time_ms NUMERIC,
+    success_count INTEGER,
+    error_count INTEGER,
+    throughput_per_second NUMERIC
+) AS $
+DECLARE
+    start_time TIMESTAMP;
+    end_time TIMESTAMP;
+    success_cnt INTEGER := 0;
+    error_cnt INTEGER := 0;
+    i INTEGER;
+    test_user_id UUID;
+BEGIN
+    start_time := clock_timestamp();
+    
+    -- Simulate concurrent reservations
+    FOR i IN 1..total_reservations LOOP
+        test_user_id := gen_random_uuid();
+        
+        BEGIN
+            PERFORM reserve_barcode(test_pool_id, test_user_id);
+            success_cnt := success_cnt + 1;
+        EXCEPTION WHEN OTHERS THEN
+            error_cnt := error_cnt + 1;
+        END;
+        
+        -- Progress logging
+        IF i % 100 = 0 THEN
+            RAISE NOTICE 'Processed % reservations', i;
+        END IF;
+    END LOOP;
+    
+    end_time := clock_timestamp();
+    
+    RETURN QUERY SELECT 
+        end_time - start_time,
+        EXTRACT(EPOCH FROM (end_time - start_time)) * 1000 / total_reservations,
+        success_cnt,
+        error_cnt,
+        total_reservations / EXTRACT(EPOCH FROM (end_time - start_time));
+END;
+$ LANGUAGE plpgsql;
+
+-- Performance monitoring during test
+CREATE OR REPLACE FUNCTION monitor_performance_during_test()
+RETURNS TABLE(
+    timestamp TIMESTAMP,
+    active_connections INTEGER,
+    waiting_queries INTEGER,
+    cache_hit_ratio NUMERIC,
+    tps NUMERIC
+) AS $
+BEGIN
+    RETURN QUERY
+    SELECT 
+        NOW(),
+        (SELECT COUNT(*) FROM pg_stat_activity WHERE state = 'active')::INTEGER,
+        (SELECT COUNT(*) FROM pg_stat_activity WHERE waiting = true)::INTEGER,
+        (SELECT 
+            100.0 * sum(blks_hit) / nullif(sum(blks_hit) + sum(blks_read), 0)
+         FROM pg_stat_database)::NUMERIC,
+        (SELECT 
+            sum(xact_commit + xact_rollback) / EXTRACT(EPOCH FROM (NOW() - stats_reset))
+         FROM pg_stat_database 
+         WHERE datname = current_database())::NUMERIC;
+END;
+$ LANGUAGE plpgsql;
+```
+
+### 7.21.2 MongoDB Performance Tests
+
+#### **Event Ingestion Benchmark**
+```javascript
+// MongoDB event ingestion performance test
+function benchmarkEventIngestion(eventCount = 10000, batchSize = 1000) {
+  const db = db.getSiblingDB('psp_main');
+  const startTime = new Date();
+  
+  const campaigns = ['camp_001', 'camp_002', 'camp_003'];
+  const eventTypes = ['qr_scan', 'form_submit', 'otp_verified', 'barcode_issued', 'redemption'];
+  const users = Array.from({length: 1000}, () => new ObjectId());
+  
+  let totalInserted = 0;
+  let errors = 0;
+  
+  for (let i = 0; i < eventCount; i += batchSize) {
+    const batch = [];
+    const currentBatchSize = Math.min(batchSize, eventCount - i);
+    
+    for (let j = 0; j < currentBatchSize; j++) {
+      batch.push({
+        eventType: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+        eventId: `evt_${Date.now()}_${i + j}`,
+        sessionId: `session_${Math.floor(Math.random() * 1000)}`,
+        userId: users[Math.floor(Math.random() * users.length)],
+        campaignId: new ObjectId(campaigns[Math.floor(Math.random() * campaigns.length)]),
+        timestamp: new Date(),
+        data: {
+          testData: true,
+          batchNumber: Math.floor(i / batchSize) + 1
+        },
+        receivedAt: new Date(),
+        processedAt: new Date()
+      });
+    }
+    
+    try {
+      const result = db.events.insertMany(batch, {ordered: false});
+      totalInserted += result.insertedIds.length;
+    } catch (e) {
+      errors++;
+      print(`Batch error: ${e.message}`);
+    }
+    
+    if (i % (batchSize * 10) === 0) {
+      print(`Progress: ${i + currentBatchSize}/${eventCount} events processed`);
+    }
+  }
+  
+  const endTime = new Date();
+  const duration = (endTime - startTime) / 1000; // seconds
+  
+  return {
+    totalEvents: eventCount,
+    insertedEvents: totalInserted,
+    errors: errors,
+    durationSeconds: duration,
+    eventsPerSecond: totalInserted / duration,
+    averageLatencyMs: (duration * 1000) / totalInserted
+  };
+}
+
+// Analytics query performance test
+function benchmarkAnalyticsQueries() {
+  const db = db.getSiblingDB('psp_main');
+  const results = [];
+  
+  // Test 1: Campaign funnel analysis
+  const funnelStart = new Date();
+  const funnelResult = db.events.aggregate([
+    {
+      $match: {
+        campaignId: new ObjectId("507f1f77bcf86cd799439011"), // sample campaign
+        timestamp: {
+          $gte: new Date("2025-07-01"),
+          $lte: new Date("2025-07-31")
+        }
+      }
+    },
+    {
+      $group: {
+        _id: "$eventType",
+        count: { $sum: 1 },
+        uniqueUsers: { $addToSet: "$userId" }
+      }
+    },
+    {
+      $project: {
+        eventType: "$_id",
+        count: 1,
+        uniqueUserCount: { $size: "$uniqueUsers" }
+      }
+    }
+  ]).toArray();
+  const funnelDuration = new Date() - funnelStart;
+  
+  results.push({
+    queryType: 'funnel_analysis',
+    durationMs: funnelDuration,
+    resultCount: funnelResult.length
+  });
+  
+  // Test 2: User behavior analysis
+  const behaviorStart = new Date();
+  const behaviorResult = db.events.aggregate([
+    {
+      $match: {
+        timestamp: {
+          $gte: new Date("2025-07-01"),
+          $lte: new Date("2025-07-31")
+        }
+      }
+    },
+    {
+      $group: {
+        _id: "$userId",
+        eventCount: { $sum: 1 },
+        eventTypes: { $addToSet: "$eventType" },
+        firstEvent: { $min: "$timestamp" },
+        lastEvent: { $max: "$timestamp" }
+      }
+    },
+    {
+      $match: {
+        eventCount: { $gte: 3 } // Users với ít nhất 3 events
+      }
+    }
+  ]).toArray();
+  const behaviorDuration = new Date() - behaviorStart;
+  
+  results.push({
+    queryType: 'user_behavior_analysis', 
+    durationMs: behaviorDuration,
+    resultCount: behaviorResult.length
+  });
+  
+  return results;
+}
+```
+
+### 7.21.3 Redis Performance Tests
+
+#### **Cache Performance Benchmark**
+```bash
+#!/bin/bash
+# Redis performance benchmark script
+
+REDIS_HOST=${REDIS_HOST:-localhost}
+REDIS_PORT=${REDIS_PORT:-6379}
+REDIS_PASSWORD=${REDIS_PASSWORD:-""}
+
+echo "=== Redis Performance Benchmark ==="
+echo "Host: $REDIS_HOST:$REDIS_PORT"
+echo "Timestamp: $(date)"
+
+# Basic performance test
+echo "1. Basic Operations Benchmark:"
+redis-benchmark -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" \
+  -t set,get,incr,lpush,rpush,lpop,rpop,sadd,hset,spop,zadd,zpopmin \
+  -n 100000 -d 100 --csv
+
+# Session storage simulation
+echo "2. Session Storage Benchmark:"
+redis-benchmark -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" \
+  -t set,get -n 50000 -d 1024 --csv
+
+# OTP simulation (small values, high frequency)
+echo "3. OTP Operations Benchmark:"
+redis-benchmark -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" \
+  -t set,get -n 100000 -d 50 --csv
+
+# Pub/Sub performance
+echo "4. Pub/Sub Benchmark:"
+redis-benchmark -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" \
+  -t publish -n 10000 -d 256 --csv
+
+# Pipeline performance
+echo "5. Pipeline Benchmark:"
+redis-benchmark -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" \
+  -t set,get -n 100000 -d 100 -P 16 --csv
+
+# Memory usage analysis
+echo "6. Memory Analysis:"
+redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" info memory | grep -E "(used_memory_human|used_memory_peak_human|used_memory_rss_human)"
+
+# Latency analysis
+echo "7. Latency Analysis:"
+redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" --latency-history -i 1 &
+LATENCY_PID=$!
+sleep 10
+kill $LATENCY_PID
+
+echo "Benchmark completed at $(date)"
+```
+
+---
+
+## 7.22 Database Security Hardening
+
+### 7.22.1 PostgreSQL Security Configuration
+
+#### **Security Settings**
+```sql
+-- Enable SSL/TLS
+ALTER SYSTEM SET ssl = 'on';
+ALTER SYSTEM SET ssl_cert_file = '/etc/ssl/certs/server.crt';
+ALTER SYSTEM SET ssl_key_file = '/etc/ssl/private/server.key';
+ALTER SYSTEM SET ssl_ca_file = '/etc/ssl/certs/ca.crt';
+
+-- Connection security
+ALTER SYSTEM SET ssl_min_protocol_version = 'TLSv1.2';
+ALTER SYSTEM SET password_encryption = 'scram-sha-256';
+
+-- Logging configuration for security
+ALTER SYSTEM SET log_connections = 'on';
+ALTER SYSTEM SET log_disconnections = 'on';
+ALTER SYSTEM SET log_failed_connections = 'on';
+ALTER SYSTEM SET log_statement = 'all';
+ALTER SYSTEM SET log_duration = 'on';
+ALTER SYSTEM SET log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h ';
+
+-- Row Level Security setup
+CREATE POLICY tenant_isolation_campaigns ON campaigns
+    FOR ALL TO application_role
+    USING (tenant_id = current_setting('app.tenant_id', true));
+
+CREATE POLICY tenant_isolation_barcode_pools ON barcode_pools
+    FOR ALL TO application_role  
+    USING (campaign_id IN (
+        SELECT id FROM campaigns WHERE tenant_id = current_setting('app.tenant_id', true)
+    ));
+
+-- Enable RLS
+ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE barcode_pools ENABLE ROW LEVEL SECURITY;
+
+-- Create application roles
+CREATE ROLE psp_read_only;
+GRANT CONNECT ON DATABASE psp_main TO psp_read_only;
+GRANT USAGE ON SCHEMA public TO psp_read_only;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO psp_read_only;
+
+CREATE ROLE psp_read_write;
+GRANT psp_read_only TO psp_read_write;
+GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO psp_read_write;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO psp_read_write;
+
+-- Service-specific users
+CREATE USER barcode_service WITH PASSWORD 'secure_random_password_123';
+GRANT psp_read_write TO barcode_service;
+
+CREATE USER analytics_service WITH PASSWORD 'secure_random_password_456';
+GRANT psp_read_only TO analytics_service;
+```
+
+#### **pg_hba.conf Security Configuration**
+```
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# Local connections
+local   all             postgres                                peer
+local   all             all                                     md5
+
+# SSL connections only for remote
+hostssl all             all             0.0.0.0/0               scram-sha-256
+hostssl replication     replicator      10.0.0.0/8              scram-sha-256
+
+# Deny non-SSL connections
+host    all             all             0.0.0.0/0               reject
+```
+
+### 7.22.2 MongoDB Security Configuration
+
+#### **mongod.conf Security Settings**
+```yaml
+# MongoDB security configuration
+security:
+  authorization: enabled
+  clusterAuthMode: x509
+  
+net:
+  ssl:
+    mode: requireSSL
+    PEMKeyFile: /etc/ssl/mongodb.pem
+    CAFile: /etc/ssl/ca.pem
+    allowConnectionsWithoutCertificates: false
+    
+systemLog:
+  destination: file
+  path: /var/log/mongodb/mongod.log
+  logAppend: true
+  
+auditLog:
+  destination: file
+  format: JSON
+  path: /var/log/mongodb/audit.json
+  filter: |
+    {
+      "ts": 1,
+      "t": {"$date": "2025-01-01T00:00:00.000Z"},
+      "atype": {"$in": ["authCheck", "authenticate", "createUser", "dropUser"]},
+      "param.command": {"$exists": true}
+    }
+```
+
+#### **User Roles và Permissions**
+```javascript
+// Create database admin
+db.createUser({
+  user: "dbadmin",
+  pwd: "secure_admin_password_123",
+  roles: [
+    { role: "dbAdminAnyDatabase", db: "admin" },
+    { role: "userAdminAnyDatabase", db: "admin" },
+    { role: "readWriteAnyDatabase", db: "admin" }
+  ]
+});
+
+// Create application users với least privilege
+db.createUser({
+  user: "campaign_service",
+  pwd: "secure_service_password_456", 
+  roles: [
+    { role: "readWrite", db: "psp_main" }
+  ]
+});
+
+db.createUser({
+  user: "analytics_service",
+  pwd: "secure_analytics_password_789",
+  roles: [
+    { role: "read", db: "psp_main" }
+  ]
+});
+
+// Custom role cho integration service
+db.createRole({
+  role: "integrationService",
+  privileges: [
+    {
+      resource: { db: "psp_main", collection: "users" },
+      actions: ["find", "update"]
+    },
+    {
+      resource: { db: "psp_main", collection: "events" },
+      actions: ["find", "insert"]
+    }
+  ],
+  roles: []
+});
+
+db.createUser({
+  user: "integration_service",
+  pwd: "secure_integration_password_012",
+  roles: ["integrationService"]
+});
+```
+
+### 7.22.3 Redis Security Configuration
+
+#### **redis.conf Security Settings**
+```bash
+# Redis security configuration
+
+# Authentication
+requirepass secure_redis_password_345
+
+# Network security
+bind 127.0.0.1 10.0.0.100  # Bind to specific IPs only
+port 0                      # Disable default port
+tls-port 6380              # Use TLS port instead
+
+# TLS configuration
+tls-cert-file /etc/ssl/redis.crt
+tls-key-file /etc/ssl/redis.key
+tls-ca-cert-file /etc/ssl/ca.crt
+tls-protocols "TLSv1.2 TLSv1.3"
+
+# Command security
+rename-command FLUSHDB ""      # Disable dangerous commands
+rename-command FLUSHALL ""
+rename-command EVAL ""
+rename-command DEBUG ""
+rename-command SHUTDOWN REDIS_SHUTDOWN
+
+# Logging
+loglevel notice
+logfile /var/log/redis/redis-server.log
+
+# Memory protection
+maxmemory 2gb
+maxmemory-policy allkeys-lru
+```
+
+---
+
+## 7.23 Final Database Summary
+
+### 7.23.1 Complete Architecture Overview
+
+**Database Distribution:**
+✅ **PostgreSQL**: Transactional data (barcodes, redemptions) với ACID compliance  
+✅ **MongoDB**: Flexible schemas (campaigns, users, events) với horizontal scaling  
+✅ **Redis**: High-performance caching và messaging với cluster support  
+
+**Key Features Implemented:**
+✅ **Cross-database Relationships**: Logical foreign keys với event-driven consistency  
+✅ **Performance Optimization**: Strategic indexing, partitioning, connection pooling  
+✅ **Security Hardening**: Encryption, authentication, audit logging, RLS  
+✅ **Monitoring & Health**: Comprehensive health checks và performance monitoring  
+✅ **Scalability**: Sharding strategies cho growth từ 100K → 10M users  
+✅ **Data Lifecycle**: Migration scripts, backup/DR, archival policies  
+
+### 7.23.2 Production Readiness Checklist
+
+**Security & Compliance:**
+- [ ] TLS 1.3 encryption enabled cho all databases
+- [ ] Role-based access control implemented
+- [ ] Audit logging configured và tested
+- [ ] PII encryption với field-level AES-256
+- [ ] GDPR/PDPA compliance procedures validated
+
+**Performance & Scalability:**
+- [ ] Connection pooling configured và tuned
+- [ ] Indexes optimized cho query patterns
+- [ ] Partitioning implemented cho large tables
+- [ ] Caching strategies deployed
+- [ ] Load testing completed với target metrics
+
+**Operational Excellence:**
+- [ ] Backup/restore procedures tested
+- [ ] Monitoring dashboards deployed
+- [ ] Health check endpoints functional
+- [ ] Migration scripts validated
+- [ ] DR procedures documented và tested
+
+### 7.23.3 Success Metrics
+
+| Metric Category | Target | Current Status |
+|----------------|--------|----------------|
+| **Response Time** | <1s barcode reservation | ✅ Architecture ready |
+| **Throughput** | 2K requests/second | ✅ Benchmarks defined |
+| **Availability** | 99.9% uptime | ✅ HA architecture |
+| **Data Integrity** | 100% ACID compliance | ✅ PostgreSQL transactions |
+| **Security** | Zero data breaches | ✅ Multi-layer security |
+| **Scalability** | 10M users support | ✅ Sharding strategies |
+
+---
+
+**Trạng thái tài liệu**: ✅ HOÀN THÀNH Part07  
+**Coverage**: Complete database architecture từ schema design → production deployment  
+**Dependencies**: Architecture decisions confirmed, security requirements validated  
+**Người sở hữu**: Đội thiết kế dữ liệu  
+**Next Action**: Proceed to Part09 - Detailed Use Caseslogin:{userId}" = counter
 // TTL: 15 minutes, max 5 attempts
 
 "rate_limit:
+
+# 📘 Part08 - Thiết kế API & Tích hợp (API Design & Integration)
+**Đặc tả yêu cầu hệ thống (SRS) - Product Sampling Platform**
+
+**Phiên bản**: 1.0  
+**Ngày**: 2025-10-17  
+**Tác giả**: Đội thiết kế API  
+**Trạng thái**: ✅ Hoàn thành  
+
+---
+
+## 8.1 Tổng quan thiết kế API
+
+### 8.1.1 Triết lý thiết kế API
+Hệ thống Product Sampling Platform được thiết kế theo nguyên tắc **API-First**, đảm bảo:
+
+- 🔄 **RESTful Architecture**: Tuân thủ các chuẩn REST với HTTP methods và status codes
+- 📋 **OpenAPI 3.0 Specification**: Tất cả APIs được định nghĩa bằng OpenAPI specs
+- 🔐 **Security by Design**: Authentication và authorization tích hợp từ đầu
+- 📊 **Consistent Response Format**: Cấu trúc response nhất quán across services
+- 🚦 **Rate Limiting**: Bảo vệ hệ thống khỏi abuse và overload
+- 📝 **Comprehensive Documentation**: Auto-generated docs từ OpenAPI specs
+
+### 8.1.2 Kiến trúc API tổng thể
+
+```mermaid
+graph TB
+    subgraph "Client Applications"
+        CA1[Brand Dashboard - Web]
+        CA2[User Portal - PWA]
+        CA3[POS App - Mobile]
+        CA4[Third-party Integrations]
+    end
+    
+    subgraph "API Gateway Layer"
+        AGW[Kong API Gateway]
+        AUTH[Authentication Service]
+        RL[Rate Limiting]
+        LB[Load Balancer]
+    end
+    
+    subgraph "Microservices APIs"
+        API1[auth-service API]
+        API2[campaign-service API]
+        API3[barcode-service API]
+        API4[user-service API]
+        API5[redemption-service API]
+        API6[analytics-service API]
+        API7[notification-service API]
+        API8[integration-service API]
+    end
+    
+    subgraph "External APIs"
+        EXT1[Twilio SMS API]
+        EXT2[HubSpot CRM API]
+        EXT3[Google Analytics API]
+        EXT4[POS System APIs]
+    end
+    
+    CA1 --> AGW
+    CA2 --> AGW
+    CA3 --> AGW
+    CA4 --> AGW
+    
+    AGW --> AUTH --> RL --> LB
+    
+    LB --> API1
+    LB --> API2
+    LB --> API3
+    LB --> API4
+    LB --> API5
+    LB --> API6
+    LB --> API7
+    LB --> API8
+    
+    API7 --> EXT1
+    API8 --> EXT2
+    API6 --> EXT3
+    API5 --> EXT4
+    
+    style AGW fill:#e3f2fd
+    style AUTH fill:#ffebee
+    style API2 fill:#e8f5e8
+```
+
+### 8.1.3 Các nguyên tắc thiết kế chính
+
+| Nguyên tắc | Mô tả | Lợi ích |
+|------------|-------|---------|
+| **API Versioning** | Sử dụng header versioning (`Accept: application/vnd.psp.v1+json`) | Backward compatibility, smooth migration |
+| **Resource-based URLs** | `/api/v1/campaigns/{id}` thay vì `/api/v1/getCampaign` | RESTful, intuitive |
+| **HTTP Status Codes** | Sử dụng đúng status codes (200, 201, 400, 401, 404, 500) | Clear communication |
+| **Request/Response Validation** | JSON Schema validation cho input/output | Data integrity |
+| **Error Handling** | Consistent error response format | Better debugging |
+| **Pagination** | Cursor-based pagination cho large datasets | Performance optimization |
+
+---
+
+## 8.2 API Gateway Configuration
+
+### 8.2.1 Kong API Gateway Setup
+
+**Cấu hình Kong plugins cho security và performance:**
+
+```yaml
+# kong.yml configuration
+_format_version: "3.0"
+
+services:
+  - name: auth-service
+    url: http://auth-service:3000
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+      - name: cors
+        config:
+          origins: ["https://dashboard.psp.com", "https://portal.psp.com"]
+          
+  - name: campaign-service
+    url: http://campaign-service:3000
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: iss
+      - name: rate-limiting
+        config:
+          minute: 200
+          hour: 5000
+
+routes:
+  - name: auth-routes
+    service: auth-service
+    paths: ["/api/v1/auth"]
+    
+  - name: campaign-routes
+    service: campaign-service
+    paths: ["/api/v1/campaigns"]
+    plugins:
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 10
+```
+
+### 8.2.2 Authentication Flow qua API Gateway
+
+```mermaid
+sequenceDiagram
+    participant Client as Client App
+    participant Gateway as Kong Gateway
+    participant Auth as auth-service
+    participant Service as Target Service
+    
+    Note over Client,Service: Login Flow
+    Client->>Gateway: POST /api/v1/auth/login
+    Gateway->>Auth: Forward request
+    Auth-->>Gateway: JWT + Refresh Token
+    Gateway-->>Client: Tokens + User Info
+    
+    Note over Client,Service: Authenticated Request
+    Client->>Gateway: GET /api/v1/campaigns (với JWT)
+    Gateway->>Gateway: Validate JWT
+    Gateway->>Auth: Verify token & permissions
+    Auth-->>Gateway: Token valid + user context
+    Gateway->>Service: Forward với user context
+    Service-->>Gateway: Response data
+    Gateway-->>Client: Final response
+```
+
+### 8.2.3 Rate Limiting Strategy
+
+**Phân cấp rate limiting theo user types:**
+
+| User Type | Requests/Minute | Requests/Hour | Burst Limit | Punishment |
+|-----------|-----------------|---------------|-------------|------------|
+| **Anonymous** | 20 | 100 | 50 | 1 giờ block |
+| **End User** | 60 | 1,000 | 100 | 30 phút block |
+| **Customer Account** | 200 | 10,000 | 500 | 15 phút block |
+| **Admin** | 500 | 50,000 | 1,000 | 5 phút block |
+| **System/Integration** | 1,000 | Unlimited | 2,000 | Alert only |
+
+---
+
+## 8.3 Auth Service API
+
+### 8.3.1 Authentication Endpoints
+
+#### **POST /api/v1/auth/login**
+**Mô tả**: Đăng nhập người dùng và trả về JWT tokens
+
+```yaml
+# OpenAPI specification
+/api/v1/auth/login:
+  post:
+    summary: Đăng nhập người dùng
+    tags: [Authentication]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, password]
+            properties:
+              email:
+                type: string
+                format: email
+                example: "admin@example.com"
+              password:
+                type: string
+                minLength: 8
+                example: "password123"
+              rememberMe:
+                type: boolean
+                default: false
+    responses:
+      200:
+        description: Đăng nhập thành công
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    accessToken:
+                      type: string
+                      example: "eyJhbGciOiJIUzI1NiIs..."
+                    refreshToken:
+                      type: string
+                      example: "def502001234567890..."
+                    expiresIn:
+                      type: integer
+                      example: 3600
+                    user:
+                      $ref: '#/components/schemas/User'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      401:
+        $ref: '#/components/responses/Unauthorized'
+      429:
+        $ref: '#/components/responses/TooManyRequests'
+```
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "def502001234567890abcdef...",
+    "expiresIn": 3600,
+    "user": {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "email": "admin@example.com",
+      "role": "admin",
+      "permissions": ["campaign:read", "campaign:write", "user:manage"],
+      "tenantId": "tenant_123"
+    }
+  },
+  "message": "Đăng nhập thành công"
+}
+```
+
+#### **POST /api/v1/auth/refresh**
+**Mô tả**: Làm mới access token bằng refresh token
+
+```json
+// Request body
+{
+  "refreshToken": "def502001234567890abcdef..."
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  }
+}
+```
+
+#### **POST /api/v1/auth/logout**
+**Mô tả**: Đăng xuất và blacklist tokens
+
+```json
+// Request headers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+// Response
+{
+  "success": true,
+  "message": "Đăng xuất thành công"
+}
+```
+
+### 8.3.2 OTP Verification Endpoints
+
+#### **POST /api/v1/auth/send-otp**
+**Mô tả**: Gửi OTP code cho user verification
+
+```yaml
+/api/v1/auth/send-otp:
+  post:
+    summary: Gửi mã OTP xác thực
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [contact, type]
+            properties:
+              contact:
+                type: string
+                description: "Số điện thoại hoặc email"
+                example: "+84901234567"
+              type:
+                type: string
+                enum: [sms, email]
+                example: "sms"
+              campaignId:
+                type: string
+                description: "ID campaign nếu OTP cho sampling"
+                example: "camp_123"
+    responses:
+      200:
+        description: OTP đã được gửi
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    sessionId:
+                      type: string
+                      example: "otp_session_123"
+                    expiresIn:
+                      type: integer
+                      example: 300
+                    attemptsLeft:
+                      type: integer
+                      example: 3
+                message:
+                  type: string
+                  example: "Mã OTP đã được gửi đến +84901***567"
+```
+
+#### **POST /api/v1/auth/verify-otp**
+**Mô tả**: Xác thực OTP code
+
+```json
+// Request
+{
+  "sessionId": "otp_session_123",
+  "code": "123456",
+  "contact": "+84901234567"
+}
+
+// Success Response
+{
+  "success": true,
+  "data": {
+    "verified": true,
+    "userId": "user_123",
+    "nextStep": "barcode_generation"
+  },
+  "message": "Xác thực thành công"
+}
+
+// Error Response
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_OTP",
+    "message": "Mã OTP không đúng",
+    "details": {
+      "attemptsLeft": 2,
+      "sessionId": "otp_session_123"
+    }
+  }
+}
+```
+
+### 8.3.3 Permission Management
+
+#### **GET /api/v1/auth/permissions**
+**Mô tả**: Lấy danh sách permissions của user hiện tại
+
+```json
+// Response
+{
+  "success": true,
+  "data": {
+    "userId": "user_123",
+    "role": "customer_account",
+    "permissions": [
+      "campaign:read",
+      "campaign:write", 
+      "campaign:delete:own",
+      "barcode:read:own",
+      "analytics:read:own"
+    ],
+    "tenantId": "tenant_123",
+    "scopes": {
+      "campaigns": ["own"],
+      "users": ["none"],
+      "analytics": ["own"]
+    }
+  }
+}
+```
+
+---
+
+## 8.4 Campaign Service API
+
+### 8.4.1 Campaign Management Endpoints
+
+#### **POST /api/v1/campaigns**
+**Mô tả**: Tạo campaign mới
+
+```yaml
+/api/v1/campaigns:
+  post:
+    summary: Tạo campaign mới
+    tags: [Campaigns]
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateCampaignRequest'
+    responses:
+      201:
+        description: Campaign được tạo thành công
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                data:
+                  $ref: '#/components/schemas/Campaign'
+```
+
+**Request Schema:**
+```json
+{
+  "name": "Coca Cola Summer 2025",
+  "description": "Chiến dịch sampling mùa hè với Coca Cola",
+  "startDate": "2025-06-01T00:00:00Z",
+  "endDate": "2025-08-31T23:59:59Z",
+  "products": [
+    {
+      "name": "Coca Cola Original 330ml",
+      "description": "Coca Cola nguyên bản lon 330ml",
+      "value": 15000,
+      "category": "beverage"
+    }
+  ],
+  "config": {
+    "maxRedemptionsPerUser": 1,
+    "requireQuiz": true,
+    "autoExpireHours": 72
+  },
+  "targeting": {
+    "ageRange": {"min": 18, "max": 45},
+    "genders": ["M", "F"],
+    "locations": ["loc_hcm_001", "loc_hn_001"]
+  },
+  "tracking": {
+    "utmSource": "sampling",
+    "utmMedium": "qr_code",
+    "utmCampaign": "coca_cola_summer"
+  }
+}
+```
+
+#### **GET /api/v1/campaigns**
+**Mô tả**: Lấy danh sách campaigns với filtering và pagination
+
+```yaml
+/api/v1/campaigns:
+  get:
+    summary: Lấy danh sách campaigns
+    parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [draft, active, paused, completed, cancelled]
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: search
+        in: query
+        schema:
+          type: string
+          description: "Tìm kiếm theo tên hoặc mô tả"
+      - name: startDateFrom
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: startDateTo
+        in: query
+        schema:
+          type: string
+          format: date
+```
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "data": {
+    "campaigns": [
+      {
+        "id": "camp_123",
+        "name": "Coca Cola Summer 2025",
+        "status": "active",
+        "startDate": "2025-06-01T00:00:00Z",
+        "endDate": "2025-08-31T23:59:59Z",
+        "stats": {
+          "totalScans": 1250,
+          "totalRedemptions": 987,
+          "conversionRate": 78.96
+        },
+        "createdAt": "2025-05-15T10:30:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 45,
+      "totalPages": 3,
+      "hasNext": true,
+      "hasPrev": false
+    }
+  }
+}
+```
+
+#### **PUT /api/v1/campaigns/{id}**
+**Mô tả**: Cập nhật campaign
+
+```json
+// Request
+{
+  "name": "Coca Cola Summer 2025 - Extended",
+  "endDate": "2025-09-15T23:59:59Z",
+  "config": {
+    "maxRedemptionsPerUser": 2
+  }
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "id": "camp_123",
+    "name": "Coca Cola Summer 2025 - Extended",
+    "endDate": "2025-09-15T23:59:59Z",
+    "updatedAt": "2025-07-15T14:20:00Z"
+  },
+  "message": "Campaign đã được cập nhật"
+}
+```
+
+### 8.4.2 Ads Format Management
+
+#### **POST /api/v1/campaigns/{campaignId}/ads-formats**
+**Mô tả**: Tạo ads format cho campaign
+
+```json
+// Request (multipart/form-data)
+{
+  "name": "Summer Flyer A4",
+  "type": "flyer",
+  "dimensions": {
+    "width": 210,
+    "height": 297,
+    "unit": "mm",
+    "dpi": 300
+  },
+  "qrConfig": {
+    "position": {"x": 150, "y": 200, "width": 50, "height": 50},
+    "style": "square",
+    "safeZone": 5
+  },
+  "printSpecs": {
+    "quantity": 1000,
+    "paperType": "glossy_paper"
+  },
+  "designFile": "@summer_flyer.pdf" // file upload
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "id": "ads_format_123",
+    "name": "Summer Flyer A4",
+    "type": "flyer",
+    "designFiles": [{
+      "filename": "summer_flyer.pdf",
+      "url": "https://storage.psp.com/ads-formats/summer_flyer.pdf",
+      "fileSize": 2048576
+    }],
+    "qrCodeUrl": "https://api.psp.com/qr/camp_123/ads_format_123",
+    "createdAt": "2025-05-20T09:15:00Z"
+  }
+}
+```
+
+---
+
+## 8.5 Barcode Service API
+
+### 8.5.1 Barcode Pool Management
+
+#### **POST /api/v1/barcode-pools**
+**Mô tả**: Tạo barcode pool mới
+
+```json
+// Request
+{
+  "name": "Coca Cola Summer Pool",
+  "campaignId": "camp_123",
+  "barcodes": [
+    {
+      "code": "COC2025A12345678C",
+      "productName": "Coca Cola Original 330ml",
+      "value": 15000,
+      "expiryDate": "2025-12-31",
+      "batchCode": "BATCH001"
+    }
+    // ... more barcodes
+  ]
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "poolId": "pool_123",
+    "name": "Coca Cola Summer Pool",
+    "totalQuantity": 10000,
+    "availableQuantity": 10000,
+    "importedCount": 10000,
+    "failedCount": 0,
+    "validationErrors": []
+  }
+}
+```
+
+#### **POST /api/v1/barcode-pools/import**
+**Mô tả**: Import barcodes từ CSV file
+
+```yaml
+/api/v1/barcode-pools/import:
+  post:
+    summary: Import barcodes từ CSV
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+                description: "CSV file chứa barcode data"
+              poolName:
+                type: string
+              campaignId:
+                type: string
+              skipErrors:
+                type: boolean
+                default: false
+```
+
+**CSV Format Example:**
+```csv
+code,productName,value,expiryDate,batchCode
+COC2025A12345678C,Coca Cola Original 330ml,15000,2025-12-31,BATCH001
+COC2025A87654321D,Coca Cola Original 330ml,15000,2025-12-31,BATCH001
+```
+
+### 8.5.2 Barcode Operations
+
+#### **POST /api/v1/barcodes/reserve**
+**Mô tả**: Reserve barcode cho user đã verify
+
+```json
+// Request
+{
+  "userId": "user_123",
+  "poolId": "pool_123",
+  "preferences": {
+    "productType": "beverage"
+  }
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "barcodeId": "barcode_123",
+    "code": "COC2025A12345678C",
+    "productName": "Coca Cola Original 330ml",
+    "expiryDate": "2025-12-31",
+    "qrCodeUrl": "https://api.psp.com/qr/barcode_123",
+    "walletPassUrl": "https://api.psp.com/wallet/barcode_123",
+    "reservedAt": "2025-07-15T10:30:00Z",
+    "expiresAt": "2025-07-18T10:30:00Z"
+  }
+}
+```
+
+#### **GET /api/v1/barcodes/{code}/validate**
+**Mô tả**: Validate barcode trước khi redeem
+
+```json
+// Response for valid barcode
+{
+  "success": true,
+  "data": {
+    "valid": true,
+    "barcodeId": "barcode_123",
+    "productName": "Coca Cola Original 330ml",
+    "campaignName": "Coca Cola Summer 2025",
+    "status": "issued",
+    "expiryDate": "2025-12-31",
+    "userId": "user_123",
+    "userInfo": {
+      "name": "Nguyễn Văn A",
+      "phone": "+84901***567"
+    }
+  }
+}
+
+// Response for invalid barcode
+{
+  "success": false,
+  "error": {
+    "code": "BARCODE_INVALID",
+    "message": "Mã barcode không hợp lệ hoặc đã được sử dụng",
+    "details": {
+      "status": "redeemed",
+      "redeemedAt": "2025-07-10T14:20:00Z"
+    }
+  }
+}
+```
+
+---
+
+## 8.6 User Service API
+
+### 8.6.1 User Profile Management
+
+#### **POST /api/v1/users**
+**Mô tả**: Tạo user profile từ form submission
+
+```json
+// Request
+{
+  "personalInfo": {
+    "fullName": "Nguyễn Văn A",
+    "email": "user@example.com",
+    "phoneNumber": "+84901234567",
+    "dateOfBirth": "1990-05-15",
+    "gender": "M"
+  },
+  "preferences": {
+    "language": "vi",
+    "marketing": {
+      "email": true,
+      "sms": false
+    },
+    "interests": ["technology", "sports"],
+    "dietaryRestrictions": ["vegetarian"]
+  },
+  "compliance": {
+    "dataProcessingConsent": true,
+    "marketingConsent": true,
+    "consentVersion": "1.2.0"
+  },
+  "campaignId": "camp_123",
+  "source": "qr_scan"
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "userId": "user_123",
+    "profileComplete": true,
+    "verificationRequired": true,
+    "nextSteps": ["phone_verification", "barcode_generation"]
+  }
+}
+```
+
+#### **GET /api/v1/users/{userId}**
+**Mô tả**: Lấy thông tin user profile
+
+```json
+// Response (dữ liệu đã decrypt cho authorized user)
+{
+  "success": true,
+  "data": {
+    "id": "user_123",
+    "personalInfo": {
+      "fullName": "Nguyễn Văn A",
+      "email": "use***@example.com", // masked for privacy
+      "phoneNumber": "+84901***567",
+      "gender": "M"
+    },
+    "verification": {
+      "email": {
+        "isVerified": false,
+        "verifiedAt": null
+      },
+      "phone": {
+        "isVerified": true,
+        "verifiedAt": "2025-07-15T10:35:00Z"
+      }
+    },
+    "activity": {
+      "totalCampaigns": 3,
+      "totalRedemptions": 2,
+      "lastActivityAt": "2025-07-15T14:20:00Z"
+    },
+    "riskProfile": {
+      "trustScore": 85,
+      "riskLevel": "low"
+    }
+  }
+}
+```
+
+### 8.6.2 User Portal APIs
+
+#### **GET /api/v1/user-portal/dashboard**
+**Mô tả**: Dashboard data cho User Portal
+
+```json
+// Response
+{
+  "success": true,
+  "data": {
+    "user": {
+      "name": "Nguyễn Văn A",
+      "joinDate": "2025-07-01T00:00:00Z",
+      "totalSamples": 5,
+      "totalRedemptions": 3
+    },
+    "recentSamples": [
+      {
+        "id": "barcode_123",
+        "productName": "Coca Cola Original 330ml",
+        "campaignName": "Coca Cola Summer 2025",
+        "status": "issued",
+        "issuedAt": "2025-07-15T10:30:00Z",
+        "expiryDate": "2025-12-31",
+        "qrCodeUrl": "https://api.psp.com/qr/barcode_123"
+      }
+    ],
+    "notifications": [
+      {
+        "id": "notif_123",
+        "type": "expiry_reminder",
+        "title": "Sản phẩm sắp hết hạn",
+        "message": "Coca Cola của bạn sẽ hết hạn trong 7 ngày",
+        "isRead": false,
+        "createdAt": "2025-07-15T09:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 8.7 Redemption Service API
+
+### 8.7.1 POS Integration
+
+#### **POST /api/v1/redemptions/scan**
+**Mô tả**: Scan barcode tại POS để bắt đầu redemption process
+
+```json
+// Request
+{
+  "barcodeCode": "COC2025A12345678C",
+  "locationId": "loc_hcm_001",
+  "staffId": "staff_123",
+  "deviceInfo": {
+    "deviceId": "pos_terminal_001",
+    "appVersion": "1.2.3"
+  }
+}
+
+// Response for successful scan
+{
+  "success": true,
+  "data": {
+    "scanId": "scan_123",
+    "barcode": {
+      "id": "barcode_123",
+      "productName": "Coca Cola Original 330ml",
+      "value": 15000,
+      "status": "issued"
+    },
+    "campaign": {
+      "name": "Coca Cola Summer 2025",
+      "brand": "Coca Cola"
+    },
+    "customer": {
+      "name": "Nguyễn Văn A",
+      "phone": "+84901***567"
+    },
+    "canRedeem": true,
+    "message": "Sẵn sàng để đổi sản phẩm"
+  }
+}
+```
+
+#### **POST /api/v1/redemptions/process**
+**Mô tả**: Xử lý redemption sau khi scan thành công
+
+```json
+// Request
+{
+  "scanId": "scan_123",
+  "barcodeId": "barcode_123",
+  "locationId": "loc_hcm_001",
+  "staffId": "staff_123",
+  "notes": "Khách hàng đổi thành công"
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "redemptionId": "redemption_123",
+    "barcodeCode": "COC2025A12345678C",
+    "redeemedAt": "2025-07-15T14:30:00Z",
+    "location": {
+      "name": "Circle K Nguyễn Huệ",
+      "address": "123 Nguyễn Huệ, Q1, TP.HCM"
+    },
+    "receipt": {
+      "id": "receipt_123",
+      "url": "https://api.psp.com/receipts/receipt_123"
+    }
+  },
+  "message": "Đổi sản phẩm thành công"
+}
+```
+## 8.7.2 Offline Sync APIs
+
+### **POST /api/v1/redemptions/batch-sync**
+**Mô tả**: Đồng bộ các redemptions đã được thực hiện offline
+
+```json
+// Request - batch upload offline redemptions
+{
+  "deviceId": "pos_terminal_001",
+  "staffId": "staff_123",
+  "locationId": "loc_hcm_001",
+  "syncTimestamp": "2025-07-15T15:00:00Z",
+  "redemptions": [
+    {
+      "localId": "offline_redemption_001",
+      "barcodeCode": "COC2025A12345678C", 
+      "redeemedAt": "2025-07-15T14:30:00Z",
+      "customerSignature": "base64_signature_data",
+      "notes": "Offline redemption - network unavailable"
+    },
+    {
+      "localId": "offline_redemption_002",
+      "barcodeCode": "COC2025A87654321D",
+      "redeemedAt": "2025-07-15T14:45:00Z",
+      "notes": "Offline redemption"
+    }
+  ]
+}
+
+// Response - sync results with conflict resolution
+{
+  "success": true,
+  "data": {
+    "syncId": "sync_123",
+    "processedCount": 2,
+    "successCount": 1,
+    "failedCount": 1,
+    "results": [
+      {
+        "localId": "offline_redemption_001",
+        "status": "success",
+        "redemptionId": "redemption_456",
+        "message": "Đồng bộ thành công"
+      },
+      {
+        "localId": "offline_redemption_002", 
+        "status": "failed",
+        "error": "BARCODE_ALREADY_REDEEMED",
+        "message": "Barcode đã được đổi bởi user khác",
+        "conflictData": {
+          "existingRedemptionId": "redemption_789",
+          "redeemedAt": "2025-07-15T14:35:00Z",
+          "location": "Circle K Lê Lợi"
+        }
+      }
+    ]
+  }
+}
+```
+
+### **GET /api/v1/redemptions/sync-status**
+**Mô tả**: Kiểm tra trạng thái sync cho device
+
+```json
+// Response
+{
+  "success": true,
+  "data": {
+    "deviceId": "pos_terminal_001",
+    "lastSyncAt": "2025-07-15T15:00:00Z",
+    "pendingUploads": 0,
+    "totalSynced": 145,
+    "syncHealth": "healthy",
+    "connectionStatus": "online"
+  }
+}
+```
+
+---
+
+## 8.8 Analytics Service API
+
+### 8.8.1 Dashboard Analytics
+
+#### **GET /api/v1/analytics/dashboard**
+**Mô tả**: Dữ liệu dashboard tổng quan cho brands
+
+```yaml
+/api/v1/analytics/dashboard:
+  get:
+    summary: Lấy dữ liệu dashboard analytics
+    parameters:
+      - name: campaignId
+        in: query
+        schema:
+          type: string
+          description: "Lọc theo campaign cụ thể"
+      - name: dateFrom
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: dateTo
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: timeZone
+        in: query
+        schema:
+          type: string
+          default: "Asia/Ho_Chi_Minh"
+```
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalScans": 15420,
+      "totalSubmissions": 12890,
+      "totalVerifications": 11245,
+      "totalRedemptions": 9876,
+      "overallConversion": 64.03,
+      "costPerLead": 0.38
+    },
+    "funnel": {
+      "steps": [
+        {
+          "step": "qr_scan",
+          "count": 15420,
+          "percentage": 100,
+          "dropOff": 0
+        },
+        {
+          "step": "form_submit", 
+          "count": 12890,
+          "percentage": 83.6,
+          "dropOff": 16.4
+        },
+        {
+          "step": "otp_verified",
+          "count": 11245,
+          "percentage": 87.2,
+          "dropOff": 12.8
+        },
+        {
+          "step": "redemption",
+          "count": 9876,
+          "percentage": 87.8,
+          "dropOff": 12.2
+        }
+      ]
+    },
+    "timeSeriesData": {
+      "daily": [
+        {
+          "date": "2025-07-01",
+          "scans": 523,
+          "redemptions": 421,
+          "conversion": 80.5
+        }
+        // ... more daily data
+      ]
+    },
+    "topLocations": [
+      {
+        "locationId": "loc_hcm_001",
+        "name": "Circle K Nguyễn Huệ",
+        "scans": 1250,
+        "redemptions": 987,
+        "conversion": 78.96
+      }
+    ]
+  }
+}
+```
+
+### 8.8.2 Campaign Performance
+
+#### **GET /api/v1/analytics/campaigns/{campaignId}/performance**
+**Mô tả**: Phân tích chi tiết performance của một campaign
+
+```json
+// Response
+{
+  "success": true,
+  "data": {
+    "campaign": {
+      "id": "camp_123",
+      "name": "Coca Cola Summer 2025",
+      "status": "active",
+      "duration": 45 // days running
+    },
+    "metrics": {
+      "reach": {
+        "totalScans": 15420,
+        "uniqueUsers": 12350,
+        "repeatScanRate": 19.9
+      },
+      "engagement": {
+        "formCompletionRate": 83.6,
+        "quizCompletionRate": 78.2,
+        "averageTimeOnPage": 145 // seconds
+      },
+      "conversion": {
+        "scanToSubmission": 83.6,
+        "submissionToVerification": 87.2,
+        "verificationToRedemption": 87.8,
+        "overallConversion": 64.03
+      },
+      "cost": {
+        "totalSpent": 4672.50,
+        "costPerScan": 0.303,
+        "costPerLead": 0.416,
+        "costPerRedemption": 0.473
+      }
+    },
+    "demographics": {
+      "ageGroups": {
+        "18-24": 25.3,
+        "25-34": 35.7,
+        "35-44": 22.1,
+        "45-54": 12.4,
+        "55+": 4.5
+      },
+      "genders": {
+        "M": 52.3,
+        "F": 45.2,
+        "Other": 2.5
+      },
+      "topCities": [
+        {"city": "Hồ Chí Minh", "percentage": 45.2},
+        {"city": "Hà Nội", "percentage": 28.7},
+        {"city": "Đà Nẵng", "percentage": 12.1}
+      ]
+    }
+  }
+}
+```
+
+### 8.8.3 Export Analytics
+
+#### **POST /api/v1/analytics/export**
+**Mô tả**: Tạo export job cho analytics data
+
+```json
+// Request
+{
+  "type": "campaign_report", // enum: campaign_report|user_data|redemption_logs
+  "format": "excel", // enum: csv|excel|json
+  "filters": {
+    "campaignIds": ["camp_123", "camp_456"],
+    "dateFrom": "2025-07-01",
+    "dateTo": "2025-07-31",
+    "locations": ["loc_hcm_001"]
+  },
+  "options": {
+    "includePersonalData": false,
+    "aggregateOnly": true,
+    "timeZone": "Asia/Ho_Chi_Minh"
+  }
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "exportId": "export_123",
+    "status": "queued",
+    "estimatedDuration": 120, // seconds
+    "downloadUrl": null, // sẽ có sau khi complete
+    "expiresAt": "2025-07-22T10:30:00Z" // 7 days from creation
+  }
+}
+```
+
+#### **GET /api/v1/analytics/exports/{exportId}/status**
+**Mô tả**: Kiểm tra trạng thái export job
+
+```json
+// Response for completed export
+{
+  "success": true,
+  "data": {
+    "exportId": "export_123", 
+    "status": "completed",
+    "downloadUrl": "https://api.psp.com/downloads/export_123.xlsx",
+    "fileSize": 2048576,
+    "recordCount": 15420,
+    "completedAt": "2025-07-15T10:35:00Z",
+    "expiresAt": "2025-07-22T10:30:00Z"
+  }
+}
+
+// Response for failed export
+{
+  "success": false,
+  "error": {
+    "code": "EXPORT_FAILED",
+    "message": "Export thất bại do lỗi database",
+    "details": {
+      "exportId": "export_123",
+      "failedAt": "2025-07-15T10:33:00Z",
+      "retryable": true
+    }
+  }
+}
+```
+
+---
+
+## 8.9 Notification Service API
+
+### 8.9.1 Notification Management
+
+#### **POST /api/v1/notifications/send**
+**Mô tả**: Gửi notification (internal API cho các services khác)
+
+```json
+// Request
+{
+  "type": "barcode_issued", // template type
+  "channel": "sms", // enum: sms|email|push
+  "recipient": {
+    "userId": "user_123",
+    "phoneNumber": "+84901234567",
+    "email": "user@example.com"
+  },
+  "templateData": {
+    "userName": "Nguyễn Văn A",
+    "productName": "Coca Cola Original 330ml",
+    "barcodeCode": "COC2025A12345678C",
+    "expiryDate": "2025-12-31",
+    "redemptionInstructions": "Đến Circle K để đổi sản phẩm"
+  },
+  "priority": "high", // enum: low|normal|high|urgent
+  "scheduleAt": null // null = send immediately
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "notificationId": "notif_123",
+    "status": "queued",
+    "estimatedDelivery": "2025-07-15T10:31:00Z",
+    "channel": "sms",
+    "recipient": "+84901***567"
+  }
+}
+```
+
+### 8.9.2 Notification Status Tracking
+
+#### **GET /api/v1/notifications/{notificationId}/status**
+**Mô tả**: Kiểm tra trạng thái delivery của notification
+
+```json
+// Response for delivered notification
+{
+  "success": true,
+  "data": {
+    "notificationId": "notif_123",
+    "status": "delivered",
+    "channel": "sms",
+    "sentAt": "2025-07-15T10:30:30Z",
+    "deliveredAt": "2025-07-15T10:30:45Z",
+    "attempts": 1,
+    "cost": 0.025 // USD
+  }
+}
+
+// Response for failed notification
+{
+  "success": true,
+  "data": {
+    "notificationId": "notif_456",
+    "status": "failed",
+    "channel": "sms",
+    "sentAt": "2025-07-15T10:30:30Z",
+    "attempts": 3,
+    "lastError": "INVALID_PHONE_NUMBER",
+    "errorMessage": "Số điện thoại không hợp lệ"
+  }
+}
+```
+
+---
+
+## 8.10 Integration Service API
+
+### 8.10.1 CRM Integration
+
+#### **POST /api/v1/integrations/crm/sync**
+**Mô tả**: Đồng bộ dữ liệu user với CRM systems
+
+```json
+// Request
+{
+  "crmType": "hubspot", // enum: hubspot|salesforce|braze
+  "action": "create_or_update", // enum: create|update|create_or_update|delete
+  "users": [
+    {
+      "userId": "user_123",
+      "email": "user@example.com",
+      "personalInfo": {
+        "firstName": "Nguyễn",
+        "lastName": "Văn A",
+        "phoneNumber": "+84901234567"
+      },
+      "campaignData": {
+        "campaignId": "camp_123",
+        "campaignName": "Coca Cola Summer 2025",
+        "participatedAt": "2025-07-15T10:30:00Z",
+        "redemptionStatus": "redeemed"
+      },
+      "preferences": {
+        "emailMarketing": true,
+        "smsMarketing": false,
+        "interests": ["beverage", "sports"]
+      }
+    }
+  ],
+  "options": {
+    "createListSegment": true,
+    "segmentName": "PSP - Coca Cola Summer 2025 Participants"
+  }
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "syncId": "sync_789",
+    "crmType": "hubspot",
+    "processedCount": 1,
+    "successCount": 1,
+    "failedCount": 0,
+    "results": [
+      {
+        "userId": "user_123",
+        "status": "success",
+        "crmContactId": "hubspot_contact_456",
+        "action": "updated",
+        "listMembership": ["PSP - Coca Cola Summer 2025 Participants"]
+      }
+    ],
+    "segmentCreated": {
+      "segmentId": "hubspot_list_789",
+      "segmentName": "PSP - Coca Cola Summer 2025 Participants",
+      "memberCount": 1
+    }
+  }
+}
+```
+
+### 8.10.2 Webhook Management
+
+#### **POST /api/v1/integrations/webhooks**
+**Mô tả**: Đăng ký webhook endpoint để nhận events
+
+```json
+// Request
+{
+  "name": "Brand CRM Webhook",
+  "url": "https://brand-crm.com/webhooks/psp",
+  "events": [
+    "user.verified",
+    "barcode.issued", 
+    "redemption.completed",
+    "campaign.completed"
+  ],
+  "secret": "webhook_secret_key_123",
+  "active": true,
+  "retryConfig": {
+    "maxRetries": 3,
+    "retryDelay": 300 // seconds
+  }
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "webhookId": "webhook_123",
+    "name": "Brand CRM Webhook",
+    "url": "https://brand-crm.com/webhooks/psp",
+    "events": ["user.verified", "barcode.issued", "redemption.completed", "campaign.completed"],
+    "signingSecret": "whsec_abc123...",
+    "active": true,
+    "createdAt": "2025-07-15T10:30:00Z"
+  }
+}
+```
+
+#### **Webhook Event Payload Example:**
+```json
+// POST to registered webhook URL
+{
+  "eventId": "evt_123",
+  "eventType": "redemption.completed",
+  "timestamp": "2025-07-15T14:30:00Z",
+  "data": {
+    "redemptionId": "redemption_123",
+    "barcodeCode": "COC2025A12345678C",
+    "userId": "user_123",
+    "campaignId": "camp_123",
+    "locationId": "loc_hcm_001",
+    "redeemedAt": "2025-07-15T14:30:00Z",
+    "user": {
+      "email": "user@example.com",
+      "phoneNumber": "+84901234567"
+    },
+    "campaign": {
+      "name": "Coca Cola Summer 2025",
+      "brand": "Coca Cola"
+    },
+    "location": {
+      "name": "Circle K Nguyễn Huệ",
+      "address": "123 Nguyễn Huệ, Q1, TP.HCM"
+    }
+  }
+}
+
+// Headers sent with webhook
+Headers:
+X-PSP-Signature: sha256=calculated_signature
+X-PSP-Event-Type: redemption.completed
+X-PSP-Event-ID: evt_123
+Content-Type: application/json
+```
+
+---
+
+## 8.11 Error Handling Standards
+
+### 8.11.1 Chuẩn Error Response Format
+
+**Tất cả APIs sử dụng consistent error format:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Mô tả lỗi cho end user",
+    "details": {
+      // Additional error context
+    },
+    "traceId": "trace_123", // for debugging
+    "timestamp": "2025-07-15T10:30:00Z"
+  }
+}
+```
+
+### 8.11.2 Common Error Codes
+
+| HTTP Status | Error Code | Mô tả | Ví dụ Message |
+|-------------|------------|-------|---------------|
+| **400** | `VALIDATION_ERROR` | Dữ liệu input không hợp lệ | "Email không đúng định dạng" |
+| **400** | `BARCODE_INVALID` | Barcode không tồn tại/hết hạn | "Mã barcode không hợp lệ hoặc đã hết hạn" |
+| **401** | `UNAUTHORIZED` | Chưa đăng nhập | "Vui lòng đăng nhập để tiếp tục" |
+| **401** | `TOKEN_EXPIRED` | JWT token hết hạn | "Phiên đăng nhập đã hết hạn" |
+| **403** | `INSUFFICIENT_PERMISSIONS` | Không đủ quyền truy cập | "Bạn không có quyền thực hiện hành động này" |
+| **404** | `RESOURCE_NOT_FOUND` | Resource không tồn tại | "Campaign không tồn tại" |
+| **409** | `BARCODE_ALREADY_REDEEMED` | Barcode đã được đổi | "Sản phẩm đã được đổi trước đó" |
+| **422** | `BUSINESS_RULE_VIOLATION` | Vi phạm business rules | "Một user chỉ được nhận tối đa 1 mẫu" |
+| **429** | `RATE_LIMIT_EXCEEDED` | Vượt rate limit | "Quá nhiều requests, vui lòng thử lại sau" |
+| **500** | `INTERNAL_SERVER_ERROR` | Lỗi hệ thống | "Có lỗi xảy ra, vui lòng thử lại sau" |
+| **503** | `SERVICE_UNAVAILABLE` | Service tạm thời không khả dụng | "Dịch vụ đang bảo trì, vui lòng thử lại sau" |
+
+### 8.11.3 Validation Error Details
+
+**Lỗi validation trả về chi tiết field-level errors:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Dữ liệu gửi lên không hợp lệ",
+    "details": {
+      "fields": {
+        "email": ["Email không đúng định dạng"],
+        "phoneNumber": ["Số điện thoại phải bắt đầu bằng +84"],
+        "startDate": ["Ngày bắt đầu phải sau ngày hiện tại"]
+      },
+      "invalidCount": 3
+    },
+    "traceId": "trace_123"
+  }
+}
+```
+
+---
+
+## 8.12 Rate Limiting Implementation
+
+### 8.12.1 Rate Limiting Headers
+
+**Tất cả responses include rate limiting headers:**
+
+```http
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 87
+X-RateLimit-Reset: 1642694400
+X-RateLimit-Window: 60
+Retry-After: 45
+```
+
+### 8.12.2 Rate Limit Exceeded Response
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Quá nhiều requests. Vui lòng thử lại sau 45 giây",
+    "details": {
+      "limit": 100,
+      "window": 60,
+      "retryAfter": 45,
+      "resetAt": "2025-07-15T10:31:00Z"
+    }
+  }
+}
+```
+
+---
+
+## 8.13 API Security
+
+### 8.13.1 Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant Client as Client App
+    participant Gateway as API Gateway
+    participant Auth as auth-service
+    participant Resource as Resource Service
+    
+    Note over Client,Resource: Initial Authentication
+    Client->>Gateway: POST /auth/login (credentials)
+    Gateway->>Auth: Forward login request
+    Auth->>Auth: Validate credentials
+    Auth-->>Gateway: JWT + Refresh tokens
+    Gateway-->>Client: Authentication response
+    
+    Note over Client,Resource: Subsequent API Calls
+    Client->>Gateway: API request + JWT
+    Gateway->>Gateway: Extract & validate JWT
+    Gateway->>Auth: Verify token (if needed)
+    Auth-->>Gateway: Token validation result
+    Gateway->>Resource: Forward request + user context
+    Resource-->>Gateway: Response
+    Gateway-->>Client: Final response
+```
+
+### 8.13.2 JWT Token Structure
+
+```json
+// JWT Header
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+// JWT Payload
+{
+  "iss": "psp-auth-service",
+  "sub": "user_123",
+  "aud": "psp-api",
+  "exp": 1642694400,
+  "iat": 1642690800,
+  "jti": "token_123",
+  "scope": "api:read api:write",
+  "role": "customer_account",
+  "tenant": "tenant_123",
+  "permissions": [
+    "campaign:read",
+    "campaign:write:own",
+    "analytics:read:own"
+  ]
+}
+```
+
+### 8.13.3 API Security Headers
+
+**Tất cả API responses bao gồm security headers:**
+
+```http
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Content-Security-Policy: default-src 'self'
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+```
+
+---
+
+## 8.14 API Monitoring & Observability
+
+### 8.14.1 Request Tracing
+
+**Mỗi API request có unique trace ID:**
+
+```http
+// Request headers
+X-Trace-ID: trace_abc123
+X-Request-ID: req_def456
+X-User-ID: user_123
+
+// Response headers  
+X-Trace-ID: trace_abc123
+X-Response-Time: 245ms
+X-Service-Version: 1.2.3
+```
+
+### 8.14.2 API Metrics
+
+**Metrics được thu thập cho mỗi endpoint:**
+
+| Metric | Description | Labels |
+|--------|-------------|--------|
+| `api_requests_total` | Tổng số requests | method, endpoint, status_code, user_type |
+| `api_request_duration_seconds` | Thời gian xử lý request | method, endpoint, percentile |
+| `api_rate_limit_hits_total` | Số lần hit rate limit | endpoint, user_type |
+| `api_errors_total` | Tổng số errors | endpoint, error_code, severity |
+| `api_concurrent_requests` | Số requests đồng thời | endpoint |
+
+### 8.14.3 Health Check Endpoints
+
+#### **GET /api/health**
+**Mô tả**: Health check tổng quan cho load balancer
+
+```json
+// Response for healthy service
+{
+  "status": "healthy",
+  "version": "1.2.3",
+  "timestamp": "2025-07-15T10:30:00Z",
+  "uptime": 86400 // seconds
+}
+
+// Response for unhealthy service  
+{
+  "status": "unhealthy",
+  "version": "1.2.3", 
+  "timestamp": "2025-07-15T10:30:00Z",
+  "errors": ["database_connection_failed"]
+}
+```
+
+#### **GET /api/health/deep**
+**Mô tả**: Deep health check bao gồm dependencies
+
+```json
+{
+  "status": "healthy",
+  "version": "1.2.3",
+  "timestamp": "2025-07-15T10:30:00Z",
+  "dependencies": {
+    "database": {
+      "status": "healthy",
+      "responseTime": 25,
+      "lastChecked": "2025-07-15T10:30:00Z"
+    },
+    "redis": {
+      "status": "healthy", 
+      "responseTime": 5,
+      "lastChecked": "2025-07-15T10:30:00Z"
+    },
+    "external_apis": {
+      "twilio": {
+        "status": "healthy",
+        "responseTime": 150
+      },
+      "hubspot": {
+        "status": "degraded",
+        "responseTime": 2500,
+        "warning": "Slow response time"
+      }
+    }
+  }
+}
+```
+
+---
+
+## 8.15 API Documentation & Developer Experience
+
+### 8.15.1 OpenAPI Specification Standards
+
+**Tất cả services expose OpenAPI 3.0 specs tại `/api/docs/openapi.json`:**
+
+```yaml
+openapi: 3.0.3
+info:
+  title: Product Sampling Platform API
+  description: API documentation cho hệ thống Product Sampling Platform
+  version: 1.2.3
+  contact:
+    name: PSP API Support
+    email: api-support@psp.com
+    url: https://docs.psp.com
+  license:
+    name: Proprietary
+    url: https://psp.com/license
+
+servers:
+  - url: https://api.psp.com/v1
+    description: Production server
+  - url: https://staging-api.psp.com/v1
+    description: Staging server
+
+paths:
+  /campaigns:
+    get:
+      summary: Lấy danh sách campaigns
+      # ... detailed specification
+```
+
+### 8.15.2 Interactive API Documentation
+
+**Swagger UI tại `/api/docs` cho mỗi service với features:**
+
+- ✅ **Try It Out**: Test APIs directly từ documentation
+- ✅ **Authentication**: JWT token input cho testing
+- ✅ **Code Examples**: Auto-generated code samples
+- ✅ **Response Schemas**: Detailed response format
+- ✅ **Error Examples**: Common error scenarios
+
+### 8.15.3 SDK Generation
+
+**Auto-generated SDKs cho multiple languages:**
+
+```javascript
+// JavaScript/TypeScript SDK example
+import { PSPClient } from '@psp/sdk';
+
+const client = new PSPClient({
+  apiKey: 'your-api-key',
+  environment: 'production' // or 'staging'
+});
+
+// Campaign operations
+const campaigns = await client.campaigns.list({
+  status: 'active',
+  page: 1,
+  limit: 20
+});
+
+// User operations
+const user = await client.users.create({
+  personalInfo: {
+    fullName: 'Nguyễn Văn A',
+    email: 'user@example.com',
+    phoneNumber: '+84901234567'
+  }
+});
+
+// Error handling
+try {
+  await client.barcodes.reserve({
+    userId: 'user_123',
+    poolId: 'pool_456'
+  });
+} catch (error) {
+  if (error.code === 'BARCODE_UNAVAILABLE') {
+    console.log('Không còn barcode khả dụng');
+  }
+}
+```
+
+---
+
+## 8.16 API Testing Strategy
+
+### 8.16.1 Contract Testing
+
+**Sử dụng Pact cho consumer-driven contract testing:**
+
+```javascript
+// Consumer test (Frontend)
+describe('Campaign API Contract', () => {
+  const provider = new Pact({
+    consumer: 'brand-dashboard',
+    provider: 'campaign-service'
+  });
+
+  it('should get campaign list', async () => {
+    await provider
+      .given('campaigns exist')
+      .uponReceiving('a request for campaigns')
+      .withRequest({
+        method: 'GET',
+        path: '/api/v1/campaigns',
+        headers: {
+          'Authorization': 'Bearer valid-jwt-token'
+        }
+      })
+      .willRespondWith({
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: {
+          success: true,
+          data: {
+            campaigns: Matchers.eachLike({
+              id: Matchers.string('camp_123'),
+              name: Matchers.string('Test Campaign'),
+              status: Matchers.string('active')
+            })
+          }
+        }
+      });
+
+    const response = await campaignService.getCampaigns();
+    expect(response.success).toBe(true);
+  });
+});
+```
+
+### 8.16.2 Integration Testing
+
+**API integration tests với real database:**
+
+```javascript
+describe('Redemption API Integration', () => {
+  beforeEach(async () => {
+    await setupTestDatabase();
+    await seedTestData();
+  });
+
+  it('should process redemption flow', async () => {
+    // 1. Scan barcode
+    const scanResponse = await request(app)
+      .post('/api/v1/redemptions/scan')
+      .send({
+        barcodeCode: 'TEST2025A12345678C',
+        locationId: 'test_location_001',
+        staffId: 'test_staff_123'
+      })
+      .expect(200);
+
+    expect(scanResponse.body.data.canRedeem).toBe(true);
+
+    // 2. Process redemption
+    const redeemResponse = await request(app)
+      .post('/api/v1/redemptions/process')
+      .send({
+        scanId: scanResponse.body.data.scanId,
+        barcodeId: scanResponse.body.data.barcode.id,
+        locationId: 'test_location_001',
+        staffId: 'test_staff_123'
+      })
+      .expect(200);
+
+    expect(redeemResponse.body.data.redemptionId).toBeDefined();
+
+    // 3. Verify barcode status changed
+    const validateResponse = await request(app)
+      .get('/api/v1/barcodes/TEST2025A12345678C/validate')
+      .expect(200);
+
+    expect(validateResponse.body.data.valid).toBe(false);
+    expect(validateResponse.body.error.code).toBe('BARCODE_ALREADY_REDEEMED');
+  });
+});
+```
+
+---
+
+## 8.17 API Versioning Strategy
+
+### 8.17.1 Versioning Approach
+
+**PSP sử dụng URL versioning kết hợp với Accept headers:**
+
+```http
+# URL versioning (preferred)
+GET /api/v1/campaigns
+GET /api/v2/campaigns
+
+# Header versioning (alternative)
+GET /api/campaigns
+Accept: application/vnd.psp.v1+json
+```
+
+### 8.17.2 Backward Compatibility Rules
+
+| Change Type | Breaking? | Version Bump | Example |
+|-------------|-----------|--------------|---------|
+| **Add optional field** | ❌ No | Patch | Thêm field `description` vào campaign |
+| **Add new endpoint** | ❌ No | Minor | Thêm endpoint `/campaigns/{id}/clone` |
+| **Remove field** | ✅ Yes | Major | Xóa field `deprecated_field` |
+| **Change field type** | ✅ Yes | Major | `value` từ integer thành decimal |
+| **Rename field** | ✅ Yes | Major | `campaignId` thành `campaign_id` |
+| **Add required field** | ✅ Yes | Major | Thêm required field `tenantId` |
+
+### 8.17.3 Deprecation Process
+
+```mermaid
+graph LR
+    A[API v1.0] --> B[API v1.1 - Deprecate field]
+    B --> C[API v2.0 - Remove field]
+    
+    A --> D[Announce deprecation - 3 months notice]
+    D --> E[Grace period - 6 months]
+    E --> F[Remove deprecated API]
+    
+    style D fill:#fff3e0
+    style E fill:#ffebee
+    style F fill:#ffcdd2
+```
+
+**Deprecation headers:**
+```http
+HTTP/1.1 200 OK
+Deprecation: true
+Sunset: Sat, 31 Dec 2025 23:59:59 GMT
+Link: </api/v2/campaigns>; rel="successor-version"
+Warning: 299 - "API v1 deprecated, migrate to v2 before Dec 31, 2025"
+```
+
+---
+
+## 8.18 External API Integrations
+
+### 8.18.1 Twilio SMS Integration
+
+**SMS sending qua Twilio API:**
+
+```typescript
+// notification-service integration
+class TwilioSMSProvider {
+  async sendSMS(phoneNumber: string, message: string, templateId?: string) {
+    const twilioClient = new Twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
+    try {
+      const result = await twilioClient.messages.create({
+        body: message,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: phoneNumber,
+        statusCallback: `${process.env.API_BASE_URL}/webhooks/twilio/status`
+      });
+
+      return {
+        success: true,
+        messageId: result.sid,
+        status: result.status,
+        cost: parseFloat(result.price || '0')
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        code: error.code
+      };
+    }
+  }
+}
+```
+
+**Twilio Webhook xử lý delivery status:**
+
+```typescript
+// POST /webhooks/twilio/status
+interface TwilioStatusWebhook {
+  MessageSid: string;
+  MessageStatus: 'queued' | 'sent' | 'delivered' | 'undelivered' | 'failed';
+  ErrorCode?: string;
+  ErrorMessage?: string;
+}
+
+async function handleTwilioStatus(body: TwilioStatusWebhook) {
+  await notificationService.updateDeliveryStatus({
+    externalId: body.MessageSid,
+    status: body.MessageStatus,
+    error: body.ErrorCode ? {
+      code: body.ErrorCode,
+      message: body.ErrorMessage
+    } : null
+  });
+}
+```
+
+### 8.18.2 HubSpot CRM Integration
+
+**Sync user data tới HubSpot:**
+
+```typescript
+class HubSpotIntegration {
+  private hubspotClient: Client;
+
+  constructor(apiKey: string) {
+    this.hubspotClient = new Client({ apiKey });
+  }
+
+  async syncUser(userData: UserSyncData) {
+    const contactProperties = {
+      email: userData.email,
+      firstname: userData.firstName,
+      lastname: userData.lastName,
+      phone: userData.phoneNumber,
+      // Custom properties
+      psp_user_id: userData.userId,
+      psp_campaign_id: userData.campaignId,
+      psp_redemption_status: userData.redemptionStatus,
+      psp_participation_date: userData.participatedAt
+    };
+
+    try {
+      // Create or update contact
+      const response = await this.hubspotClient.crm.contacts.basicApi.create({
+        properties: contactProperties
+      });
+
+      // Add to campaign-specific list
+      if (userData.campaignId) {
+        await this.addToList(response.id, userData.campaignName);
+      }
+
+      return {
+        success: true,
+        hubspotContactId: response.id,
+        action: 'created'
+      };
+    } catch (error) {
+      if (error.code === 'CONTACT_EXISTS') {
+        // Update existing contact
+        const updateResponse = await this.hubspotClient.crm.contacts.basicApi.update(
+          error.existingContactId,
+          { properties: contactProperties }
+        );
+
+        return {
+          success: true,
+          hubspotContactId: updateResponse.id,
+          action: 'updated'
+        };
+      }
+
+      throw error;
+    }
+  }
+
+  async addToList(contactId: string, campaignName: string) {
+    const listName = `PSP - ${campaignName} Participants`;
+    
+    // Create list if not exists
+    let listId = await this.findOrCreateList(listName);
+    
+    // Add contact to list
+    await this.hubspotClient.crm.lists.membershipsApi.add(listId, {
+      contactIds: [contactId]
+    });
+  }
+}
+```
+
+### 8.18.3 Google Analytics Integration
+
+**Send events tới GA4:**
+
+```typescript
+class GoogleAnalyticsIntegration {
+  private measurementId: string;
+  private apiSecret: string;
+
+  async sendEvent(eventData: GAEventData) {
+    const payload = {
+      client_id: eventData.clientId,
+      events: [{
+        name: eventData.eventName,
+        parameters: {
+          campaign_id: eventData.campaignId,
+          user_id: eventData.userId,
+          custom_parameter_1: eventData.customData
+        }
+      }]
+    };
+
+    const response = await fetch(
+      `https://www.google-analytics.com/mp/collect?measurement_id=${this.measurementId}&api_secret=${this.apiSecret}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      }
+    );
+
+    return response.ok;
+  }
+}
+
+// Event mapping cho PSP
+const GAEventMapping = {
+  'qr_scan': 'psp_qr_scan',
+  'form_submit': 'psp_form_submit',
+  'otp_verified': 'psp_user_verified',
+  'barcode_issued': 'psp_sample_issued',
+  'redemption': 'psp_sample_redeemed'
+};
+```
+
+---
+
+## 8.19 API Performance Optimization
+
+### 8.19.1 Caching Strategies
+
+**Multi-level caching implementation:**
+
+```typescript
+class CacheManager {
+  private redis: Redis;
+  private localCache: NodeCache;
+
+  async get<T>(key: string): Promise<T | null> {
+    // L1: Local cache (fastest)
+    let value = this.localCache.get<T>(key);
+    if (value) return value;
+
+    // L2: Redis cache
+    const redisValue = await this.redis.get(key);
+    if (redisValue) {
+      value = JSON.parse(redisValue);
+      // Store in local cache với TTL ngắn
+      this.localCache.set(key, value, 300); // 5 minutes
+      return value;
+    }
+
+    return null;
+  }
+
+  async set(key: string, value: any, ttl: number) {
+    // Set both levels
+    this.localCache.set(key, value, Math.min(ttl, 300));
+    await this.redis.setex(key, ttl, JSON.stringify(value));
+  }
+
+  async invalidate(pattern: string) {
+    // Invalidate local cache
+    this.localCache.flushAll();
+    
+    // Invalidate Redis cache
+    const keys = await this.redis.keys(pattern);
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+    }
+  }
+}
+
+// Cache decorators cho controllers
+function Cacheable(ttl: number = 300) {
+  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    const method = descriptor.value;
+    
+    descriptor.value = async function (...args: any[]) {
+      const cacheKey = `${target.constructor.name}:${propertyName}:${JSON.stringify(args)}`;
+      
+      const cached = await cacheManager.get(cacheKey);
+      if (cached) return cached;
+      
+      const result = await method.apply(this, args);
+      await cacheManager.set(cacheKey, result, ttl);
+      
+      return result;
+    };
+  };
+}
+
+// Usage example
+class CampaignController {
+  @Cacheable(600) // Cache 10 minutes
+  async getCampaigns(filters: CampaignFilters) {
+    return await this.campaignService.findAll(filters);
+  }
+}
+```
+
+### 8.19.2 Database Query Optimization
+
+**Optimized query patterns:**
+
+```typescript
+// Pagination với cursor-based thay vì offset
+class CampaignService {
+  async findPaginated(filters: CampaignFilters, cursor?: string, limit: number = 20) {
+    const query: any = {
+      tenantId: filters.tenantId
+    };
+
+    if (filters.status) {
+      query.status = filters.status;
+    }
+
+    if (cursor) {
+      query._id = { $gt: new ObjectId(cursor) };
+    }
+
+    const campaigns = await Campaign.find(query)
+      .sort({ _id: 1 })
+      .limit(limit + 1) // +1 để check hasNext
+      .lean();
+
+    const hasNext = campaigns.length > limit;
+    if (hasNext) campaigns.pop();
+
+    return {
+      data: campaigns,
+      pagination: {
+        hasNext,
+        nextCursor: hasNext ? campaigns[campaigns.length - 1]._id.toString() : null
+      }
+    };
+  }
+
+  // Aggregation pipeline cho analytics
+  async getCampaignStats(campaignId: string) {
+    return await Event.aggregate([
+      { $match: { campaignId: new ObjectId(campaignId) } },
+      {
+        $group: {
+          _id: '$eventType',
+          count: { $sum: 1 },
+          uniqueUsers: { $addToSet: '$userId' }
+        }
+      },
+      {
+        $project: {
+          eventType: '$_id',
+          count: 1,
+          uniqueUserCount: { $size: '$uniqueUsers' }
+        }
+      }
+    ]);
+  }
+}
+```
+
+### 8.19.3 Connection Pooling
+
+**Database connection optimization:**
+
+```typescript
+// MongoDB connection pooling
+const mongoOptions = {
+  maxPoolSize: 50, // Maximum connections
+  minPoolSize: 5,  // Minimum connections
+  maxIdleTimeMS: 30000, // Close connections after 30s idle
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  bufferMaxEntries: 0 // Disable mongoose buffering
+};
+
+// PostgreSQL connection pooling với PgBouncer
+const pgPool = new Pool({
+  host: process.env.PG_HOST,
+  port: 5432,
+  database: process.env.PG_DATABASE,
+  user: process.env.PG_USER,
+  password: process.env.PG_PASSWORD,
+  max: 20, // Maximum pool size
+  min: 5,  // Minimum pool size
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000
+});
+
+// Redis cluster configuration
+const redisCluster = new Redis.Cluster([
+  { host: 'redis-1', port: 6379 },
+  { host: 'redis-2', port: 6379 },
+  { host: 'redis-3', port: 6379 }
+], {
+  redisOptions: {
+    password: process.env.REDIS_PASSWORD
+  },
+  maxRetriesPerRequest: 3,
+  retryDelayOnFailover: 100
+});
+```
+
+---
+
+## 8.20 API Summary & Next Steps
+
+### 8.20.1 Tổng kết kiến trúc API
+
+**Các thành phần chính đã được thiết kế:**
+
+✅ **API Gateway**: Kong với authentication, rate limiting, CORS  
+✅ **8 Microservice APIs**: Từ auth đến integration với comprehensive endpoints  
+✅ **Security**: JWT authentication, RBAC, rate limiting, security headers  
+✅ **Error Handling**: Standardized error format với meaningful messages  
+✅ **Documentation**: OpenAPI 3.0 specs với Swagger UI  
+✅ **External Integrations**: Twilio, HubSpot, Google Analytics  
+✅ **Performance**: Multi-level caching, connection pooling, query optimization  
+
+### 8.20.2 API Readiness Checklist
+
+**MVP Implementation Checklist:**
+
+- [ ] **Kong API Gateway** setup với basic plugins
+- [ ] **auth-service API** với JWT và OTP endpoints  
+- [ ] **campaign-service API** với CRUD operations
+- [ ] **barcode-service API** với reservation logic
+- [ ] **user-service API** với profile management
+- [ ] **redemption-service API** với POS integration
+- [ ] **analytics-service API** với basic dashboard
+- [ ] **notification-service API** với SMS/email
+- [ ] **integration-service API** với webhook support
+
+**Quality Gates:**
+
+- [ ] All APIs có OpenAPI 3.0 specifications
+- [ ] Rate limiting configured cho all endpoints
+- [ ] Error handling consistent across services
+- [ ] Security headers implemented
+- [ ] Health checks functional
+- [ ] Contract tests passing
+- [ ] Integration tests coverage >80%
+
+### 8.20.3 Performance Targets
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| **API Response Time** | <3s (p95) | Application monitoring |
+| **Authentication** | <500ms (p95) | JWT validation time |
+| **Database Queries** | <1s (p95) | Query execution time |
+| **Cache Hit Ratio** | >80% | Redis monitoring |
+| **API Availability** | >99.9% | Uptime monitoring |
+| **Concurrent Users** | 10,000 | Load testing |
+
+### 8.20.4 Security Compliance
+
+**Security measures implemented:**
+
+✅ **Authentication**: JWT với refresh tokens  
+✅ **Authorization**: RBAC với granular permissions  
+✅ **Rate Limiting**: Per-user và per-endpoint limits  
+✅ **Input Validation**: JSON schema validation  
+✅ **Output Sanitization**: Prevent XSS attacks  
+✅ **HTTPS Only**: TLS 1.3 encryption  
+✅ **Security Headers**: Comprehensive security headers  
+✅ **Audit Logging**: All API calls logged với trace IDs  
+
+---
+
+**Trạng thái tài liệu**: ✅ Hoàn thành Part08  
+**Hành động tiếp theo**: Part09 - Detailed Use Cases  
+**Dependencies**: API specifications approved và validated  
+**Người sở hữu**: Đội thiết kế API
+
+# 📘 Part09 - Use Case chi tiết (Detailed Use Cases)
+**Đặc tả yêu cầu hệ thống (SRS) - Product Sampling Platform**
+
+**Phiên bản**: 1.0  
+**Ngày**: 2025-10-17  
+**Tác giả**: Đội phân tích nghiệp vụ  
+**Trạng thái**: ✅ Hoàn thành  
+
+---
+
+## 9.1 Tổng quan Use Cases
+
+### 9.1.1 Danh sách Use Cases chính
+
+Hệ thống Product Sampling Platform có **8 use cases chính** được phân loại theo actors và business flows:
+
+```mermaid
+graph TB
+    subgraph "Brand Management"
+        UC1[UC-001: Tạo và quản lý Campaign]
+        UC2[UC-002: Upload và quản lý Ads Format]
+        UC8[UC-008: Xem Analytics và Export dữ liệu]
+    end
+    
+    subgraph "User Experience"
+        UC3[UC-003: Người dùng nhận Sample]
+        UC7[UC-007: Quản lý User Portal]
+    end
+    
+    subgraph "Operations"
+        UC4[UC-004: Xử lý Redemption tại POS]
+        UC5[UC-005: Đồng bộ Offline Redemptions]
+    end
+    
+    subgraph "System Management"
+        UC6[UC-006: Quản lý Webhook và Integrations]
+    end
+    
+    style UC3 fill:#e8f5e8
+    style UC4 fill:#fff3e0
+    style UC1 fill:#e3f2fd
+```
+
+### 9.1.2 Actor Mapping
+
+| Use Case | Primary Actor | Supporting Actors | System Actor |
+|----------|---------------|-------------------|--------------|
+| UC-001 | Customer Account | Admin, Group Admin | campaign-service |
+| UC-002 | Customer Account | Admin, Group Admin | campaign-service |
+| UC-003 | End User | - | user-service, barcode-service |
+| UC-004 | Serving Account | End User | redemption-service |
+| UC-005 | Serving Account | - | redemption-service |
+| UC-006 | Admin | Integration Services | integration-service |
+| UC-007 | End User | - | user-service |
+| UC-008 | Customer Account | Admin, Group Admin | analytics-service |
+
+### 9.1.3 Use Case Dependencies
+
+```mermaid
+graph LR
+    UC1 --> UC2
+    UC2 --> UC3
+    UC3 --> UC4
+    UC4 --> UC5
+    UC3 --> UC7
+    UC4 --> UC8
+    UC1 --> UC6
+    
+    UC1[UC-001: Campaign Management]
+    UC2[UC-002: Ads Format]
+    UC3[UC-003: User Sample Journey]
+    UC4[UC-004: POS Redemption]
+    UC5[UC-005: Offline Sync]
+    UC6[UC-006: Integrations]
+    UC7[UC-007: User Portal]
+    UC8[UC-008: Analytics]
+```
+
+---
+
+## 9.2 UC-001: Tạo và quản lý Campaign
+
+### 9.2.1 Use Case Overview
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **ID** | UC-001 |
+| **Tên** | Tạo và quản lý Campaign |
+| **Primary Actor** | Customer Account (Brand Manager) |
+| **Supporting Actors** | Admin, Group Admin |
+| **Mục tiêu** | Tạo, cấu hình và quản lý campaign sampling để thu thập verified leads |
+| **Phạm vi** | campaign-service, barcode-service |
+| **Độ phức tạp** | Trung bình |
+| **Tần suất** | 10-50 campaigns/tháng per brand |
+
+### 9.2.2 Preconditions
+
+- ✅ User đã đăng nhập với role Customer Account hoặc cao hơn
+- ✅ User có permissions `campaign:write` cho tenant
+- ✅ Hệ thống barcode-service hoạt động bình thường
+- ✅ Có ít nhất 1 location active trong hệ thống
+
+### 9.2.3 Main Success Scenario (Normal Flow)
+
+#### **Bước 1-5: Campaign Setup**
+```mermaid
+sequenceDiagram
+    participant User as Brand Manager
+    participant Dashboard as Brand Dashboard
+    participant API as campaign-service
+    participant DB as MongoDB
+    participant Barcode as barcode-service
+    
+    User->>Dashboard: 1. Click "Tạo Campaign mới"
+    Dashboard->>User: 2. Hiển thị form tạo campaign
+    User->>Dashboard: 3. Điền thông tin campaign
+    Note over User,Dashboard: Tên, mô tả, thời gian, sản phẩm
+    
+    Dashboard->>API: 4. POST /api/v1/campaigns
+    API->>DB: 5. Validate và lưu campaign
+    DB-->>API: 6. Campaign created
+    API-->>Dashboard: 7. Campaign response với ID
+    Dashboard-->>User: 8. Hiển thị "Campaign đã tạo thành công"
+```
+
+#### **Bước 6-10: Barcode Pool Assignment**
+```mermaid
+sequenceDiagram
+    participant User as Brand Manager
+    participant Dashboard as Brand Dashboard
+    participant API as campaign-service
+    participant Barcode as barcode-service
+    participant PG as PostgreSQL
+    
+    User->>Dashboard: 6. Click "Gán Barcode Pool"
+    Dashboard->>User: 7. Form upload CSV hoặc chọn pool có sẵn
+    User->>Dashboard: 8. Upload CSV với barcodes
+    
+    Dashboard->>Barcode: 9. POST /api/v1/barcode-pools
+    Barcode->>PG: 10. Validate và import barcodes
+    PG-->>Barcode: 11. Import results
+    Barcode-->>Dashboard: 12. Pool created với stats
+    
+    Dashboard->>API: 13. Gán pool ID vào campaign
+    API-->>Dashboard: 14. Campaign updated
+    Dashboard-->>User: 15. "10,000 barcodes đã được gán"
+```
+
+#### **Bước 11-15: Campaign Configuration**
+```
+11. User chọn targeting options (age range, gender, locations)
+12. User cấu hình campaign settings:
+    - Số lượng redemptions tối đa per user (default: 1)
+    - Yêu cầu quiz hay không (default: false) 
+    - Auto-expire time cho barcodes (default: 24h)
+    - Offline redemption cho phép (default: true)
+13. User setup UTM tracking parameters
+14. User preview campaign configuration
+15. User click "Lưu và Activate" campaign
+```
+
+### 9.2.4 Alternative Flows
+
+#### **A1: Import Barcode từ CSV thất bại**
+```
+A1.1. System validate CSV format và phát hiện lỗi
+A1.2. System hiển thị error details:
+      - Row 15: Barcode "ABC123" đã tồn tại
+      - Row 23: Expiry date "2023-12-31" đã quá hạn  
+      - Row 45: Product name quá dài (>255 chars)
+A1.3. User fix CSV file và re-upload
+A1.4. Return to step 8
+```
+
+#### **A2: Insufficient Permissions**
+```
+A2.1. System check user permissions cho campaign creation
+A2.2. User chỉ có permission "campaign:read" 
+A2.3. System hiển thị "Bạn không có quyền tạo campaign mới"
+A2.4. System suggest liên hệ Admin để được cấp quyền
+A2.5. Use case ends
+```
+
+#### **A3: Campaign Name Duplicate**
+```
+A3.1. User nhập campaign name đã tồn tại trong tenant
+A3.2. System validate uniqueness và return error
+A3.3. System suggest alternative names:
+      - "Summer Campaign 2025 (2)"
+      - "Summer Campaign 2025 - Copy"
+A3.4. User chọn name mới hoặc edit original
+A3.5. Return to step 4
+```
+
+### 9.2.5 Exception Flows
+
+#### **E1: Database Connection Error**
+```
+E1.1. campaign-service không thể connect tới MongoDB
+E1.2. System log error với trace ID
+E1.3. System hiển thị "Lỗi hệ thống tạm thời, vui lòng thử lại sau"
+E1.4. System gửi alert tới operations team
+E1.5. User có thể retry sau 30 giây
+```
+
+#### **E2: Barcode Service Unavailable**
+```
+E2.1. barcode-service return 503 Service Unavailable
+E2.2. System enable "Campaign draft mode" - lưu campaign không có barcodes
+E2.3. System hiển thị "Campaign đã tạo ở draft mode, barcodes sẽ được gán sau"
+E2.4. System queue job để auto-assign barcodes khi service khả dụng
+E2.5. Use case ends với partial success
+```
+
+### 9.2.6 Business Rules
+
+| Rule ID | Mô tả | Validation |
+|---------|-------|------------|
+| BR-001 | Campaign name phải unique trong tenant | Kiểm tra trong MongoDB |
+| BR-002 | End date phải sau start date ít nhất 1 ngày | Client và server validation |
+| BR-003 | Barcode pool chỉ có thể gán cho 1 campaign | Kiểm tra foreign key |
+| BR-004 | Campaign chỉ có thể edit khi status = "draft" | Business logic trong API |
+| BR-005 | Số lượng barcodes >= expected sample size | Warning nếu không đủ |
+
+### 9.2.7 Post-conditions
+
+**Success Post-conditions:**
+- ✅ Campaign được tạo với status "draft" hoặc "active"
+- ✅ Barcode pool được gán và ready để phát
+- ✅ UTM tracking parameters được setup
+- ✅ Campaign xuất hiện trong dashboard list
+- ✅ Event "campaign_created" được gửi tới analytics-service
+
+**Failure Post-conditions:**
+- ❌ Campaign không được tạo, không có entry trong database
+- ❌ Barcode pool không được gán (nếu có upload)
+- ❌ User nhận được clear error message
+- ❌ System state không thay đổi
+
+---
+
+## 9.3 UC-002: Upload và quản lý Ads Format
+
+### 9.3.1 Use Case Overview
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **ID** | UC-002 |
+| **Tên** | Upload và quản lý Ads Format |
+| **Primary Actor** | Customer Account (Brand Manager) |
+| **Supporting Actors** | Graphic Designer, Marketing Team |
+| **Mục tiêu** | Upload design files, cấu hình QR codes và quản lý ads formats cho campaign |
+| **Phạm vi** | campaign-service, file storage |
+| **Độ phức tạp** | Trung bình |
+| **Tần suất** | 2-10 ads formats per campaign |
+
+### 9.3.2 Preconditions
+
+- ✅ Campaign đã được tạo và có status "draft" hoặc "active"
+- ✅ User có permissions `campaign:write` cho campaign đó
+- ✅ File storage service (S3/MinIO) hoạt động bình thường
+- ✅ User có design files với format hỗ trợ (PNG, JPG, PDF)
+
+### 9.3.3 Main Success Scenario
+
+#### **Bước 1-8: Upload Design File**
+```mermaid
+sequenceDiagram
+    participant User as Brand Manager
+    participant Dashboard as Brand Dashboard
+    participant API as campaign-service
+    participant Storage as File Storage
+    participant QR as QR Generator
+    
+    User->>Dashboard: 1. Navigate to campaign ads formats
+    Dashboard->>User: 2. Show "Thêm Ads Format" button
+    User->>Dashboard: 3. Click "Thêm Ads Format"
+    Dashboard->>User: 4. Show ads format form
+    
+    Note over User,Dashboard: Form fields: tên, type, dimensions, QR config
+    
+    User->>Dashboard: 5. Fill form và select design file
+    User->>Dashboard: 6. Configure QR position và size
+    Dashboard->>API: 7. POST /api/v1/campaigns/{id}/ads-formats
+    API->>Storage: 8. Upload file validation và storage
+```
+
+#### **Bước 9-15: QR Code Generation và Validation**
+```mermaid
+sequenceDiagram
+    participant API as campaign-service
+    participant Storage as File Storage
+    participant QR as QR Generator
+    participant Validator as File Validator
+    participant DB as MongoDB
+    
+    Storage-->>API: 9. File uploaded successfully
+    API->>Validator: 10. Validate file specifications
+    Note over Validator: Check DPI ≥ 300, size limits, format
+    
+    Validator-->>API: 11. Validation results
+    API->>QR: 12. Generate dynamic QR code
+    QR-->>API: 13. QR code URL và metadata
+    
+    API->>DB: 14. Save ads format record
+    DB-->>API: 15. Ads format saved với ID
+    API-->>Dashboard: 16. Success response với preview
+```
+
+#### **Bước 16-20: Preview và Finalization**
+```
+16. Dashboard hiển thị preview của ads format với QR code overlay
+17. User xem preview và kiểm tra QR position
+18. User có thể adjust QR size/position nếu cần
+19. User click "Lưu và Tạo QR Code"
+20. System generate final QR codes và update tracking URLs
+```
+
+### 9.3.4 Alternative Flows
+
+#### **A1: File không đạt yêu cầu kỹ thuật**
+```
+A1.1. File Validator phát hiện issues:
+      - DPI < 300 (hiện tại: 150 DPI)
+      - File size > 50MB
+      - Format không hỗ trợ (e.g., TIFF)
+A1.2. System hiển thị detailed error message
+A1.3. System suggest solutions:
+      - "Vui lòng export với DPI ≥ 300"
+      - "Compress file xuống dưới 50MB"
+      - "Convert sang PNG/JPG/PDF"
+A1.4. User fix file và re-upload
+A1.5. Return to step 7
+```
+
+#### **A2: QR Code Position Conflict**
+```
+A2.1. User đặt QR code position overlap với important design elements
+A2.2. System analyze design và detect potential conflicts
+A2.3. System hiển thị warning: "QR code có thể che khuất logo/text"
+A2.4. System suggest alternative positions
+A2.5. User adjust position hoặc proceed với warning
+A2.6. Continue to step 19
+```
+
+### 9.3.5 Exception Flows
+
+#### **E1: File Storage Service Error**
+```
+E1.1. S3/MinIO service return 500 error
+E1.2. System retry upload 3 lần với exponential backoff
+E1.3. All retries fail
+E1.4. System save ads format metadata without file URL
+E1.5. System hiển thị "File upload thất bại, vui lòng thử lại"
+E1.6. System allow user để retry upload later
+```
+
+#### **E2: QR Generator Service Down**
+```
+E2.1. QR generator service không response
+E2.2. System save ads format với placeholder QR URL
+E2.3. System queue background job để generate QR later
+E2.4. System notify user: "QR code sẽ được tạo trong vài phút"
+E2.5. System send notification khi QR ready
+```
+
+### 9.3.6 Business Rules
+
+| Rule ID | Mô tả | Implementation |
+|---------|-------|----------------|
+| BR-010 | File phải có DPI ≥ 300 cho print formats | ImageMagick validation |
+| BR-011 | QR code minimum size = 20mm x 20mm | Client-side validation |
+| BR-012 | QR safe zone ≥ 4 modules | Automatic validation |
+| BR-013 | Maximum 10 ads formats per campaign | Database constraint |
+| BR-014 | File size limit 50MB | Upload validation |
+
+### 9.3.7 Post-conditions
+
+**Success:**
+- ✅ Ads format record saved trong MongoDB
+- ✅ Design file uploaded và accessible
+- ✅ QR code generated với dynamic URL
+- ✅ Tracking URLs configured cho campaign
+- ✅ Preview available cho user review
+
+---
+
+## 9.4 UC-003: Người dùng nhận Sample
+
+### 9.4.1 Use Case Overview
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **ID** | UC-003 |
+| **Tên** | Người dùng nhận Sample (End-to-End User Journey) |
+| **Primary Actor** | End User (Khách hàng cuối) |
+| **Supporting Actors** | - |
+| **Mục tiêu** | Complete flow từ scan QR code đến nhận barcode sample |
+| **Phạm vi** | user-service, auth-service, barcode-service, notification-service |
+| **Độ phức tạp** | Cao |
+| **Tần suất** | 1,000-10,000 lần/ngày per campaign |
+
+### 9.4.2 Preconditions
+
+- ✅ Campaign đang active và trong thời gian hiệu lực
+- ✅ Campaign có barcode pool với available barcodes
+- ✅ User có smartphone với camera và internet connection
+- ✅ SMS/Email notification services hoạt động
+
+### 9.4.3 Main Success Scenario
+
+#### **Phase 1: QR Scan và Landing Page (Steps 1-5)**
+```mermaid
+sequenceDiagram
+    participant User as End User
+    participant Camera as Phone Camera
+    participant Browser as Mobile Browser
+    participant Landing as Landing Page
+    participant Analytics as analytics-service
+    
+    User->>Camera: 1. Mở camera scan QR code
+    Camera->>Browser: 2. Detect QR và mở URL
+    Browser->>Landing: 3. GET /landing/{campaignId}/{adsFormatId}
+    Landing->>Analytics: 4. Track event "qr_scan"
+    Landing-->>Browser: 5. Hiển thị landing page với form
+    Browser-->>User: 6. Show product info và registration form
+```
+
+#### **Phase 2: Form Submission và Data Collection (Steps 6-12)**
+```mermaid
+sequenceDiagram
+    participant User as End User
+    participant Form as Landing Form
+    participant API as user-service
+    participant Validation as Validation Engine
+    participant DB as MongoDB
+    
+    User->>Form: 6. Điền form (name, email, phone, preferences)
+    User->>Form: 7. Tick consent checkboxes
+    User->>Form: 8. Complete quiz (optional)
+    User->>Form: 9. Click "Gửi thông tin"
+    
+    Form->>API: 10. POST /api/v1/users (create user)
+    API->>Validation: 11. Validate data format
+    Validation-->>API: 12. Validation passed
+    API->>DB: 13. Save user profile (encrypted PII)
+    DB-->>API: 14. User created với ID
+```
+
+#### **Phase 3: OTP Verification (Steps 13-20)**
+```mermaid
+sequenceDiagram
+    participant User as End User
+    participant Form as OTP Form
+    participant Auth as auth-service
+    participant SMS as Twilio SMS
+    participant Validation as OTP Validator
+    
+    Form->>Auth: 13. POST /api/v1/auth/send-otp
+    Auth->>SMS: 14. Send SMS với 6-digit OTP
+    SMS-->>User: 15. Nhận SMS: "Mã OTP của bạn: 123456"
+    
+    User->>Form: 16. Nhập OTP code
+    Form->>Auth: 17. POST /api/v1/auth/verify-otp
+    Auth->>Validation: 18. Validate OTP code
+    Validation-->>Auth: 19. OTP valid
+    Auth-->>Form: 20. Verification successful
+```
+
+#### **Phase 4: Barcode Generation và Delivery (Steps 21-28)**
+```mermaid
+sequenceDiagram
+    participant Form as Verified Form
+    participant Barcode as barcode-service
+    participant PG as PostgreSQL
+    participant Notification as notification-service
+    participant User as End User
+    
+    Form->>Barcode: 21. POST /api/v1/barcodes/reserve
+    Barcode->>PG: 22. CALL reserve_barcode(pool_id, user_id)
+    PG-->>Barcode: 23. Return barcode_id, code
+    Barcode-->>Form: 24. Barcode reserved successfully
+    
+    Form->>Notification: 25. Send barcode via SMS/Email
+    Notification-->>User: 26. SMS: "Mã barcode: COC2025A123..."
+    Form-->>User: 27. Show success page với barcode QR
+    User->>User: 28. Save barcode to Apple Wallet (optional)
+```
+
+### 9.4.4 Alternative Flows
+
+#### **A1: User đã tồn tại trong hệ thống**
+```
+A1.1. System detect user email/phone đã tồn tại
+A1.2. System check last participation date
+A1.3. If > 6 months ago:
+      A1.3.1. System update existing profile
+      A1.3.2. Continue với OTP verification
+A1.4. If < 6 months ago:
+      A1.4.1. System check campaign participation history
+      A1.4.2. If not participated in this campaign: allow continuation
+      A1.4.3. If already participated: show "Bạn đã tham gia campaign này"
+```
+
+#### **A2: OTP Verification Failed**
+```
+A2.1. User nhập sai OTP code
+A2.2. System decrement attempts (remaining: 2/3)
+A2.3. System hiển thị "Mã OTP không đúng, còn 2 lần thử"
+A2.4. If attempts = 0:
+      A2.4.1. System block phone number trong 15 minutes
+      A2.4.2. System hiển thị "Quá nhiều lần thử sai, vui lòng thử lại sau 15 phút"
+      A2.4.3. Use case ends với failure
+A2.5. User có thể request OTP mới sau 1 minute
+```
+
+#### **A3: Không còn Barcode available**
+```
+A3.1. barcode-service check available_quantity = 0
+A3.2. System hiển thị "Campaign đã hết mẫu, cảm ơn bạn đã quan tâm"
+A3.3. System offer alternatives:
+      - Subscribe để nhận thông báo campaign tương tự
+      - Xem các campaign khác đang active
+A3.4. System track event "out_of_stock" cho analytics
+A3.5. Use case ends với partial success (lead captured, no barcode)
+```
+
+### 9.4.5 Exception Flows
+
+#### **E1: SMS Service Down**
+```
+E1.1. Twilio API return error 500
+E1.2. System fallback sang Email OTP
+E1.3. System hiển thị "SMS tạm thời lỗi, chúng tôi sẽ gửi OTP qua email"
+E1.4. System send email với OTP code
+E1.5. Continue với email verification flow
+```
+
+#### **E2: Database Transaction Failed**
+```
+E2.1. PostgreSQL transaction timeout during barcode reservation
+E2.2. System rollback transaction
+E2.3. System retry operation 1 lần
+E2.4. If retry fails:
+      E2.4.1. System log error với user context
+      E2.4.2. System hiển thị "Lỗi hệ thống, vui lòng thử lại sau"
+      E2.4.3. System preserve user data for retry
+E2.5. User có thể retry từ bước OTP verification
+```
+
+### 9.4.6 Business Rules
+
+| Rule ID | Mô tả | Enforcement |
+|---------|-------|-------------|
+| BR-020 | 1 user chỉ được 1 barcode per campaign | Database unique constraint |
+| BR-021 | OTP có hiệu lực 5 phút | Redis TTL |
+| BR-022 | Maximum 3 OTP attempts per session | Redis counter |
+| BR-023 | Barcode reservation timeout 5 phút nếu không verify | Background job cleanup |
+| BR-024 | Consent bắt buộc cho data processing | Form validation |
+
+### 9.4.7 Quality Attributes
+
+| Attribute | Requirement | Measurement |
+|-----------|-------------|-------------|
+| **Performance** | Form load < 3s trên 3G | Browser timing API |
+| **Availability** | 99.5% uptime cho user flow | Application monitoring |
+| **Usability** | Form completion rate > 90% | Analytics tracking |
+| **Security** | All PII encrypted at rest | Database audit |
+| **Scalability** | Support 1000 concurrent users | Load testing |
+
+---
+
+## 9.5 UC-004: Xử lý Redemption tại POS
+
+### 9.5.1 Use Case Overview
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **ID** | UC-004 |
+| **Tên** | Xử lý Redemption tại POS |
+| **Primary Actor** | Serving Account (Store Staff) |
+| **Supporting Actors** | End User, Store Manager |
+| **Mục tiêu** | Scan và xử lý barcode redemption tại điểm bán để customer nhận sản phẩm |
+| **Phạm vi** | redemption-service, barcode-service |
+| **Độ phức tạp** | Trung bình |
+| **Tần suất** | 500-2000 redemptions/ngày per location |
+
+### 9.5.2 Preconditions
+
+- ✅ Staff đã đăng nhập POS app với role Serving Account
+- ✅ Customer có valid barcode (issued status)
+- ✅ Location có inventory của sản phẩm tương ứng
+- ✅ POS device có camera hoặc barcode scanner
+
+### 9.5.3 Main Success Scenario
+
+#### **Phase 1: Barcode Scanning (Steps 1-8)**
+```mermaid
+sequenceDiagram
+    participant Customer as Customer
+    participant Staff as Store Staff
+    participant POS as POS App
+    participant Redemption as redemption-service
+    participant Barcode as barcode-service
+    
+    Customer->>Staff: 1. Đưa barcode (QR/phone screen)
+    Staff->>POS: 2. Click "Scan Barcode"
+    POS->>POS: 3. Activate camera scanner
+    Staff->>POS: 4. Scan barcode từ customer phone
+    
+    POS->>Redemption: 5. POST /api/v1/redemptions/scan
+    Redemption->>Barcode: 6. Validate barcode status
+    Barcode-->>Redemption: 7. Barcode valid và issued
+    Redemption-->>POS: 8. Scan successful với product info
+```
+
+#### **Phase 2: Product Information Display (Steps 9-13)**
+```mermaid
+sequenceDiagram
+    participant POS as POS App
+    participant Staff as Store Staff
+    participant Customer as Customer
+    participant Inventory as Store Inventory
+    
+    POS->>Staff: 9. Display product information
+    Note over POS: Product: Coca Cola 330ml<br/>Customer: Nguyễn Văn A<br/>Expiry: 2025-12-31
+    
+    Staff->>Inventory: 10. Kiểm tra sản phẩm trong kho
+    Inventory-->>Staff: 11. Confirm product available
+    Staff->>Customer: 12. "Anh chờ tôi lấy sản phẩm nhé"
+    Staff->>POS: 13. Click "Xác nhận đổi hàng"
+```
+
+#### **Phase 3: Redemption Processing (Steps 14-20)**
+```mermaid
+sequenceDiagram
+    participant Staff as Store Staff
+    participant POS as POS App
+    participant Redemption as redemption-service
+    participant PG as PostgreSQL
+    participant Analytics as analytics-service
+    
+    Staff->>POS: 14. Click "Hoàn thành redemption"
+    POS->>Redemption: 15. POST /api/v1/redemptions/process
+    Redemption->>PG: 16. Update barcode status = 'redeemed'
+    PG-->>Redemption: 17. Redemption record created
+    
+    Redemption->>Analytics: 18. Track "redemption" event
+    Redemption-->>POS: 19. Success response
+    POS-->>Staff: 20. "Đổi hàng thành công!"
+```
+
+#### **Phase 4: Customer Service (Steps 21-25)**
+```
+21. Staff lấy sản phẩm từ kho và đưa cho customer
+22. Staff explain sản phẩm (nếu cần) và usage instructions
+23. Customer nhận sản phẩm và confirm satisfied
+24. Staff có thể request customer feedback (optional)
+25. Transaction hoàn tất
+```
+
+### 9.5.4 Alternative Flows
+
+#### **A1: Barcode đã được sử dụng**
+```
+A1.1. barcode-service return status "redeemed"
+A1.2. POS hiển thị thông tin redemption trước đó:
+      - Đã đổi tại: Circle K Lê Lợi
+      - Thời gian: 2025-07-10 14:30
+      - Staff: Nguyễn Thị B
+A1.3. Staff thông báo cho customer: "Barcode này đã được sử dụng"
+A1.4. Staff có thể contact customer service nếu customer khiếu nại
+A1.5. Use case ends
+```
+
+#### **A2: Sản phẩm hết hàng tại store**
+```
+A2.1. Staff check inventory và confirm out of stock
+A2.2. Staff click "Báo hết hàng" trong POS
+A2.3. POS suggest alternatives:
+      - Raincheck cho customer
+      - Chuyển đến store gần nhất có hàng
+      - Contact customer service để arrange delivery
+A2.4. Staff discuss options với customer
+A2.5. If customer accept raincheck:
+      A2.5.1. POS tạo raincheck code
+      A2.5.2. Barcode vẫn giữ status "issued"
+      A2.5.3. System set reminder để contact customer khi có hàng
+A2.6. Use case ends với partial success
+```
+
+#### **A3: Barcode expired**
+```
+A3.1. barcode-service check expiry_date < today
+A3.2. POS hiển thị "Barcode đã hết hạn (expired: 2025-07-01)"
+A3.3. Staff explain cho customer về expiry policy
+A3.4. POS offer customer service contact option
+A3.5. Staff có thể escalate tới manager nếu cần
+A3.6. Use case ends
+```
+
+### 9.5.5 Exception Flows
+
+#### **E1: Network connectivity issues**
+```
+E1.1. POS app detect network unavailable
+E1.2. POS switch sang "Offline Mode"
+E1.3. POS hiển thị "Chế độ offline - Redemption sẽ được sync sau"
+E1.4. Staff proceed với offline redemption process
+E1.5. POS store redemption trong local IndexedDB
+E1.6. Continue với UC-005 (Offline Sync) khi network restored
+```
+
+#### **E2: Barcode validation service timeout**
+```
+E2.1. Redemption service không receive response từ barcode-service
+E2.2. POS hiển thị "Đang kiểm tra barcode..." với loading spinner
+E2.3. After 10 seconds timeout:
+      E2.3.1. POS offer "Xử lý thủ công" option
+      E2.3.2. Staff có thể proceed với manual verification
+      E2.3.3. System flag transaction cho later verification
+E2.4. Use case continues với manual override
+```
+
+### 9.5.6 Business Rules
+
+| Rule ID | Mô tả | Implementation |
+|---------|-------|----------------|
+| BR-030 | Barcode chỉ có thể redeem 1 lần | Database unique constraint |
+| BR-031 | Redemption chỉ valid tại locations được assigned | Location validation |
+| BR-032 | Staff phải belong to same location như redemption | Authorization check |
+| BR-033 | Offline redemptions auto-sync trong 24h | Background sync job |
+| BR-034 | Manual override require manager approval | Role permission check |
+
+### 9.5.7 Quality Attributes
+
+| Attribute | Target | Measurement |
+|-----------|--------|-------------|
+| **Scan Speed** | < 3 seconds | Camera processing time |
+| **Validation Speed** | < 2 seconds | API response time |
+| **Offline Capability** | 8 hours | Local storage duration |
+| **Accuracy** | 99.9% | Error rate tracking |
+
+---
+
+## 9.6 UC-005: Đồng bộ Offline Redemptions
+
+### 9.6.1 Use Case Overview
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **ID** | UC-005 |
+| **Tên** | Đồng bộ Offline Redemptions |
+| **Primary Actor** | System (Background Process) |
+| **Supporting Actors** | Serving Account, Network Service |
+| **Mục tiêu** | Sync offline redemptions khi network connection restored |
+| **Phạm vi** | redemption-service, POS app |
+| **Độ phức tạp** | Cao |
+| **Tần suất** | Continuous background process |
+
+### 9.6.2 Preconditions
+
+- ✅ POS device có offline redemptions stored locally
+- ✅ Network connection restored
+- ✅ redemption-service hoạt động bình thường
+- ✅ POS app có valid authentication token
+
+### 9.6.3 Main Success Scenario
+
+#### **Phase 1: Detect Network và Prepare Sync**
+```mermaid
+sequenceDiagram
+    participant POS as POS App
+    participant Network as Network Monitor
+    participant Queue as Local Queue
+    participant API as redemption-service
+    
+    Network->>POS: 1. Network connection restored
+    POS->>Queue: 2. Query offline redemptions
+    Queue-->>POS: 3. Return 15 pending redemptions
+    
+    POS->>API: 4. GET /api/v1/redemptions/sync-status
+    API-->>POS: 5. Sync service available
+    POS->>POS: 6. Prepare batch sync request
+```
+
+#### **Phase 2: Batch Upload và Conflict Resolution**
+```mermaid
+sequenceDiagram
+    participant POS as POS App
+    participant API as redemption-service
+    participant PG as PostgreSQL
+    participant Conflict as Conflict Resolver
+    
+    POS->>API: 7. POST /api/v1/redemptions/batch-sync
+    Note over POS,API: 15 offline redemptions in batch
+    
+    API->>PG: 8. Process each redemption
+    
+    loop For each redemption
+        PG->>Conflict: 9. Check for conflicts
+        Conflict-->>PG: 10. Resolution strategy
+        alt No Conflict
+            PG->>PG: 11. Insert redemption
+        else Conflict Detected
+            PG->>PG: 12. Apply resolution rules
+        end
+    end
+    
+    API-->>POS: 13. Batch sync results
+```
+
+#### **Phase 3: Handle Sync Results**
+```mermaid
+sequenceDiagram
+    participant POS as POS App
+    participant Queue as Local Queue
+    participant Staff as Store Staff
+    participant Manager as Store Manager
+    
+    POS->>POS: 14. Process sync results
+    Note over POS: 12 success, 2 conflicts, 1 failed
+    
+    POS->>Queue: 15. Remove successful redemptions
+    POS->>Staff: 16. Notify conflicts require attention
+    POS->>Manager: 17. Send conflict report
+    
+    alt Critical Conflicts
+        POS->>Manager: 18. Immediate notification
+    else Minor Conflicts  
+        POS->>Staff: 19. Add to daily report
+    end
+```
+
+### 9.6.4 Alternative Flows
+
+#### **A1: Duplicate Redemption Conflict**
+```
+A1.1. Conflict Resolver detect same barcode redeemed online
+A1.2. System compare timestamps:
+      - Offline: 2025-07-15 14:30 (staff A)
+      - Online: 2025-07-15 14:35 (staff B)
+A1.3. System apply "First-In-Time" rule
+A1.4. Keep offline redemption (earlier timestamp)
+A1.5. Mark online redemption as "duplicate_resolved"
+A1.6. Send notification to both staff members
+A1.7. Update final resolution in database
+```
+
+#### **A2: Barcode đã expired trong thời gian offline**
+```
+A2.1. System detect barcode expired between offline time và sync time
+A2.2. System check business rule exceptions:
+      - Grace period: 24 hours post-expiry
+      - Manager override available
+A2.3. If within grace period:
+      A2.3.1. Allow redemption với warning flag
+      A2.3.2. Notify manager về exception
+A2.4. If beyond grace period:
+      A2.4.1. Reject redemption
+      A2.4.2. Create customer service ticket
+      A2.4.3. Notify staff về required customer follow-up
+```
+
+### 9.6.5 Exception Flows
+
+#### **E1: Partial Sync Failure**
+```
+E1.1. Network drops during batch sync
+E1.2. 8/15 redemptions processed successfully
+E1.3. System mark processed items trong local queue
+E1.4. Resume sync với remaining 7 items khi network stable
+E1.5. Retry failed items với exponential backoff
+E1.6. Max 3 retry attempts per redemption
+```
+
+#### **E2: Authentication Token Expired**
+```
+E2.1. API return 401 Unauthorized during sync
+E2.2. POS attempt token refresh
+E2.3. If refresh successful: retry sync
+E2.4. If refresh failed:
+      E2.4.1. Prompt staff để re-login
+      E2.4.2. Preserve offline data
+      E2.4.3. Resume sync after authentication
+```
+
+### 9.6.6 Conflict Resolution Matrix
+
+| Conflict Type | Resolution Strategy | Business Rule |
+|---------------|-------------------|---------------|
+| **Duplicate Barcode** | First-in-time wins | Timestamps comparison |
+| **Expired During Offline** | Grace period 24h | Business exception |
+| **Location Mismatch** | Manager approval required | Security validation |
+| **Staff Authorization** | Escalate to admin | Role verification |
+| **Product Unavailable** | Create raincheck | Inventory reconciliation |
+
+---
+
+## 9.7 UC-006: Quản lý Webhook và Integrations
+
+### 9.7.1 Use Case Overview
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **ID** | UC-006 |
+| **Tên** | Quản lý Webhook và Integrations |
+| **Primary Actor** | Admin |
+| **Supporting Actors** | Integration Developer, Brand Technical Team |
+| **Mục tiêu** | Setup và quản lý integrations với external systems (CRM, Analytics) |
+| **Phạm vi** | integration-service |
+| **Độ phức tạp** | Cao |
+| **Tần suất** | 5-20 integrations per month |
+
+### 9.7.2 Preconditions
+
+- ✅ User có role Admin hoặc permissions `integration:manage`
+- ✅ External system có webhook endpoint ready
+- ✅ API credentials và authentication setup
+- ✅ Network connectivity tới external systems
+
+### 9.7.3 Main Success Scenario
+
+#### **Phase 1: Webhook Configuration**
+```mermaid
+sequenceDiagram
+    participant Admin as Admin User
+    participant Dashboard as Admin Dashboard
+    participant API as integration-service
+    participant External as External System
+    participant Validator as Webhook Validator
+    
+    Admin->>Dashboard: 1. Navigate to "Integrations"
+    Dashboard->>Admin: 2. Show integration types
+    Admin->>Dashboard: 3. Select "HubSpot CRM"
+    Dashboard->>Admin: 4. Show webhook configuration form
+    
+    Admin->>Dashboard: 5. Fill webhook details
+    Note over Admin,Dashboard: URL, events, authentication
+    
+    Dashboard->>API: 6. POST /api/v1/integrations/webhooks
+    API->>Validator: 7. Validate webhook endpoint
+    Validator->>External: 8. Send test ping
+    External-->>Validator: 9. Return 200 OK
+    Validator-->>API: 10. Webhook endpoint valid
+```
+
+#### **Phase 2: Event Subscription Setup**
+```mermaid
+sequenceDiagram
+    participant API as integration-service
+    participant EventBus as Event Bus
+    participant DB as MongoDB
+    participant Admin as Admin User
+    
+    API->>DB: 11. Save webhook configuration
+    API->>EventBus: 12. Subscribe to selected events
+    Note over EventBus: user.verified, barcode.issued, redemption.completed
+    
+    API-->>Dashboard: 13. Webhook created successfully
+    Dashboard->>Admin: 14. Show webhook details và test options
+    Admin->>Dashboard: 15. Click "Test Webhook"
+    Dashboard->>API: 16. POST /api/v1/integrations/webhooks/{id}/test
+```
+
+#### **Phase 3: Test và Activation**
+```mermaid
+sequenceDiagram
+    participant API as integration-service
+    participant External as HubSpot CRM
+    participant Monitor as Webhook Monitor
+    participant Admin as Admin User
+    
+    API->>External: 17. Send test event payload
+    External-->>API: 18. Return webhook response
+    API->>Monitor: 19. Log webhook delivery stats
+    
+    alt Test Successful
+        API-->>Dashboard: 20. Test passed - webhook ready
+        Admin->>Dashboard: 21. Click "Activate"
+        Dashboard->>API: 22. PATCH /webhooks/{id} (active: true)
+    else Test Failed
+        API-->>Dashboard: 23. Test failed với error details
+        Admin->>Dashboard: 24. Review và fix configuration
+    end
+```
+
+### 9.7.4 Alternative Flows
+
+#### **A1: External System Authentication Required**
+```
+A1.1. Webhook validation require OAuth2 authentication
+A1.2. System redirect admin tới OAuth flow
+A1.3. External system (HubSpot) show consent screen
+A1.4. Admin authorize PSP access
+A1.5. System receive access token và refresh token
+A1.6. System store encrypted tokens
+A1.7. Retry webhook validation với authenticated requests
+A1.8. Continue với normal flow
+```
+
+#### **A2: Webhook URL không accessible**
+```
+A2.1. Validator receive timeout hoặc connection refused
+A2.2. System suggest troubleshooting steps:
+      - Check firewall settings
+      - Verify URL format
+      - Test network connectivity
+A2.3. System offer "Skip validation" option với warning
+A2.4. Admin có thể proceed với unvalidated webhook
+A2.5. System mark webhook as "pending_validation"
+A2.6. Background job retry validation every hour
+```
+
+### 9.7.5 Exception Flows
+
+#### **E1: Webhook Delivery Failures**
+```
+E1.1. integration-service attempt webhook delivery
+E1.2. External system return 500 error
+E1.3. System retry với exponential backoff:
+      - Retry 1: after 30 seconds
+      - Retry 2: after 2 minutes  
+      - Retry 3: after 10 minutes
+E1.4. All retries failed
+E1.5. System mark webhook as "failed"
+E1.6. Send alert tới admin: "HubSpot webhook failing"
+E1.7. System disable webhook after 24h of failures
+```
+
+#### **E2: Rate Limiting từ External System**
+```
+E2.1. External API return 429 Too Many Requests
+E2.2. System parse Retry-After header (e.g., 3600 seconds)
+E2.3. System queue webhook deliveries với appropriate delay
+E2.4. System adjust delivery rate automatically
+E2.5. Continue delivery sau rate limit period
+```
+
+### 9.7.6 Business Rules
+
+| Rule ID | Mô tả | Implementation |
+|---------|-------|----------------|
+| BR-040 | Maximum 10 webhooks per tenant | Database constraint |
+| BR-041 | Webhook timeout 30 seconds | HTTP client config |
+| BR-042 | Maximum 3 retry attempts | Delivery logic |
+| BR-043 | Failed webhooks auto-disabled after 24h | Background job |
+| BR-044 | Webhook signatures required cho security | HMAC validation |
+
+---
+
+## 9.8 UC-007: Quản lý User Portal
+
+### 9.8.1 Use Case Overview
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **ID** | UC-007 |
+| **Tên** | Quản lý User Portal |
+| **Primary Actor** | End User |
+| **Supporting Actors** | Customer Service |
+| **Mục tiêu** | User tự quản lý profile, xem sampling history, track redemptions |
+| **Phạm vi** | user-service, User Portal PWA |
+| **Độ phức tạp** | Trung bình |
+| **Tần suất** | 50-200 sessions/ngày per user |
+
+### 9.8.2 Main Success Scenario
+
+#### **Phase 1: Portal Access**
+```mermaid
+sequenceDiagram
+    participant User as End User
+    participant PWA as User Portal PWA
+    participant Auth as auth-service
+    participant UserAPI as user-service
+    
+    User->>PWA: 1. Access portal URL từ SMS/Email
+    PWA->>Auth: 2. Validate magic link token
+    Auth-->>PWA: 3. Token valid, user identified
+    PWA->>UserAPI: 4. GET /api/v1/user-portal/dashboard
+    UserAPI-->>PWA: 5. Return dashboard data
+    PWA-->>User: 6. Show personalized dashboard
+```
+
+#### **Phase 2: View Sampling History**
+```mermaid
+sequenceDiagram
+    participant User as End User
+    participant PWA as User Portal PWA
+    participant UserAPI as user-service
+    participant Barcode as barcode-service
+    
+    User->>PWA: 7. Click "Lịch sử sampling"
+    PWA->>UserAPI: 8. GET /api/v1/user-portal/samples
+    UserAPI->>Barcode: 9. Get user's barcodes
+    Barcode-->>UserAPI: 10. Return barcode list với status
+    UserAPI-->>PWA: 11. Return formatted sample history
+    PWA-->>User: 12. Display samples với status icons
+```
+
+### 9.8.3 Business Rules
+
+| Rule ID | Mô tả |
+|---------|-------|
+| BR-050 | User chỉ access được own data |
+| BR-051 | Magic links expire sau 24h |
+| BR-052 | Consent withdrawal immediate effect |
+
+---
+
+## 9.9 UC-008: Xem Analytics và Export dữ liệu
+
+### 9.9.1 Use Case Overview
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **ID** | UC-008 |
+| **Tên** | Xem Analytics và Export dữ liệu |
+| **Primary Actor** | Customer Account |
+| **Supporting Actors** | Marketing Team, Data Analyst |
+| **Mục tiêu** | View campaign performance và export data cho analysis |
+| **Phạm vi** | analytics-service |
+| **Độ phức tạp** | Trung bình |
+| **Tần suất** | Daily dashboard views, weekly exports |
+
+### 9.9.2 Main Success Scenario
+
+#### **Phase 1: Dashboard Analytics**
+```mermaid
+sequenceDiagram
+    participant User as Brand Manager
+    participant Dashboard as Brand Dashboard
+    participant Analytics as analytics-service
+    participant Cache as Redis Cache
+    
+    User->>Dashboard: 1. Open campaign analytics
+    Dashboard->>Analytics: 2. GET /api/v1/analytics/dashboard
+    Analytics->>Cache: 3. Check cached results
+    Cache-->>Analytics: 4. Cache miss
+    Analytics->>Analytics: 5. Calculate funnel metrics
+    Analytics->>Cache: 6. Cache results (TTL: 5 min)
+    Analytics-->>Dashboard: 7. Return dashboard data
+    Dashboard-->>User: 8. Display real-time metrics
+```
+
+### 9.9.3 Business Rules
+
+| Rule ID | Mô tả |
+|---------|-------|
+| BR-060 | Data chỉ export với explicit consent |
+| BR-061 | PII cần approval để export |
+| BR-062 | Export files expire sau 7 days |
+
+---
+
+## 9.10 Use Case Testing Matrix
+
+### 9.10.1 Test Coverage Requirements
+
+| Use Case | Unit Tests | Integration Tests | E2E Tests | Performance Tests |
+|----------|------------|-------------------|-----------|-------------------|
+| UC-001 | ✅ 90% | ✅ API workflows | ✅ Full campaign creation | ✅ Concurrent campaigns |
+| UC-002 | ✅ 85% | ✅ File upload flows | ✅ QR generation | ✅ Large file handling |
+| UC-003 | ✅ 95% | ✅ Multi-service flow | ✅ Complete user journey | ✅ 1K concurrent users |
+| UC-004 | ✅ 90% | ✅ POS integration | ✅ Redemption flow | ✅ High scan volume |
+| UC-005 | ✅ 80% | ✅ Sync mechanisms | ✅ Conflict resolution | ✅ Batch processing |
+| UC-006 | ✅ 85% | ✅ External APIs | ✅ Webhook delivery | ✅ Rate limiting |
+| UC-007 | ✅ 75% | ✅ Portal APIs | ✅ User experience | ✅ Mobile performance |
+| UC-008 | ✅ 85% | ✅ Data pipelines | ✅ Export generation | ✅ Large datasets |
+
+### 9.10.2 Acceptance Test Scenarios
+
+**High-Priority Scenarios (Must Pass):**
+- ✅ End-to-end user journey (UC-003) hoàn thành trong <5 phút
+- ✅ POS redemption (UC-004) xử lý trong <30 giây
+- ✅ Offline sync (UC-005) resolve conflicts correctly
+- ✅ Campaign creation (UC-001) với 10K barcodes thành công
+
+**Medium-Priority Scenarios:**
+- ✅ Webhook deliveries (UC-006) với 99% success rate
+- ✅ Analytics export (UC-008) files generated trong <2 phút
+- ✅ User Portal (UC-007) load times <3 giây
+
+---
+
+## 9.11 Use Case Summary & Dependencies
+
+### 9.11.1 Critical Success Path
+
+```mermaid
+graph TB
+    UC1[UC-001: Campaign Creation] --> UC2[UC-002: Ads Format]
+    UC2 --> UC3[UC-003: User Journey]
+    UC3 --> UC4[UC-004: POS Redemption]
+    UC4 --> UC8[UC-008: Analytics]
+    
+    UC4 --> UC5[UC-005: Offline Sync]
+    UC3 --> UC7[UC-007: User Portal]
+    UC1 --> UC6[UC-006: Integrations]
+    
+    style UC3 fill:#e8f5e8
+    style UC4 fill:#fff3e0
+```
+
+### 9.11.2 Use Case Metrics Summary
+
+| Use Case | Success Rate Target | Performance Target | Business Impact |
+|----------|--------------------|--------------------|-----------------|
+| UC-001 | 95% completion | <2 min setup | Campaign launch speed |
+| UC-002 | 90% upload success | <30s file processing | Marketing efficiency |
+| UC-003 | 90% conversion | <5 min total time | User experience |
+| UC-004 | 98% scan success | <30s redemption | Operational efficiency |
+| UC-005 | 99% sync accuracy | <1h sync time | Data integrity |
+| UC-006 | 95% delivery rate | <10s webhook | Integration reliability |
+| UC-007 | 70% user engagement | <3s load time | User retention |
+| UC-008 | 100% data accuracy | <30s dashboard | Business intelligence |
+
+---
+
+**Trạng thái tài liệu**: ✅ Hoàn thành Part09  
+**Coverage**: 8 use cases chi tiết với flows, alternatives, exceptions  
+**Dependencies**: Functional requirements (Part04), API design (Part08)  
+**Người sở hữu**: Đội phân tích nghiệp vụ  
+**Hành động tiếp theo**: Part10 - UI/UX Design & Wireframes
+
+# 📘 Part10 - Giao diện & Wireframes (UI/UX Design)
+**Đặc tả yêu cầu hệ thống (SRS) - Product Sampling Platform**
+
+**Phiên bản**: 1.0  
+**Ngày**: 2025-10-17  
+**Tác giả**: Đội UX/UI Design  
+**Trạng thái**: ✅ Hoàn thành  
+
+---
+
+## 10.1 Tổng quan thiết kế UI/UX
+
+### 10.1.1 Nguyên tắc thiết kế
+
+**Design Philosophy:**
+- 🎯 **Mobile-First**: Thiết kế cho mobile trước, scale up cho desktop
+- ⚡ **Performance-Oriented**: Tối ưu loading time và responsiveness
+- 🔍 **Accessibility-Compliant**: WCAG 2.1 AA standards
+- 🎨 **Brand-Consistent**: Consistent visual identity across platforms
+- 📱 **Progressive Web App**: Native app experience trên web
+
+**Core Design Principles:**
+
+| Nguyên tắc | Mô tả | Implementation |
+|------------|-------|----------------|
+| **Simplicity** | Interface đơn giản, clear navigation | Minimal design, clear CTAs |
+| **Consistency** | Consistent components across apps | Design system với reusable components |
+| **Feedback** | Clear feedback cho user actions | Loading states, success/error messages |
+| **Accessibility** | Usable by all users | Color contrast, keyboard navigation, screen readers |
+| **Performance** | Fast loading và smooth interactions | Optimized images, lazy loading, caching |
+
+### 10.1.2 Target Devices & Platforms
+
+**Device Support Matrix:**
+
+| Device Type | Screen Sizes | Primary Use Case | Design Priority |
+|-------------|--------------|------------------|-----------------|
+| **Mobile** | 375px - 414px | End user sampling journey | 🔴 Critical |
+| **Tablet** | 768px - 1024px | POS staff operations | 🟡 High |
+| **Desktop** | 1280px+ | Brand dashboard & admin | 🟡 High |
+| **Large Screen** | 1920px+ | Analytics & reporting | 🟠 Medium |
+
+**Browser Support:**
+- Chrome 90+ (65% market share)
+- Safari 14+ (20% market share)  
+- Firefox 88+ (8% market share)
+- Edge 90+ (5% market share)
+
+---
+
+## 10.2 Design System Foundation
+
+### 10.2.1 Color Palette
+
+**Primary Colors:**
+```css
+:root {
+  /* Brand Colors */
+  --primary-blue: #2563EB;      /* CTAs, links, brand elements */
+  --primary-dark: #1E40AF;      /* Hover states, emphasis */
+  --primary-light: #DBEAFE;     /* Backgrounds, subtle highlights */
+  
+  /* Semantic Colors */
+  --success-green: #059669;     /* Success messages, completed states */
+  --warning-orange: #D97706;    /* Warnings, pending states */
+  --error-red: #DC2626;         /* Errors, failed states */
+  --info-blue: #0284C7;         /* Information, neutral actions */
+  
+  /* Neutral Colors */
+  --gray-900: #111827;          /* Primary text */
+  --gray-700: #374151;          /* Secondary text */
+  --gray-500: #6B7280;          /* Placeholder text */
+  --gray-300: #D1D5DB;          /* Borders, dividers */
+  --gray-100: #F3F4F6;          /* Background, disabled states */
+  --white: #FFFFFF;             /* Backgrounds, cards */
+}
+```
+
+**Color Usage Guidelines:**
+- **Accessibility**: Minimum 4.5:1 contrast ratio cho text
+- **Brand Recognition**: Primary blue cho all CTAs và brand elements
+- **Status Indication**: Consistent semantic colors cho system states
+- **Cultural Sensitivity**: Colors appropriate cho SEA markets
+
+### 10.2.2 Typography Scale
+
+**Font Hierarchy:**
+```css
+/* Font Family */
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+/* Type Scale */
+--text-xs: 0.75rem;    /* 12px - Captions, labels */
+--text-sm: 0.875rem;   /* 14px - Body text, secondary info */
+--text-base: 1rem;     /* 16px - Primary body text */
+--text-lg: 1.125rem;   /* 18px - Emphasized text */
+--text-xl: 1.25rem;    /* 20px - Section headings */
+--text-2xl: 1.5rem;    /* 24px - Page headings */
+--text-3xl: 1.875rem;  /* 30px - Main headings */
+--text-4xl: 2.25rem;   /* 36px - Hero text */
+
+/* Font Weights */
+--font-normal: 400;
+--font-medium: 500;
+--font-semibold: 600;
+--font-bold: 700;
+```
+
+### 10.2.3 Spacing System
+
+**8-Point Grid System:**
+```css
+--space-1: 0.25rem;   /* 4px */
+--space-2: 0.5rem;    /* 8px */
+--space-3: 0.75rem;   /* 12px */
+--space-4: 1rem;      /* 16px */
+--space-5: 1.25rem;   /* 20px */
+--space-6: 1.5rem;    /* 24px */
+--space-8: 2rem;      /* 32px */
+--space-10: 2.5rem;   /* 40px */
+--space-12: 3rem;     /* 48px */
+--space-16: 4rem;     /* 64px */
+```
+
+### 10.2.4 Component Library Specifications
+
+#### **Button Component Interface**
+```typescript
+interface ButtonProps {
+  variant: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size: 'sm' | 'md' | 'lg';
+  state: 'default' | 'loading' | 'disabled';
+  icon?: IconName;
+  iconPosition?: 'left' | 'right';
+  fullWidth?: boolean;
+  onClick: () => void;
+  ariaLabel?: string;
+}
+```
+
+#### **Input Component Interface**
+```typescript
+interface InputProps {
+  type: 'text' | 'email' | 'tel' | 'password' | 'number';
+  label: string;
+  placeholder?: string;
+  helperText?: string;
+  error?: string;
+  required?: boolean;
+  disabled?: boolean;
+  maxLength?: number;
+  pattern?: string;
+  autoComplete?: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+}
+```
+
+---
+
+## 10.3 User Journey Flows
+
+### 10.3.1 End User Sampling Journey
+
+```mermaid
+graph TB
+    A[QR Code Scan] --> B[Landing Page]
+    B --> C[Product Information]
+    C --> D[Registration Form]
+    D --> E[OTP Verification]
+    E --> F[Barcode Display]
+    F --> G[User Portal Access]
+    
+    D --> D1[Form Validation]
+    E --> E1[OTP Retry]
+    F --> F1[Save to Wallet]
+    
+    style A fill:#e8f5e8
+    style F fill:#fff3e0
+    style G fill:#e3f2fd
+```
+
+**Key Screens trong User Journey:**
+1. **QR Scan Result** - Immediate product recognition
+2. **Landing Page** - Product showcase với clear value prop
+3. **Registration Form** - Minimal fields, smart validation
+4. **OTP Verification** - Clear instructions, retry options
+5. **Success Page** - Barcode display với next steps
+6. **User Portal** - Self-service dashboard
+
+### 10.3.2 Brand Dashboard Flow
+
+```mermaid
+graph TB
+    A[Login] --> B[Dashboard Overview]
+    B --> C[Campaign Management]
+    B --> D[Analytics & Reports]
+    B --> E[User Management]
+    
+    C --> C1[Create Campaign]
+    C --> C2[Upload Ads Format]
+    C --> C3[Manage Barcodes]
+    
+    D --> D1[Real-time Dashboard]
+    D --> D2[Export Data]
+    
+    style B fill:#e3f2fd
+    style D1 fill:#fff3e0
+```
+
+### 10.3.3 POS Staff Workflow
+
+```mermaid
+graph TB
+    A[Staff Login] --> B[Scan Mode]
+    B --> C[Barcode Validation]
+    C --> D[Product Confirmation]
+    D --> E[Redemption Complete]
+    
+    C --> C1[Invalid Barcode]
+    C1 --> C2[Manual Override]
+    
+    B --> B1[Offline Mode]
+    B1 --> B2[Queue for Sync]
+    
+    style B fill:#e8f5e8
+    style E fill:#fff3e0
+```
+
+---
+
+## 10.4 Mobile Landing Page Design
+
+### 10.4.1 Landing Page Wireframe
+
+```mermaid
+graph TB
+    subgraph "Mobile Landing Page (375px)"
+        A[Header với Brand Logo]
+        B[Hero Product Image - 200px height]
+        C[Product Title - text-2xl bold]
+        D[Value Proposition - 2-3 lines]
+        E[Trust Indicators - security badges]
+        F[CTA Button - Nhận mẫu miễn phí]
+        G[Footer - Privacy policy links]
+    end
+    
+    A --> B --> C --> D --> E --> F --> G
+    
+    style B fill:#e8f5e8
+    style F fill:#fff3e0
+```
+
+**Landing Page Specifications:**
+
+| Element | Specifications | Notes |
+|---------|---------------|-------|
+| **Header Height** | 64px | Fixed height, brand logo centered |
+| **Hero Image** | 375x200px, 2x retina | WebP format, fallback to JPG |
+| **CTA Button** | 48px height, full width | Primary color, prominent placement |
+| **Loading Time** | <3 seconds on 3G | Image optimization critical |
+| **Conversion Goal** | >90% form completion | A/B test different layouts |
+
+### 10.4.2 Registration Form Design
+
+**Form Layout Specifications:**
+```css
+.registration-form {
+  max-width: 400px;
+  padding: var(--space-6);
+  gap: var(--space-4);
+}
+
+.form-field {
+  margin-bottom: var(--space-4);
+}
+
+.input-field {
+  height: 48px;           /* Touch-friendly */
+  border-radius: 8px;     /* Modern appearance */
+  border: 1px solid var(--gray-300);
+  padding: 0 var(--space-4);
+  font-size: var(--text-base);
+}
+
+.cta-button {
+  height: 48px;
+  border-radius: 8px;
+  background: var(--primary-blue);
+  color: var(--white);
+  font-weight: var(--font-semibold);
+  width: 100%;
+}
+```
+
+**Form Fields Interface:**
+```typescript
+interface RegistrationForm {
+  personalInfo: {
+    fullName: string;        // Required, max 100 chars
+    email: string;           // Required, email validation
+    phoneNumber: string;     // Required, Vietnam format (+84)
+    dateOfBirth?: Date;      // Optional, age verification
+    gender?: 'M' | 'F' | 'Other';
+  };
+  
+  preferences: {
+    interests?: string[];    // Multi-select from predefined list
+    dietaryRestrictions?: string[];
+    marketingConsent: boolean;    // Required
+    dataProcessingConsent: boolean; // Required
+  };
+  
+  quiz?: {
+    questions: QuizQuestion[];     // Campaign-specific
+    responses: string[];
+  };
+}
+```
+
+---
+
+## 10.5 Brand Dashboard Interface
+
+### 10.5.1 Dashboard Layout Structure
+
+```mermaid
+graph TB
+    subgraph "Desktop Dashboard (1280px+)"
+        A[Top Navigation Bar - 64px]
+        B[Sidebar Navigation - 240px width]
+        C[Main Content Area]
+        D[Right Panel - 320px]
+    end
+    
+    subgraph "Main Content"
+        C1[Page Header với breadcrumbs]
+        C2[KPI Cards Row]
+        C3[Charts và Analytics]
+        C4[Data Tables]
+    end
+    
+    A --> C1
+    B --> C2
+    C --> C2 --> C3 --> C4
+    D --> C3
+    
+    style C2 fill:#e3f2fd
+    style C3 fill:#fff3e0
+```
+
+**Layout Specifications:**
+```css
+.dashboard-layout {
+  display: grid;
+  grid-template-areas: 
+    "sidebar header header"
+    "sidebar main right-panel";
+  grid-template-columns: 240px 1fr 320px;
+  grid-template-rows: 64px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  background: var(--white);
+  border-right: 1px solid var(--gray-200);
+}
+
+.main-content {
+  grid-area: main;
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+```
+
+### 10.5.2 KPI Cards Interface
+
+```typescript
+interface KPICard {
+  title: string;
+  value: number | string;
+  format: 'number' | 'currency' | 'percentage';
+  trend?: {
+    direction: 'up' | 'down' | 'neutral';
+    value: number;
+    period: string;
+  };
+  status: 'success' | 'warning' | 'error' | 'neutral';
+  icon?: IconName;
+  clickable?: boolean;
+  loading?: boolean;
+}
+
+// Example KPI Cards
+const campaignKPIs: KPICard[] = [
+  {
+    title: "Total Scans",
+    value: 15420,
+    format: "number",
+    trend: { direction: "up", value: 12.5, period: "vs last week" },
+    status: "success",
+    icon: "qr-code"
+  },
+  {
+    title: "Conversion Rate", 
+    value: 64.03,
+    format: "percentage",
+    trend: { direction: "down", value: 2.1, period: "vs last week" },
+    status: "warning",
+    icon: "trending-up"
+  }
+];
+```
+
+### 10.5.3 Navigation Menu Structure
+
+```typescript
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: IconName;
+  href?: string;
+  children?: NavigationItem[];
+  permissions?: string[];
+  badge?: {
+    text: string;
+    variant: 'default' | 'success' | 'warning' | 'error';
+  };
+}
+
+const navigationMenu: NavigationItem[] = [
+  {
+    id: 'dashboard',
+    label: 'Tổng quan',
+    icon: 'home',
+    href: '/dashboard'
+  },
+  {
+    id: 'campaigns',
+    label: 'Quản lý Campaign',
+    icon: 'megaphone',
+    children: [
+      { id: 'campaigns-list', label: 'Danh sách Campaign', href: '/campaigns' },
+      { id: 'campaigns-create', label: 'Tạo Campaign mới', href: '/campaigns/create' },
+      { id: 'ads-formats', label: 'Ads Formats', href: '/campaigns/ads-formats' }
+    ],
+    permissions: ['campaign:read']
+  },
+  {
+    id: 'analytics',
+    label: 'Báo cáo & Analytics',
+    icon: 'chart-bar',
+    href: '/analytics',
+    permissions: ['analytics:read']
+  }
+];
+```
+
+---
+
+## 10.6 POS Interface Design
+
+### 10.6.1 Mobile POS App Layout
+
+```mermaid
+graph TB
+    subgraph "Tablet POS (768px)"
+        A[Header với Location Info - 56px]
+        B[Scanner View Area - 400px]
+        C[Product Display Section]
+        D[Action Buttons Row]
+        E[Status Bar - 40px]
+    end
+    
+    B --> B1[Camera Feed]
+    B --> B2[Scan Overlay]
+    C --> C1[Product Details]
+    C --> C2[Customer Info]
+    D --> D1[Confirm Button]
+    D --> D2[Cancel Button]
+    
+    style B fill:#e8f5e8
+    style D1 fill:#fff3e0
+```
+
+**POS Component Interface:**
+```typescript
+interface POSInterface {
+  scanner: {
+    startScan(): void;
+    stopScan(): void;
+    onScanResult: (barcode: string) => void;
+    onScanError: (error: Error) => void;
+  };
+  
+  display: {
+    showProduct(product: ProductInfo): void;
+    showCustomer(customer: CustomerInfo): void;
+    showStatus(status: ScanStatus): void;
+    showError(error: string): void;
+  };
+  
+  actions: {
+    confirmRedemption(): Promise<RedemptionResult>;
+    cancelRedemption(): void;
+    manualOverride(): void;
+    contactSupport(): void;
+  };
+  
+  offline: {
+    isOnline: boolean;
+    queueRedemption(data: OfflineRedemption): void;
+    syncPending(): Promise<SyncResult>;
+  };
+}
+```
+
+### 10.6.2 Scan Interface States
+
+**Scanner State Machine:**
+```typescript
+type ScannerState = 
+  | 'idle'           // Waiting for scan
+  | 'scanning'       // Camera active
+  | 'validating'     // Checking barcode
+  | 'success'        // Valid barcode found
+  | 'error'          // Invalid barcode
+  | 'offline';       // Network unavailable
+
+interface ScannerStateConfig {
+  idle: {
+    message: "Hướng camera vào barcode";
+    actions: ['startScan'];
+  };
+  scanning: {
+    message: "Đang quét barcode...";
+    actions: ['stopScan'];
+  };
+  validating: {
+    message: "Đang kiểm tra...";
+    actions: [];
+  };
+  success: {
+    message: "Barcode hợp lệ";
+    actions: ['confirm', 'cancel'];
+  };
+  error: {
+    message: "Barcode không hợp lệ";
+    actions: ['retry', 'manualEntry'];
+  };
+  offline: {
+    message: "Chế độ offline";
+    actions: ['offlineRedeem', 'retry'];
+  };
+}
+```
+
+---
+
+## 10.7 User Portal PWA Design
+
+### 10.7.1 Portal Navigation Structure
+
+```mermaid
+graph TB
+    subgraph "User Portal PWA"
+        A[Bottom Tab Navigation]
+        B[Home Dashboard]
+        C[My Samples]
+        D[Notifications] 
+        E[Profile Settings]
+    end
+    
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    
+    C --> C1[Active Samples]
+    C --> C2[Redeemed History]
+    C --> C3[Expired Samples]
+    
+    style B fill:#e3f2fd
+    style C fill:#e8f5e8
+```
+
+**PWA Features Interface:**
+```typescript
+interface PWAFeatures {
+  install: {
+    isInstallable: boolean;
+    promptInstall(): void;
+    onInstallPrompt: (event: InstallPromptEvent) => void;
+  };
+  
+  notifications: {
+    requestPermission(): Promise<NotificationPermission>;
+    subscribe(): Promise<PushSubscription>;
+    showNotification(data: NotificationData): void;
+  };
+  
+  offline: {
+    isOnline: boolean;
+    cacheStrategy: 'cache-first' | 'network-first';
+    syncWhenOnline(): Promise<void>;
+  };
+  
+  storage: {
+    saveUserData(data: UserData): void;
+    getUserData(): UserData | null;
+    clearData(): void;
+  };
+}
+```
+
+### 10.7.2 Sample Card Component
+
+```typescript
+interface SampleCardProps {
+  sample: {
+    id: string;
+    productName: string;
+    productImage: string;
+    campaignName: string;
+    status: 'active' | 'redeemed' | 'expired';
+    issuedAt: Date;
+    expiryDate: Date;
+    qrCodeUrl?: string;
+    redemptionDetails?: {
+      redeemedAt: Date;
+      location: string;
+    };
+  };
+  
+  actions: {
+    onViewQR?: () => void;
+    onSaveToWallet?: () => void;
+    onFindStore?: () => void;
+    onReportIssue?: () => void;
+  };
+}
+```
+
+---
+
+## 10.8 Responsive Design Specifications
+
+### 10.8.1 Breakpoint System
+
+```css
+/* Breakpoint Definitions */
+:root {
+  --breakpoint-sm: 640px;   /* Small tablets */
+  --breakpoint-md: 768px;   /* Large tablets */
+  --breakpoint-lg: 1024px;  /* Small desktops */
+  --breakpoint-xl: 1280px;  /* Large desktops */
+  --breakpoint-2xl: 1536px; /* Extra large screens */
+}
+
+/* Media Query Mixins */
+@media (min-width: 640px) { /* sm */ }
+@media (min-width: 768px) { /* md */ }
+@media (min-width: 1024px) { /* lg */ }
+@media (min-width: 1280px) { /* xl */ }
+```
+
+### 10.8.2 Component Responsive Behavior
+
+| Component | Mobile (375px) | Tablet (768px) | Desktop (1280px) |
+|-----------|----------------|----------------|------------------|
+| **Navigation** | Bottom tabs | Side drawer | Top nav + sidebar |
+| **KPI Cards** | Stacked | 2x2 grid | 4x1 row |
+| **Data Tables** | Horizontal scroll | Responsive columns | Full table |
+| **Forms** | Single column | Single column | Two columns |
+| **Modals** | Full screen | Centered overlay | Centered overlay |
+
+---
+
+## 10.9 Accessibility Specifications
+
+### 10.9.1 WCAG 2.1 AA Compliance
+
+**Color Contrast Requirements:**
+```css
+/* Text Contrast Ratios */
+.text-primary { color: var(--gray-900); }    /* 16.75:1 ratio */
+.text-secondary { color: var(--gray-700); }  /* 8.67:1 ratio */
+.text-muted { color: var(--gray-500); }      /* 4.54:1 ratio */
+
+/* Button Contrast */
+.btn-primary { 
+  background: var(--primary-blue);   /* 7.12:1 ratio */
+  color: var(--white);
+}
+
+.btn-secondary {
+  background: var(--gray-100);       /* 12.63:1 ratio */
+  color: var(--gray-900);
+}
+```
+
+**Keyboard Navigation Interface:**
+```typescript
+interface AccessibilityFeatures {
+  keyboard: {
+    focusManagement: {
+      trapFocus(element: HTMLElement): void;
+      restoreFocus(): void;
+      skipToContent(): void;
+    };
+    shortcuts: {
+      'Ctrl+K': 'openSearch';
+      'Esc': 'closeModal';
+      'Tab': 'nextElement';
+      'Shift+Tab': 'previousElement';
+    };
+  };
+  
+  screenReader: {
+    ariaLabels: Record<string, string>;
+    announcements: {
+      announce(message: string, priority: 'polite' | 'assertive'): void;
+      announcePageChange(title: string): void;
+    };
+  };
+  
+  reduced_motion: {
+    respectsPreference: boolean;
+    disableAnimations(): void;
+    enableAnimations(): void;
+  };
+}
+```
+
+### 10.9.2 Screen Reader Support
+
+**ARIA Labels Interface:**
+```typescript
+interface ARIALabels {
+  buttons: {
+    scan_barcode: "Quét mã barcode";
+    confirm_redemption: "Xác nhận đổi hàng";
+    cancel_action: "Hủy thao tác";
+  };
+  
+  form_fields: {
+    full_name: "Họ và tên đầy đủ";
+    email_address: "Địa chỉ email";
+    phone_number: "Số điện thoại";
+  };
+  
+  status_messages: {
+    loading: "Đang tải dữ liệu";
+    success: "Thao tác thành công";
+    error: "Có lỗi xảy ra";
+  };
+  
+  navigation: {
+    main_menu: "Menu chính";
+    breadcrumb: "Đường dẫn trang";
+    pagination: "Phân trang";
+  };
+}
+```
+
+---
+
+## 10.10 Performance Optimization
+
+### 10.10.1 Loading Performance Targets
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| **First Contentful Paint** | <1.5s | Lighthouse audit |
+| **Largest Contentful Paint** | <2.5s | Core Web Vitals |
+| **Cumulative Layout Shift** | <0.1 | Layout stability |
+| **First Input Delay** | <100ms | User interaction |
+| **Time to Interactive** | <3s | Full page load |
+
+### 10.10.2 Optimization Strategies
+
+**Image Optimization Interface:**
+```typescript
+interface ImageOptimization {
+  formats: {
+    modern: 'webp' | 'avif';
+    fallback: 'jpg' | 'png';
+  };
+  
+  responsive: {
+    breakpoints: number[];
+    sizes: string;
+    srcSet: string;
+  };
+  
+  lazy_loading: {
+    enabled: boolean;
+    threshold: number;      // Pixels before loading
+    placeholder: 'blur' | 'color';
+  };
+  
+  compression: {
+    quality: number;        // 0-100
+    progressive: boolean;
+    optimize: boolean;
+  };
+}
+```
+
+**Bundle Optimization:**
+```typescript
+interface BundleOptimization {
+  code_splitting: {
+    route_based: boolean;   // Split by pages
+    component_based: boolean; // Split large components
+    vendor_chunks: boolean; // Separate vendor libraries
+  };
+  
+  tree_shaking: {
+    enabled: boolean;
+    side_effects: false;
+  };
+  
+  compression: {
+    gzip: boolean;
+    brotli: boolean;
+  };
+  
+  caching: {
+    strategy: 'cache-first' | 'network-first';
+    duration: number;       // Cache TTL in seconds
+  };
+}
+```
+
+---
+
+## 10.11 Design System Implementation
+
+### 10.11.1 Component Architecture
+
+```typescript
+interface DesignSystemAPI {
+  components: {
+    Button: ComponentInterface<ButtonProps>;
+    Input: ComponentInterface<InputProps>;
+    Card: ComponentInterface<CardProps>;
+    Modal: ComponentInterface<ModalProps>;
+    Table: ComponentInterface<TableProps>;
+  };
+  
+  tokens: {
+    colors: ColorTokens;
+    typography: TypographyTokens;
+    spacing: SpacingTokens;
+    shadows: ShadowTokens;
+  };
+  
+  themes: {
+    light: Theme;
+    dark: Theme;
+    high_contrast: Theme;
+  };
+  
+  utilities: {
+    responsive: ResponsiveUtilities;
+    accessibility: AccessibilityUtilities;
+    animations: AnimationUtilities;
+  };
+}
+```
+
+### 10.11.2 Theme Configuration
+
+```typescript
+interface ThemeConfig {
+  brand: {
+    primary_color: string;
+    secondary_color: string;
+    logo_url: string;
+    favicon_url: string;
+  };
+  
+  layout: {
+    max_width: string;
+    sidebar_width: string;
+    header_height: string;
+    footer_height: string;
+  };
+  
+  typography: {
+    font_family_primary: string;
+    font_family_secondary: string;
+    base_font_size: string;
+    line_height: number;
+  };
+  
+  animation: {
+    duration_fast: string;     // 150ms
+    duration_normal: string;   // 300ms
+    duration_slow: string;     // 500ms
+    easing: string;           // ease-in-out
+  };
+}
+```
+
+---
+
+## 10.12 Testing & Quality Assurance
+
+### 10.12.1 UI Testing Requirements
+
+**Visual Regression Testing Interface:**
+```typescript
+interface VisualTesting {
+  screenshot_comparison: {
+    browsers: ['chrome', 'firefox', 'safari'];
+    viewports: [375, 768, 1280, 1920];
+    threshold: number;      // Pixel difference tolerance
+  };
+  
+  component_testing: {
+    isolated_tests: boolean;  // Test components in isolation
+    interaction_tests: boolean; // Test user interactions
+    accessibility_tests: boolean; // Automated a11y testing
+  };
+  
+  performance_testing: {
+    lighthouse_audits: boolean;
+    bundle_size_tracking: boolean;
+    runtime_performance: boolean;
+  };
+}
+```
+
+### 10.12.2 Usability Testing Plan
+
+**User Testing Scenarios:**
+```typescript
+interface UsabilityTest {
+  target_users: {
+    end_users: {
+      demographics: 'ages 18-45, mobile-first users';
+      scenarios: ['first-time sampling', 'return user'];
+      success_criteria: '>90% task completion';
+    };
+    
+    brand_managers: {
+      demographics: 'marketing professionals';
+      scenarios: ['campaign creation', 'analytics review'];
+      success_criteria: '<5 min task completion';
+    };
+    
+    store_staff: {
+      demographics: 'retail workers, varying tech skills';
+      scenarios: ['redemption processing', 'offline operations'];
+      success_criteria: '<30s redemption processing';
+    };
+  };
+  
+  testing_methods: {
+    moderated_sessions: boolean;
+    unmoderated_testing: boolean;
+    a_b_testing: boolean;
+    heatmap_
