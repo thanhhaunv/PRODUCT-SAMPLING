@@ -163,6 +163,3 @@ BRD là nền tảng cho **SRS (System Requirement Specification)** và User Sto
 
 ---
 
-Nếu bạn muốn, bước tiếp theo tôi có thể viết **`02-SRS.md` phiên bản v1.0 hoàn chỉnh** dựa trên bản BRD này, kèm **FR-014 → FR-020**, DB schema, API, Use Case, và mapping RBAC chi tiết cho dev luôn.
-
-Bạn có muốn tôi làm luôn bước này không?
