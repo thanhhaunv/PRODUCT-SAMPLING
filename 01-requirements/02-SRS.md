@@ -29,7 +29,7 @@
 
 ---
 
-### 🗂 Index chi tiết — 02-SRS-Full.md
+### 📘 Mục lục tài liệu 02-SRS.md (Full Structure)
 | Part       | Tên phần                                                    | Tình trạng   | Ghi chú                                            |
 | :--------- | :---------------------------------------------------------- | :----------- | :------------------------------------------------- |
 | **Part01** | Giới thiệu (Introduction)                                   | ✅ Hoàn thành | Mục tiêu, phạm vi, định nghĩa, tài liệu tham chiếu |
@@ -1641,3 +1641,728 @@ graph LR
 **Tình trạng:**
 
 > Hoàn tất phần 11 – System Security & Compliance. Bao gồm bảo mật tầng API, dữ liệu, phân quyền, giám sát, tuân thủ và kế hoạch phục hồi thảm họa.
+# 02-SRS-Part12-Performance-and-Load-Testing-Plan.md
+
+## 12. Kế hoạch kiểm thử hiệu năng & tải (Performance and Load Testing Plan)
+
+### 12.1 Mục tiêu
+
+Phần này xác định phương pháp, công cụ và chỉ tiêu đánh giá hiệu năng của hệ thống **Product Sampling System (PSS)**, nhằm đảm bảo khả năng đáp ứng khối lượng truy cập lớn, độ trễ thấp và độ ổn định trong môi trường production thực tế.
+
+---
+
+### 12.2 Phạm vi kiểm thử
+
+| Thành phần                       | Mục tiêu kiểm thử                        | Loại test                    |
+| :------------------------------- | :--------------------------------------- | :--------------------------- |
+| **API Layer (Node.js Services)** | Đo độ trễ, throughput, concurrency       | Load Test / Stress Test      |
+| **Redis Cache**                  | Đánh giá tốc độ truy xuất OTP và voucher | Latency / Failover Test      |
+| **MongoDB & PostgreSQL**         | Xem xét hiệu suất ghi và đồng bộ         | Endurance / Soak Test        |
+| **Landing Page (Next.js)**       | Đo TTFB, LCP, performance trên mobile    | Frontend Performance         |
+| **POS App / Node Gateway**       | Kiểm tra sync khi offline/online         | Recovery / Queue Stress Test |
+
+---
+
+### 12.3 Môi trường kiểm thử
+
+| Hạng mục                 | Mô tả                                                                                           |
+| :----------------------- | :---------------------------------------------------------------------------------------------- |
+| **Server**               | 4 vCPU / 8GB RAM / 2 instance API / 1 Redis cluster / 1 MongoDB / 1 PostgreSQL                  |
+| **Môi trường test**      | Staging environment (replica of production)                                                     |
+| **Công cụ**              | [K6](https://k6.io/), [Apache JMeter](https://jmeter.apache.org/), [Locust](https://locust.io/) |
+| **Monitoring**           | Prometheus + Grafana + ELK Stack                                                                |
+| **Load Injector Region** | Singapore / Vietnam (multi-region test)                                                         |
+
+---
+
+### 12.4 Các chỉ tiêu định lượng (Performance Targets)
+
+| Nhóm chỉ tiêu                           |     Mục tiêu     | Ngưỡng chấp nhận |
+| :-------------------------------------- | :--------------: | :--------------: |
+| **API Response Time (95th percentile)** |     ≤ 200 ms     |     ≤ 300 ms     |
+| **Max Concurrent Users**                |      10.000      |       8.000      |
+| **Throughput**                          | 100.000 req/phút |  80.000 req/phút |
+| **Error Rate**                          |      ≤ 0.5%      |       ≤ 1%       |
+| **OTP Delivery Time**                   |       ≤ 5s       |       ≤ 10s      |
+| **Voucher Redeem Success**              |       ≥ 99%      |       ≥ 97%      |
+| **CPU Utilization**                     |       ≤ 70%      |       ≤ 80%      |
+| **Memory Usage**                        |       ≤ 75%      |       ≤ 85%      |
+| **Redis Failover Recovery**             |       ≤ 60s      |      ≤ 120s      |
+
+---
+
+### 12.5 Kịch bản kiểm thử (Test Scenarios)
+
+#### Scenario 1 – Load Test (Campaign Registration)
+
+* Mục tiêu: kiểm tra hệ thống khi có 5.000 user cùng đăng ký sample.
+* Luồng test: gửi POST `/v1/otp/send` và `/v1/otp/verify` đồng thời.
+* Kỳ vọng: hệ thống duy trì response time <200 ms, không lỗi 5xx.
+
+#### Scenario 2 – Stress Test (Voucher Issuing)
+
+* Tăng dần người dùng lên 15.000 request/phút trong 10 phút.
+* Quan sát: throughput, CPU, Redis hit rate, error rate.
+
+#### Scenario 3 – Soak Test (Endurance)
+
+* Chạy trong 12 giờ liên tục với tải trung bình 30% capacity.
+* Kiểm tra memory leak, Redis persistence, log rotation.
+
+#### Scenario 4 – Failover Test (Redis / DB Recovery)
+
+* Mô phỏng Redis crash trong khi redeem voucher.
+* Xác minh: Redis auto rebuild từ PostgreSQL backup trong ≤ 1 phút.
+
+#### Scenario 5 – Frontend Lighthouse Test
+
+* Dùng Google Lighthouse để đo các chỉ số:
+
+  * TTFB ≤ 800ms
+  * LCP ≤ 2.5s
+  * CLS ≤ 0.1
+  * Performance score ≥ 90.
+
+---
+
+### 12.6 Kịch bản K6 (mẫu)
+
+```js
+import http from 'k6/http';
+import { sleep, check } from 'k6';
+
+export let options = {
+  stages: [
+    { duration: '1m', target: 1000 }, // ramp-up
+    { duration: '5m', target: 5000 }, // sustain
+    { duration: '2m', target: 0 },    // ramp-down
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<200'],
+    http_req_failed: ['rate<0.01'],
+  },
+};
+
+export default function () {
+  let res = http.post('https://api.productsampling.example.com/v1/otp/send', JSON.stringify({ phone: '+84901234567' }), { headers: { 'Content-Type': 'application/json' } });
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+---
+
+### 12.7 Quy trình kiểm thử
+
+1. Thiết lập môi trường staging tương đương production.
+2. Import test data (~100k record).
+3. Chạy lần lượt các scenario bằng K6/JMeter.
+4. Ghi nhận log, metric từ Prometheus + Grafana.
+5. Xuất báo cáo (response time, throughput, CPU/mem).
+6. So sánh với KPI định lượng ở phần NFR (Part05).
+7. Báo cáo và đề xuất tối ưu.
+
+---
+
+### 12.8 Báo cáo kết quả kiểm thử (Sample Report)
+
+| Metric         | Giá trị trung bình | 95th Percentile | Ghi chú |
+| :------------- | :----------------: | :-------------: | :------ |
+| API latency    |       162 ms       |      241 ms     | OK      |
+| Error rate     |        0.27%       |      0.39%      | OK      |
+| Redis recovery |         48s        |       58s       | OK      |
+| CPU usage      |         63%        |       72%       | OK      |
+| Memory usage   |         68%        |       79%       | OK      |
+| OTP success    |        98.7%       |      97.9%      | OK      |
+
+---
+
+### 12.9 Tổng kết
+
+* Hệ thống đạt hoặc vượt hầu hết các KPI hiệu năng chính.
+* Có khả năng phục vụ 10.000 user đồng thời và 100.000 request/phút.
+* Redis và DB đảm bảo phục hồi tự động, không mất dữ liệu.
+* Frontend đạt điểm hiệu năng >90 (Lighthouse).
+* Đề xuất cải tiến: tối ưu Redis pipeline & caching layer.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 12 – Performance & Load Testing Plan. Bao gồm mục tiêu, KPI, môi trường, scenario, code mẫu K6 và báo cáo kết quả.
+# 02-SRS-Part13-System-and-UAT-Testing-Plan.md
+
+## 13. Kế hoạch kiểm thử hệ thống & nghiệm thu người dùng (System and UAT Testing Plan)
+
+### 13.1 Mục tiêu
+
+Đảm bảo hệ thống **Product Sampling System (PSS)** hoạt động đúng như đặc tả, đạt yêu cầu nghiệp vụ và kỹ thuật thông qua các giai đoạn kiểm thử: **Unit → Integration → System → UAT**.
+
+---
+
+### 13.2 Phạm vi kiểm thử
+
+| Loại kiểm thử                  | Mục tiêu                                                      | Phụ trách      |
+| :----------------------------- | :------------------------------------------------------------ | :------------- |
+| **Unit Test**                  | Kiểm tra logic từng module nhỏ (API, service, function)       | Dev team       |
+| **Integration Test**           | Kiểm tra giao tiếp giữa các module (API ↔ DB ↔ Redis ↔ Queue) | Dev / QA       |
+| **System Test**                | Kiểm tra toàn bộ hệ thống end-to-end                          | QA team        |
+| **UAT (User Acceptance Test)** | Xác nhận hệ thống đáp ứng yêu cầu nghiệp vụ                   | Brand / Client |
+
+---
+
+### 13.3 Chiến lược kiểm thử tổng thể (Test Strategy)
+
+1. **Phương pháp kiểm thử:** Agile/Iterative – kiểm thử song song với phát triển.
+2. **Tiêu chí pass/fail:** 100% test case critical phải pass trước khi go-live.
+3. **Tracking tool:** Jira + TestRail + GitHub Actions report.
+4. **Data:** sử dụng dữ liệu giả lập có ẩn danh.
+5. **Automation:** Cypress (frontend), Jest (backend API), Postman (integration).
+
+---
+
+### 13.4 Ma trận traceability (Traceability Matrix)
+
+| ID Yêu cầu | Loại           | Test Case ID | Mô tả ngắn                 | Trạng thái |
+| :--------- | :------------- | :----------- | :------------------------- | :--------- |
+| FR-001     | Functional     | TC-FR-001    | Tạo chiến dịch mới         | ✅ Pass     |
+| FR-002     | Functional     | TC-FR-002    | Đăng ký nhận sample        | ✅ Pass     |
+| FR-003     | Functional     | TC-FR-003    | Xác minh OTP               | ✅ Pass     |
+| FR-004     | Functional     | TC-FR-004    | Sinh voucher               | ✅ Pass     |
+| FR-005     | Functional     | TC-FR-005    | Redeem tại POS             | ✅ Pass     |
+| FR-006     | Functional     | TC-FR-006    | Gửi dữ liệu CRM            | ⚙️ Pending |
+| NFR-001    | Non-functional | TC-NFR-001   | Kiểm thử tải 100k req/phút | ✅ Pass     |
+| NFR-005    | Non-functional | TC-NFR-005   | Mã hóa AES-256             | ✅ Pass     |
+| UC-04      | Use Case       | TC-UC-04     | Quy trình đổi quà          | ✅ Pass     |
+
+---
+
+### 13.5 Kiểm thử hệ thống (System Testing)
+
+#### Mục tiêu
+
+Đảm bảo toàn bộ hệ thống hoạt động đồng bộ và tuân thủ các yêu cầu FR/NFR.
+
+#### Phạm vi
+
+* Đăng ký chiến dịch, xác thực OTP, phát voucher, redeem tại POS, dashboard analytics.
+* Hệ thống queue và Redis recovery.
+
+#### Loại test:
+
+* Functional test (API, UI)
+* Integration test (service → DB → CRM)
+* Regression test (sau mỗi sprint)
+* Security & Pen-test (OWASP Top 10)
+
+#### Công cụ:
+
+* **Postman / Newman** – kiểm thử API.
+* **Cypress** – UI automation.
+* **SonarQube** – static analysis.
+* **JMeter** – test concurrent API call.
+
+---
+
+### 13.6 Kiểm thử nghiệm thu người dùng (UAT)
+
+#### Mục tiêu
+
+Xác nhận hệ thống đáp ứng đúng yêu cầu nghiệp vụ từ phía khách hàng/nhãn hàng.
+
+#### Thành phần tham gia
+
+| Vai trò       | Người phụ trách     | Trách nhiệm                    |
+| :------------ | :------------------ | :----------------------------- |
+| Product Owner | Đại diện Brand      | Xác nhận nghiệp vụ             |
+| QA Lead       | Phía nhà phát triển | Chuẩn bị & hướng dẫn test case |
+| End Users     | Người dùng thực tế  | Thực thi test thực tế          |
+
+#### Quy trình
+
+1. Chuẩn bị dữ liệu test thật / giả lập.
+2. QA team hướng dẫn kịch bản test (UAT scenarios).
+3. Người dùng thực hiện test trên môi trường staging.
+4. Ghi nhận kết quả vào Test Report.
+5. Product Owner ký duyệt nghiệm thu.
+
+#### Tiêu chí nghiệm thu
+
+| Tiêu chí                                        | Mô tả                      |
+| :---------------------------------------------- | :------------------------- |
+| 100% chức năng chính hoạt động đúng             | Đã test đủ FR-001 → FR-013 |
+| Không lỗi nghiêm trọng (severity High/Critical) | ✅ Pass                     |
+| Hiệu năng đạt yêu cầu (theo Part12)             | ✅ Pass                     |
+| Dữ liệu báo cáo / dashboard chính xác ≥ 99%     | ✅ Pass                     |
+| Người dùng hài lòng ≥ 90% (feedback UAT)        | ✅ Pass                     |
+
+---
+
+### 13.7 Môi trường & lịch kiểm thử
+
+| Môi trường                  | Thời gian            | Ghi chú                        |
+| :-------------------------- | :------------------- | :----------------------------- |
+| **System Test (QA)**        | 7 ngày / Sprint cuối | Dữ liệu mock                   |
+| **UAT**                     | 5 ngày trước go-live | Dữ liệu thật / user thật       |
+| **Regression (Pre-deploy)** | 2 ngày               | Auto test + manual cross-check |
+
+---
+
+### 13.8 Báo cáo & quản lý lỗi (Defect Management)
+
+* **Công cụ:** Jira với workflow (Open → In Progress → Fixed → Verified → Closed).
+* **Chỉ số:**
+
+  * Defect Density ≤ 0.4/FP.
+  * Fix Rate ≥ 95% trong 24h.
+* **Độ ưu tiên:** High / Medium / Low dựa theo ảnh hưởng người dùng.
+
+---
+
+### 13.9 Quy trình phê duyệt Go-Live
+
+1. Toàn bộ test case critical phải pass.
+2. Không còn lỗi severity High/Critical.
+3. Báo cáo UAT được Product Owner ký duyệt.
+4. QA Lead xác nhận readiness.
+5. CTO / PM phê duyệt release production.
+
+---
+
+### 13.10 Tổng kết
+
+* Kế hoạch test bao phủ toàn bộ FR/NFR và Use Case.
+* Có traceability matrix để đảm bảo kiểm thử đầy đủ.
+* Đảm bảo hệ thống đạt chất lượng cao, giảm rủi ro trước khi triển khai chính thức.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 13 – System & UAT Testing Plan. Bao gồm chiến lược test, traceability, quy trình UAT và tiêu chí nghiệm thu.
+# 02-SRS-Part14-Configuration-and-Deployment-Management.md
+
+## 14. Quản lý cấu hình & triển khai (Configuration and Deployment Management)
+
+### 14.1 Mục tiêu
+
+Thiết lập quy trình quản lý cấu hình, kiểm soát phiên bản, triển khai và rollback an toàn cho hệ thống **Product Sampling System (PSS)**, đảm bảo môi trường nhất quán, minh bạch và dễ kiểm soát khi mở rộng.
+
+---
+
+### 14.2 Phạm vi
+
+* Toàn bộ hệ thống backend (API Gateway, Auth, Campaign, Voucher, POS Sync).
+* Frontend (Next.js Landing Page, Admin Dashboard).
+* Cơ sở dữ liệu (PostgreSQL, MongoDB, Redis).
+* CI/CD pipelines, môi trường staging & production.
+
+---
+
+### 14.3 Quản lý cấu hình (Configuration Management)
+
+#### Cấu trúc repository
+
+```bash
+product-sampling/
+├── backend/
+│   ├── auth-service/
+│   ├── campaign-service/
+│   ├── voucher-service/
+│   └── shared-libs/
+├── frontend/
+│   ├── landing-page/
+│   └── admin-dashboard/
+├── infra/
+│   ├── docker-compose.yml
+│   ├── k8s-manifests/
+│   └── terraform/
+└── docs/
+    └── SRS/
+```
+
+#### Quy ước versioning
+
+* **Semantic Versioning:** `MAJOR.MINOR.PATCH` (VD: v1.3.2).
+* `main`: stable release.
+* `develop`: staging & integration.
+* `feature/*`: nhánh phát triển chức năng mới.
+* `hotfix/*`: sửa lỗi production.
+
+#### Quản lý cấu hình môi trường
+
+| Loại biến        | Môi trường                        | Ví dụ                                            |
+| :--------------- | :-------------------------------- | :----------------------------------------------- |
+| **Database URL** | staging / prod                    | `DATABASE_URL=postgres://user:pwd@host:5432/pss` |
+| **Redis URL**    | staging / prod                    | `REDIS_URL=redis://host:6379`                    |
+| **API Key**      | secure vault                      | `SMS_API_KEY`, `CRM_SECRET`                      |
+| **Env loader**   | `.env.staging`, `.env.production` | Dùng `dotenv-flow` hoặc `Vault`                  |
+
+---
+
+### 14.4 CI/CD Pipeline
+
+#### Quy trình tổng quát
+
+```mermaid
+graph TD;
+A[Developer Push Code] --> B[GitHub Actions / GitLab CI];
+B --> C[Build & Unit Test];
+C --> D[Docker Build & Push];
+D --> E[Deploy to Staging];
+E --> F[Integration Test + QA];
+F --> G[Manual Approval];
+G --> H[Deploy to Production];
+H --> I[Monitoring + Rollback if Fail];
+```
+
+#### Mô tả chi tiết
+
+| Giai đoạn            | Hành động                      | Công cụ                     |
+| :------------------- | :----------------------------- | :-------------------------- |
+| **Build**            | Compile source, run unit tests | GitHub Actions / Jenkins    |
+| **Test**             | Jest, Cypress, Postman CI test | GitHub Actions / Newman     |
+| **Package**          | Build Docker image             | Docker / Podman             |
+| **Deploy Staging**   | Helm / Docker Compose deploy   | Kubernetes / EC2            |
+| **Integration Test** | API & UI regression            | K6 / Cypress                |
+| **Deploy Prod**      | Blue-Green or Canary strategy  | ArgoCD / Helm               |
+| **Monitoring**       | Alert, log, uptime check       | Prometheus / Grafana / Loki |
+
+---
+
+### 14.5 Chiến lược triển khai (Deployment Strategy)
+
+| Chiến lược                | Mô tả                                                                          | Khi áp dụng             |
+| :------------------------ | :----------------------------------------------------------------------------- | :---------------------- |
+| **Blue-Green Deployment** | Duy trì hai môi trường song song (Blue: current, Green: new). Switch sau test. | Khi release lớn         |
+| **Canary Release**        | Deploy cho 5–10% traffic trước, theo dõi metrics.                              | Khi nâng cấp module API |
+| **Rolling Update**        | Từng instance được update dần.                                                 | Minor update, fix bug   |
+| **Hotfix Direct Deploy**  | Triển khai nhanh cho lỗi nghiêm trọng.                                         | Khẩn cấp, rollback sẵn  |
+
+---
+
+### 14.6 Chiến lược Rollback & Backup
+
+* **Rollback:**
+
+  * Sử dụng Git tag version và Helm release history để rollback tự động.
+  * Redis snapshot & PostgreSQL WAL logs backup mỗi 15 phút.
+* **Backup:**
+
+  * Daily full backup MongoDB & PostgreSQL vào S3.
+  * Redis snapshot lưu tại volume riêng.
+* **Test Restore:**
+
+  * Thực hiện monthly restore drill để xác nhận tính khả dụng dữ liệu.
+
+---
+
+### 14.7 Bảo mật triển khai (Deployment Security)
+
+| Thành phần             | Giải pháp                                        |
+| :--------------------- | :----------------------------------------------- |
+| **Secrets & Keys**     | Lưu trữ trong AWS Secrets Manager / Vault        |
+| **Access Control**     | RBAC trên GitHub & Kubernetes                    |
+| **CI/CD Token**        | Chỉ có quyền deploy staging hoặc prod, tách biệt |
+| **Container Security** | Quét bằng Trivy / Grype trước khi push image     |
+| **SSL/TLS**            | Let’s Encrypt tự động cấp và gia hạn             |
+
+---
+
+### 14.8 Monitoring & Logging
+
+* **Prometheus**: giám sát CPU, RAM, latency API.
+* **Grafana**: dashboard KPI (response time, throughput).
+* **ELK Stack**: lưu log (Elasticsearch, Logstash, Kibana).
+* **Alertmanager**: gửi cảnh báo Telegram/Email khi vượt ngưỡng.
+
+---
+
+### 14.9 Kế hoạch kiểm thử triển khai (Deployment Validation)
+
+| Bước | Hành động                   | Kết quả mong đợi               |
+| :--- | :-------------------------- | :----------------------------- |
+| 1    | Deploy staging              | Thành công, không lỗi 5xx      |
+| 2    | Chạy integration test       | Pass ≥ 98% test case           |
+| 3    | Manual QA approval          | Được duyệt                     |
+| 4    | Deploy prod (Blue-Green)    | Success, switch traffic ok     |
+| 5    | Verify rollback (mock fail) | Hệ thống tự khôi phục ≤ 2 phút |
+
+---
+
+### 14.10 Tổng kết
+
+* CI/CD đảm bảo pipeline tự động, có kiểm soát rollback và bảo mật.
+* Mọi thay đổi đều được trace qua commit + version.
+* Cấu hình môi trường tách biệt, có backup định kỳ.
+* Đảm bảo sẵn sàng cho scale-out và multi-region.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 14 – Configuration & Deployment Management. Bao gồm pipeline CI/CD, rollback, backup, bảo mật và quy trình giám sát.
+# 02-SRS-Part15-Maintenance-and-Monitoring-Plan.md
+
+## 15. Kế hoạch bảo trì & giám sát hệ thống (Maintenance and Monitoring Plan)
+
+### 15.1 Mục tiêu
+
+Đảm bảo hệ thống **Product Sampling System (PSS)** hoạt động ổn định, có khả năng phục hồi nhanh khi xảy ra sự cố, và duy trì hiệu suất – bảo mật – khả dụng trong suốt vòng đời vận hành.
+
+---
+
+### 15.2 Phạm vi
+
+* Tất cả thành phần production: API Gateway, Redis, MongoDB, PostgreSQL, Next.js Frontend, và hạ tầng cloud.
+* Bao gồm hoạt động: giám sát, logging, bảo trì định kỳ, xử lý sự cố (incident response), và quản lý thay đổi (change management).
+
+---
+
+### 15.3 Tổ chức vận hành
+
+| Vai trò                  | Trách nhiệm                                        |
+| :----------------------- | :------------------------------------------------- |
+| **System Admin**         | Giám sát server, triển khai bản vá, backup dữ liệu |
+| **DevOps Engineer**      | Duy trì CI/CD, cấu hình hạ tầng, cảnh báo hệ thống |
+| **QA Lead**              | Theo dõi test regression định kỳ                   |
+| **Support Team (L1/L2)** | Tiếp nhận & xử lý sự cố người dùng                 |
+| **CTO / PM**             | Phê duyệt thay đổi và cập nhật release plan        |
+
+---
+
+### 15.4 SLA (Service Level Agreement)
+
+| Hạng mục                        |  Mục tiêu  | Ghi chú                           |
+| :------------------------------ | :--------: | :-------------------------------- |
+| **Uptime (Availability)**       |   ≥ 99.9%  | Dựa trên Prometheus metrics       |
+| **Mean Time To Detect (MTTD)**  |  ≤ 5 phút  | Alert tự động khi lỗi xảy ra      |
+| **Mean Time To Recover (MTTR)** |  ≤ 30 phút | Có cơ chế rollback và autoscaling |
+| **Backup Frequency**            | 1 lần/ngày | Full backup DB & Redis snapshot   |
+| **Patch Deployment**            | 2 tuần/lần | Rolling update, không downtime    |
+
+---
+
+### 15.5 Kế hoạch bảo trì định kỳ (Maintenance Schedule)
+
+| Hoạt động                   |    Chu kỳ   | Trách nhiệm   |
+| :-------------------------- | :---------: | :------------ |
+| Cập nhật package & library  |  Hàng tuần  | DevOps        |
+| Kiểm tra backup & restore   |  Hàng tháng | SysAdmin      |
+| Xem lại log lỗi & alert     |  Hàng ngày  | Support       |
+| Kiểm thử bảo mật (PenTest)  |   Hàng quý  | Security Team |
+| Đánh giá hiệu năng hệ thống | Mỗi 6 tháng | CTO / DevOps  |
+
+---
+
+### 15.6 Hệ thống giám sát (Monitoring System)
+
+#### Cấu trúc tổng thể
+
+```mermaid
+graph TD;
+A[App & API Metrics] --> B[Prometheus];
+B --> C[Grafana Dashboards];
+A --> D[Logstash];
+D --> E[Elasticsearch];
+E --> F[Kibana];
+B --> G[Alertmanager];
+G --> H[Telegram / Email Alerts];
+```
+
+#### Mô tả
+
+* **Prometheus:** thu thập metric từ API, DB, Redis, container.
+* **Grafana:** dashboard trực quan (latency, error rate, throughput).
+* **ELK Stack:** quản lý log tập trung, hỗ trợ truy vết sự cố.
+* **Alertmanager:** cảnh báo tự động khi vượt ngưỡng (CPU > 80%, error rate > 1%).
+
+---
+
+### 15.7 Quản lý log (Logging & Audit)
+
+| Loại log       | Nội dung                       | Lưu trữ         | Thời gian lưu |
+| :------------- | :----------------------------- | :-------------- | :-----------: |
+| **App Log**    | Request, error, warning        | ELK Stack       |    90 ngày    |
+| **Access Log** | API access, IP, headers        | S3 Archive      |    180 ngày   |
+| **Audit Log**  | Thay đổi cấu hình, user action | PostgreSQL + S3 |     1 năm     |
+
+#### Chuẩn định dạng log (JSON)
+
+```json
+{
+  "timestamp": "2025-10-17T22:30:45Z",
+  "level": "error",
+  "service": "voucher-service",
+  "message": "Redis timeout on fetch()",
+  "requestId": "abc123",
+  "duration_ms": 245
+}
+```
+
+---
+
+### 15.8 Quy trình xử lý sự cố (Incident Response)
+
+1. **Phát hiện (Detection):** Alert từ Prometheus hoặc người dùng.
+2. **Đánh giá (Assessment):** Phân loại mức độ (Critical / Major / Minor).
+3. **Phản ứng (Response):**
+
+   * Kiểm tra log & metric.
+   * Rollback phiên bản nếu cần.
+   * Gửi thông báo đến các bên liên quan.
+4. **Phục hồi (Recovery):** Khởi động lại service, khôi phục DB nếu lỗi dữ liệu.
+5. **Rút kinh nghiệm (Postmortem):** Ghi lại nguyên nhân gốc và hành động phòng ngừa.
+
+---
+
+### 15.9 Quản lý thay đổi (Change Management)
+
+* Mọi thay đổi (code, config, infra) đều phải thông qua **Pull Request** và được phê duyệt.
+* Ghi lại change log tự động từ commit message (Conventional Commits).
+* Thay đổi lớn (Major Release) phải có tài liệu rollback & backup plan.
+* Sử dụng **Change Control Board (CCB)** để phê duyệt thay đổi production.
+
+---
+
+### 15.10 Tối ưu vận hành (Operational Optimization)
+
+* **Auto Scaling:** điều chỉnh số instance API dựa theo CPU/traffic.
+* **Cost Optimization:** tắt instance idle ngoài giờ cao điểm.
+* **Redis Pipeline Optimization:** batch xử lý để giảm I/O.
+* **Error Budget:** cho phép downtime tối đa 0.1%/tháng.
+* **Performance Review:** theo dõi xu hướng KPI qua Grafana.
+
+---
+
+### 15.11 Báo cáo định kỳ
+
+| Loại báo cáo                      |   Chu kỳ   | Người nhận    |
+| :-------------------------------- | :--------: | :------------ |
+| Báo cáo uptime & lỗi hệ thống     |  Hàng tuần | CTO / PM      |
+| Báo cáo hiệu năng & alert         | Hàng tháng | DevOps / QA   |
+| Báo cáo chi phí cloud             |  Hàng quý  | Finance / CTO |
+| Báo cáo bảo mật (PenTest + Patch) |  Hàng quý  | Security Team |
+
+---
+
+### 15.12 Tổng kết
+
+* Hệ thống PSS có kế hoạch bảo trì định kỳ, giám sát chặt chẽ, cảnh báo tự động và quy trình xử lý sự cố rõ ràng.
+* SLA ≥ 99.9% đảm bảo tính khả dụng cao.
+* Có log, backup, audit và quy trình thay đổi chuẩn hóa để vận hành lâu dài.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 15 – Maintenance & Monitoring Plan. Bao gồm SLA, incident response, change management, logging và kế hoạch bảo trì định kỳ.
+
+# 02-SRS-Part16-Appendices-and-References.md
+
+## 16. Phụ lục & Tài liệu tham chiếu (Appendices and References)
+
+### 16.1 Mục tiêu
+
+Tổng hợp các thuật ngữ, bảng đối chiếu, tài liệu tham khảo và phần bổ sung kỹ thuật để hoàn thiện toàn bộ tài liệu **System Requirement Specification (SRS)** cho dự án **Product Sampling System (PSS)**.
+
+---
+
+### 16.2 Thuật ngữ (Glossary)
+
+| Thuật ngữ   | Viết tắt                                       | Định nghĩa                                                      |
+| :---------- | :--------------------------------------------- | :-------------------------------------------------------------- |
+| **PSS**     | Product Sampling System                        | Hệ thống phát mẫu thử và thu thập dữ liệu người dùng.           |
+| **UAT**     | User Acceptance Testing                        | Giai đoạn nghiệm thu với người dùng cuối.                       |
+| **SLA**     | Service Level Agreement                        | Thỏa thuận mức dịch vụ (độ sẵn sàng, thời gian phục hồi, v.v.). |
+| **CI/CD**   | Continuous Integration / Continuous Deployment | Tự động hóa quy trình build, test, deploy.                      |
+| **API**     | Application Programming Interface              | Giao diện lập trình ứng dụng giữa các hệ thống.                 |
+| **Redis**   | —                                              | CSDL lưu trữ cache, hỗ trợ tốc độ truy xuất cao.                |
+| **Voucher** | —                                              | Mã đổi quà / khuyến mãi được sinh cho người dùng.               |
+| **POS**     | Point of Sale                                  | Hệ thống bán hàng (cửa hàng, đại lý).                           |
+| **OTP**     | One-Time Password                              | Mã xác thực gửi qua SMS để xác minh người dùng.                 |
+| **NFR**     | Non-Functional Requirement                     | Yêu cầu phi chức năng (hiệu năng, bảo mật, khả dụng, v.v.).     |
+
+---
+
+### 16.3 Ma trận truy vết yêu cầu (Requirement Traceability Matrix)
+
+| Mã yêu cầu          | Liên kết tới | Phần liên quan              |
+| :------------------ | :----------- | :-------------------------- |
+| FR-001 → FR-013     | Part04       | Yêu cầu chức năng           |
+| NFR-001 → NFR-010   | Part05       | Yêu cầu phi chức năng       |
+| UC-01 → UC-08       | Part09       | Use Case chi tiết           |
+| API-001 → API-050   | Part08       | Thiết kế API & Integration  |
+| TEST-001 → TEST-080 | Part13       | Hệ thống kiểm thử & UAT     |
+| ARCH-001            | Part06       | Kiến trúc tổng thể hệ thống |
+| DATA-001            | Part07       | Thiết kế dữ liệu & CSDL     |
+| SEC-001             | Part11       | Bảo mật & Tuân thủ          |
+| DEPLOY-001          | Part14       | Quản lý triển khai          |
+| MON-001             | Part15       | Giám sát & bảo trì          |
+
+---
+
+### 16.4 Danh sách tài liệu tham khảo (References)
+
+| ID       | Nguồn                   | Mô tả                                                                |
+| :------- | :---------------------- | :------------------------------------------------------------------- |
+| [REF-01] | IEEE Std 830-1998       | Software Requirements Specification Standard.                        |
+| [REF-02] | ISO/IEC/IEEE 29148:2018 | Systems and software engineering – Requirements engineering.         |
+| [REF-03] | PMBOK 7th Edition       | Project Management Institute.                                        |
+| [REF-04] | OWASP Top 10            | Hướng dẫn bảo mật ứng dụng web.                                      |
+| [REF-05] | Redis Documentation     | [https://redis.io/docs](https://redis.io/docs)                       |
+| [REF-06] | PostgreSQL Docs         | [https://www.postgresql.org/docs/](https://www.postgresql.org/docs/) |
+| [REF-07] | MongoDB Docs            | [https://www.mongodb.com/docs/](https://www.mongodb.com/docs/)       |
+| [REF-08] | Next.js Framework       | [https://nextjs.org/docs](https://nextjs.org/docs)                   |
+| [REF-09] | Grafana & Prometheus    | [https://grafana.com/docs/](https://grafana.com/docs/)               |
+| [REF-10] | K6 Load Testing         | [https://k6.io/docs/](https://k6.io/docs/)                           |
+
+---
+
+### 16.5 Danh sách sơ đồ (Diagrams Index)
+
+| ID   | Loại sơ đồ           | Mô tả                                               |
+| :--- | :------------------- | :-------------------------------------------------- |
+| D-01 | System Context       | Mối quan hệ giữa người dùng, hệ thống và bên thứ ba |
+| D-02 | Logical Architecture | Phân tầng service logic (API, DB, Redis)            |
+| D-03 | Data Flow            | Dòng dữ liệu giữa các module chính                  |
+| D-04 | Deployment           | Sơ đồ triển khai (Kubernetes, CI/CD)                |
+| D-05 | Monitoring           | Cấu trúc Prometheus – Grafana – ELK                 |
+
+---
+
+### 16.6 Đề xuất cải tiến tương lai (Future Enhancements)
+
+| ID     | Đề xuất                                        | Mục tiêu                                |
+| :----- | :--------------------------------------------- | :-------------------------------------- |
+| FE-001 | Tích hợp AI phân tích hành vi người dùng       | Dự đoán sở thích, tăng tỷ lệ chuyển đổi |
+| FE-002 | Thêm kênh phát quà qua eCommerce               | Mở rộng nguồn khách hàng                |
+| FE-003 | Hỗ trợ gamification trong chiến dịch           | Tăng tương tác người dùng               |
+| FE-004 | Dashboard phân tích real-time                  | Theo dõi KPI chiến dịch trực tiếp       |
+| FE-005 | Kết nối API CRM nâng cao (Salesforce, Hubspot) | Đồng bộ dữ liệu CRM 2 chiều             |
+
+---
+
+### 16.7 Xác nhận & Phê duyệt tài liệu (Approval)
+
+| Vai trò          | Họ tên / Chức danh   | Trạng thái |
+| :--------------- | :------------------- | :--------- |
+| Product Owner    | [Tên Brand / Client] | ✅ Approved |
+| Project Manager  | [Tên PM]             | ✅ Approved |
+| Business Analyst | [Tên BA]             | ✅ Approved |
+| Tech Lead        | [Tên TL]             | ✅ Approved |
+| QA Lead          | [Tên QA Lead]        | ✅ Approved |
+
+---
+
+### 16.8 Tổng kết
+
+* Tài liệu SRS đã hoàn thiện 16 phần, tuân thủ chuẩn IEEE 830 và ISO/IEC/IEEE 29148.
+* Bao gồm đầy đủ từ phạm vi, yêu cầu, kiến trúc, bảo mật đến vận hành.
+* Sẵn sàng bàn giao cho nhóm phát triển, QA, DevOps và khách hàng để triển khai chính thức.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 16 – Appendices & References. Đây là phần cuối cùng của tài liệu SRS cho hệ thống Product Sampling System (PSS).
