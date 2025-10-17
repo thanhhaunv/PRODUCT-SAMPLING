@@ -29,6 +29,29 @@
 
 ---
 
+### 🗂 Index chi tiết — 02-SRS-Full.md
+| **Mục** | **Tên phần**                             | **Ghi chú**                                                           |
+| :------ | :--------------------------------------- | :-------------------------------------------------------------------- |
+| **0**   | Change Log                               | Phiên bản, ngày, mô tả thay đổi                                       |
+| **1**   | Giới thiệu & Phạm vi                     | Mục đích, phạm vi, actor, chuẩn áp dụng                               |
+| **2**   | Tài liệu tham khảo                       | Liệt kê tài liệu nguồn & tiêu chuẩn                                   |
+| **3**   | Tổng quan hệ thống                       | Actor, context diagram, assumptions                                   |
+| **4**   | Yêu cầu chức năng (FR)                   | FR-001 → FR-013 (Campaign → Admin)                                    |
+| **5**   | Yêu cầu phi chức năng (NFR)              | NFR-001 → NFR-007 + Business KPI                                      |
+| **6**   | Kiến trúc hệ thống & Thành phần kỹ thuật | Kiến trúc logic, physical, Redis fallback                             |
+| **7**   | Giao diện hệ thống & API Contracts       | API mẫu cho Auth, Campaign, Voucher, Retail Node, CRM                 |
+| **8**   | Data Model & Schema                      | Entities, Mongo/PostgreSQL schema, ETL flow                           |
+| **9**   | Use Cases (Chi tiết)                     | UC-01 → UC-03 (online/offline)                                        |
+| **10**  | Acceptance Criteria & Test Cases         | TC-OTP-01, TC-VOUCHER-01, TC-OFFLINE-01                               |
+| **11**  | Traceability Matrix                      | BRD ↔ SRS ↔ Test                                                      |
+| **12**  | Triển khai (Deployment & CI/CD)          | Option 1: GitHub Actions / Docker Compose; Option 2: Jenkins Pipeline |
+| **13**  | Security & Privacy                       | OWASP, PII, Encryption, Logging                                       |
+| **14**  | Operation & Runbook                      | Redis fallback, Node reconciliation, incident handling                |
+| **15**  | Phụ lục                                  | Thuật ngữ, liên hệ, repo link                                         |
+| **16**  | Summary - Kiểm tra hoàn tất              | Xác nhận nội dung đầy đủ & sẵn sàng triển khai                        |
+
+
+
 **Tình trạng hiện tại:**  
 > Phiên bản `v0.1` – Hoàn tất khung SRS và Change Log, chuẩn bị gen phần 01 (Giới thiệu & Phạm vi hệ thống).
 
@@ -597,3 +620,280 @@ Mỗi yêu cầu bao gồm: mục tiêu nghiệp vụ, mô tả, dữ liệu đ�
 **Tình trạng:**
 
 > Hoàn tất phần 04 – Yêu cầu chức năng. Bao gồm FR-001 → FR-013, có thể dùng để dev mapping API & test cases.
+# 02-SRS-Part05-NonFunctionalRequirements.md
+
+## 5. Yêu cầu phi chức năng (Non-Functional Requirements)
+
+### 5.1 Mục tiêu
+
+Mục tiêu của phần này là xác định các yêu cầu phi chức năng (NFRs) giúp hệ thống **Product Sampling System (PSS)** hoạt động ổn định, bảo mật, hiệu quả và dễ mở rộng trong điều kiện vận hành thực tế.
+
+---
+
+### 5.2 Nhóm yêu cầu phi chức năng chính
+
+| ID          | Tên yêu cầu                                 | Mô tả                                                                                        | Chỉ tiêu định lượng                                                             | Tiêu chí chấp nhận                                    |
+| :---------- | :------------------------------------------ | :------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ | :---------------------------------------------------- |
+| **NFR-001** | Hiệu năng (Performance)                     | Hệ thống phải đáp ứng khối lượng lớn người dùng truy cập đồng thời và tốc độ phản hồi nhanh. | - API response ≤ 200 ms (95th percentile)  <br> - Throughput ≥ 100.000 req/phút | Kết quả kiểm thử tải đạt hoặc vượt ngưỡng định lượng. |
+| **NFR-002** | Khả năng mở rộng (Scalability)              | Cho phép mở rộng ngang mà không cần downtime.                                                | Tối thiểu 10 instances API có thể chạy song song.                               | Kiểm thử scale-out thành công qua load balancer.      |
+| **NFR-003** | Độ tin cậy (Reliability)                    | Hệ thống hoạt động ổn định và tự phục hồi khi lỗi.                                           | Uptime ≥ 99.9% / tháng                                                          | Có cơ chế retry, circuit breaker, health check.       |
+| **NFR-004** | Khả dụng (Availability)                     | Người dùng luôn có thể truy cập landing page và redeem POS.                                  | Downtime ≤ 1h/tháng                                                             | Load balancer + multi-region deployment.              |
+| **NFR-005** | Bảo mật (Security)                          | Dữ liệu cá nhân phải được mã hóa và xác thực người dùng an toàn.                             | 100% dữ liệu PII mã hóa AES-256 <br> OAuth2 / JWT xác thực                      | Pen-test không phát hiện lỗ hổng mức High.            |
+| **NFR-006** | Khả năng bảo trì (Maintainability)          | Code base cần dễ bảo trì, tách module rõ ràng.                                               | Thời gian sửa lỗi trung bình (MTTR) ≤ 4h                                        | Code coverage ≥ 80%, CI/CD kiểm thử tự động.          |
+| **NFR-007** | Khả năng giám sát & logging (Observability) | Toàn bộ hoạt động hệ thống được ghi log và giám sát.                                         | - 100% API có log request/response <br> - Dashboard Prometheus/Grafana          | Cảnh báo qua Slack/Email hoạt động đúng.              |
+| **NFR-008** | Tính tương thích (Compatibility)            | Hệ thống tương thích nhiều nền tảng POS và CRM khác nhau.                                    | Tích hợp ≥ 3 CRM (HubSpot, Salesforce, Zoho)                                    | Tích hợp thành công với 3 provider đầu tiên.          |
+| **NFR-009** | Tính an toàn dữ liệu (Data Integrity)       | Dữ liệu phải được sao lưu, phục hồi chính xác khi sự cố.                                     | Backup PostgreSQL 6h/lần <br> MongoDB snapshot hàng ngày                        | Bài test khôi phục dữ liệu thành công 100%.           |
+| **NFR-010** | Tuân thủ quy định (Compliance)              | Hệ thống phải tuân thủ luật bảo vệ dữ liệu cá nhân.                                          | PDPA/GDPR Ready                                                                 | Không vi phạm quy định bảo mật PII.                   |
+
+---
+
+### 5.3 KPI định lượng hệ thống
+
+| Nhóm KPI          | Chỉ số mục tiêu                               | Mức chấp nhận tối thiểu |
+| :---------------- | :-------------------------------------------- | :---------------------- |
+| **Business KPI**  | Cost per verified user ≤ **0.40 USD**         | ≤ 0.50 USD              |
+|                   | ROI uplift ≥ **20%** so với sampling thủ công | ≥ 15%                   |
+|                   | Stock accuracy ≥ **95%**                      | ≥ 90%                   |
+|                   | Fraud false-positive rate ≤ **3%**            | ≤ 5%                    |
+| **Technical KPI** | OTP delivery success ≥ **98%**                | ≥ 95%                   |
+|                   | CRM sync success ≥ **97%**                    | ≥ 95%                   |
+|                   | Redis failover recovery ≤ **60s**             | ≤ 120s                  |
+|                   | CI/CD pipeline build success ≥ **95%**        | ≥ 90%                   |
+
+---
+
+### 5.4 Bảo mật và quyền riêng tư
+
+* Tất cả thông tin PII được mã hóa ở cả **at-rest** và **in-transit**.
+* Dữ liệu nhạy cảm (số điện thoại, email) chỉ được hiển thị dạng masked.
+* Token truy cập API theo chuẩn **JWT + OAuth2**.
+* Cơ chế rate-limit, captcha và lockout khi sai OTP quá 3 lần.
+* Log bảo mật chỉ hiển thị cho Admin cấp cao.
+
+---
+
+### 5.5 Khả năng phục hồi và sao lưu
+
+* Redis được đồng bộ từ PostgreSQL nếu crash.
+* PostgreSQL có cơ chế WAL + snapshot 6 giờ/lần.
+* MongoDB backup tự động hàng ngày.
+* Restore test chạy định kỳ 1 lần/tuần.
+
+---
+
+### 5.6 Tiêu chí nghiệm thu tổng hợp
+
+| Nhóm             | Tiêu chí                                   | Phương pháp kiểm thử             |
+| :--------------- | :----------------------------------------- | :------------------------------- |
+| Hiệu năng        | Đáp ứng ≥100k request/phút                 | Load test bằng JMeter / K6       |
+| Bảo mật          | Không có lỗ hổng High trong Pen-test       | OWASP ZAP / BurpSuite            |
+| Khả năng mở rộng | Scale 10 instance không downtime           | Docker Compose + HAProxy test    |
+| Logging          | 100% API log hoạt động                     | Kiểm tra Prometheus + Kibana     |
+| Backup           | Phục hồi dữ liệu thành công trong ≤10 phút | Chaos Engineering / Restore Test |
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 05 – Yêu cầu phi chức năng. Bao gồm hiệu năng, bảo mật, khả năng mở rộng, compliance, KPI định lượng và tiêu chí nghiệm thu.
+
+# 02-SRS-Part06-SystemArchitecture.md
+
+## 6. Kiến trúc hệ thống & Thành phần kỹ thuật (System Architecture & Components)
+
+### 6.1 Tổng quan
+
+Phần này mô tả cấu trúc tổng thể của hệ thống **Product Sampling System (PSS)**, bao gồm kiến trúc logic, vật lý, các thành phần kỹ thuật chính, và cơ chế đồng bộ dữ liệu (Redis ↔ PostgreSQL ↔ MongoDB).
+Hệ thống được thiết kế theo mô hình **microservices** để đảm bảo khả năng mở rộng, phục hồi và bảo trì.
+
+---
+
+### 6.2 Kiến trúc logic (Logical Architecture)
+
+```mermaid
+flowchart TB
+    subgraph UI[User Interface Layer]
+        A1[Landing Page / Next.js PWA]
+        A2[Admin & Brand Dashboard]
+    end
+
+    subgraph API[Application Layer - Node.js]
+        B1[Campaign Service]
+        B2[OTP Service]
+        B3[Voucher Service]
+        B4[Retail Node Gateway]
+        B5[Fraud Detection Service]
+        B6[Analytics Service]
+        B7[Notification Service]
+        B8[CRM Integration]
+    end
+
+    subgraph DATA[Data Layer]
+        C1[(MongoDB - Master Data)]
+        C2[(PostgreSQL - Backup / BI)]
+        C3[(Redis - Cache / Queue)]
+    end
+
+    subgraph EXT[External Systems]
+        D1[CRM Provider]
+        D2[SMS Gateway]
+        D3[Email Provider]
+    end
+
+    A1 --> B2
+    A1 --> B1
+    A2 --> B6
+    B2 --> C3
+    B1 --> C1
+    B3 --> C1
+    B3 --> C2
+    B4 --> C3
+    B6 --> C2
+    B8 --> D1
+    B2 --> D2
+    B7 --> D3
+```
+
+---
+
+### 6.3 Kiến trúc vật lý (Physical Deployment)
+
+```mermaid
+graph TD
+    subgraph Client
+        U1[End User Browser]
+        U2[Retail POS App]
+    end
+
+    subgraph WebTier[Web Tier]
+        W1[Nginx Reverse Proxy]
+        W2[Next.js Frontend]
+    end
+
+    subgraph AppTier[Application Tier]
+        A1[Node.js Services]
+        A2[Redis Cluster]
+    end
+
+    subgraph DataTier[Data Tier]
+        D1[MongoDB Replica Set]
+        D2[PostgreSQL Server]
+    end
+
+    subgraph External
+        E1[CRM System]
+        E2[SMS Gateway]
+    end
+
+    U1 --> W1 --> W2 --> A1
+    U2 --> A1
+    A1 --> A2
+    A1 --> D1
+    A1 --> D2
+    A1 --> E1
+    A1 --> E2
+```
+
+---
+
+### 6.4 Các thành phần chính
+
+| Thành phần               | Công nghệ                       | Mô tả                                     | Ghi chú               |
+| :----------------------- | :------------------------------ | :---------------------------------------- | :-------------------- |
+| **Frontend**             | Next.js (React)                 | Giao diện landing page và dashboard brand | PWA, SSR support      |
+| **Backend Services**     | Node.js (NestJS / Express)      | Xử lý API, OTP, CRM sync, Fraud detection | Microservice-based    |
+| **Database chính**       | MongoDB                         | Lưu user, campaign, voucher               | Master data store     |
+| **Database backup / BI** | PostgreSQL                      | Backup và phục vụ dashboard, reporting    | Data sync mỗi 10 phút |
+| **Cache / Queue**        | Redis                           | Caching OTP, voucher, fraud scoring       | Auto resync nếu crash |
+| **Reverse Proxy**        | Nginx                           | Cân bằng tải & routing HTTPS              | Hỗ trợ gzip, caching  |
+| **CI/CD**                | Docker, GitHub Actions, Jenkins | Triển khai tự động                        | Có 2 phương án CI/CD  |
+
+---
+
+### 6.5 Cơ chế đồng bộ dữ liệu (Redis ↔ PostgreSQL ↔ MongoDB)
+
+1. **Luồng chính:** Mọi giao dịch (OTP, voucher, redeem) được ghi vào MongoDB.
+2. **Redis** lưu cache cho OTP & queue sự kiện. Nếu Redis lỗi → hệ thống tự động chuyển sang chế độ “degraded mode”.
+3. **PostgreSQL** nhận bản ghi định kỳ từ MongoDB qua worker sync job (interval 10 phút).
+4. **Redis Recovery:** Khi Redis khôi phục, hệ thống chạy `sync job` để tải lại dữ liệu từ PostgreSQL.
+
+```mermaid
+sequenceDiagram
+User->>OTP Service: Request OTP
+OTP Service->>Redis: Cache OTP
+Redis-->>OTP Service: ACK
+User->>Voucher Service: Verify OTP
+Voucher Service->>MongoDB: Write verified user
+MongoDB->>PostgreSQL: Sync snapshot
+PostgreSQL-->>Redis: Reload cache if needed
+```
+
+---
+
+### 6.6 Giám sát & Logging
+
+* **Prometheus + Grafana** để theo dõi CPU, RAM, throughput.
+* **ELK Stack (Elastic, Logstash, Kibana)** cho log tập trung.
+* Cảnh báo qua **Slack / Email** khi lỗi 5xx > 1% hoặc Redis không khả dụng.
+
+---
+
+### 6.7 Cấu hình CI/CD
+
+#### Option 1: GitHub Actions + Docker Compose
+
+```yaml
+name: CI-CD Pipeline
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker images
+        run: docker-compose build
+      - name: Run tests
+        run: npm test
+      - name: Deploy to Staging
+        run: docker-compose -f docker-compose.staging.yml up -d
+```
+
+#### Option 2: Jenkins Pipeline (Declarative)
+
+```groovy
+pipeline {
+  agent any
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('Build & Test') {
+      steps {
+        sh 'docker-compose build'
+        sh 'npm test'
+      }
+    }
+    stage('Deploy') {
+      steps {
+        sh 'docker-compose -f docker-compose.prod.yml up -d'
+      }
+    }
+  }
+}
+```
+
+---
+
+### 6.8 Tóm tắt
+
+* Kiến trúc 3 lớp (UI – API – Data), microservices, có Redis queue, MongoDB master, PostgreSQL backup.
+* Hỗ trợ CI/CD tự động bằng GitHub Actions hoặc Jenkins.
+* Khả năng phục hồi cao, quan sát được toàn diện, sẵn sàng cho scaling multi-brand.
+
+---
+
+**Tình trạng:**
+
+> Hoàn tất phần 06 – Kiến trúc hệ thống & Thành phần kỹ thuật. Bao gồm sơ đồ logic, vật lý, cơ chế đồng bộ, CI/CD và giám sát.
