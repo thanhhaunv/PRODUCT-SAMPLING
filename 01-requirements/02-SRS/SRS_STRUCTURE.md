@@ -218,3 +218,385 @@ SRS_Product_Sampling_Platform/
     └── 16.7_References/
     [Ref: All previous parts, 01-BRD.md, System_Feature_Tree_Grok.md]
 ```
+# Part00 - 00.1_Purpose_and_Scope.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Xác định lý do tồn tại và ranh giới của toàn bộ SRS, làm nền tảng để align team và stakeholders.
+
+**Ý nghĩa (Significance):** Giúp tránh hiểu lầm về dự án PSP, đảm bảo tập trung vào hybrid sampling và verified data, hỗ trợ đo lường ROI từ quà giá thấp.
+
+**Cách làm (How to do):** Thu thập từ BRD và Problem, viết ngắn gọn với định nghĩa scope (in/out), sử dụng bảng hoặc bullet để phân biệt.
+
+**Nội dung cần có (Required Content):** Mô tả tổng quan dự án, in-scope (campaign management, OTP verification), out-scope (logistics, native apps), audience (dev team, PM, stakeholders).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part00; 01-BRD.md Section 1.2 Phạm vi; Problem.md Section 1 Phân loại mục tiêu (in/out-scope); Product-Sampling-Vision-and-Strategy Document.md Section 1 Executive Summary (vấn đề cốt lõi)].
+
+**Mục đích của node này:** Cung cấp cái nhìn tổng quan ban đầu về SRS, giúp reader hiểu rõ scope trước khi đi sâu vào chi tiết.
+
+---
+
+# Part00 - 00.2_Progress_Tracking.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Theo dõi tiến độ phát triển SRS, đảm bảo hoàn thành đúng hạn và không bỏ sót phần nào.
+
+**Ý nghĩa (Significance):** Giúp team quản lý thời gian, ưu tiên critical parts như Functional Requirements, hỗ trợ dự án PSP đạt MVP nhanh chóng.
+
+**Cách làm (How to do):** Sử dụng bảng tiến độ (hoàn thành/đang làm/sắp làm), cập nhật ước tính thời gian dựa trên team size.
+
+**Nội dung cần có (Required Content):** Bảng tỷ lệ hoàn thành (e.g., 69% như mẫu), ước tính thời gian (2-3 tuần), danh sách tình trạng từng Part.
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-Pre.md Section Tiến độ tổng thể; 02-SRS-V2.md Part00 (progress table); 01-BRD.md Section 6 Kế hoạch triển khai (milestones); Product-Sampling-Vision-and-Strategy Document.md Section 6 Technology & Product Roadmap].
+
+**Mục đích của node này:** Cung cấp công cụ theo dõi realtime để PM và team điều chỉnh kế hoạch, đảm bảo SRS hoàn chỉnh kịp development.
+
+---
+
+# Part00 - 00.3_Dependencies_Matrix.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Lập ma trận phụ thuộc giữa các Parts để xác định thứ tự làm việc và rủi ro chain-effect.
+
+**Ý nghĩa (Significance):** Tránh bottleneck trong dự án PSP, ví dụ Part04 Functional phải hoàn thành trước Part06 Architecture.
+
+**Cách làm (How to do):** Vẽ bảng ma trận (hàng/cột là Parts), đánh dấu phụ thuộc (critical/parallel), sử dụng công cụ như Excel hoặc Mermaid.
+
+**Nội dung cần có (Required Content):** Ma trận phụ thuộc (e.g., Part01 → Part02 → Part04), critical path (requirements → design), parallel workstreams (architecture/testing).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-Pre.md Section Dependencies & Prerequisites; 02-SRS-V2.md Part00 (dependencies); System_Feature_Tree_Grok.md Section 4 Yêu cầu kỹ thuật tổng quan (dependencies); 01-BRD.md Section 6.1 Phase 1 (parallel tracks)].
+
+**Mục đích của node này:** Xác định mối quan hệ giữa các thành phần SRS, giúp lập kế hoạch hiệu quả và giảm rủi ro trễ hạn.
+
+---
+
+# Part00 - 00.4_Critical_Path.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Xác định đường găng (critical path) trong SRS để ưu tiên các phần ảnh hưởng lớn đến timeline.
+
+**Ý nghĩa (Significance):** Đảm bảo dự án PSP đạt MVP đúng hạn, tập trung vào core như Functional và Architecture.
+
+**Cách làm (How to do):** Sử dụng diagram Gantt hoặc Mermaid flowchart, tính toán dựa trên dependencies matrix.
+
+**Nội dung cần có (Required Content):** Đường găng (e.g., Part01 → Part02 → Part04 → Part06 → Development), key milestones (Week 1: Part01-04).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-Pre.md Section Critical Path; 02-SRS-V2.md Part00 (milestones); Product-Sampling-Vision-and-Strategy Document.md Section 6 Roadmap (phases); 01-BRD.md Section 6.1 Phase 1 (milestones)].
+
+**Mục đích của node này:** Hướng dẫn ưu tiên công việc, giúp team tập trung vào các phần quan trọng để tránh delay toàn dự án.
+
+---
+
+# Part00 - 00.5_Success_Criteria.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Định nghĩa tiêu chí thành công cho SRS, bao gồm quality, technical readiness và business alignment.
+
+**Ý nghĩa (Significance):** Đảm bảo SRS hỗ trợ đạt KPI dự án PSP như fraud ≤5%, scalability 10M users.
+
+**Cách làm (How to do):** Liệt kê checklist với measurable criteria, sử dụng bullet hoặc bảng để kiểm tra.
+
+**Nội dung cần có (Required Content):** Documentation quality (traceable requirements), technical readiness (NFRs support), business alignment (MVP feasible, KPIs achievable), stakeholder sign-off.
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-Pre.md Section Success Criteria; 02-SRS-V2.md Part00 (success definition); 01-BRD.md Section 8 Tiêu chí thành công; Problem.md Section 5 Mở rộng (KPIs như fraud <5%)].
+
+**Mục đích của node này:** Xác định các chỉ số đo lường để đánh giá SRS có đạt chất lượng, hỗ trợ triển khai dự án hiệu quả.
+
+---
+
+# Part01 - 01.1_Document_Purpose.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Mô tả mục tiêu của tài liệu SRS, xác định audience và vai trò trong dự án.
+
+**Ý nghĩa (Significance):** Giúp team hiểu rõ SRS là cầu nối từ BRD đến development, tập trung vào PSP hybrid sampling.
+
+**Cách làm (How to do):** Viết ngắn gọn dựa trên BRD, liệt kê audience và purpose statement.
+
+**Nội dung cần có (Required Content):** Mục tiêu SRS (translate business to technical), audience (Dev, QA, PM), tổng quan dự án.
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; 02-SRS-Pre.md Part01 (Mục tiêu tài liệu); 01-BRD.md Section 1.1 Mục đích tài liệu; Problem.md (mô tả bài toán cốt lõi)].
+
+**Mục đích của node này:** Thiết lập ngữ cảnh cơ bản cho SRS, giúp reader nắm rõ vai trò của tài liệu trong toàn dự án.
+
+---
+
+# Part01 - 01.2.1_In_Scope.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Liệt kê các yếu tố nằm trong phạm vi dự án để định giới hạn công việc.
+
+**Ý nghĩa (Significance):** Tránh scope creep, tập trung vào core như campaign management và OTP cho PSP.
+
+**Cách làm (How to do):** Sử dụng bullet list hoặc bảng, map từ BRD và feature tree.
+
+**Nội dung cần có (Required Content):** In-scope items (hybrid sampling, data collection, CRM sync, PWA portal).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; 01-BRD.md Section 1.2 Phạm vi (In-scope); Problem.md Section 1 Must-have (core features); System_Feature_Tree_Grok.md Section 1 Must-Have].
+
+**Mục đích của node này:** Rõ ràng hóa những gì dự án sẽ thực hiện, giúp quản lý kỳ vọng và nguồn lực.
+
+---
+
+# Part01 - 01.2.2_Out_of_Scope.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Liệt kê các yếu tố ngoài phạm vi để tránh mở rộng không cần thiết.
+
+**Ý nghĩa (Significance):** Giữ dự án PSP tập trung, loại bỏ logistics thực tế hoặc blockchain.
+
+**Cách làm (How to do):** Sử dụng bullet list, dựa trên assumptions và constraints từ BRD.
+
+**Nội dung cần có (Required Content):** Out-scope items (logistics vận chuyển, app native, blockchain traceability).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; 01-BRD.md Section 1.2 Phạm vi (Out-of-scope); Problem.md Section 1 Must-have (out-scope như logistics); Product-Sampling-Vision-and-Strategy Document.md Section 2 Vision (long-term exclusions)].
+
+**Mục đích của node này:** Ngăn chặn mở rộng scope, đảm bảo team chỉ làm những gì cần thiết cho MVP.
+
+---
+
+# Part01 - 01.3_Definitions_and_Acronyms.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Định nghĩa thuật ngữ và viết tắt để đảm bảo ngôn ngữ thống nhất.
+
+**Ý nghĩa (Significance):** Tránh nhầm lẫn trong PSP, như Campaign, Barcode Pool, Verified User.
+
+**Cách làm (How to do):** Sử dụng bảng hoặc list alphabet, thu thập từ glossary toàn dự án.
+
+**Nội dung cần có (Required Content):** Định nghĩa (e.g., PSP: Product Sampling Platform), acronyms (FR: Functional Requirement).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; 02-SRS-Pre.md Part01 (Định nghĩa thuật ngữ); Problem.md Section 2 Tính năng chính (terms như Barcode Pool); Access_Control_Tree_Grok.md Section 1 Vai trò (roles acronyms)].
+
+**Mục đích của node này:** Tạo ngôn ngữ chung cho team, giảm hiểu lầm khi đọc SRS.
+
+---
+
+# Part01 - 01.4.1_Input_Documents.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Liệt kê tài liệu đầu vào để xây dựng SRS.
+
+**Ý nghĩa (Significance):** Đảm bảo traceability từ business đến technical trong PSP.
+
+**Cách làm (How to do):** Bullet list với version/date, link nếu có.
+
+**Nội dung cần có (Required Content):** Tài liệu như BRD, Problem.md, Feature Tree, Vision-Strategy.
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; 02-SRS-Pre.md Part01 (Tài liệu tham chiếu); 01-BRD.md (input chính); All uploaded files như Problem.md, System_Feature_Tree_Grok.md].
+
+**Mục đích của node này:** Cung cấp nguồn gốc dữ liệu cho SRS, hỗ trợ audit và update.
+
+---
+
+# Part01 - 01.4.2_Standards.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Liệt kê tiêu chuẩn áp dụng cho SRS và dự án.
+
+**Ý nghĩa (Significance):** Đảm bảo PSP tuân thủ như IEEE SRS, GDPR, ISO 27001.
+
+**Cách làm (How to do):** Bullet list với mô tả ngắn.
+
+**Nội dung cần có (Required Content):** Tiêu chuẩn (IEEE 830 for SRS, GDPR/PDPA for compliance, SOLID for design).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; Access_Control_Tree_Grok.md Section 3 Yêu cầu kỹ thuật (ISO 27001); 01-BRD.md Section 5.1 Rủi ro (compliance standards); Part06B_Design_Patterns (SOLID Principles)].
+
+**Mục đích của node này:** Xác định khung chuẩn để SRS và hệ thống đạt chất lượng chuyên nghiệp.
+
+---
+
+# Part01 - 01.5.1_Requirement_IDs.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Quy định cách đánh ID cho requirements để dễ trace.
+
+**Ý nghĩa (Significance):** Hỗ trợ traceability trong PSP, như FR-001 cho Campaign.
+
+**Cách làm (How to do):** Mô tả format (FR-XXX, NFR-XXX), ví dụ.
+
+**Nội dung cần có (Required Content):** Format ID (e.g., FR-001: Functional, UC-XXX: Use Case).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; 02-SRS-Pre.md Part01 (Quy ước ký hiệu FR-XXX); System_Feature_Tree_Grok.md Section 1 (FR examples); Part04_Functional_Requirements (FR-001 to FR-013)].
+
+**Mục đích của node này:** Chuẩn hóa cách đánh mã requirements, dễ dàng tham chiếu và quản lý.
+
+---
+
+# Part01 - 01.5.2_Priority_Levels.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Định nghĩa mức độ ưu tiên cho requirements.
+
+**Ý nghĩa (Significance):** Ưu tiên Must-Have cho MVP PSP, như OTP verification.
+
+**Cách làm (How to do):** Sử dụng scale (High/Medium/Low) hoặc MoSCoW.
+
+**Nội dung cần có (Required Content):** Mô tả levels (Critical: Must-Have, High: Should-Have, Low: Nice-to-Have).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; Problem.md Section 1 Phân loại mục tiêu (MoSCoW); System_Feature_Tree_Grok.md Section 1-3 (Must/Should/Nice); 01-BRD.md Section 3 Feature Prioritization].
+
+**Mục đích của node này:** Hướng dẫn team ưu tiên phát triển, phù hợp với phasing MVP.
+
+---
+
+# Part01 - 01.5.3_Status_Indicators.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Quy định indicator cho status của requirements.
+
+**Ý nghĩa (Significance):** Theo dõi progress trong SRS PSP, như Draft/Approved.
+
+**Cách làm (How to do):** Định nghĩa icons hoặc text (✅ Complete, ⏳ In Progress).
+
+**Nội dung cần có (Required Content):** Status types (New, In Review, Approved, Rejected).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; 02-SRS-Pre.md Part00 (status icons như ✅); 01-BRD.md Section 8.3 Tiêu chí thành công (checklist status)].
+
+**Mục đích của node này:** Giúp quản lý version và status của requirements trong SRS.
+
+---
+
+# Part01 - 01.6_Document_Structure.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Mô tả cấu trúc tổng thể của SRS.
+
+**Ý nghĩa (Significance):** Hướng dẫn navigation qua các Parts trong PSP documentation.
+
+**Cách làm (How to do):** Vẽ cây thư mục hoặc list hierarchically.
+
+**Nội dung cần có (Required Content):** Overview cấu trúc (Part00 to Part16), với refs.
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; SRS_STRUCTURE.md (cấu trúc thư mục); 02-SRS-Pre.md (chi tiết từng Part)].
+
+**Mục đích của node này:** Giúp reader dễ dàng tìm kiếm thông tin trong SRS lớn.
+
+---
+
+# Part01 - 01.7_Quality_Assurance.md
+
+## Menu
+- [Mục đích (Purpose)](#mục-đích-purpose)
+- [Ý nghĩa (Significance)](#ý-nghĩa-significance)
+- [Cách làm (How to do)](#cách-làm-how-to-do)
+- [Nội dung cần có (Required Content)](#nội-dung-cần-có-required-content)
+- [Tài liệu tham khảo (References)](#tài-liệu-tham-khảo-references)
+- [Mục đích của node này](#mục-đích-của-node-này)
+
+**Mục đích (Purpose):** Mô tả quy trình đảm bảo chất lượng cho SRS.
+
+**Ý nghĩa (Significance):** Đảm bảo SRS PSP không có contradictions, traceable đầy đủ.
+
+**Cách làm (How to do):** Liệt kê steps review, tools như peer review.
+
+**Nội dung cần có (Required Content):** Quy trình QA (review cycles, traceability check), metrics (zero contradictions).
+
+**Tài liệu tham khảo (References):** [Ref: 02-SRS-V2.md Part01; 02-SRS-Pre.md Section Documentation Quality; 01-BRD.md Section 8 Tiêu chí thành công (quality gates); Part16.2_Traceability_Matrix].
+
+**Mục đích của node này:** Đảm bảo SRS đạt chuẩn chất lượng trước khi approve.
+
