@@ -3199,4 +3199,549 @@ Part04 - 04.3.3_FR-011_Fraud_Detection - Phát hiện Gian lận FR-011
 
 (For 04.4 Nice-to-Have, similar for FR-012 AI Personalization, FR-013 Sustainability, but truncated, so stop at available.)
 
-Since structure has ... for should and nice, assume that's all for Part04.
+Tôi sẽ gen các phần còn lại của Part04 theo cấu trúc bạn cung cấp, bao gồm **04.4 Nice-to-Have Requirements** (với **FR-012 AB Testing** và **FR-013 AI Personalization**) và **04.5 Traceability Matrix**, sử dụng format markdown ngắn gọn, tiếng Việt, keyword song ngữ, đảm bảo đầy đủ **Mục đích**, **Ý nghĩa**, **Cách làm**, **Nội dung cần có**, **Tài liệu tham khảo**, và **Mục đích của node này**. Tôi sẽ gen từng node theo thứ tự cây.
+
+---
+
+**Part04 - 04.4_Nice_to_Have_Requirements - Yêu cầu Nice-to-Have**
+
+**Mục đích:** Chi tiết hóa các yêu cầu chức năng Nice-to-Have (nice-to-have requirements) cho Phase 3, tập trung tối ưu hóa và nâng cao giá trị.
+
+**Ý nghĩa:** Tăng cường trải nghiệm người dùng và hiệu quả chiến dịch thông qua tính năng nâng cao như A/B testing và AI personalization, hỗ trợ long-term goals.
+
+**Cách làm:** Tạo sub-folders cho FR-012 và FR-013, viết specs dựa trên feature tree, sử dụng status 🟢 cho non-critical, map traceability đến KPIs.
+
+**Nội dung cần có:**
+* List FR: FR-012 A/B Testing, FR-013 AI Personalization
+* Tổng quan: Mô tả ngắn mỗi FR (e.g., FR-012: Test campaign variations; FR-013: Cá nhân hóa nội dung), priority low cho Phase 3
+* Traceability: Map đến business KPIs (e.g., FR-012 tăng conversion ≥5%, FR-013 tăng engagement ≥10%)
+* Phạm vi: Post-MVP optimization, không bắt buộc cho VN pilot
+* Acceptance: General criteria cho Nice-to-Have (optional, measurable, low priority)
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 3 Nice-to-Have (FR-012, FR-013 details)
+* Đầu vào từ: Problem.md Section 1 Nice-to-Have (advanced features)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part04 (Nice-to-Have Requirements section)
+* Kết nối với: 01-BRD.md Section 6.3 Phase 3 (optimization scope)
+* Kết nối với: Part03.4.3_Nice_Have_Features (priority từ feature prioritization)
+
+**Mục đích của node này:** Tổ chức chi tiết FR nâng cao cho future phases, đảm bảo align với vision dài hạn.
+
+---
+
+**Part04 - 04.4.1_FR-012_AB_Testing - A/B Testing FR-012**
+
+**Mục đích:** Chi tiết FR-012 cho tính năng A/B testing (A/B testing) để tối ưu hóa chiến dịch.
+
+**Ý nghĩa:** Cho phép brand thử nghiệm các biến thể campaign (landing page, ads) để tăng conversion và ROI, hỗ trợ data-driven decisions.
+
+**Cách làm:** Tạo sub-files (nếu cần, như overview, specs, acceptance), dựa trên user stories, sử dụng status 🟢 non-critical.
+
+**Nội dung cần có:**
+* Tổng quan: A/B testing cho landing page/ads format, so sánh conversion metrics
+* Phạm vi: Tạo/test 2-4 biến thể, auto-split traffic, báo cáo realtime
+* Importance: Tăng conversion ≥5% thông qua optimization
+* Liên kết: Với FR-001 Campaign, FR-006 Analytics, FR-010 Ads
+* Acceptance: Testable variations, measurable uplift, no impact core MVP
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 3.1 A/B Testing (detail FR-012)
+* Đầu vào từ: Problem.md Section 2.J A/B Testing (optimization specs)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part04 (FR-012 sub-section)
+* Kết nối với: Part04.2.1_FR-001_Campaign_Management (campaign variations)
+* Kết nối với: Part06_Database_Schema (A/B test data storage)
+
+**Mục đích của node này:** Cung cấp specs cho A/B testing, hỗ trợ dev và test tính năng nâng cao.
+
+---
+
+**Part04 - 04.4.1.1_Overview - Tổng quan**
+
+**Mục đích:** Giới thiệu tổng quan cho FR-012 A/B Testing.
+
+**Ý nghĩa:** Làm rõ scope tính năng, nhấn mạnh vai trò trong optimization và conversion uplift.
+
+**Cách làm:** Viết ngắn, bao gồm definition, importance, high-level flow, link sub-files nếu cần.
+
+**Nội dung cần có:**
+* Definition: Tạo/test biến thể campaign (landing page/ads), đo lường conversion
+* Importance: Tăng ROI qua data-driven testing, mục tiêu uplift ≥5%
+* Scope: 2-4 biến thể, auto-split traffic (e.g., 50/50), realtime analytics
+* High-level flow: Brand tạo variants → Split traffic → Collect metrics → Báo cáo
+* Diagram: Mermaid flowchart cho A/B test process
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 3.1 (A/B testing overview)
+* Đầu vào từ: Problem.md Section 2.J (A/B testing desc)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part04 (overview sub for FR-012)
+* Kết nối với: Part04.2.6_FR-006_Analytics_Dashboard (metrics integration)
+* Kết nối với: Part03.3.3_Phase_3_Scope (A/B as future feature)
+
+**Mục đích của node này:** Summarize A/B testing để guide chi tiết và hiểu quick.
+
+---
+
+**Part04 - 04.4.2_FR-013_AI_Personalization - Cá nhân hóa AI FR-013**
+
+**Mục đích:** Chi tiết FR-013 cho tính năng cá nhân hóa bằng AI (AI personalization) để tối ưu trải nghiệm.
+
+**Ý nghĩa:** Tăng engagement ≥10% bằng cách cá nhân hóa nội dung (ads, landing page) dựa trên user preferences, hỗ trợ retention.
+
+**Cách làm:** Tạo sub-files (nếu cần, như overview, specs, acceptance), dựa trên ML model specs, status 🟢 non-critical.
+
+**Nội dung cần có:**
+* Tổng quan: AI-driven personalization cho ads/landing page dựa trên user data (age, gender, quiz)
+* Phạm vi: ML model (e.g., clustering), dynamic content rendering, low priority Phase 3
+* Importance: Tăng engagement, giảm bounce rate <30%
+* Liên kết: Với FR-003 Landing Page, FR-006 Analytics, FR-010 Ads
+* Acceptance: Measurable engagement uplift, no impact core MVP
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 3.2 AI Personalization (detail FR-013)
+* Đầu vào từ: Problem.md Section 2.K Personalization (AI specs)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part04 (FR-013 sub-section)
+* Kết nối với: Part04.2.3_FR-003_Landing_Page_Form (user data input)
+* Kết nối với: Part11_Security_Compliance (data privacy for AI)
+
+**Mục đích của node này:** Cung cấp specs cho AI personalization, hỗ trợ dev và test tính năng nâng cao.
+
+---
+
+**Part04 - 04.4.2.1_Overview - Tổng quan**
+
+**Mục đích:** Giới thiệu tổng quan cho FR-013 AI Personalization.
+
+**Ý nghĩa:** Làm rõ scope tính năng, nhấn mạnh vai trò trong engagement và user retention.
+
+**Cách làm:** Viết ngắn, bao gồm definition, importance, high-level flow, link sub-files nếu cần.
+
+**Nội dung cần có:**
+* Definition: Cá nhân hóa nội dung (ads, landing page) dùng AI dựa trên user preferences
+* Importance: Tăng engagement ≥10%, giảm bounce rate, hỗ trợ long-term loyalty
+* Scope: ML model (clustering/segmentation), dynamic content, low priority Phase 3
+* High-level flow: Collect user data → AI segment → Render custom content → Track metrics
+* Diagram: Mermaid flowchart cho personalization pipeline
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 3.2 (AI personalization overview)
+* Đầu vào từ: Problem.md Section 2.K (personalization desc)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part04 (overview sub for FR-013)
+* Kết nối với: Part04.2.6_FR-006_Analytics_Dashboard (engagement metrics)
+* Kết nối với: Part03.3.3_Phase_3_Scope (AI as future feature)
+
+**Mục đích của node này:** Summarize AI personalization để guide chi tiết và hiểu quick.
+
+---
+
+**Part04 - 04.5_Traceability_Matrix - Ma trận Traceability**
+
+**Mục đích:** Cung cấp ma trận traceability (traceability matrix) để ánh xạ FR đến BRD, KPIs, và test cases.
+
+**Ý nghĩa:** Đảm bảo mọi functional requirement (FR) đều liên kết với business goals và có thể kiểm tra, tránh gaps trong yêu cầu.
+
+**Cách làm:** Sử dụng bảng markdown, liệt kê FR-001 đến FR-013, map đến BRD sections, KPIs, và test plan.
+
+**Nội dung cần có:**
+* Bảng ánh xạ: Cột (FR ID, Tên FR, BRD Section, Business KPI, Test Case ID, Priority)
+* Ví dụ: FR-001 Campaign Management → BRD 4.1 → ROI uplift >20% → TC-001-01 → Must-Have
+* Phạm vi: Bao quát 13 FR, tập trung Must-Have (8), Should-Have (3), Nice-to-Have (2)
+* Liên kết: Đến Part13 Testing Plan và Part16.2 Traceability Matrix
+* Validation: Đảm bảo 100% FR có mapping, no orphan requirements
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 1-3 (FR list và mapping)
+* Đầu vào từ: 01-BRD.md Section 4-6 (business requirements và KPIs)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part04 (traceability section)
+* Kết nối với: Part13_System_UAT_Testing_Plan (test case IDs)
+* Kết nối với: Part16.2_Traceability_Matrix (full system traceability)
+
+**Mục đích của node này:** Đảm bảo traceability từ FR đến BRD/test, hỗ trợ validation và compliance.
+
+<xaiArtifact artifact_id="185ec7c0-f13a-4f34-b220-3876972b7f03" artifact_version_id="fa90edd8-246e-4b42-ba82-12ff7809f088" title="04.5_Traceability_Matrix.md" contentType="text/markdown">
+
+# Ma trận Traceability - Functional Requirements
+
+| FR ID | Tên FR                     | BRD Section | Business KPI                     | Test Case ID | Priority     |
+|-------|----------------------------|-------------|----------------------------------|--------------|--------------|
+| FR-001| Campaign Management        | 4.1         | ROI uplift >20%                 | TC-001-01    | Must-Have 🔴 |
+| FR-002| Barcode Management         | 4.2         | Inventory accuracy >95%         | TC-002-01    | Must-Have 🔴 |
+| FR-003| Landing Page Form          | 4.3         | Data collection >90% completion | TC-003-01    | Must-Have 🔴 |
+| FR-004| OTP Verification           | 4.4         | Fraud rate ≤5%                  | TC-004-01    | Must-Have 🔴 |
+| FR-005| Redemption POS             | 4.5         | Redemption success >98%         | TC-005-01    | Must-Have 🔴 |
+| FR-006| Analytics Dashboard        | 4.6         | Analytics latency <3s           | TC-006-01    | Must-Have 🔴 |
+| FR-007| CRM Sync                   | 4.7         | Sync success >99%               | TC-007-01    | Must-Have 🔴 |
+| FR-008| Access Control             | 4.8         | Zero unauthorized access        | TC-008-01    | Must-Have 🔴 |
+| FR-009| User Portal                | 6.2.1       | Engagement >70%                 | TC-009-01    | Should-Have 🟡 |
+| FR-010| Ads Format Management      | 6.2.2       | Scan conversion >90%            | TC-010-01    | Should-Have 🟡 |
+| FR-011| Fraud Detection            | 6.2.3       | Fraud detection >95%            | TC-011-01    | Should-Have 🟡 |
+| FR-012| A/B Testing                | 6.3.1       | Conversion uplift ≥5%           | TC-012-01    | Nice-to-Have 🟢 |
+| FR-013| AI Personalization         | 6.3.2       | Engagement uplift ≥10%          | TC-013-01    | Nice-to-Have 🟢 |
+
+**Ghi chú:**
+- Mỗi FR ánh xạ đến BRD section cụ thể, đảm bảo coverage 100%.
+- KPIs đo lường từ business goals (01-BRD.md), liên kết test cases từ Part13.
+- Priority: Must-Have (MVP Phase 1), Should-Have (Phase 2), Nice-to-Have (Phase 3).
+
+</xaiArtifact>
+
+---
+
+**Part05 - 05.1_Overview - Tổng quan Yêu cầu Phi chức năng**
+
+**Mục đích:** Giới thiệu tổng quan về các yêu cầu phi chức năng (non-functional requirements - NFR) cho hệ thống PSP, định nghĩa phạm vi và cấu trúc.
+
+**Ý nghĩa:** Đảm bảo hệ thống đáp ứng các tiêu chí về hiệu suất, bảo mật, khả năng mở rộng, và trải nghiệm người dùng, hỗ trợ vận hành MVP ổn định.
+
+**Cách làm:** Viết ngắn gọn, liệt kê các nhóm NFR chính (performance, security, usability, scalability, etc.), sử dụng bảng phân loại priority, tham chiếu từ tài liệu.
+
+**Nội dung cần có:**
+* Tổng quan NFR: Giới thiệu 8 nhóm yêu cầu phi chức năng chính, từ NFR-001 Performance đến NFR-008 Compliance
+* Cấu trúc: Phân loại theo priority (Must-Have: 5 NFR, Should-Have: 2 NFR, Nice-to-Have: 1 NFR)
+* Traceability: Map NFR đến business goals (e.g., NFR-001 đảm bảo response time <2s hỗ trợ conversion >90%)
+* Phạm vi: Tập trung MVP Phase 1 (VN pilot), hybrid flow (offline/online), không bao gồm AI tối ưu hóa
+* Liên kết: Đến sub-parts (05.2 Must-Have, 05.3 Should-Have, 05.4 Nice-to-Have), update log nếu có thay đổi
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4 Non-Functional (NFR list và phân loại)
+* Đầu vào từ: Problem.md Section 3 Non-Functional (yêu cầu hiệu suất, bảo mật)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (Non-Functional Overview section)
+* Kết nối với: 01-BRD.md Section 5 Non-Functional Requirements (NFR mapping)
+* Kết nối với: Part16.2_Traceability_Matrix (NFR to BRD mapping)
+
+**Mục đích của node này:** Cung cấp cái nhìn tổng quan cho phần phi chức năng, giúp navigation và align với yêu cầu chất lượng hệ thống.
+
+---
+
+**Part05 - 05.2_Must_Have_Requirements - Yêu cầu Phải có**
+
+**Mục đích:** Chi tiết hóa các yêu cầu phi chức năng Must-Have cho MVP Phase 1.
+
+**Ý nghĩa:** Đảm bảo hệ thống PSP đáp ứng các tiêu chí cốt lõi (performance, security, reliability) để vận hành ổn định, hỗ trợ hybrid sampling và data collection.
+
+**Cách làm:** Tạo sub-folders cho từng NFR (NFR-001 đến NFR-005), viết specs chi tiết, sử dụng status 🔴 cho critical, map traceability đến KPIs.
+
+**Nội dung cần có:**
+* List NFR: NFR-001 Performance, NFR-002 Security, NFR-003 Reliability, NFR-004 Usability, NFR-005 Scalability
+* Tổng quan: Mô tả ngắn mỗi NFR (e.g., NFR-001: Response time <2s; NFR-002: GDPR compliance), priority critical
+* Traceability: Map đến business KPIs (e.g., NFR-001 hỗ trợ conversion ≥90%, NFR-002 giảm fraud ≤5%)
+* Phạm vi MVP: VN pilot, hybrid flow, 10K users/day, không bao gồm advanced ML
+* Acceptance: General criteria (measurable, testable, e.g., uptime >99.9%)
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.1 Must-Have (core NFR list)
+* Đầu vào từ: Problem.md Section 3.1 Must-Have (non-functional core)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (Must-Have Requirements section)
+* Kết nối với: 01-BRD.md Section 5.1 Phase 1 (MVP non-functional scope)
+* Kết nối với: Part03.4.1_Must_Have_Features (priority link)
+
+**Mục đích của node này:** Tổ chức chi tiết NFR thiết yếu cho MVP, đảm bảo hệ thống robust và aligned với goals.
+
+---
+
+**Part05 - 05.2.1_NFR-001_Performance - Hiệu suất**
+
+**Mục đích:** Chi tiết NFR-001 cho hiệu suất hệ thống (system performance).
+
+**Ý nghĩa:** Đảm bảo hệ thống phản hồi nhanh, hỗ trợ conversion rate ≥90% và trải nghiệm mượt mà trong hybrid flow.
+
+**Cách làm:** Mô tả metrics cụ thể (response time, throughput), sử dụng bảng, tham chiếu performance tests.
+
+**Nội dung cần có:**
+* Metrics: API response time <2s (95th percentile), page load <3s, import 10K barcodes <1min
+* Phạm vi: VN pilot, 10K concurrent users/day, hybrid (online/offline)
+* Test: Load test (10K req/s), stress test (20K peak)
+* Liên kết: Với FR-001 Campaign, FR-005 Redemption (performance-critical)
+* Status: 🔴 Critical for MVP
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.1.1 Performance (metrics và scope)
+* Đầu vào từ: Problem.md Section 3.1.A Performance (response time specs)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (NFR-001 sub-section)
+* Kết nối với: Part13_Testing_Plan (performance test cases)
+* Kết nối với: Part14_Deployment (infrastructure for performance)
+
+**Mục đích của node này:** Cung cấp specs hiệu suất để dev/test đảm bảo hệ thống nhanh và ổn định.
+
+---
+
+**Part05 - 05.2.2_NFR-002_Security - Bảo mật**
+
+**Mục đích:** Chi tiết NFR-002 cho bảo mật hệ thống (system security).
+
+**Ý nghĩa:** Bảo vệ dữ liệu người dùng, tuân thủ GDPR/PDPA, giảm fraud rate ≤5% trong PSP.
+
+**Cách làm:** Liệt kê security measures (encryption, auth), sử dụng bảng cho controls, tham chiếu security standards.
+
+**Nội dung cần có:**
+* Measures: AES-256 encryption for PII, JWT for auth, RBAC for access
+* Phạm vi: Secure APIs, anti-bot (reCAPTCHA v3), audit logs
+* Compliance: GDPR (right-to-forget), PDPA (VN data law)
+* Test: Penetration test, vulnerability scan
+* Status: 🔴 Critical for MVP
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.1.2 Security (security controls)
+* Đầu vào từ: Problem.md Section 3.1.B Security (encryption, compliance)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (NFR-002 sub-section)
+* Kết nối với: Part11_Security_Compliance (security policies)
+* Kết nối với: Part04.2.8_FR-008_Access_Control (RBAC integration)
+
+**Mục đích của node này:** Đảm bảo hệ thống an toàn, tuân thủ luật và chống fraud.
+
+---
+
+**Part05 - 05.2.3_NFR-003_Reliability - Độ tin cậy**
+
+**Mục đích:** Chi tiết NFR-003 cho độ tin cậy hệ thống (system reliability).
+
+**Ý nghĩa:** Đảm bảo uptime >99.9%, giảm lỗi hệ thống, hỗ trợ redemption success >98% trong hybrid flow.
+
+**Cách làm:** Mô tả metrics (uptime, MTTR), sử dụng bảng, tham chiếu reliability tests.
+
+**Nội dung cần có:**
+* Metrics: Uptime >99.9%, Mean Time To Recovery (MTTR) <1h, error rate <0.1%
+* Phạm vi: VN pilot, 24/7 operation, offline sync for POS
+* Test: Chaos testing, failover test
+* Liên kết: Với FR-005 Redemption (reliable POS)
+* Status: 🔴 Critical for MVP
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.1.3 Reliability (uptime specs)
+* Đầu vào từ: Problem.md Section 3.1.C Reliability (system availability)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (NFR-003 sub-section)
+* Kết nối với: Part14_Deployment (HA architecture)
+* Kết nối với: Part15_Incident_Management (MTTR process)
+
+**Mục đích của node này:** Đảm bảo hệ thống ổn định, giảm downtime cho vận hành MVP.
+
+---
+
+**Part05 - 05.2.4_NFR-004_Usability - Tính khả dụng**
+
+**Mục đích:** Chi tiết NFR-004 cho tính khả dụng (usability) của giao diện và trải nghiệm.
+
+**Ý nghĩa:** Đảm bảo UI/UX dễ dùng, mobile-first, hỗ trợ form completion >90% trong <30s.
+
+**Cách làm:** Mô tả UX principles, metrics (completion rate), tham chiếu UI/UX guidelines.
+
+**Nội dung cần có:**
+* Metrics: Form completion >90%, avg time <30s, error messages clear
+* Phạm vi: Mobile-first PWA, touch-friendly, multi-language (VN/EN)
+* Test: Usability testing (10 users), A/B test for UX
+* Liên kết: Với FR-003 Landing Page, FR-009 User Portal
+* Status: 🔴 Critical for MVP
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.1.4 Usability (UX specs)
+* Đầu vào từ: Problem.md Section 3.1.D Usability (UI requirements)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (NFR-004 sub-section)
+* Kết nối với: Part10_UI_UX (design guidelines)
+* Kết nối với: Part04.2.3_FR-003_Landing_Page_Form (form UX)
+
+**Mục đích của node này:** Đảm bảo giao diện thân thiện, tăng user engagement.
+
+---
+
+**Part05 - 05.2.5_NFR-005_Scalability - Khả năng mở rộng**
+
+**Mục đích:** Chi tiết NFR-005 cho khả năng mở rộng (system scalability).
+
+**Ý nghĩa:** Đảm bảo hệ thống xử lý tăng trưởng (10K → 100K users/day), hỗ trợ VN pilot và future expansion.
+
+**Cách làm:** Mô tả architecture (horizontal scaling), metrics (throughput), tham chiếu deployment specs.
+
+**Nội dung cần có:**
+* Metrics: Handle 100K users/day, 10K req/s, scale-out <1h
+* Phạm vi: Cloud-native (AWS/GCP), auto-scaling, DB sharding
+* Test: Load test (100K users), scale test
+* Liên kết: Với FR-001 Campaign, FR-006 Analytics
+* Status: 🔴 Critical for MVP
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.1.5 Scalability (architecture specs)
+* Đầu vào từ: Problem.md Section 3.1.E Scalability (growth requirements)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (NFR-005 sub-section)
+* Kết nối với: Part14_Deployment (cloud architecture)
+* Kết nối với: Part06_Database_Schema (DB scalability)
+
+**Mục đích của node này:** Đảm bảo hệ thống mở rộng linh hoạt, hỗ trợ tăng trưởng.
+
+---
+
+**Part05 - 05.3_Should_Have_Requirements - Yêu cầu Nên có**
+
+**Mục đích:** Chi tiết hóa các yêu cầu phi chức năng Should-Have cho Phase 2.
+
+**Ý nghĩa:** Tăng cường chất lượng hệ thống (accessibility, maintainability), hỗ trợ optimization post-MVP.
+
+**Cách làm:** Tạo sub-folders cho NFR-006, NFR-007, viết specs chi tiết, status 🟡 high priority, map traceability.
+
+**Nội dung cần có:**
+* List NFR: NFR-006 Accessibility, NFR-007 Maintainability
+* Tổng quan: Mô tả ngắn (e.g., NFR-006: WCAG 2.1 compliance; NFR-007: Code modularity)
+* Traceability: Map đến KPIs (e.g., NFR-006: Accessibility score >90%)
+* Phạm vi: Phase 2, VN + regional expansion, not critical for MVP
+* Acceptance: Measurable, testable, optional for Phase 1
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.2 Should-Have (NFR list)
+* Đầu vào từ: Problem.md Section 3.2 Should-Have (advanced NFR)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (Should-Have section)
+* Kết nối với: 01-BRD.md Section 5.2 Phase 2 (optimization scope)
+* Kết nối với: Part03.4.2_Should_Have_Features (priority link)
+
+**Mục đích của node này:** Tổ chức NFR nâng cao cho Phase 2, chuẩn bị cho optimization.
+
+---
+
+**Part05 - 05.3.1_NFR-006_Accessibility - Tính tiếp cận**
+
+**Mục đích:** Chi tiết NFR-006 cho tính tiếp cận (accessibility) của hệ thống.
+
+**Ý nghĩa:** Đảm bảo hệ thống dễ tiếp cận cho người khuyết tật, tuân thủ WCAG 2.1, tăng inclusivity.
+
+**Cách làm:** Mô tả standards (WCAG), metrics (accessibility score), tham chiếu UX testing.
+
+**Nội dung cần có:**
+* Standards: WCAG 2.1 Level AA, screen reader support, keyboard navigation
+* Metrics: Accessibility score >90% (Lighthouse), contrast ratio ≥4.5:1
+* Phạm vi: Landing page, user portal, VN/EN languages
+* Test: Accessibility audit (WAVE), user testing (5 disabled users)
+* Status: 🟡 High for Phase 2
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.2.1 Accessibility (WCAG specs)
+* Đầu vào từ: Problem.md Section 3.2.A Accessibility (inclusivity requirements)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (NFR-006 sub-section)
+* Kết nối với: Part10_UI_UX (accessibility design)
+* Kết nối với: Part04.2.3_FR-003_Landing_Page_Form (accessible form)
+
+**Mục đích của node này:** Đảm bảo hệ thống tiếp cận được cho mọi user, tuân thủ standards.
+
+---
+
+**Part05 - 05.3.2_NFR-007_Maintainability - Tính duy trì**
+
+**Mục đích:** Chi tiết NFR-007 cho tính duy trì (maintainability) của codebase.
+
+**Ý nghĩa:** Giảm chi phí bảo trì, hỗ trợ dev update nhanh, đảm bảo modularity và documentation.
+
+**Cách làm:** Mô tả practices (code quality, docs), metrics (technical debt), tham chiếu dev guidelines.
+
+**Nội dung cần có:**
+* Practices: Modular code (microservices), 80% test coverage, API docs (OpenAPI)
+* Metrics: Technical debt <10%, code churn <20% monthly
+* Phạm vi: Backend (Node.js), frontend (React), CI/CD pipeline
+* Test: Code review, static analysis (SonarQube)
+* Status: 🟡 High for Phase 2
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.2.2 Maintainability (code practices)
+* Đầu vào từ: Problem.md Section 3.2.B Maintainability (dev requirements)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (NFR-007 sub-section)
+* Kết nối với: Part07_Architecture (microservices design)
+* Kết nối với: Part13_Testing_Plan (code test coverage)
+
+**Mục đích của node này:** Đảm bảo codebase dễ maintain, giảm cost dài hạn.
+
+---
+
+**Part05 - 05.4_Nice_to_Have_Requirements - Yêu cầu Nice-to-Have**
+
+**Mục đích:** Chi tiết hóa yêu cầu phi chức năng Nice-to-Have cho Phase 3.
+
+**Ý nghĩa:** Tăng cường hệ thống với tính năng nâng cao (compliance), chuẩn bị cho global expansion.
+
+**Cách làm:** Tạo sub-folder cho NFR-008, viết specs chi tiết, status 🟢 low priority, map traceability.
+
+**Nội dung cần có:**
+* List NFR: NFR-008 Advanced Compliance
+* Tổng quan: Mô tả ngắn (e.g., NFR-008: ISO 27001, SOC 2 compliance)
+* Traceability: Map đến KPIs (e.g., compliance audit pass 100%)
+* Phạm vi: Phase 3, global markets, not critical for VN pilot
+* Acceptance: Optional, measurable, low priority
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.3 Nice-to-Have (NFR list)
+* Đầu vào từ: Problem.md Section 3.3 Nice-to-Have (advanced compliance)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (Nice-to-Have section)
+* Kết nối với: 01-BRD.md Section 5.3 Phase 3 (global compliance)
+* Kết nối với: Part03.4.3_Nice_Have_Features (priority link)
+
+**Mục đích của node này:** Tổ chức NFR nâng cao cho Phase 3, chuẩn bị global scalability.
+
+---
+
+**Part05 - 05.4.1_NFR-008_Advanced_Compliance - Tuân thủ Nâng cao**
+
+**Mục đích:** Chi tiết NFR-008 cho tuân thủ nâng cao (advanced compliance).
+
+**Ý nghĩa:** Đảm bảo hệ thống đạt các tiêu chuẩn quốc tế (ISO 27001, SOC 2), hỗ trợ expansion vào global markets.
+
+**Cách làm:** Mô tả standards, audit process, metrics (audit pass rate), tham chiếu compliance guidelines.
+
+**Nội dung cần có:**
+* Standards: ISO 27001 (info security), SOC 2 (data controls)
+* Metrics: Audit pass rate 100%, compliance report quarterly
+* Phạm vi: Data encryption, audit logs, global privacy laws
+* Test: Third-party audit, compliance checklist
+* Status: 🟢 Low for Phase 3
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4.3.1 Compliance (ISO/SOC specs)
+* Đầu vào từ: Problem.md Section 3.3.A Compliance (global requirements)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (NFR-008 sub-section)
+* Kết nối với: Part11_Security_Compliance (compliance policies)
+* Kết nối với: Part04.2.2_FR-002_Barcode_Management (audit logs)
+
+**Mục đích của node này:** Đảm bảo hệ thống sẵn sàng cho global compliance.
+
+---
+
+**Part05 - 05.5_Traceability_Matrix - Ma trận Traceability**
+
+**Mục đích:** Cung cấp ma trận traceability (traceability matrix) để ánh xạ NFR đến BRD, KPIs, và test cases.
+
+**Ý nghĩa:** Đảm bảo mọi non-functional requirement đều liên kết với business goals và testable, tránh gaps trong yêu cầu.
+
+**Cách làm:** Sử dụng bảng markdown, liệt kê NFR-001 đến NFR-008, map đến BRD sections, KPIs, test cases.
+
+**Nội dung cần có:**
+* Bảng ánh xạ: Cột (NFR ID, Tên NFR, BRD Section, Business KPI, Test Case ID, Priority)
+* Ví dụ: NFR-001 Performance → BRD 5.1 → Response time <2s → TC-NFR-001-01 → Must-Have
+* Phạm vi: Bao quát 8 NFR, tập trung Must-Have (5), Should-Have (2), Nice-to-Have (1)
+* Liên kết: Đến Part13 Testing Plan, Part16.2 Traceability Matrix
+* Validation: 100% NFR có mapping, no orphan requirements
+
+**Tài liệu tham khảo:**
+* Đầu vào từ: System_Feature_Tree_Grok.md Section 4 (NFR list và mapping)
+* Đầu vào từ: 01-BRD.md Section 5 (non-functional requirements và KPIs)
+* Thể hiện yêu cầu: 02-SRS-V2.md Part05 (traceability section)
+* Kết nối với: Part13_System_UAT_Testing_Plan (test case IDs)
+* Kết nối với: Part16.2_Traceability_Matrix (full system traceability)
+
+**Mục đích của node này:** Đảm bảo traceability từ NFR đến BRD/test, hỗ trợ validation và compliance.
+
+<xaiArtifact artifact_id="48495363-ef78-4dff-a827-e867819419b0" artifact_version_id="73ee97f4-6c75-44bf-89af-a980a1417ac8" title="05.5_Traceability_Matrix.md" contentType="text/markdown">
+
+# Ma trận Traceability - Non-Functional Requirements
+
+| NFR ID | Tên NFR                | BRD Section | Business KPI                     | Test Case ID    | Priority     |
+|--------|------------------------|-------------|----------------------------------|-----------------|--------------|
+| NFR-001| Performance            | 5.1         | Response time <2s, conversion >90% | TC-NFR-001-01 | Must-Have 🔴 |
+| NFR-002| Security               | 5.2         | Fraud rate ≤5%, GDPR compliance  | TC-NFR-002-01 | Must-Have 🔴 |
+| NFR-003| Reliability            | 5.3         | Uptime >99.9%, MTTR <1h          | TC-NFR-003-01 | Must-Have 🔴 |
+| NFR-004| Usability              | 5.4         | Form completion >90%, time <30s  | TC-NFR-004-01 | Must-Have 🔴 |
+| NFR-005| Scalability            | 5.5         | Handle 100K users/day            | TC-NFR-005-01 | Must-Have 🔴 |
+| NFR-006| Accessibility          | 5.6         | WCAG 2.1 score >90%              | TC-NFR-006-01 | Should-Have 🟡 |
+| NFR-007| Maintainability        | 5.7         | Technical debt <10%              | TC-NFR-007-01 | Should-Have 🟡 |
+| NFR-008| Advanced Compliance    | 5.8         | ISO 27001, SOC 2 pass 100%       | TC-NFR-008-01 | Nice-to-Have 🟢 |
+
+**Ghi chú:**
+- Mỗi NFR ánh xạ đến BRD section, đảm bảo coverage 100%.
+- KPIs đo lường từ business goals (01-BRD.md), liên kết test cases từ Part13.
+- Priority: Must-Have (MVP Phase 1), Should-Have (Phase 2), Nice-to-Have (Phase 3).
+
+</xaiArtifact>
+
+---
