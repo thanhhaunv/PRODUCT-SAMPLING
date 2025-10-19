@@ -15981,7 +15981,6 @@ The Campaign module handles all campaign-related operations including CRUD, barc
 
 ## Structure
 
-```
 campaign/
 ├── domain/           # Core business logic
 │   ├── entities/    # Campaign entity
@@ -15993,8 +15992,6 @@ campaign/
 │   └── persistence/ # CampaignRepository
 └── presentation/    # API layer
     └── controllers/ # CampaignController
-```
-
 
 ## Usage
 
