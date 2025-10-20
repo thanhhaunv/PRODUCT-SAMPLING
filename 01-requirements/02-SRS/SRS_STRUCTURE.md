@@ -384,12 +384,6 @@ PSP_SRS_V2/
 │   │   │   ├── 08.2.8.1_Send_SMS.md
 │   │   │   ├── 08.2.8.2_Send_Email.md
 │   │   │   └── 08.2.8.3_Get_Notification_Status.md
-│   │   │
-Vâng! Tiếp tục phần còn lại của **Full SRS Structure**! 🚀
-
----
-
-```
 │   │   ├── 08.2.9_CRM_Integration_APIs/ ✅
 │   │   │   ├── 08.2.9.1_Sync_To_CRM.md
 │   │   │   ├── 08.2.9.2_Get_Sync_Status.md
