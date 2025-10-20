@@ -3095,3 +3095,1485 @@ Part05_Non_Functional_Requirements/
 | Tech Lead | [TBD] | - | - |
 
 
+
+
+# Part06 - System Architecture
+
+## Structure of Part06 (Section 1)
+```
+Part06_System_Architecture/
+├── 06.1_Architecture_Overview.md
+├── 06.2_Logical_Architecture/
+│   ├── 06.2.1_Layered_Architecture.md
+│   ├── 06.2.2_Microservices_Design.md
+│   ├── 06.2.3_Service_Boundaries.md
+│   ├── 06.2.4_Service_Dependencies.md
+│   └── 06.2.5_Service_Catalog.md
+```
+
+---
+
+## 06.1 Architecture Overview
+
+**References**: BRD.md (Section 1), Product-Sampling-Vision-and-Strategy Document.md (Section 1), System_Feature_Tree.md (Section 3), Part04_Functional_Requirements, Part05_Non_Functional_Requirements
+
+**Mục đích**: Cung cấp cái nhìn tổng quan về kiến trúc hệ thống PSP, định hướng triển khai 7 microservices để hỗ trợ phân phối quà mẫu giá trị thấp (~$1).
+
+**Ý nghĩa**: Đảm bảo đội phát triển hiểu rõ cấu trúc hệ thống, đáp ứng các yêu cầu chức năng (Part04) và phi chức năng (Part05).
+
+**Cách làm**: Mô tả kiến trúc microservices, công nghệ sử dụng, và cách hỗ trợ các FRs/NFRs.
+
+**Nội dung cần có**:
+- **Tổng quan**: Hệ thống PSP sử dụng kiến trúc microservices triển khai trên AWS, với 7 dịch vụ chính: Campaign Management, Identity, Redemption, Analytics, Notification, Fraud Detection, Intelligence. Hệ thống hỗ trợ 14 FRs (Part04) và 8 NFRs (Part05), tối ưu hóa thu thập dữ liệu khách hàng qua quà mẫu giá trị thấp với engagement cao (>90% form completion rate).
+- **Kiến trúc tổng quan**:
+  ```mermaid
+  graph TD
+      A[Client: PWA] -->|HTTPS| B[API Gateway: AWS API Gateway]
+      B --> C[Campaign Management Service]
+      B --> D[Identity Service]
+      B --> E[Redemption Service]
+      B --> F[Analytics Service]
+      B --> G[Notification Service]
+      B --> H[Fraud Detection Service]
+      B --> I[Intelligence Service]
+      C --> J[PostgreSQL: campaigns_db]
+      D --> K[PostgreSQL: users_db]
+      E --> L[PostgreSQL: redemptions_db]
+      F --> M[MongoDB: analytics_db]
+      G --> N[Redis: message_queue]
+      H --> O[MongoDB: fraud_db]
+      I --> P[MongoDB: recommendations_db]
+      G --> Q[Twilio: SMS/Email]
+      E --> R[POS Devices: Offline Sync]
+      B --> S[AWS CloudWatch: Monitoring]
+      B --> T[AWS S3: Assets]
+  ```
+- **Công nghệ sử dụng**:
+  - **Frontend**: PWA (React, Tailwind CSS).
+  - **Backend**: TypeScript/Node.js, AWS ECS (Docker).
+  - **Databases**: PostgreSQL (campaigns, users, redemptions), MongoDB (analytics, fraud, recommendations), Redis (caching, queues).
+  - **Infra**: AWS API Gateway, ELB, CloudWatch, S3, KMS, Shield.
+  - **External Services**: Twilio (SMS/Email), Okta (SSO), Scandit (barcode scanning).
+- **Mục tiêu kiến trúc**:
+  - Hỗ trợ 10K concurrent users (NFR-002).
+  - API response time <500ms (NFR-001).
+  - Uptime 99.9% (NFR-004).
+  - Tuân thủ GDPR/PDPA (NFR-008).
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: BRD.md, System_Feature_Tree.md, Part04, Part05
+- **Kết nối với**: Part03_User_Personas_And_Use_Cases, Part04, Part05
+
+**Mục đích của node này**: Tóm tắt kiến trúc và công nghệ, cung cấp context cho Logical Architecture.
+
+**Assumptions/Constraints**:
+- Assumes triển khai trên AWS với microservices độc lập.
+- Constraint: Hệ thống phải hỗ trợ PWA trên 3G/4G networks.
+
+**Dependencies/Risks**:
+- Dependencies: Part04 (FRs), Part05 (NFRs).
+- Risks: Service coupling dẫn đến lỗi → Mitigation: Strict service boundaries.
+
+**Acceptance Criteria/Testable Items**:
+- Diagram phản ánh đúng 7 microservices và dependencies.
+- Tech stack được phê duyệt bởi Tech Lead.
+- Architecture hỗ trợ tất cả FRs/NFRs.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 06.2 Logical Architecture
+
+### 06.2.1 Layered Architecture
+
+**References**: BRD.md (Section 2), Part04_Functional_Requirements, Part05_Non_Functional_Requirements
+
+**Mục đích**: Định nghĩa các tầng kiến trúc (Presentation, Application, Data) để hỗ trợ microservices.
+
+**Ý nghĩa**: Đảm bảo sự phân tách rõ ràng giữa các tầng, tăng maintainability (NFR-005).
+
+**Cách làm**: Mô tả các tầng và vai trò trong PSP.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Presentation Layer**: PWA (React, Tailwind CSS) cung cấp UI cho Customer, POS Staff, Brand Admin, Platform Admin. Hỗ trợ responsive design, đa ngôn ngữ (Anh/Việt), và form completion rate >90% (NFR-007).
+  - **Application Layer**: 7 microservices (TypeScript/Node.js) chạy trên AWS ECS, giao tiếp qua AWS API Gateway. Xử lý logic nghiệp vụ (FR-001 đến FR-014).
+  - **Data Layer**: PostgreSQL (structured data: campaigns, users, redemptions), MongoDB (unstructured: analytics, fraud, recommendations), Redis (caching, queues).
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[Presentation Layer: PWA] -->|HTTPS| B[Application Layer: Microservices]
+      B --> C[Campaign Management]
+      B --> D[Identity]
+      B --> E[Redemption]
+      B --> F[Analytics]
+      B --> G[Notification]
+      B --> H[Fraud Detection]
+      B --> I[Intelligence]
+      B --> J[API Gateway: AWS]
+      C --> K[Data Layer: PostgreSQL]
+      D --> K
+      E --> K
+      F --> L[MongoDB]
+      H --> L
+      I --> L
+      G --> M[Redis]
+      J --> N[AWS CloudWatch]
+      J --> O[AWS S3]
+  ```
+- **Dependencies**: FR-006 (Ads Format Management), NFR-001 (Performance), NFR-007 (Usability).
+
+**Assumptions/Constraints**:
+- Assumes PWA sử dụng service workers cho offline redemption.
+- Constraint: Data layer phải hỗ trợ sharding cho MongoDB.
+
+**Dependencies/Risks**:
+- Dependencies: AWS ECS, API Gateway.
+- Risks: Layer coupling → Mitigation: Use RESTful APIs và event-driven design.
+
+**Acceptance Criteria/Testable Items**:
+- Presentation layer load trong <2s (NFR-007).
+- Application layer xử lý 1K requests/s (NFR-001).
+- Data layer đảm bảo data consistency trong 95% test cases.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.2.2 Microservices Design
+
+**References**: System_Feature_Tree.md (Section 3), Part04_Functional_Requirements
+
+**Mục đích**: Mô tả thiết kế microservices với 7 dịch vụ chính.
+
+**Ý nghĩa**: Đảm bảo mỗi dịch vụ độc lập, dễ scale (NFR-002), và maintainable (NFR-005).
+
+**Cách làm**: Mô tả chức năng, công nghệ, và giao tiếp của mỗi microservice.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Campaign Management Service**: Xử lý FR-001 (Campaign CRUD), FR-002 (Barcode Management), FR-006 (Ads Format Management). Tech: TypeScript/Node.js, PostgreSQL.
+  - **Identity Service**: Xử lý FR-003 (User Authentication), FR-004 (User Management), FR-005 (OTP Verification). Tech: TypeScript/Node.js, PostgreSQL, Redis.
+  - **Redemption Service**: Xử lý FR-007 (Barcode Redemption). Tech: TypeScript/Node.js, PostgreSQL, LocalDB (offline sync).
+  - **Analytics Service**: Xử lý FR-008 (Real-Time Analytics). Tech: TypeScript/Node.js, MongoDB.
+  - **Notification Service**: Xử lý FR-009 (CRM Integration), FR-010 (Notification System). Tech: TypeScript/Node.js, Redis, Twilio.
+  - **Fraud Detection Service**: Xử lý FR-011 (Fraud Detection). Tech: TypeScript/Node.js, MongoDB.
+  - **Intelligence Service**: Xử lý FR-012 (A/B Testing), FR-013 (Recommendation Engine), FR-014 (Advanced Reporting). Tech: TypeScript/Node.js, MongoDB.
+- **Giao tiếp**: RESTful APIs qua AWS API Gateway, event-driven với AWS SNS/SQS cho async tasks (e.g., notifications).
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[API Gateway] -->|REST| B[Campaign Management]
+      A -->|REST| C[Identity]
+      A -->|REST| D[Redemption]
+      A -->|REST| E[Analytics]
+      A -->|SQS| F[Notification]
+      A -->|REST| G[Fraud Detection]
+      A -->|REST| H[Intelligence]
+      F -->|SNS| I[Twilio]
+      D -->|Offline| J[POS Devices]
+      B --> K[PostgreSQL]
+      C --> K
+      D --> K
+      E --> L[MongoDB]
+      G --> L
+      H --> L
+      F --> M[Redis]
+  ```
+
+**Assumptions/Constraints**:
+- Assumes mỗi microservice có repository riêng (GitHub).
+- Constraint: API phải stateless, hỗ trợ horizontal scaling.
+
+**Dependencies/Risks**:
+- Dependencies: AWS SNS/SQS, API Gateway.
+- Risks: Service downtime → Mitigation: Health checks và retries.
+
+**Acceptance Criteria/Testable Items**:
+- Mỗi microservice xử lý đúng FRs được gán.
+- APIs đạt response time <500ms (NFR-001).
+- Event-driven tasks (e.g., notifications) hoàn tất trong <5s.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.2.3 Service Boundaries
+
+**References**: Part04_Functional_Requirements, System_Feature_Tree.md (Section 3)
+
+**Mục đích**: Xác định ranh giới trách nhiệm của từng microservice.
+
+**Ý nghĩa**: Ngăn service coupling, tăng maintainability (NFR-005) và scalability (NFR-002).
+
+**Cách làm**: Mô tả trách nhiệm và data ownership của mỗi microservice.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Campaign Management Service**: Quản lý campaigns, barcodes, ads formats (FR-001, FR-002, FR-006). Data: Campaign metadata, barcode pools, template assets.
+  - **Identity Service**: Quản lý users, authentication, OTP (FR-003, FR-004, FR-005). Data: User profiles, roles, OTP cache.
+  - **Redemption Service**: Xử lý barcode redemption (online/offline) (FR-007). Data: Redemption logs, offline sync data.
+  - **Analytics Service**: Cung cấp real-time metrics, advanced analytics (FR-008). Data: Metrics, funnel data.
+  - **Notification Service**: Gửi SMS/Email/Push, đồng bộ CRM (FR-009, FR-010). Data: Notification queue, CRM sync logs.
+  - **Fraud Detection Service**: Phát hiện gian lận (FR-011). Data: Fraud scores, device fingerprints.
+  - **Intelligence Service**: A/B testing, recommendations, advanced reporting (FR-012, FR-013, FR-014). Data: Experiment data, recommendation models.
+- **Boundaries**:
+  - Mỗi service chỉ truy cập database riêng (e.g., Campaign Management không truy cập users_db).
+  - Giao tiếp giữa services qua REST APIs hoặc SQS/SNS.
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class Campaign_Management {
+          +FR-001, FR-002, FR-006
+          +campaigns_db: PostgreSQL
+          +Assets: AWS S3
+      }
+      class Identity {
+          +FR-003, FR-004, FR-005
+          +users_db: PostgreSQL
+          +OTP_cache: Redis
+      }
+      class Redemption {
+          +FR-007
+          +redemptions_db: PostgreSQL
+          +LocalDB: Offline
+      }
+      class Analytics {
+          +FR-008
+          +analytics_db: MongoDB
+      }
+      class Notification {
+          +FR-009, FR-010
+          +message_queue: Redis
+          +Twilio: External
+      }
+      class Fraud_Detection {
+          +FR-011
+          +fraud_db: MongoDB
+      }
+      class Intelligence {
+          +FR-012, FR-013, FR-014
+          +recommendations_db: MongoDB
+      }
+      Campaign_Management --> Notification : SQS
+      Identity --> Notification : SQS
+      Redemption --> Fraud_Detection : REST
+      Analytics --> Intelligence : REST
+  ```
+
+**Assumptions/Constraints**:
+- Assumes Domain-Driven Design (DDD) cho service boundaries.
+- Constraint: Không có direct DB access giữa các services.
+
+**Dependencies/Risks**:
+- Dependencies: FR-001 đến FR-014.
+- Risks: Boundary overlap → Mitigation: DDD workshops với dev team.
+
+**Acceptance Criteria/Testable Items**:
+- Mỗi service chỉ truy cập database được gán.
+- No direct DB coupling trong integration tests.
+- Service boundaries được phê duyệt bởi Tech Lead.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.2.4 Service Dependencies
+
+**References**: Part04_Functional_Requirements, System_Feature_Tree.md (Section 3)
+
+**Mục đích**: Mô tả dependencies giữa các microservices để đảm bảo integration.
+
+**Ý nghĩa**: Giảm rủi ro lỗi tích hợp, hỗ trợ scalability (NFR-002).
+
+**Cách làm**: Liệt kê dependencies và giao tiếp (sync/async).
+
+**Nội dung cần có**:
+- **Dependencies**:
+  | Service | Depends On | Type | Description |
+  |---------|------------|------|-------------|
+  | Campaign Management | Notification | Async (SQS) | Gửi thông báo khi campaign được tạo. |
+  | Identity | Notification | Async (SQS) | Gửi OTP qua SMS/Email. |
+  | Redemption | Campaign Management | Sync (REST) | Validate barcode với campaign. |
+  | Redemption | Fraud Detection | Sync (REST) | Kiểm tra fraud score trước khi redeem. |
+  | Analytics | Redemption | Sync (REST) | Thu thập redemption data cho metrics. |
+  | Notification | Identity | Sync (REST) | Validate user trước khi gửi notification. |
+  | Fraud Detection | Redemption | Sync (REST) | Nhận redemption events để tính fraud score. |
+  | Intelligence | Analytics | Sync (REST) | Sử dụng analytics data cho A/B testing, recommendations. |
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[Campaign Management] -->|SQS| B[Notification]
+      C[Identity] -->|SQS| B
+      D[Redemption] -->|REST| A
+      D -->|REST| E[Fraud Detection]
+      F[Analytics] -->|REST| D
+      B -->|REST| C
+      E -->|REST| D
+      G[Intelligence] -->|REST| F
+  ```
+
+**Assumptions/Constraints**:
+- Assumes sử dụng AWS SNS/SQS cho async communication.
+- Constraint: REST APIs phải idempotent.
+
+**Dependencies/Risks**:
+- Dependencies: AWS SNS/SQS, API Gateway.
+- Risks: Dependency loops → Mitigation: Circuit breakers, retries.
+
+**Acceptance Criteria/Testable Items**:
+- Dependencies được xác định chính xác cho 7 services.
+- Async tasks (SQS) hoàn tất trong <5s.
+- REST calls giữa services đạt latency <500ms.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.2.5 Service Catalog
+
+**References**: Part04_Functional_Requirements, System_Feature_Tree.md (Section 3)
+
+**Mục đích**: Cung cấp danh mục chi tiết của 7 microservices với API endpoints và trách nhiệm.
+
+**Ý nghĩa**: Hỗ trợ dev team triển khai và test các services.
+
+**Cách làm**: Liệt kê mỗi service với FRs, APIs, và tech stack.
+
+**Nội dung cần có**:
+- **Service Catalog**:
+  | Service | FRs | APIs | Tech Stack | Database |
+  |---------|-----|------|------------|----------|
+  | Campaign Management | FR-001, FR-002, FR-006 | POST/GET/PUT/DELETE /api/campaigns, /api/barcodes, /api/ads-formats | TypeScript/Node.js, AWS ECS | PostgreSQL, AWS S3 |
+  | Identity | FR-003, FR-004, FR-005 | POST /api/auth/login, /api/auth/sso, /api/users, /api/otp | TypeScript/Node.js, AWS ECS | PostgreSQL, Redis |
+  | Redemption | FR-007 | POST/GET /api/redemptions | TypeScript/Node.js, AWS ECS | PostgreSQL, LocalDB |
+  | Analytics | FR-008 | GET /api/analytics/realtime | TypeScript/Node.js, AWS ECS | MongoDB |
+  | Notification | FR-009, FR-010 | POST /api/notifications/sms, /email, /push, /crm | TypeScript/Node.js, AWS ECS | Redis, PostgreSQL |
+  | Fraud Detection | FR-011 | POST /api/fraud/score, /rules, /fingerprint | TypeScript/Node.js, AWS ECS | MongoDB |
+  | Intelligence | FR-012, FR-013, FR-014 | POST/GET /api/ab-tests, /recommendations, /reports | TypeScript/Node.js, AWS ECS | MongoDB |
+
+**Assumptions/Constraints**:
+- Assumes mỗi service có Swagger docs cho APIs.
+- Constraint: APIs phải tuân thủ REST standards.
+
+**Dependencies/Risks**:
+- Dependencies: AWS API Gateway, Swagger.
+- Risks: API mismatch → Mitigation: API-first design với contract testing.
+
+**Acceptance Criteria/Testable Items**:
+- Catalog bao gồm đầy đủ 7 services với APIs chính xác.
+- Mỗi service ánh xạ đúng FRs từ Part04.
+- Swagger docs được generate và phê duyệt.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+
+# Part06 - System Architecture (Section 2)
+
+## Structure of Part06 (Section 2)
+```
+Part06_System_Architecture/
+├── 06.3_Physical_Architecture/
+│   ├── 06.3.1_Deployment_Diagram.md
+│   ├── 06.3.2_Infrastructure_Components.md
+│   ├── 06.3.3_Network_Topology.md
+│   ├── 06.3.4_Kubernetes_Architecture.md
+│   └── 06.3.5_Service_Mesh_Design.md
+├── 06.4_Technology_Stack/
+│   ├── 06.4.1_Frontend_Technologies.md
+│   ├── 06.4.2_Backend_Technologies.md
+│   ├── 06.4.3_Database_Technologies.md
+│   ├── 06.4.4_Integration_Technologies.md
+│   ├── 06.4.5_DevOps_Tools.md
+│   └── 06.4.6_Observability_Stack.md
+```
+
+---
+
+## 06.3 Physical Architecture
+
+### 06.3.1 Deployment Diagram
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements, 06.2_Logical_Architecture
+
+**Mục đích**: Mô tả cách triển khai 7 microservices trên hạ tầng vật lý (AWS EKS).
+
+**Ý nghĩa**: Đảm bảo hệ thống đáp ứng NFR-002 (Scalability, 10K concurrent users) và NFR-004 (Reliability, 99.9% uptime).
+
+**Cách làm**: Cung cấp deployment diagram với các thành phần vật lý và mối quan hệ.
+
+**Nội dung cần có**:
+- **Mô tả**: Hệ thống PSP triển khai trên AWS EKS với 7 microservices, sử dụng AWS API Gateway, ELB, và Multi-AZ RDS. PWA được phục vụ qua CloudFront, hỗ trợ offline redemption cho POS devices.
+- **Deployment Diagram**:
+  ```mermaid
+  graph TD
+      A[Client: PWA] -->|HTTPS| B[CloudFront: CDN]
+      B -->|HTTPS| C[API Gateway]
+      C -->|HTTPS| D[ELB: Load Balancer]
+      D --> E[EKS Cluster]
+      E --> F[Campaign Management Pod]
+      E --> G[Identity Pod]
+      E --> H[Redemption Pod]
+      E --> I[Analytics Pod]
+      E --> J[Notification Pod]
+      E --> K[Fraud Detection Pod]
+      E --> L[Intelligence Pod]
+      F --> M[RDS PostgreSQL: Multi-AZ]
+      G --> M
+      H --> M
+      I --> N[DocumentDB: MongoDB]
+      K --> N
+      L --> N
+      J --> O[ElastiCache: Redis]
+      J --> P[Twilio: SMS/Email]
+      H --> Q[POS Devices: Offline Sync]
+      E --> R[CloudWatch: Monitoring]
+      F --> S[S3: Assets]
+      C --> T[KMS: Encryption]
+      C --> U[Shield: DDoS Protection]
+  ```
+- **Dependencies**: FR-001 to FR-014, NFR-001 (Performance), NFR-003 (Security).
+
+**Assumptions/Constraints**:
+- Assumes EKS cluster với minimum 3 nodes (t3.medium).
+- Constraint: Deployment phải hỗ trợ auto-scaling và zero-downtime updates.
+
+**Dependencies/Risks**:
+- Dependencies: AWS EKS, RDS, CloudFront.
+- Risks: Misconfigured EKS → Mitigation: Use Infrastructure as Code (Terraform).
+
+**Acceptance Criteria/Testable Items**:
+- Deployment diagram phản ánh đúng 7 microservices và components.
+- EKS cluster xử lý 10K concurrent users trong load test.
+- Zero-downtime deployment trong 95% test cases.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.3.2 Infrastructure Components
+
+**References**: Part05_Non_Functional_Requirements, 06.2_Logical_Architecture
+
+**Mục đích**: Liệt kê và mô tả các thành phần hạ tầng vật lý của PSP.
+
+**Ý nghĩa**: Đảm bảo hạ tầng hỗ trợ NFR-002 (Scalability) và NFR-004 (Reliability).
+
+**Cách làm**: Mô tả chi tiết các thành phần AWS và vai trò.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **AWS EKS**: Chạy 7 microservices (TypeScript/Node.js) trong Docker containers, hỗ trợ auto-scaling.
+  - **AWS API Gateway**: Quản lý API requests, rate limiting, và authentication.
+  - **AWS ELB**: Phân phối traffic đến EKS pods, đảm bảo latency <500ms (NFR-001).
+  - **AWS RDS PostgreSQL (Multi-AZ)**: Lưu campaigns, users, redemptions, đảm bảo 99.9% uptime (NFR-004).
+  - **AWS DocumentDB (MongoDB)**: Lưu analytics, fraud, recommendations data, hỗ trợ sharding.
+  - **AWS ElastiCache (Redis)**: Caching và message queue cho OTP, notifications.
+  - **AWS CloudFront**: Phục vụ PWA assets, đảm bảo UI load <2s (NFR-007).
+  - **AWS S3**: Lưu ads assets (images, videos).
+  - **AWS KMS**: Quản lý encryption keys cho PII (NFR-003).
+  - **AWS Shield**: Bảo vệ chống DDoS (NFR-003).
+  - **AWS CloudWatch**: Monitoring và logging, hỗ trợ NFR-006 (Auditability).
+  - **POS Devices**: Redeem Tool với LocalDB cho offline sync (FR-007).
+- **Dependencies**: FR-001 to FR-014, NFR-001 to NFR-008.
+
+**Assumptions/Constraints**:
+- Assumes EKS cluster sử dụng t3.medium instances, scale tối đa 10 nodes.
+- Constraint: RDS và DocumentDB phải hỗ trợ Multi-AZ và backups.
+
+**Dependencies/Risks**:
+- Dependencies: AWS EKS, RDS, DocumentDB.
+- Risks: Infra costs vượt ngân sách → Mitigation: Optimize instance types, use reserved instances.
+
+**Acceptance Criteria/Testable Items**:
+- Tất cả components được liệt kê và ánh xạ đúng với FRs/NFRs.
+- RDS Multi-AZ đạt 99.9% uptime trong test.
+- CloudFront đảm bảo asset load time <1s.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.3.3 Network Topology
+
+**References**: Part05_Non_Functional_Requirements, 06.2_Logical_Architecture
+
+**Mục đích**: Mô tả cấu trúc mạng để đảm bảo bảo mật và hiệu suất.
+
+**Ý nghĩa**: Hỗ trợ NFR-003 (Security) và NFR-001 (Performance).
+
+**Cách làm**: Cung cấp network diagram và mô tả VPC, subnets, security groups.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **VPC**: Single VPC (us-east-1) với public và private subnets.
+  - **Public Subnets**: CloudFront, API Gateway, ELB.
+  - **Private Subnets**: EKS cluster, RDS, DocumentDB, ElastiCache.
+  - **Security Groups**:
+    - API Gateway: Allow HTTPS (port 443) từ Internet.
+    - EKS: Allow traffic từ ELB (port 80/443).
+    - RDS/DocumentDB: Allow traffic từ EKS (port 5432/27017).
+    - ElastiCache: Allow traffic từ Notification Service (port 6379).
+  - **NAT Gateway**: Cho private subnets truy cập Twilio, Okta.
+  - **VPC Endpoints**: S3, CloudWatch để tránh public Internet.
+- **Network Diagram**:
+  ```mermaid
+  graph TD
+      A[Internet] -->|HTTPS| B[CloudFront]
+      A -->|HTTPS| C[API Gateway]
+      C -->|HTTPS| D[ELB]
+      B --> E[VPC: us-east-1]
+      D --> E
+      E --> F[Public Subnet: CloudFront, API Gateway, ELB]
+      E --> G[Private Subnet: EKS Cluster]
+      E --> H[Private Subnet: RDS PostgreSQL]
+      E --> I[Private Subnet: DocumentDB]
+      E --> J[Private Subnet: ElastiCache]
+      G --> K[Campaign Management]
+      G --> L[Identity]
+      G --> M[Redemption]
+      G --> N[Analytics]
+      G --> O[Notification]
+      G --> P[Fraud Detection]
+      G --> Q[Intelligence]
+      K --> H
+      L --> H
+      M --> H
+      N --> I
+      P --> I
+      Q --> I
+      O --> J
+      O -->|HTTPS| R[Twilio]
+      E --> S[NAT Gateway]
+      S --> R
+      E --> T[VPC Endpoint: S3, CloudWatch]
+  ```
+
+**Assumptions/Constraints**:
+- Assumes VPC với 2 AZs (us-east-1a, us-east-1b).
+- Constraint: Chỉ HTTPS traffic được phép vào public subnets.
+
+**Dependencies/Risks**:
+- Dependencies: AWS VPC, NAT Gateway.
+- Risks: Network misconfiguration → Mitigation: Use Terraform, network tests.
+
+**Acceptance Criteria/Testable Items**:
+- VPC hỗ trợ traffic từ 10K concurrent users.
+- Security groups chặn 100% unauthorized access trong test.
+- Latency giữa EKS và RDS/DocumentDB <100ms.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.3.4 Kubernetes Architecture
+
+**References**: Part05_Non_Functional_Requirements, 06.2_Logical_Architecture
+
+**Mục đích**: Mô tả cách triển khai microservices trên AWS EKS.
+
+**Ý nghĩa**: Đảm bảo NFR-002 (Scalability) và NFR-004 (Reliability) với Kubernetes.
+
+**Cách làm**: Mô tả EKS cluster, node groups, và pod configurations.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **EKS Cluster**: Single cluster (us-east-1) với 2 node groups (app, db).
+  - **Node Group: App**: t3.medium instances, auto-scaling từ 3-10 nodes, chạy 7 microservices.
+  - **Node Group: DB**: r5.large instances, fixed 2 nodes, chạy sidecar proxies cho RDS/DocumentDB.
+  - **Pod Configurations**:
+    - Mỗi microservice chạy trong pod riêng (1 container/pod).
+    - Health checks: `/health` endpoint, liveness/readiness probes.
+    - Resource limits: 0.5 CPU, 1GB RAM/pod.
+  - **Horizontal Pod Autoscaler (HPA)**: Scale pods dựa trên CPU (80%) và memory (80%).
+  - **Cluster Autoscaler**: Scale node group dựa trên pod demand.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[EKS Cluster: us-east-1]
+      A --> B[Node Group: App]
+      A --> C[Node Group: DB]
+      B --> D[Campaign Management Pod]
+      B --> E[Identity Pod]
+      B --> F[Redemption Pod]
+      B --> G[Analytics Pod]
+      B --> H[Notification Pod]
+      B --> I[Fraud Detection Pod]
+      B --> J[Intelligence Pod]
+      C --> K[RDS Proxy]
+      C --> L[DocumentDB Proxy]
+      D --> M[Container: TypeScript/Node.js]
+      E --> N[Container: TypeScript/Node.js]
+      F --> O[Container: TypeScript/Node.js]
+      G --> P[Container: TypeScript/Node.js]
+      H --> Q[Container: TypeScript/Node.js]
+      I --> R[Container: TypeScript/Node.js]
+      J --> S[Container: TypeScript/Node.js]
+      A --> T[CloudWatch: Metrics]
+      A --> U[HPA: Auto-scaling]
+  ```
+
+**Assumptions/Constraints**:
+- Assumes EKS version 1.28, Kubernetes 1.28.
+- Constraint: Pods phải restart trong <30s sau failure.
+
+**Dependencies/Risks**:
+- Dependencies: AWS EKS, CloudWatch.
+- Risks: Pod crashes → Mitigation: Liveness/readiness probes, logging.
+
+**Acceptance Criteria/Testable Items**:
+- EKS cluster scale từ 3-10 nodes trong <5 phút.
+- Pods đạt 99.9% uptime trong test.
+- HPA triggers chính xác tại 80% CPU/memory.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.3.5 Service Mesh Design
+
+**References**: Part05_Non_Functional_Requirements, 06.2_Logical_Architecture
+
+**Mục đích**: Triển khai service mesh để quản lý giao tiếp giữa microservices.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) và NFR-006 (Auditability) với observability và mTLS.
+
+**Cách làm**: Sử dụng Istio trên EKS để quản lý traffic, security, và monitoring.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Istio Service Mesh**: Chạy trên EKS, cung cấp mTLS, traffic management, và observability.
+  - **Components**:
+    - **Istio Gateway**: Proxy cho API Gateway traffic.
+    - **Sidecar Proxies**: Envoy proxies tiêm vào mỗi pod, xử lý mTLS và logging.
+    - **Istio Control Plane**: Quản lý policies, telemetry.
+  - **Features**:
+    - mTLS: Encrypt traffic giữa services (NFR-003).
+    - Traffic routing: Canary deployments cho FR-012 (A/B Testing).
+    - Observability: Metrics và traces qua Prometheus/Grafana.
+  - **Configuration**:
+    - mTLS: Strict mode.
+    - Rate limiting: 1K requests/s/service.
+    - Circuit breaking: Retry 3 lần, timeout 5s.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[API Gateway] -->|HTTPS| B[Istio Gateway]
+      B --> C[EKS Cluster]
+      C --> D[Campaign Management Pod + Envoy]
+      C --> E[Identity Pod + Envoy]
+      C --> F[Redemption Pod + Envoy]
+      C --> G[Analytics Pod + Envoy]
+      C --> H[Notification Pod + Envoy]
+      C --> I[Fraud Detection Pod + Envoy]
+      C --> J[Intelligence Pod + Envoy]
+      C --> K[Istio Control Plane]
+      K --> L[Prometheus: Metrics]
+      K --> M[Grafana: Dashboards]
+      D -->|mTLS| E
+      E -->|mTLS| H
+      F -->|mTLS| I
+      G -->|mTLS| J
+      H -->|mTLS| N[Twilio]
+  ```
+
+**Assumptions/Constraints**:
+- Assumes Istio 1.17 trên EKS.
+- Constraint: Service mesh không được tăng latency quá 50ms.
+
+**Dependencies/Risks**:
+- Dependencies: Istio, Prometheus, Grafana.
+- Risks: Istio misconfiguration → Mitigation: Automated Istio configs via Helm.
+
+**Acceptance Criteria/Testable Items**:
+- mTLS được áp dụng cho 100% inter-service traffic.
+- Latency do service mesh <50ms trong test.
+- Prometheus/Grafana thu thập metrics chính xác.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 06.4 Technology Stack
+
+### 06.4.1 Frontend Technologies
+
+**References**: Part04_Functional_Requirements (FR-006), Part05_Non_Functional_Requirements (NFR-007)
+
+**Mục đích**: Mô tả tech stack cho PWA để hỗ trợ UX và engagement (quà mẫu ~$1).
+
+**Ý nghĩa**: Đảm bảo NFR-007 (Usability, form completion rate >90%).
+
+**Cách làm**: Liệt kê công nghệ và vai trò.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **React (18.x)**: Framework cho PWA, hỗ trợ responsive UI.
+  - **Tailwind CSS (3.x)**: Styling cho landing pages, banners (FR-006).
+  - **Service Workers**: Hỗ trợ offline redemption (FR-007).
+  - **TypeScript (5.x)**: Type safety cho frontend code.
+  - **Vite (5.x)**: Build tool, đảm bảo build time <10s.
+  - **CDN**: AWS CloudFront, đảm bảo asset load <1s (NFR-007).
+- **Dependencies**: FR-006 (Ads Format Management), NFR-007 (Usability).
+
+**Assumptions/Constraints**:
+- Assumes PWA hỗ trợ Chrome, Safari (mobile/desktop).
+- Constraint: UI phải đa ngôn ngữ (Anh/Việt).
+
+**Dependencies/Risks**:
+- Dependencies: AWS CloudFront, React.
+- Risks: PWA không tương thích với old browsers → Mitigation: Polyfills, browser testing.
+
+**Acceptance Criteria/Testable Items**:
+- PWA load time <2s trên 3G/4G (NFR-007).
+- Form completion rate >90% trong usability tests.
+- Offline redemption hoạt động trên POS devices.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.4.2 Backend Technologies
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-001, NFR-005)
+
+**Mục đích**: Mô tả tech stack cho 7 microservices.
+
+**Ý nghĩa**: Đảm bảo NFR-001 (Performance, <500ms API response) và NFR-005 (Maintainability).
+
+**Cách làm**: Liệt kê công nghệ và vai trò.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **TypeScript (5.x)**: Ngôn ngữ chính, type safety.
+  - **Node.js (20.x)**: Runtime cho microservices, hỗ trợ async I/O.
+  - **Express (4.x)**: Framework cho REST APIs.
+  - **Docker (24.x)**: Containerization cho EKS deployment.
+  - **AWS SDK**: Tích hợp với S3, CloudWatch, KMS.
+- **Dependencies**: FR-001 to FR-014, NFR-001, NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes mỗi microservice có repository riêng (GitHub).
+- Constraint: APIs phải stateless, RESTful.
+
+**Dependencies/Risks**:
+- Dependencies: AWS ECS, Docker.
+- Risks: Dependency conflicts → Mitigation: Lock file versioning.
+
+**Acceptance Criteria/Testable Items**:
+- APIs đạt response time <500ms (NFR-001).
+- Codebase đạt 80% test coverage (NFR-005).
+- Docker images build và deploy không lỗi.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.4.3 Database Technologies
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-004)
+
+**Mục đích**: Mô tả database stack để lưu trữ và truy xuất dữ liệu.
+
+**Ý nghĩa**: Đảm bảo NFR-004 (Reliability, 99.9% uptime) và NFR-003 (Security).
+
+**Cách làm**: Liệt kê databases và vai trò.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **PostgreSQL (15.x)**: Lưu campaigns, users, redemptions (FR-001, FR-003, FR-004, FR-007). Multi-AZ, backups daily.
+  - **MongoDB (DocumentDB, 5.x)**: Lưu analytics, fraud, recommendations (FR-008, FR-011, FR-012, FR-013, FR-014). Sharding enabled.
+  - **Redis (ElastiCache, 7.x)**: Caching (OTP, sessions) và message queue (notifications) (FR-005, FR-010).
+  - **LocalDB (SQLite)**: Lưu offline redemption data trên POS devices (FR-007).
+- **Dependencies**: FR-001 to FR-014, NFR-004.
+
+**Assumptions/Constraints**:
+- Assumes RDS PostgreSQL và DocumentDB chạy Multi-AZ.
+- Constraint: PII phải được mã hóa (AES-256, NFR-003).
+
+**Dependencies/Risks**:
+- Dependencies: AWS RDS, DocumentDB, ElastiCache.
+- Risks: Data inconsistency → Mitigation: Transactional queries, sharding.
+
+**Acceptance Criteria/Testable Items**:
+- PostgreSQL/DocumentDB đạt 99.9% uptime.
+- Redis latency <10ms cho caching.
+- LocalDB sync offline data trong <5s khi online.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.4.4 Integration Technologies
+
+**References**: Part04_Functional_Requirements (FR-009, FR-010), Part05_Non_Functional_Requirements
+
+**Mục đích**: Mô tả công nghệ tích hợp với external services (Twilio, Okta, etc.).
+
+**Ý nghĩa**: Hỗ trợ FR-009 (CRM Integration), FR-010 (Notification System), và NFR-003 (Security).
+
+**Cách làm**: Liệt kê integration tools và vai trò.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **AWS SNS/SQS**: Async messaging cho notifications, CRM sync (FR-009, FR-010).
+  - **Twilio (API v2010)**: Gửi SMS/Email cho OTP và notifications (FR-005, FR-010).
+  - **Okta (OAuth2)**: SSO cho authentication (FR-003).
+  - **Scandit SDK**: Barcode scanning (QR/Code128/DataMatrix) cho redemption (FR-007).
+  - **HubSpot/Salesforce APIs**: Đồng bộ customer data (FR-009).
+- **Dependencies**: FR-003, FR-005, FR-007, FR-009, FR-010.
+
+**Assumptions/Constraints**:
+- Assumes Twilio và Okta có uptime 99.9%.
+- Constraint: Integration APIs phải idempotent.
+
+**Dependencies/Risks**:
+- Dependencies: AWS SNS/SQS, Twilio, Okta.
+- Risks: Third-party downtime → Mitigation: Fallback mechanisms, retries.
+
+**Acceptance Criteria/Testable Items**:
+- SNS/SQS xử lý 1K messages/s.
+- Twilio gửi SMS/Email trong <5s.
+- Okta SSO response time <500ms.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.4.5 DevOps Tools
+
+**References**: Part05_Non_Functional_Requirements (NFR-005), 06.2_Logical_Architecture
+
+**Mục đích**: Mô tả DevOps tools để hỗ trợ CI/CD và maintainability.
+
+**Ý nghĩa**: Đảm bảo NFR-005 (Maintainability, 80% test coverage) và zero-downtime deployments.
+
+**Cách làm**: Liệt kê tools và vai trò.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **GitHub**: Source control, repository cho mỗi microservice.
+  - **GitHub Actions**: CI/CD pipeline, build/test/deploy trong <10 phút.
+  - **Terraform (1.x)**: Infrastructure as Code cho VPC, EKS, RDS.
+  - **Helm (3.x)**: Quản lý Kubernetes manifests, Istio configs.
+  - **SonarQube**: Code quality, đảm bảo 80% test coverage.
+  - **Swagger (OpenAPI 3.0)**: API documentation.
+- **Dependencies**: NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes CI/CD pipeline chạy trên GitHub Actions.
+- Constraint: Deployments phải zero-downtime.
+
+**Dependencies/Risks**:
+- Dependencies: GitHub, Terraform, Helm.
+- Risks: Pipeline failures → Mitigation: Automated rollback, testing.
+
+**Acceptance Criteria/Testable Items**:
+- CI/CD pipeline hoàn tất trong <10 phút.
+- Test coverage đạt 80% trên SonarQube.
+- Terraform scripts deploy infra không lỗi.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.4.6 Observability Stack
+
+**References**: Part05_Non_Functional_Requirements (NFR-006), 06.3.5_Service_Mesh_Design
+
+**Mục đích**: Mô tả observability tools để monitoring và auditing.
+
+**Ý nghĩa**: Đảm bảo NFR-006 (Auditability, logs truy xuất <5s) và NFR-001 (Performance).
+
+**Cách làm**: Liệt kê tools và vai trò.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **AWS CloudWatch**: Thu thập logs, metrics, và alarms cho EKS, RDS, API Gateway.
+  - **Prometheus (2.x)**: Metrics cho Istio service mesh, pod performance.
+  - **Grafana (9.x)**: Dashboards cho real-time monitoring (e.g., API latency, redemption rates).
+  - **AWS CloudTrail**: Audit logs cho user actions, infra changes (NFR-006).
+  - **Loki**: Log aggregation cho microservices.
+- **Dependencies**: NFR-006 (Auditability), FR-008 (Real-Time Analytics).
+
+**Assumptions/Constraints**:
+- Assumes CloudWatch và Prometheus tích hợp với Istio.
+- Constraint: Logs phải truy xuất <5s (NFR-006).
+
+**Dependencies/Risks**:
+- Dependencies: AWS CloudWatch, Prometheus, Grafana.
+- Risks: Log volume vượt quota → Mitigation: Log rotation, S3 archival.
+
+**Acceptance Criteria/Testable Items**:
+- CloudWatch logs truy xuất <5s.
+- Grafana dashboards hiển thị metrics real-time (<5s refresh).
+- CloudTrail lưu audit logs 12 tháng.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part06 - System Architecture (Section 3)
+
+## Structure of Part06 (Section 3)
+```
+Part06_System_Architecture/
+├── 06.5_Communication_Patterns/
+│   ├── 06.5.1_Synchronous_Communication.md
+│   ├── 06.5.2_Asynchronous_Communication.md
+│   ├── 06.5.3_Event_Driven_Architecture.md
+│   ├── 06.5.4_Message_Queue_Design.md
+│   └── 06.5.5_Service_Discovery.md
+├── 06.6_Scalability_Patterns/
+│   ├── 06.6.1_Horizontal_Scaling.md
+│   ├── 06.6.2_Caching_Strategy.md
+│   ├── 06.6.3_Load_Balancing.md
+│   └── 06.6.4_Database_Partitioning.md
+```
+
+---
+
+## 06.5 Communication Patterns
+
+### 06.5.1 Synchronous Communication
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-001, NFR-003), 06.2_Logical_Architecture
+
+**Mục đích**: Mô tả giao tiếp đồng bộ (REST APIs) giữa các microservices để xử lý real-time requests.
+
+**Ý nghĩa**: Đảm bảo NFR-001 (Performance, <500ms API response) và NFR-003 (Security, mTLS).
+
+**Cách làm**: Mô tả RESTful APIs, endpoints, và Istio integration.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - Synchronous communication sử dụng REST APIs qua AWS API Gateway và Istio (mTLS).
+  - Áp dụng cho: Redemption validation (FR-007), Fraud scoring (FR-011), Analytics queries (FR-008).
+  - **Key Endpoints**:
+    - `POST /api/redemptions/online` (Redemption → Campaign Management): Validate barcode.
+    - `POST /api/fraud/score` (Redemption → Fraud Detection): Tính fraud score.
+    - `GET /api/analytics/realtime` (Analytics → Client): Lấy metrics.
+  - **Security**: mTLS (Istio), JWT authentication (FR-003).
+  - **Performance**: Latency <500ms (NFR-001).
+- **Diagram**:
+  ```mermaid
+  sequenceDiagram
+      participant Client
+      participant API_Gateway
+      participant Istio
+      participant Redemption
+      participant Fraud_Detection
+      Client->>API_Gateway: POST /api/redemptions/online
+      API_Gateway->>Istio: Forward request (mTLS)
+      Istio->>Redemption: Route to pod
+      Redemption->>Fraud_Detection: POST /api/fraud/score (mTLS)
+      Fraud_Detection-->>Redemption: Fraud score
+      Redemption-->>Istio: Redemption result
+      Istio-->>API_Gateway: Response
+      API_Gateway-->>Client: Success
+  ```
+- **Dependencies**: FR-003, FR-007, FR-008, FR-011, NFR-001, NFR-003.
+
+**Assumptions/Constraints**:
+- Assumes APIs là stateless, idempotent.
+- Constraint: Latency phải <500ms kể cả với mTLS.
+
+**Dependencies/Risks**:
+- Dependencies: AWS API Gateway, Istio.
+- Risks: API overload → Mitigation: Rate limiting, circuit breakers.
+
+**Acceptance Criteria/Testable Items**:
+- REST APIs đạt latency <500ms trong 95% test cases.
+- mTLS được áp dụng cho 100% synchronous calls.
+- Rate limiting xử lý 1K requests/s/service.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.5.2 Asynchronous Communication
+
+**References**: Part04_Functional_Requirements (FR-009, FR-010), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Mô tả giao tiếp bất đồng bộ (message queues) cho notifications và CRM sync.
+
+**Ý nghĩa**: Đảm bảo NFR-001 (Performance, <5s for async tasks) và NFR-002 (Scalability).
+
+**Cách làm**: Mô tả AWS SNS/SQS usage và workflows.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - Asynchronous communication sử dụng AWS SNS/SQS cho notifications (FR-010) và CRM sync (FR-009).
+  - **Key Workflows**:
+    - Notification Service: Gửi SMS/Email/Push (FR-010) qua SQS queue.
+    - CRM Integration: Đồng bộ customer data (FR-009) qua SQS.
+  - **Queue Config**: Dead Letter Queue (DLQ) cho failed messages, retry 3 lần.
+  - **Performance**: Message processing <5s (NFR-001).
+- **Diagram**:
+  ```mermaid
+  sequenceDiagram
+      participant Campaign_Management
+      participant SQS
+      participant Notification
+      participant Twilio
+      Campaign_Management->>SQS: Publish campaign creation event
+      SQS->>Notification: Poll message
+      Notification->>Twilio: Send SMS/Email
+      Twilio-->>Notification: Success
+      Notification-->>SQS: Acknowledge
+      Note right of SQS: DLQ for failed messages
+  ```
+- **Dependencies**: FR-009, FR-010, NFR-001, NFR-002.
+
+**Assumptions/Constraints**:
+- Assumes SQS throughput 1K messages/s.
+- Constraint: Messages phải được xử lý trong <5s.
+
+**Dependencies/Risks**:
+- Dependencies: AWS SNS/SQS, Twilio.
+- Risks: Message loss → Mitigation: DLQ, idempotent consumers.
+
+**Acceptance Criteria/Testable Items**:
+- SQS messages xử lý trong <5s trong 95% test cases.
+- DLQ lưu failed messages chính xác.
+- 100% notifications gửi thành công qua Twilio.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.5.3 Event-Driven Architecture
+
+**References**: Part04_Functional_Requirements (FR-009, FR-010, FR-012), Part05_Non_Functional_Requirements (NFR-002)
+
+**Mục đích**: Mô tả kiến trúc event-driven để xử lý A/B testing, notifications, và CRM sync.
+
+**Ý nghĩa**: Tăng NFR-002 (Scalability) và hỗ trợ async workflows.
+
+**Cách làm**: Mô tả event producers, consumers, và event types.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - Event-driven architecture sử dụng AWS SNS/SQS cho loose coupling.
+  - **Event Types**:
+    - `campaign.created`: Trigger notifications (FR-010).
+    - `redemption.completed`: Trigger analytics, fraud detection (FR-007, FR-008, FR-011).
+    - `ab_test.started`: Trigger A/B testing (FR-012).
+  - **Producers**: Campaign Management, Redemption, Intelligence.
+  - **Consumers**: Notification, Analytics, Fraud Detection, Intelligence.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[Campaign Management] -->|SNS| B[Topic: campaign.created]
+      B --> C[SQS: Notification Queue]
+      C --> D[Notification Service]
+      E[Redemption] -->|SNS| F[Topic: redemption.completed]
+      F --> G[SQS: Analytics Queue]
+      F --> H[SQS: Fraud Queue]
+      G --> I[Analytics Service]
+      H --> J[Fraud Detection Service]
+      K[Intelligence] -->|SNS| L[Topic: ab_test.started]
+      L --> M[SQS: Intelligence Queue]
+      M --> K
+  ```
+- **Dependencies**: FR-007, FR-008, FR-009, FR-010, FR-011, FR-012.
+
+**Assumptions/Constraints**:
+- Assumes SNS topics có fan-out tới multiple SQS queues.
+- Constraint: Events phải idempotent để tránh duplicates.
+
+**Dependencies/Risks**:
+- Dependencies: AWS SNS/SQS.
+- Risks: Event duplication → Mitigation: Idempotent consumers, deduplication.
+
+**Acceptance Criteria/Testable Items**:
+- Events được publish và consume trong <5s.
+- 100% events được xử lý không duplicate.
+- SNS fan-out hỗ trợ 10K messages/s.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.5.4 Message Queue Design
+
+**References**: Part04_Functional_Requirements (FR-009, FR-010), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Mô tả thiết kế message queues để xử lý notifications và CRM sync.
+
+**Ý nghĩa**: Đảm bảo NFR-001 (Performance, <5s async tasks) và NFR-002 (Scalability).
+
+**Cách làm**: Mô tả SQS queues, DLQ, và scaling.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Queues**:
+    - `notification-queue`: Xử lý SMS/Email/Push (FR-010).
+    - `crm-sync-queue`: Đồng bộ HubSpot/Salesforce (FR-009).
+    - `analytics-queue`: Thu thập redemption data (FR-008).
+  - **DLQ**: `notification-dlq`, `crm-sync-dlq`, `analytics-dlq` cho failed messages.
+  - **Config**:
+    - Visibility timeout: 30s.
+    - Retention period: 7 days.
+    - Max retries: 3.
+  - **Scaling**: Auto-scale consumers (Notification Service) dựa trên queue length.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[SNS: campaign.created] --> B[SQS: notification-queue]
+      A --> C[SQS: crm-sync-queue]
+      D[SNS: redemption.completed] --> E[SQS: analytics-queue]
+      B --> F[Notification Service]
+      C --> G[Notification Service]
+      E --> H[Analytics Service]
+      B --> I[SQS: notification-dlq]
+      C --> J[SQS: crm-sync-dlq]
+      E --> K[SQS: analytics-dlq]
+      F --> L[Twilio]
+      G --> M[HubSpot/Salesforce]
+  ```
+
+**Assumptions/Constraints**:
+- Assumes SQS queues xử lý 1K messages/s.
+- Constraint: DLQ phải lưu failed messages ít nhất 7 ngày.
+
+**Dependencies/Risks**:
+- Dependencies: AWS SNS/SQS, Twilio.
+- Risks: Queue backlog → Mitigation: Auto-scale consumers, monitor queue length.
+
+**Acceptance Criteria/Testable Items**:
+- Queues xử lý 1K messages/s trong <5s.
+- DLQ lưu 100% failed messages.
+- Consumers scale tự động khi queue length >100.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.5.5 Service Discovery
+
+**References**: Part05_Non_Functional_Requirements (NFR-002), 06.3.4_Kubernetes_Architecture
+
+**Mục đích**: Mô tả cơ chế service discovery để microservices giao tiếp trong EKS.
+
+**Ý nghĩa**: Hỗ trợ NFR-002 (Scalability) và giảm latency trong inter-service communication.
+
+**Cách làm**: Mô tả Kubernetes DNS và Istio service discovery.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Kubernetes DNS**: Sử dụng CoreDNS cho service discovery trong EKS cluster.
+  - **Istio Service Registry**: Đăng ký và quản lý service endpoints.
+  - **Discovery Process**:
+    - Pods truy vấn DNS (e.g., `campaign-management.default.svc.cluster.local`).
+    - Istio Envoy proxies route traffic dựa trên service registry.
+  - **Config**:
+    - TTL: 30s cho DNS cache.
+    - Health checks: `/health` endpoint mỗi 10s.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[Redemption Pod] -->|DNS Query| B[CoreDNS]
+      A -->|Istio Proxy| C[Istio Service Registry]
+      B --> D[Campaign Management Pod]
+      C --> D
+      D --> E[Envoy Proxy]
+      E --> F[Campaign Management Service]
+      C --> G[CloudWatch: Metrics]
+  ```
+
+**Assumptions/Constraints**:
+- Assumes CoreDNS và Istio tích hợp với EKS.
+- Constraint: Service discovery phải resolve trong <50ms.
+
+**Dependencies/Risks**:
+- Dependencies: Kubernetes CoreDNS, Istio.
+- Risks: DNS failures → Mitigation: Redundant DNS servers.
+
+**Acceptance Criteria/Testable Items**:
+- Service discovery resolve trong <50ms.
+- 100% pods được đăng ký trong Istio registry.
+- Health checks phát hiện failed pods trong <10s.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 06.6 Scalability Patterns
+
+### 06.6.1 Horizontal Scaling
+
+**References**: Part05_Non_Functional_Requirements (NFR-002), 06.3.4_Kubernetes_Architecture
+
+**Mục đích**: Mô tả chiến lược horizontal scaling để hỗ trợ 10K concurrent users.
+
+**Ý nghĩa**: Đảm bảo NFR-002 (Scalability) và NFR-004 (Reliability, 99.9% uptime).
+
+**Cách làm**: Mô tả Kubernetes HPA và Cluster Autoscaler.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **HPA**: Scale pods dựa trên CPU (80%) và memory (80%).
+  - **Cluster Autoscaler**: Scale EKS node group (t3.medium) từ 3-10 nodes.
+  - **Scaling Triggers**:
+    - API requests >1K/s.
+    - Queue length >100 messages (Notification Service).
+  - **Config**:
+    - Min pods: 2/service.
+    - Max pods: 20/service.
+    - Scale-up cooldown: 60s.
+    - Scale-down cooldown: 300s.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[EKS Cluster]
+      A --> B[HPA]
+      A --> C[Cluster Autoscaler]
+      B --> D[Campaign Management Pods: 2-20]
+      B --> E[Identity Pods: 2-20]
+      B --> F[Redemption Pods: 2-20]
+      C --> G[Node Group: 3-10 nodes]
+      B --> H[CloudWatch: Metrics]
+      C --> H
+  ```
+
+**Assumptions/Constraints**:
+- Assumes EKS node group sử dụng t3.medium instances.
+- Constraint: Scaling không được gây downtime.
+
+**Dependencies/Risks**:
+- Dependencies: AWS EKS, CloudWatch.
+- Risks: Over-scaling tăng chi phí → Mitigation: Optimize thresholds.
+
+**Acceptance Criteria/Testable Items**:
+- HPA scale pods trong <60s khi CPU >80%.
+- Cluster Autoscaler scale nodes trong <5 phút.
+- Hệ thống xử lý 10K concurrent users không lỗi.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.6.2 Caching Strategy
+
+**References**: Part04_Functional_Requirements (FR-005, FR-008), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Mô tả chiến lược caching để giảm latency và tăng performance.
+
+**Ý nghĩa**: Hỗ trợ NFR-001 (Performance, <500ms API response) và FR-005 (OTP Verification).
+
+**Cách làm**: Mô tả Redis caching và cache policies.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Redis (ElastiCache)**: Cache OTP (FR-005), session data (FR-003), analytics metrics (FR-008).
+  - **Cache Policies**:
+    - TTL: 5 phút (OTP), 24h (sessions), 1h (analytics).
+    - Cache-aside: Load từ DB nếu cache miss.
+    - Write-through: Update cache khi DB thay đổi (e.g., redemption status).
+  - **Use Cases**:
+    - OTP verification: Cache OTP để giảm DB queries.
+    - Analytics: Cache real-time metrics để giảm load trên MongoDB.
+- **Diagram**:
+  ```mermaid
+  sequenceDiagram
+      participant Client
+      participant Redemption
+      participant Redis
+      participant PostgreSQL
+      Client->>Redemption: POST /api/redemptions/online
+      Redemption->>Redis: Check cache (barcode status)
+      alt Cache hit
+          Redis-->>Redemption: Status
+      else Cache miss
+          Redemption->>PostgreSQL: Query status
+          PostgreSQL-->>Redemption: Status
+          Redemption->>Redis: Update cache
+      end
+      Redemption-->>Client: Response
+  ```
+
+**Assumptions/Constraints**:
+- Assumes Redis ElastiCache với 1 primary, 1 replica.
+- Constraint: Cache hit rate >90%.
+
+**Dependencies/Risks**:
+- Dependencies: AWS ElastiCache, PostgreSQL.
+- Risks: Cache inconsistency → Mitigation: Write-through, TTL.
+
+**Acceptance Criteria/Testable Items**:
+- Cache hit rate >90% trong load test.
+- Redis latency <10ms.
+- Cache updates đồng bộ với DB trong <100ms.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.6.3 Load Balancing
+
+**References**: Part05_Non_Functional_Requirements (NFR-002), 06.3.3_Network_Topology
+
+**Mục đích**: Mô tả load balancing để phân phối traffic hiệu quả.
+
+**Ý nghĩa**: Đảm bảo NFR-002 (Scalability, 10K concurrent users) và NFR-001 (Performance).
+
+**Cách làm**: Mô tả AWS ELB và Istio load balancing.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **AWS ELB**: Application Load Balancer phân phối traffic tới EKS pods.
+  - **Istio Load Balancing**: Round-robin routing trong service mesh.
+  - **Config**:
+    - Health checks: `/health` endpoint, interval 10s.
+    - Sticky sessions: Disabled để hỗ trợ horizontal scaling.
+    - Max connections: 10K/service.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[API Gateway] --> B[ELB]
+      B --> C[EKS Cluster]
+      C --> D[Istio Gateway]
+      D --> E[Campaign Management Pods]
+      D --> F[Identity Pods]
+      D --> G[Redemption Pods]
+      E --> H[Envoy Proxy]
+      F --> I[Envoy Proxy]
+      G --> J[Envoy Proxy]
+      B --> K[CloudWatch: Health Checks]
+  ```
+
+**Assumptions/Constraints**:
+- Assumes ELB sử dụng ALB với 2 AZs.
+- Constraint: Load balancing không được tăng latency quá 50ms.
+
+**Dependencies/Risks**:
+- Dependencies: AWS ELB, Istio.
+- Risks: Uneven load distribution → Mitigation: Health checks, weighted routing.
+
+**Acceptance Criteria/Testable Items**:
+- ELB phân phối traffic đều, latency <50ms.
+- Health checks phát hiện failed pods trong <10s.
+- Hệ thống xử lý 10K connections không lỗi.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06.6.4 Database Partitioning
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-002, NFR-004)
+
+**Mục đích**: Mô tả chiến lược partitioning để hỗ trợ scalability và performance.
+
+**Ý nghĩa**: Đảm bảo NFR-002 (Scalability) và NFR-004 (Reliability) cho databases.
+
+**Cách làm**: Mô tả sharding và replication cho PostgreSQL/MongoDB.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **PostgreSQL (RDS)**:
+    - **Sharding**: Theo `campaign_id` cho campaigns/redemptions tables.
+    - **Replication**: Multi-AZ, 1 primary + 1 read replica.
+    - **Use Cases**: Campaign queries (FR-001), redemption logs (FR-007).
+  - **MongoDB (DocumentDB)**:
+    - **Sharding**: Theo `user_id` cho analytics, fraud, recommendations.
+    - **Replication**: 3 replicas/AZ.
+    - **Use Cases**: Real-time analytics (FR-008), fraud scoring (FR-011).
+  - **Config**:
+    - Shard key index: `campaign_id`, `user_id`.
+    - Backup retention: 30 days.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[RDS PostgreSQL]
+      A --> B[Primary: campaigns]
+      A --> C[Read Replica: campaigns]
+      A --> D[Primary: redemptions]
+      A --> E[Read Replica: redemptions]
+      F[DocumentDB MongoDB]
+      F --> G[Shard 1: analytics]
+      F --> H[Shard 2: fraud]
+      F --> I[Shard 3: recommendations]
+      G --> J[Replica 1]
+      G --> K[Replica 2]
+      G --> L[Replica 3]
+  ```
+
+**Assumptions/Constraints**:
+- Assumes sharding keys được tối ưu cho read/write patterns.
+- Constraint: Data consistency phải đạt 95% trong sharded DBs.
+
+**Dependencies/Risks**:
+- Dependencies: AWS RDS, DocumentDB.
+- Risks: Shard imbalance → Mitigation: Monitor shard distribution.
+
+**Acceptance Criteria/Testable Items**:
+- Sharding hỗ trợ 10K queries/s.
+- Replication đảm bảo 99.9% uptime.
+- Data consistency đạt 95% trong test.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
