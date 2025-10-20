@@ -2632,3 +2632,466 @@ Part04_Functional_Requirements/
 |------|------|-----------|------|
 | PM | [TBD] | - | - |
 | Tech Lead | [TBD] | - | - |
+
+
+# Part05 - Non-Functional Requirements
+
+## Structure of Part05
+```
+Part05_Non_Functional_Requirements/
+├── 05.1_Overview.md
+├── 05.2_NFR-001_Performance.md
+├── 05.3_NFR-002_Scalability.md
+├── 05.4_NFR-003_Security.md
+├── 05.5_NFR-004_Reliability.md
+├── 05.6_NFR-005_Maintainability.md
+├── 05.7_NFR-006_Auditability.md
+├── 05.8_NFR-007_Usability.md
+├── 05.9_NFR-008_Compliance.md
+└── 05.10_NFR_Priorities_Matrix.md
+```
+
+---
+
+## 05.1 Overview
+
+**References**: BRD.md (Section 2), Product-Sampling-Vision-and-Strategy Document.md (Section 1), System_Feature_Tree.md (Section 3)
+
+**Mục đích**: Tóm tắt các yêu cầu phi chức năng (NFRs) của hệ thống PSP, đảm bảo hiệu suất, bảo mật, và trải nghiệm người dùng hỗ trợ phân phối quà mẫu giá trị thấp (~$1).
+
+**Ý nghĩa**: Định hướng đội phát triển về các tiêu chuẩn chất lượng, đảm bảo hệ thống đáp ứng nhu cầu stakeholders.
+
+**Cách làm**: Tổng hợp từ BRD và System Feature Tree, liệt kê 8 NFRs với metrics cụ thể.
+
+**Nội dung cần có**:
+- **Tổng quan**: PSP yêu cầu 8 NFRs (Performance, Scalability, Security, Reliability, Maintainability, Auditability, Usability, Compliance) để hỗ trợ quản lý chiến dịch, xác thực, redemption, và analytics, tối ưu hóa engagement cho quà mẫu giá trị thấp.
+- **Danh sách NFRs**:
+  | NFR ID | Tính năng | Mô tả ngắn |
+  |--------|-----------|------------|
+  | NFR-001 | Performance | Đảm bảo hệ thống phản hồi nhanh (<500ms cho API, <2s cho UI). |
+  | NFR-002 | Scalability | Hỗ trợ 10K concurrent users, scale tự động. |
+  | NFR-003 | Security | Bảo vệ dữ liệu khách hàng, tuân thủ RBAC và AES-256. |
+  | NFR-004 | Reliability | Uptime 99.9%, recovery time <1h. |
+  | NFR-005 | Maintainability | Code modular, CI/CD pipeline, 80% test coverage. |
+  | NFR-006 | Auditability | Lưu audit logs 12 tháng, truy xuất <5s. |
+  | NFR-007 | Usability | Form completion rate >90%, UI load <2s. |
+  | NFR-008 | Compliance | Tuân thủ GDPR/PDPA, audit hàng quý. |
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: BRD.md (Section 2), System_Feature_Tree.md (Section 3)
+- **Kết nối với**: Part03_User_Personas_And_Use_Cases, Part04_Functional_Requirements
+
+**Mục đích của node này**: Tóm tắt 8 NFRs và vai trò trong hệ thống PSP.
+
+**Assumptions/Constraints**:
+- Assumes triển khai trên AWS (ECS, RDS, S3).
+- Constraint: NFRs phải hỗ trợ quà mẫu giá trị thấp (~$1) với engagement cao.
+
+**Dependencies/Risks**:
+- Dependencies: Part04 để ánh xạ NFRs với FRs.
+- Risks: Thiếu metrics cụ thể → Mitigation: Review với stakeholders.
+
+**Acceptance Criteria/Testable Items**:
+- Danh sách bao gồm 8 NFRs với metrics rõ ràng.
+- Mỗi NFR liên kết với ít nhất 1 use case/persona từ Part03.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.2 NFR-001 Performance
+
+**References**: BRD.md (Section 2.2), System_Feature_Tree.md (Section 3)
+
+**Mục đích**: Đảm bảo hệ thống phản hồi nhanh để hỗ trợ trải nghiệm mượt mà khi đăng ký và redeem quà mẫu (~$1).
+
+**Ý nghĩa**: Tăng form completion rate (>90%) và satisfaction cho Customer, POS Staff.
+
+**Cách làm**: Định nghĩa metrics về response time, throughput, và latency.
+
+**Nội dung cần có**:
+- **NFR ID**: NFR-001
+- **Mô tả**: Hệ thống phải đạt response time <500ms cho API calls, <2s cho UI load, và throughput 1K requests/s.
+- **Metrics**:
+  - API response time: <500ms (95th percentile).
+  - UI load time: <2s (PWA, mobile/desktop).
+  - Throughput: 1K requests/s tại peak load.
+- **Test Scenarios**:
+  - Load test với 10K concurrent users trên AWS ECS.
+  - Measure form submission time cho Customer persona.
+- **Dependencies**: FR-001 (Campaign Management), FR-007 (Barcode Redemption).
+
+**Assumptions/Constraints**:
+- Assumes sử dụng Redis caching cho API calls.
+- Constraint: Performance phải ổn định trên 3G/4G networks.
+
+**Dependencies/Risks**:
+- Dependencies: AWS infrastructure (ECS, CloudFront).
+- Risks: Bottlenecks tại DB → Mitigation: Optimize queries, use indexes.
+
+**Acceptance Criteria/Testable Items**:
+- API response time <500ms trong 95% test cases.
+- UI load time <2s trên Chrome, Safari (mobile/desktop).
+- Throughput đạt 1K requests/s trong load test.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.3 NFR-002 Scalability
+
+**References**: BRD.md (Section 2.3), System_Feature_Tree.md (Section 3)
+
+**Mục đích**: Hỗ trợ mở rộng hệ thống để xử lý 10K concurrent users trong các chiến dịch lớn.
+
+**Ý nghĩa**: Đảm bảo PSP đáp ứng nhu cầu tăng đột biến khi phân phối quà mẫu.
+
+**Cách làm**: Định nghĩa auto-scaling policies và load balancing.
+
+**Nội dung cần có**:
+- **NFR ID**: NFR-002
+- **Mô tả**: Hệ thống tự động scale để hỗ trợ 10K concurrent users, tăng từ 1K lên 10K users trong <5 phút.
+- **Metrics**:
+  - Scale-up time: <5 phút.
+  - Max concurrent users: 10K.
+  - Horizontal scaling: AWS ECS với auto-scaling groups.
+- **Test Scenarios**:
+  - Simulate 10K users redeeming barcodes đồng thời.
+  - Test auto-scaling triggers trên AWS CloudWatch.
+- **Dependencies**: FR-007 (Barcode Redemption), FR-008 (Real-Time Analytics).
+
+**Assumptions/Constraints**:
+- Assumes triển khai trên AWS ECS với ELB.
+- Constraint: Scaling không được làm gián đoạn dịch vụ.
+
+**Dependencies/Risks**:
+- Dependencies: AWS CloudWatch, ELB.
+- Risks: Over-scaling dẫn đến chi phí cao → Mitigation: Optimize scaling thresholds.
+
+**Acceptance Criteria/Testable Items**:
+- Scale từ 1K lên 10K users trong <5 phút.
+- Không có downtime trong load test.
+- ELB phân phối traffic đều, latency <500ms.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.4 NFR-003 Security
+
+**References**: BRD.md (Section 2.4), Access_Control_Tree_Grok.md (Section 2)
+
+**Mục đích**: Bảo vệ dữ liệu khách hàng (PII) và hệ thống khỏi unauthorized access.
+
+**Ý nghĩa**: Đảm bảo độ tin cậy và tuân thủ GDPR/PDPA khi thu thập dữ liệu qua quà mẫu.
+
+**Cách làm**: Áp dụng RBAC, mã hóa, và secure APIs.
+
+**Nội dung cần có**:
+- **NFR ID**: NFR-003
+- **Mô tả**: Hệ thống sử dụng AES-256 cho PII, JWT cho authentication, và RBAC cho access control.
+- **Metrics**:
+  - Encryption: AES-256 cho PII (name, email, phone).
+  - JWT expiry: 24h với refresh token.
+  - Penetration test: 0 critical vulnerabilities.
+- **Test Scenarios**:
+  - Penetration test với OWASP Top 10.
+  - RBAC test với 6 personas (Platform Admin, Brand Admin, etc.).
+- **Dependencies**: FR-003 (User Authentication), FR-004 (User Management).
+
+**Assumptions/Constraints**:
+- Assumes sử dụng AWS KMS cho key management.
+- Constraint: Không lưu PII plaintext trong DB.
+
+**Dependencies/Risks**:
+- Dependencies: AWS KMS, Okta (SSO).
+- Risks: Data breach → Mitigation: Regular security audits.
+
+**Acceptance Criteria/Testable Items**:
+- PII được mã hóa AES-256 trước khi lưu.
+- RBAC ngăn 100% unauthorized access trong test.
+- Penetration test không phát hiện critical vulnerabilities.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.5 NFR-004 Reliability
+
+**References**: BRD.md (Section 2.5), System_Feature_Tree.md (Section 3)
+
+**Mục đích**: Đảm bảo hệ thống hoạt động liên tục với uptime 99.9%.
+
+**Ý nghĩa**: Tăng độ tin cậy cho khách hàng khi redeem quà mẫu.
+
+**Cách làm**: Định nghĩa SLA và disaster recovery plan.
+
+**Nội dung cần có**:
+- **NFR ID**: NFR-004
+- **Mô tả**: Hệ thống đạt uptime 99.9%, recovery time <1h sau failure.
+- **Metrics**:
+  - Uptime: 99.9% (SLA).
+  - Mean Time to Recovery (MTTR): <1h.
+  - Backup frequency: Daily.
+- **Test Scenarios**:
+  - Simulate DB failure và test recovery.
+  - Monitor uptime với AWS CloudWatch.
+- **Dependencies**: FR-007 (Barcode Redemption), FR-010 (Notification System).
+
+**Assumptions/Constraints**:
+- Assumes sử dụng AWS RDS Multi-AZ.
+- Constraint: Recovery không được làm mất dữ liệu.
+
+**Dependencies/Risks**:
+- Dependencies: AWS RDS, CloudWatch.
+- Risks: Single point of failure → Mitigation: Multi-AZ deployment.
+
+**Acceptance Criteria/Testable Items**:
+- Uptime đạt 99.9% trong 3 tháng test.
+- Recovery time <1h trong simulated failures.
+- Daily backups được lưu trữ 30 ngày.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.6 NFR-005 Maintainability
+
+**References**: BRD.md (Section 2.6), System_Feature_Tree.md (Section 3)
+
+**Mục đích**: Đảm bảo code và hệ thống dễ bảo trì, cập nhật.
+
+**Ý nghĩa**: Giảm chi phí và thời gian bảo trì, hỗ trợ phát triển liên tục.
+
+**Cách làm**: Áp dụng modular design, CI/CD, và test coverage.
+
+**Nội dung cần có**:
+- **NFR ID**: NFR-005
+- **Mô tả**: Codebase modular, CI/CD pipeline với 80% test coverage, và tài liệu API đầy đủ.
+- **Metrics**:
+  - Test coverage: 80% (unit, integration).
+  - Deployment frequency: Daily (CI/CD).
+  - Technical debt: <5% codebase.
+- **Test Scenarios**:
+  - Run CI/CD pipeline với GitHub Actions.
+  - Measure test coverage với SonarQube.
+- **Dependencies**: All FRs (Part04).
+
+**Assumptions/Constraints**:
+- Assumes sử dụng TypeScript/Node.js cho microservices.
+- Constraint: Tài liệu API phải cập nhật real-time.
+
+**Dependencies/Risks**:
+- Dependencies: GitHub Actions, Swagger.
+- Risks: Technical debt tích lũy → Mitigation: Code reviews hàng tuần.
+
+**Acceptance Criteria/Testable Items**:
+- Test coverage đạt 80% trong SonarQube.
+- CI/CD pipeline chạy không lỗi trong 95% deployments.
+- API docs được generate tự động qua Swagger.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.7 NFR-006 Auditability
+
+**References**: BRD.md (Section 2.7), Access_Control_Tree_Grok.md (Section 2)
+
+**Mục đích**: Lưu trữ và truy xuất audit logs để theo dõi hoạt động hệ thống.
+
+**Ý nghĩa**: Đảm bảo traceability và tuân thủ quy định cho dữ liệu khách hàng.
+
+**Cách làm**: Lưu audit logs với timestamp, user_id, và action details.
+
+**Nội dung cần có**:
+- **NFR ID**: NFR-006
+- **Mô tả**: Hệ thống lưu audit logs (user actions, system events) trong 12 tháng, truy xuất <5s.
+- **Metrics**:
+  - Log retention: 12 tháng.
+  - Query time: <5s.
+  - Log completeness: 100% critical actions (login, redemption, user updates).
+- **Test Scenarios**:
+  - Query logs cho redemption events.
+  - Verify log retention trong AWS S3.
+- **Dependencies**: FR-003 (User Authentication), FR-007 (Barcode Redemption).
+
+**Assumptions/Constraints**:
+- Assumes logs lưu trên AWS S3 với lifecycle policy.
+- Constraint: Logs phải tuân thủ GDPR/PDPA (no PII plaintext).
+
+**Dependencies/Risks**:
+- Dependencies: AWS S3, CloudTrail.
+- Risks: Log loss → Mitigation: Redundant storage.
+
+**Acceptance Criteria/Testable Items**:
+- Logs lưu đầy đủ 100% critical actions.
+- Query time <5s trong 95% test cases.
+- Logs được lưu trữ 12 tháng, truy xuất chính xác.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.8 NFR-007 Usability
+
+**References**: BRD.md (Section 2.8), Part03_User_Personas_And_Use_Cases
+
+**Mục đích**: Đảm bảo hệ thống dễ sử dụng, đặc biệt cho Customer và POS Staff.
+
+**Ý nghĩa**: Tăng form completion rate (>90%) và satisfaction cho quà mẫu giá trị thấp.
+
+**Cách làm**: Định nghĩa UX metrics và test với personas.
+
+**Nội dung cần có**:
+- **NFR ID**: NFR-007
+- **Mô tả**: UI/UX đạt form completion rate >90%, System Usability Scale (SUS) score >80.
+- **Metrics**:
+  - Form completion rate: >90%.
+  - SUS score: >80.
+  - UI load time: <2s (PWA, mobile/desktop).
+- **Test Scenarios**:
+  - Usability test với 50 Customers và 20 POS Staff.
+  - Measure form completion time cho landing pages.
+- **Dependencies**: FR-006 (Ads Format Management), FR-007 (Barcode Redemption).
+
+**Assumptions/Constraints**:
+- Assumes PWA sử dụng React, Tailwind CSS.
+- Constraint: UI phải hỗ trợ đa ngôn ngữ (Anh/Việt).
+
+**Dependencies/Risks**:
+- Dependencies: Part10_UI_UX_Design.
+- Risks: UX phức tạp làm giảm completion rate → Mitigation: Iterative testing.
+
+**Acceptance Criteria/Testable Items**:
+- Form completion rate >90% trong usability tests.
+- SUS score >80 trong user feedback.
+- UI load time <2s trên 3G/4G networks.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.9 NFR-008 Compliance
+
+**References**: BRD.md (Section 2.9), Access_Control_Tree_Grok.md (Section 2)
+
+**Mục đích**: Đảm bảo hệ thống tuân thủ GDPR/PDPA cho dữ liệu khách hàng.
+
+**Ý nghĩa**: Tránh phạt pháp lý, tăng độ tin cậy của PSP.
+
+**Cách làm**: Áp dụng quy trình compliance và audit định kỳ.
+
+**Nội dung cần có**:
+- **NFR ID**: NFR-008
+- **Mô tả**: Hệ thống tuân thủ GDPR/PDPA, hỗ trợ consent management và audit hàng quý.
+- **Metrics**:
+  - Compliance audit frequency: Hàng quý.
+  - Consent opt-in rate: >95% cho Customers.
+  - Data breach incidents: 0.
+- **Test Scenarios**:
+  - Audit GDPR/PDPA compliance với third-party auditors.
+  - Test consent management flow cho Customer persona.
+- **Dependencies**: FR-003 (User Authentication), FR-005 (OTP Verification).
+
+**Assumptions/Constraints**:
+- Assumes sử dụng AWS Shield cho DDoS protection.
+- Constraint: Consent phải được ghi nhận trước khi thu thập PII.
+
+**Dependencies/Risks**:
+- Dependencies: AWS Shield, Okta (SSO).
+- Risks: Non-compliance dẫn đến phạt → Mitigation: Quarterly audits.
+
+**Acceptance Criteria/Testable Items**:
+- 100% Customers được yêu cầu consent trước khi thu thập PII.
+- Audit hàng quý không phát hiện vi phạm GDPR/PDPA.
+- 0 data breach incidents trong test.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 05.10 NFR Priorities Matrix
+
+**References**: BRD.md (Section 2), Part03_User_Personas_And_Use_Cases, Part04_Functional_Requirements
+
+**Mục đích**: Xếp hạng ưu tiên các NFRs để định hướng phát triển và test.
+
+**Ý nghĩa**: Đảm bảo tập trung vào NFRs quan trọng nhất cho PSP.
+
+**Cách làm**: Đánh giá NFRs dựa trên impact và feasibility.
+
+**Nội dung cần có**:
+- **Priorities Matrix**:
+  | NFR ID | Tính năng | Priority | Impact | Feasibility | Dependencies |
+  |--------|-----------|----------|--------|-------------|--------------|
+  | NFR-001 | Performance | High | Tăng form completion rate (>90%) | Cao (AWS ECS, Redis) | FR-001, FR-007 |
+  | NFR-002 | Scalability | High | Hỗ trợ 10K users | Cao (AWS auto-scaling) | FR-007, FR-008 |
+  | NFR-003 | Security | Critical | Bảo vệ PII, tránh breach | Cao (AES-256, Okta) | FR-003, FR-004 |
+  | NFR-004 | Reliability | High | Uptime 99.9% | Cao (AWS Multi-AZ) | FR-007, FR-010 |
+  | NFR-005 | Maintainability | Medium | Giảm chi phí bảo trì | Cao (CI/CD, TypeScript) | All FRs |
+  | NFR-006 | Auditability | Medium | Tuân thủ GDPR/PDPA | Cao (AWS S3, CloudTrail) | FR-003, FR-007 |
+  | NFR-007 | Usability | High | Tăng engagement (~$1 gifts) | Cao (React, Tailwind) | FR-006, FR-007 |
+  | NFR-008 | Compliance | Critical | Tránh phạt pháp lý | Cao (AWS Shield, audits) | FR-003, FR-005 |
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: BRD.md (Section 2), Part03, Part04
+- **Kết nối với**: Part03_User_Personas_And_Use_Cases, Part04_Functional_Requirements
+
+**Mục đích của node này**: Xác định ưu tiên NFRs để phân bổ nguồn lực.
+
+**Assumptions/Constraints**:
+- Assumes ưu tiên dựa trên impact đến Customer và Brand Admin.
+- Constraint: Critical NFRs (Security, Compliance) phải đạt 100% trước release.
+
+**Dependencies/Risks**:
+- Dependencies: Part04 để ánh xạ NFRs với FRs.
+- Risks: Sai ưu tiên → Mitigation: Stakeholder review.
+
+**Acceptance Criteria/Testable Items**:
+- Matrix bao gồm 8 NFRs với priority rõ ràng.
+- Priority được stakeholders phê duyệt.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+
