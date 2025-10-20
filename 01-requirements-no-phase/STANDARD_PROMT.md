@@ -1,3 +1,5 @@
+# Với Claude.ai thì phải luôn yêu cầu dùng analysis tool ngay từ đầu khi cần xác định thông tin về files.
+
 # PSP_SRS_Prompt.md
 
 ```markdown
