@@ -1,12 +1,12 @@
 # QUẢN LÝ PHÂN PHỐI PRODUCT SAMPLING
 “Hệ thống khắc phục chi phí logistics cao của quà giá thấp bằng cách triển khai mô hình Sampling Network-as-a-Service, giúp brand phân phối qua các retailer đã được xác minh.”
 
-#### 1. Phân loại mục tiêu:
+#### 1. Phân loại mục tiêu(bản nháp-draf, triển khai thực tế thì xem nội dung file BRD.md có đính kèm):
 - **Must-have (Core)**: Các tính năng thiết yếu cho MVP, giữ nguyên từ gốc và ý kiến, để hệ thống chạy cơ bản và thu thập dữ liệu hiệu quả.
 - **Should-have (Advanced - Phase 2)**: Các tính năng cần thêm để tối ưu hóa, dựa trên ý kiến (như inventory reconciliation, fraud detection) và gợi ý của tôi (như A/B testing sớm).
 - **Nice-to-have (Future-proof - Phase 3)**: Các tính năng mở rộng cho tầm nhìn dài hạn, tránh phức tạp ban đầu nhưng chuẩn bị cho scalability (như blockchain optional, marketplace co-sampling).
 
-### Must-have (Core - MVP)
+### Must-have (Core)
 Những mục tiêu này tập trung vào quy trình hybrid (retail + digital), thu thập dữ liệu an toàn, và đo lường cơ bản, đảm bảo hệ thống vận hành mượt mà ở pilot (5-10 stores). Ưu tiên reliability (OTP/redemption) và low-friction onboarding cho retailer.
 
 1. **Quản lý và phân phối sản phẩm dùng thử tại các điểm bán lẻ (Circle K, Mini Stop, siêu thị, booth sự kiện)**: Hỗ trợ phân phối hybrid (vật lý tại POS/booth + digital voucher), với QR code dẫn đến landing page. Tích hợp cơ bản với POS (scanning instructions và retailer onboarding checklist) để redeem tại chỗ, tránh logistics phức tạp như gửi mail.
