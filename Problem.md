@@ -1,6 +1,8 @@
 # QUẢN LÝ PHÂN PHỐI PRODUCT SAMPLING
 “Hệ thống khắc phục chi phí logistics cao của quà giá thấp bằng cách triển khai mô hình Sampling Network-as-a-Service, giúp brand phân phối qua các retailer đã được xác minh.”
 
+## Lưu ý: Đây chỉ là ý tưởng/câu chuyện, không dựa vào đó để thiết kế cấu trúc dự án (mà phải dựa vào các tài liệu có đính kèm khác).
+
 #### 1. Phân loại mục tiêu(bản nháp-draf, triển khai thực tế thì xem nội dung file BRD.md có đính kèm):
 - **Must-have (Core)**: Các tính năng thiết yếu cho MVP, giữ nguyên từ gốc và ý kiến, để hệ thống chạy cơ bản và thu thập dữ liệu hiệu quả.
 - **Should-have (Advanced - Phase 2)**: Các tính năng cần thêm để tối ưu hóa, dựa trên ý kiến (như inventory reconciliation, fraud detection) và gợi ý của tôi (như A/B testing sớm).
