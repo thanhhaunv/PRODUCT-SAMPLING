@@ -8,7 +8,20 @@
 
 ---
 
-## 1. Must-Have (Core - Microservice, Q1–Q2 2025)
+## 🎯 Overview
+
+PSP Platform được thiết kế với **microservices architecture** 🆕, chia thành **các independent services** 🆕 để đảm bảo:
+- Independent scaling và deployment 🆕
+- Team autonomy và service ownership 🆕
+- Fault isolation 🆕
+- Technology flexibility 🆕
+
+**Development Approach**: 🆕
+- **Parallel development** by service teams 🆕
+- **Timeline**: 6-9 months (concurrent development) 🆕
+- **All features in scope** (no phased rollout) 🆕
+
+## 1. Must-Have (Core - Microservice, UI)
 Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ trợ hybrid distribution, OTP verification, data collection, và user experience.
 
 ### 1.1. Quản lý Campaign (Campaign Management)
@@ -23,7 +36,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: Campaign ID, dynamic QR codes, API create/update.
   - Tích hợp: GA4/Meta Pixel, multi-tenant DB.
   - KPI: Campaign setup <2 ngày, tracking accuracy 100%.
-- **Roadmap**: MVP; pilot Q1–Q2 2025.
+- **Roadmap**: Microservice, full option.
 
 ### 1.2. Quản lý Barcode/Voucher (Barcode Management)
 - **Mô tả**: Import, gán, theo dõi barcode/voucher single-use, hỗ trợ đối soát phát tay/ngoài luồng.
@@ -37,7 +50,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: QR image/PDF, status logs (Chưa phát/Đã phát/Đã redeem/Hết hạn).
   - Tích hợp: Voucherify API, Apple Wallet, ERP push/pull.
   - KPI: Inventory accuracy >95%, 100% single-use.
-- **Roadmap**: MVP.
+- **Roadmap**: Microservice, full option.
 
 ### 1.3. Landing Page & Form (Customer Data Collection)
 - **Mô tả**: Landing page với form thu thập tên, email, SĐT, opt-in, quiz ngắn, post-sampling survey, và link đến User Portal.
@@ -52,7 +65,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: JSON profile (hashed PII), consent flags, survey results.
   - Tích hợp: React PWA, GA4, dynamic content (SoPost), User Portal link.
   - KPI: Form completion >90%, data quality >95%, survey response >50%.
-- **Roadmap**: MVP.
+- **Roadmap**: Microservice, full option.
 
 ### 1.4. Xác thực khách hàng (OTP Verification)
 - **Mô tả**: Xác minh SMS/email OTP, chống bot/spam bằng rate-limiting, CAPTCHA, device fingerprinting.
@@ -65,7 +78,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: Verified flag, fraud score (velocity check).
   - Tích hợp: Twilio/MessageBird, Redis.
   - KPI: OTP success >95%, fraud rate <5%.
-- **Roadmap**: MVP.
+- **Roadmap**: Microservice, full option.
 
 ### 1.5. Đổi mẫu & Tích hợp POS (Redemption & POS Integration)
 - **Mô tả**: Redeem tại POS qua web/app scan hoặc POS API, hỗ trợ offline mode, log trạng thái cho User Portal.
@@ -81,7 +94,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: Webhook/CSV log redeem, status updates.
   - Tích hợp: Scandit SDK, IndexedDB offline sync, User Portal API.
   - KPI: Redemption success >98%.
-- **Roadmap**: MVP; scale 200 stores.
+- **Roadmap**: Microservice, full option; scale 200 stores.
 
 ### 1.6. Báo cáo & Analytics cơ bản (Funnel Tracking)
 - **Mô tả**: Dashboard realtime theo Campaign/Ads/Location, hỗ trợ post-sampling surveys và ROI metrics.
@@ -95,7 +108,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: Funnel charts, NPS survey results, ROI metrics (CPL <0.4 USD).
   - Tích hợp: Metabase, BigQuery, HubSpot.
   - KPI: 24h insight reports, CPL <0.4 USD.
-- **Roadmap**: MVP.
+- **Roadmap**: Microservice, full option.
 
 ### 1.7. Kết nối CRM (CRM Sync)
 - **Mô tả**: Đồng bộ data khách (profile + preferences) với CRM, hỗ trợ remarketing từ User Portal.
@@ -109,7 +122,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: Webhook/CSV sync.
   - Tích hợp: HubSpot/Salesforce, GDPR consent.
   - KPI: Brand retention >85%.
-- **Roadmap**: MVP; Phase 2 full integration.
+- **Roadmap**: Microservice; full integration.
 
 ### 1.8. Phân quyền (Access Control)
 - **Mô tả**: Hỗ trợ 6 roles (Admin, Group Admin, Customer Account, Serving Account, Auditor, User Role) với RBAC.
@@ -125,7 +138,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: Scoped access, audit logs.
   - Tích hợp: Keycloak/OAuth2.
   - KPI: Zero unauthorized access.
-- **Roadmap**: MVP.
+- **Roadmap**: Microservice, full option.
 
 ### 1.9. User Portal (Customer Experience)
 - **Mô tả**: PWA cho user cuối xem lịch sử sản phẩm, trạng thái barcode, nhận thông báo, và gửi ticket hỗ trợ.
@@ -141,7 +154,7 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: PWA UI (React), push notifications (SMS/email), ticket form.
   - Tích hợp: Twilio for notifications, Zendesk for tickets, GA4 for tracking.
   - KPI: User engagement >70%, ticket resolution <48h.
-- **Roadmap**: MVP; Phase 2 full personalization.
+- **Roadmap**: Microservice; full personalization.
 
 ### 1.10. Quản lý Ads Format (Ads Format Management)
 - **Mô tả**: Tạo và quản lý các định dạng quảng cáo cho Campaign, bao gồm upload file thiết kế, config QR code, và tracking.
@@ -155,11 +168,11 @@ Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ tr�
   - Output: Dynamic QR code/short link, validated design files, tracking logs.
   - Tích hợp: File validation (ImageMagick), dynamic QR generation, GA4/Meta Pixel.
   - KPI: Scan-to-submit conversion >90%, file validation accuracy 100%.
-- **Roadmap**: MVP; pilot Q1–Q2 2025.
+- **Roadmap**: Microservice, full option.
 
 ---
 
-## 2. Should-Have (Advanced - Phase 2, Q3 2025–Q4 2026)
+## 2. Should-Have
 Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, và partner management.
 
 ### 2.1. Inventory & Fulfillment Reconciliation (Stock Management)
@@ -173,7 +186,7 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
   - Output: Reconciliation reports.
   - Tích hợp: ERP webhook.
   - KPI: Waste <5%, accuracy >95%.
-- **Roadmap**: Phase 2.
+- **Roadmap**: Advanced.
 
 ### 2.2. Retailer/Store Portal & POS Adapters (Partner Portal)
 - **Mô tả**: Portal cho retailer xem stock/redemptions, tích hợp POS đa chuẩn.
@@ -186,7 +199,7 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
   - Output: Multi-tenant UI, SDK.
   - Tích hợp: POS formats (XML/JSON).
   - KPI: Offline sync >98%.
-- **Roadmap**: Phase 2.
+- **Roadmap**: Advanced.
 
 ### 2.3. Fraud Detection & Trust Scoring (Advanced Security)
 - **Mô tả**: ML-based fraud detection (device fingerprint, anomaly), auto-block suspicious.
@@ -198,7 +211,7 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
   - Output: Fraud score (0–100).
   - Tích hợp: scikit-learn, Redis.
   - KPI: Fraud rate <5%.
-- **Roadmap**: Phase 2.
+- **Roadmap**: Advanced.
 
 ### 2.4. Consent Management & Privacy Hub (Compliance Hub)
 - **Mô tả**: Lưu consent versioned, hỗ trợ delete PII (GDPR/PDPA).
@@ -212,7 +225,7 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
   - Output: Encrypted PII, audit trails.
   - Tích hợp: ISO 27001 framework.
   - KPI: 100% compliance.
-- **Roadmap**: Phase 2.
+- **Roadmap**: Advanced.
 
 ### 2.5. A/B Testing & Dynamic Offers (Optimization Tools)
 - **Mô tả**: Test creatives/incentives (quiz vs no-quiz) để tăng conversion (học từ Peekage).
@@ -225,7 +238,7 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
   - Output: Conversion stats, auto-routing.
   - Tích hợp: Optimizely-like engine.
   - KPI: Conversion uplift 6x.
-- **Roadmap**: Phase 2.
+- **Roadmap**: Advanced.
 
 ### 2.6. Support & Dispute Workflow (Helpdesk)
 - **Mô tả**: Ticketing cho khiếu nại (mã invalid), resolve <48h.
@@ -238,7 +251,7 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
   - Output: Resolution status.
   - Tích hợp: Zendesk API.
   - KPI: Resolution rate >95%.
-- **Roadmap**: Phase 2.
+- **Roadmap**: Advanced.
 
 ### 2.7. Localization/Multi-Market Support (Regional Setup)
 - **Mô tả**: Hỗ trợ ngôn ngữ, telco OTP, privacy law (VN → Thái/Indo).
@@ -251,7 +264,7 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
   - Output: Localized UI, APIs.
   - Tích hợp: i18n, regional telcos.
   - KPI: 3 markets by 2026.
-- **Roadmap**: Phase 2–3.
+- **Roadmap**: Advanced.
 
 ### 2.8. Sampling Network Management (Partner Distribution)
 - **Mô tả**: Quản lý mạng lưới retailer/đối tác phát hàng (Circle K, GS25, booth).
@@ -266,7 +279,7 @@ Chức năng nâng cao để scale (1M–3M users), tối ưu fraud, analytics, 
 
 ---
 
-## 3. Nice-to-Have (Future-Proof - Phase 3, 2026–2027)
+## 3. Nice-to-Have (Future-Proof)
 Chức năng để trở thành "Sampling Intelligence Platform", dẫn đầu SEA.
 
 ### 3.1. Sustainability Tracking (Eco Module)
@@ -278,7 +291,7 @@ Chức năng để trở thành "Sampling Intelligence Platform", dẫn đầu S
   - Input: Print/sample logistics data.
   - Output: Carbon KPI dashboards.
   - KPI: Waste reduction >20%.
-- **Roadmap**: Phase 3.
+- **Roadmap**:Future-Proof.
 
 ### 3.2. AI-Driven Personalization & Predictive Analytics (AI Layer)
 - **Mô tả**: Gợi ý offers/inventory, dự đoán ROI (học từ Peekage).
@@ -301,7 +314,7 @@ Chức năng để trở thành "Sampling Intelligence Platform", dẫn đầu S
   - Input: Multi-brand rules.
   - Output: Programmatic bundle offers.
   - KPI: Bundle adoption 30%.
-- **Roadmap**: Phase 3.
+- **Roadmap**: Future-Proof.
 
 ### 3.4. Cost & ROI Optimizer (AI Module)
 - **Mô tả**: Phân tích chi phí phát quà theo khu vực, retail node, và đề xuất tối ưu route & campaign mix.
