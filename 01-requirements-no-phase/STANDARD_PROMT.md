@@ -13,7 +13,7 @@ Bạn là Technical Writer chuyên viết Software Requirements Specification (S
 - **Kiến trúc tổng quan**: Polyglot persistence, API Gateway (Kong), CI/CD per service, observability (Prometheus/Grafana/Jaeger), Docker, local computer.
 
 ## Tài liệu tham khảo:
-- **System_Feature_Tree_Grok.md**: Feature list (14 features trên 7 microservices, phân loại Core/Operational/Advanced/Intelligent, với service ownership và dependencies).
+- **System_Feature_Tree.md**: Feature list (14 features trên 7 microservices, phân loại Core/Operational/Advanced/Intelligent, với service ownership và dependencies).
 - **Access_Control_Tree_Grok.md**: RBAC roles & permissions (6 roles: Platform Admin, Brand Admin, Brand Staff, Customer Account, Customer, POS Staff; tích hợp User Portal).
 - **Problem.md**: Problem statement & solution (hybrid distribution, data collection, fraud prevention, flows như QR scan → form → OTP → redeem).
 - **BRD.md**: Business Requirements Document (scope, stakeholders, metrics như 99.9% uptime, <200ms response, fraud rate <5%).
@@ -24,7 +24,9 @@ Bạn là Technical Writer chuyên viết Software Requirements Specification (S
 # RULES: Quy tắc viết tài liệu SRS
 ## 1. STRUCTURE - Cấu trúc bắt buộc
 Mỗi node/file PHẢI có **6 thành phần** theo thứ tự, kết hợp format thống nhất để dễ chia sẻ và implement:
-Bỏ các thông tin sau cho đỡ dài: Status,Created,Last Updated,Next Review,Distribution List,Version Control
+
+### Bỏ các thông tin sau cho đỡ dài: Status,Created,Last Updated,Next Review,Distribution List,Version Control
+
 ```markdown
 # [Tên File/Section] (e.g., 00.1_Title_Page.md)
 **References**: [Liên kết chéo, e.g., Link to BRD.md Section 2, System Feature Tree Section 1.1]  
@@ -83,7 +85,7 @@ PSP_SRS_V2/
 - **Diagrams**: Sử dụng Mermaid cho flowcharts/ERD (e.g., graph TD cho dependencies).
 - **Tables**: Sử dụng markdown tables cho metrics, schemas, acceptance criteria.
 - **Traceability**: Luôn dùng IDs (FR-001, NFR-001) và references chéo.
-- **Best Practices**: Nội dung phải unambiguous, measurable, testable; tập trung vào "what" không "how" (trừ high-level approach); đảm bảo compliance (GDPR/PDPA từ Problem.md).
+- **Best Practices**: Nội dung phải unambiguous, measurable, testable; làm design pattern, chỉ cài đặt các inteface, abstract class/funtion chứ không cài đặt code cụ thể.
 
 ## 4. GENERAL GUIDELINES
 - **Consistency**: Merge từ PROMPT gốc – giữ microservices focus từ SRS_STRUCTURE.md, tích hợp phases từ Problem.md nhưng ưu tiên song song development từ BRD.
