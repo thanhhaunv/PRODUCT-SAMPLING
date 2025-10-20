@@ -4577,3 +4577,4530 @@ Part06_System_Architecture/
 |------|------|-----------|------|
 | PM | [TBD] | - | - |
 | Tech Lead | [TBD] | - | - |
+
+# Part06B - Design Patterns
+
+## Structure of Part06B (Section 1)
+```
+Part06B_Design_Patterns/
+├── 06B.1_Design_Patterns_Catalog/
+│   ├── 06B.1.1_Creational_Patterns/
+│   │   ├── 06B.1.1.1_Factory_Pattern.md
+│   │   ├── 06B.1.1.2_Builder_Pattern.md
+│   │   ├── 06B.1.1.3_Singleton_Pattern.md
+│   │   └── 06B.1.1.4_Prototype_Pattern.md
+│   ├── 06B.1.2_Structural_Patterns/
+│   │   ├── 06B.1.2.1_Adapter_Pattern.md
+│   │   ├── 06B.1.2.2_Facade_Pattern.md
+│   │   ├── 06B.1.2.3_Proxy_Pattern.md
+│   │   └── 06B.1.2.4_Decorator_Pattern.md
+│   └── 06B.1.3_Behavioral_Patterns/
+│       ├── 06B.1.3.1_Strategy_Pattern.md
+│       ├── 06B.1.3.2_Observer_Pattern.md
+│       ├── 06B.1.3.3_Command_Pattern.md
+│       └── 06B.1.3.4_Chain_Of_Responsibility_Pattern.md
+```
+
+---
+
+## 06B.1 Design Patterns Catalog
+
+### 06B.1.1 Creational Patterns
+
+#### 06B.1.1.1 Factory Pattern
+
+**References**: Part04_Functional_Requirements (FR-006), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Tạo các đối tượng quảng cáo (Ads Format) mà không cần chỉ định trực tiếp class cụ thể.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) bằng cách tách logic tạo đối tượng khỏi business logic.
+
+**Cách làm**: Sử dụng Factory Pattern để tạo các loại Ads Format (Banner, Video, QR) trong Campaign Management Service.
+
+**Nội dung cần có**:
+- **Mô tả**: Factory Pattern được áp dụng trong Campaign Management Service để tạo các đối tượng `AdsFormat` (FR-006). Client chỉ gọi factory method mà không cần biết class cụ thể (e.g., `BannerAds`, `VideoAds`).
+- **Use Case**: Tạo Ads Format cho chiến dịch quảng cáo với các định dạng khác nhau.
+- **Code Example**:
+```typescript
+interface AdsFormat {
+  render(): string;
+}
+
+class BannerAds implements AdsFormat {
+  render() { return "Banner Ad HTML"; }
+}
+
+class VideoAds implements AdsFormat {
+  render() { return "Video Ad URL"; }
+}
+
+class AdsFormatFactory {
+  static createAdsFormat(type: string): AdsFormat {
+    switch (type) {
+      case "banner": return new BannerAds();
+      case "video": return new VideoAds();
+      default: throw new Error("Invalid ads format");
+    }
+  }
+}
+
+// Usage
+const ads = AdsFormatFactory.createAdsFormat("banner");
+console.log(ads.render()); // Output: Banner Ad HTML
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class AdsFormat {
+          <<interface>>
+          +render() string
+      }
+      class BannerAds {
+          +render() string
+      }
+      class VideoAds {
+          +render() string
+      }
+      class AdsFormatFactory {
+          +createAdsFormat(type: string) AdsFormat
+      }
+      AdsFormat <|.. BannerAds
+      AdsFormat <|.. VideoAds
+      AdsFormatFactory --> AdsFormat
+  ```
+- **Dependencies**: FR-006 (Ads Format Management), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes Ads Formats được định nghĩa trước (banner, video, QR).
+- Constraint: Factory phải hỗ trợ thêm format mới mà không sửa code.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service.
+- Risks: Factory trở nên phức tạp khi có nhiều formats → Mitigation: Use configuration-based factory.
+
+**Acceptance Criteria/Testable Items**:
+- Factory tạo đúng Ads Format dựa trên type.
+- Thêm format mới không yêu cầu sửa code client.
+- Unit tests đạt 80% coverage (NFR-005).
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.1.2 Builder Pattern
+
+**References**: Part04_Functional_Requirements (FR-001), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Xây dựng đối tượng Campaign phức tạp với các thuộc tính tùy chọn.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) bằng cách tách logic xây dựng campaign khỏi constructor.
+
+**Cách làm**: Sử dụng Builder Pattern trong Campaign Management Service để tạo `Campaign` với các thuộc tính như name, startDate, adsFormat.
+
+**Nội dung cần có**:
+- **Mô tả**: Builder Pattern được áp dụng để tạo `Campaign` objects (FR-001), cho phép cấu hình linh hoạt các thuộc tính.
+- **Use Case**: Tạo campaign với các tùy chọn như ads format, barcode pool, và schedule.
+- **Code Example**:
+```typescript
+class Campaign {
+  name: string;
+  startDate: Date;
+  adsFormat?: string;
+  constructor(builder: CampaignBuilder) {
+    this.name = builder.name;
+    this.startDate = builder.startDate;
+    this.adsFormat = builder.adsFormat;
+  }
+}
+
+class CampaignBuilder {
+  name: string;
+  startDate: Date;
+  adsFormat?: string;
+  
+  constructor(name: string, startDate: Date) {
+    this.name = name;
+    this.startDate = startDate;
+  }
+  
+  setAdsFormat(format: string) {
+    this.adsFormat = format;
+    return this;
+  }
+  
+  build(): Campaign {
+    return new Campaign(this);
+  }
+}
+
+// Usage
+const campaign = new CampaignBuilder("Summer Sale", new Date())
+  .setAdsFormat("banner")
+  .build();
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class Campaign {
+          -name: string
+          -startDate: Date
+          -adsFormat: string
+      }
+      class CampaignBuilder {
+          -name: string
+          -startDate: Date
+          -adsFormat: string
+          +setAdsFormat(format: string) CampaignBuilder
+          +build() Campaign
+      }
+      CampaignBuilder --> Campaign
+  ```
+- **Dependencies**: FR-001 (Campaign Management), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes Campaign có ít nhất name và startDate.
+- Constraint: Builder phải hỗ trợ thêm thuộc tính mới dễ dàng.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service.
+- Risks: Builder quá phức tạp → Mitigation: Keep builder methods simple.
+
+**Acceptance Criteria/Testable Items**:
+- Builder tạo Campaign với đúng thuộc tính.
+- Thêm thuộc tính mới không sửa code client.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.1.3 Singleton Pattern
+
+**References**: Part04_Functional_Requirements (FR-003), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Đảm bảo chỉ có một instance của AuthService để quản lý authentication.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) bằng cách kiểm soát duy nhất authentication logic.
+
+**Cách làm**: Áp dụng Singleton Pattern trong Identity Service cho `AuthService`.
+
+**Nội dung cần có**:
+- **Mô tả**: Singleton Pattern đảm bảo chỉ một instance của `AuthService` được tạo, quản lý JWT và SSO (FR-003).
+- **Use Case**: Quản lý authentication tokens toàn hệ thống.
+- **Code Example**:
+```typescript
+class AuthService {
+  private static instance: AuthService;
+  private constructor() {}
+  
+  static getInstance(): AuthService {
+    if (!AuthService.instance) {
+      AuthService.instance = new AuthService();
+    }
+    return AuthService.instance;
+  }
+  
+  authenticate(user: string, password: string): string {
+    return "JWT_TOKEN";
+  }
+}
+
+// Usage
+const authService = AuthService.getInstance();
+console.log(authService.authenticate("user", "pass")); // JWT_TOKEN
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class AuthService {
+          -instance: AuthService
+          -constructor()
+          +getInstance() AuthService
+          +authenticate(user, pass) string
+      }
+  ```
+- **Dependencies**: FR-003 (User Authentication), NFR-003 (Security).
+
+**Assumptions/Constraints**:
+- Assumes AuthService không cần state ngoài JWT cache.
+- Constraint: Singleton phải thread-safe trong Node.js.
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service.
+- Risks: Memory leaks → Mitigation: Avoid storing large state.
+
+**Acceptance Criteria/Testable Items**:
+- Chỉ một instance AuthService được tạo.
+- Authenticate trả về JWT hợp lệ.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.1.4 Prototype Pattern
+
+**References**: Part04_Functional_Requirements (FR-002), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Tạo bản sao của Barcode objects để tái sử dụng template.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) bằng cách sao chép Barcode configurations.
+
+**Cách làm**: Áp dụng Prototype Pattern trong Campaign Management Service cho `Barcode`.
+
+**Nội dung cần có**:
+- **Mô tả**: Prototype Pattern cho phép sao chép `Barcode` objects (FR-002) với các cấu hình như format (QR, Code128).
+- **Use Case**: Tạo nhiều Barcode từ một template cho chiến dịch.
+- **Code Example**:
+```typescript
+interface ICloneable {
+  clone(): this;
+}
+
+class Barcode implements ICloneable {
+  format: string;
+  value: string;
+  
+  constructor(format: string, value: string) {
+    this.format = format;
+    this.value = value;
+  }
+  
+  clone(): this {
+    return new Barcode(this.format, this.value) as this;
+  }
+}
+
+// Usage
+const template = new Barcode("QR", "12345");
+const newBarcode = template.clone();
+newBarcode.value = "67890";
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class ICloneable {
+          <<interface>>
+          +clone() this
+      }
+      class Barcode {
+          -format: string
+          -value: string
+          +clone() Barcode
+      }
+      ICloneable <|.. Barcode
+  ```
+- **Dependencies**: FR-002 (Barcode Management), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes Barcode có thuộc tính cố định.
+- Constraint: Clone phải giữ nguyên format.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service.
+- Risks: Deep copy errors → Mitigation: Ensure proper cloning.
+
+**Acceptance Criteria/Testable Items**:
+- Clone tạo Barcode với đúng format.
+- Thay đổi clone không ảnh hưởng template.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.1.2 Structural Patterns
+
+#### 06B.1.2.1 Adapter Pattern
+
+**References**: Part04_Functional_Requirements (FR-009), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Tích hợp CRM systems (HubSpot, Salesforce) với interface thống nhất.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) bằng cách chuẩn hóa CRM integration.
+
+**Cách làm**: Áp dụng Adapter Pattern trong Notification Service cho CRM sync.
+
+**Nội dung cần có**:
+- **Mô tả**: Adapter Pattern chuyển đổi API của HubSpot/Salesforce thành interface chung `ICRMConnector` (FR-009).
+- **Use Case**: Đồng bộ customer data với nhiều CRM systems.
+- **Code Example**:
+```typescript
+interface ICRMConnector {
+  syncCustomer(data: Customer): void;
+}
+
+class HubSpotAdapter implements ICRMConnector {
+  private hubSpotClient: HubSpotClient;
+  constructor(client: HubSpotClient) {
+    this.hubSpotClient = client;
+  }
+  syncCustomer(data: Customer) {
+    this.hubSpotClient.createContact(data);
+  }
+}
+
+class SalesforceAdapter implements ICRMConnector {
+  private salesforceClient: SalesforceClient;
+  constructor(client: SalesforceClient) {
+    this.salesforceClient = client;
+  }
+  syncCustomer(data: Customer) {
+    this.salesforceClient.upsertLead(data);
+  }
+}
+
+// Usage
+const hubSpot = new HubSpotAdapter(new HubSpotClient());
+hubSpot.syncCustomer({ name: "John", email: "john@example.com" });
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class ICRMConnector {
+          <<interface>>
+          +syncCustomer(data: Customer)
+      }
+      class HubSpotAdapter {
+          -hubSpotClient: HubSpotClient
+          +syncCustomer(data: Customer)
+      }
+      class SalesforceAdapter {
+          -salesforceClient: SalesforceClient
+          +syncCustomer(data: Customer)
+      }
+      ICRMConnector <|.. HubSpotAdapter
+      ICRMConnector <|.. SalesforceAdapter
+  ```
+- **Dependencies**: FR-009 (CRM Integration), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes HubSpot/Salesforce APIs ổn định.
+- Constraint: Adapter phải xử lý lỗi API bên thứ ba.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service.
+- Risks: API thay đổi → Mitigation: Versioned adapters.
+
+**Acceptance Criteria/Testable Items**:
+- Adapter đồng bộ customer data đúng với CRM.
+- Thêm CRM mới không sửa code client.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.2.2 Facade Pattern
+
+**References**: Part04_Functional_Requirements (FR-007), Part05_Non_Functional_Requirements (NFR-007)
+
+**Mục đích**: Đơn giản hóa giao diện redemption cho POS Staff.
+
+**Ý nghĩa**: Tăng NFR-007 (Usability, form completion rate >90%).
+
+**Cách làm**: Áp dụng Facade Pattern trong Redemption Service để đơn giản hóa redemption process.
+
+**Nội dung cần có**:
+- **Mô tả**: Facade Pattern cung cấp giao diện đơn giản cho redemption (FR-007), che giấu complexity của barcode validation, fraud check, và DB update.
+- **Use Case**: POS Staff gọi một method duy nhất để redeem barcode.
+- **Code Example**:
+```typescript
+class RedemptionFacade {
+  private barcodeService: IBarcodeService;
+  private fraudService: IFraudDetectionService;
+  private dbService: IRepository;
+  
+  constructor(barcodeService: IBarcodeService, fraudService: IFraudDetectionService, dbService: IRepository) {
+    this.barcodeService = barcodeService;
+    this.fraudService = fraudService;
+    this.dbService = dbService;
+  }
+  
+  async redeemBarcode(barcode: string): Promise<boolean> {
+    const isValid = await this.barcodeService.validate(barcode);
+    if (!isValid) return false;
+    const score = await this.fraudService.checkFraud(barcode);
+    if (score > 0.8) return false;
+    await this.dbService.saveRedemption(barcode);
+    return true;
+  }
+}
+
+// Usage
+const facade = new RedemptionFacade(barcodeService, fraudService, dbService);
+await facade.redeemBarcode("12345"); // true or false
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class RedemptionFacade {
+          -barcodeService: IBarcodeService
+          -fraudService: IFraudDetectionService
+          -dbService: IRepository
+          +redeemBarcode(barcode: string) boolean
+      }
+      class IBarcodeService {
+          <<interface>>
+          +validate(barcode: string)
+      }
+      class IFraudDetectionService {
+          <<interface>>
+          +checkFraud(barcode: string)
+      }
+      class IRepository {
+          <<interface>>
+          +saveRedemption(barcode: string)
+      }
+      RedemptionFacade --> IBarcodeService
+      RedemptionFacade --> IFraudDetectionService
+      RedemptionFacade --> IRepository
+  ```
+- **Dependencies**: FR-007 (Barcode Redemption), NFR-007 (Usability).
+
+**Assumptions/Constraints**:
+- Assumes redemption process gồm 3 bước (validate, fraud check, save).
+- Constraint: Facade phải xử lý lỗi trong <500ms (NFR-001).
+
+**Dependencies/Risks**:
+- Dependencies: Redemption Service, Fraud Detection Service.
+- Risks: Facade quá phức tạp → Mitigation: Keep interface simple.
+
+**Acceptance Criteria/Testable Items**:
+- Facade xử lý redemption trong <500ms.
+- POS Staff hoàn thành redemption với 1 method call.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.2.3 Proxy Pattern
+
+**References**: Part04_Functional_Requirements (FR-003), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Kiểm soát truy cập và caching cho authentication requests.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) và NFR-001 (Performance).
+
+**Cách làm**: Áp dụng Proxy Pattern trong Identity Service để cache JWT tokens.
+
+**Nội dung cần có**:
+- **Mô tả**: Proxy Pattern kiểm soát truy cập vào `AuthService` và cache JWT trong Redis (FR-003).
+- **Use Case**: Giảm DB queries bằng cách cache authentication results.
+- **Code Example**:
+```typescript
+interface IAuthService {
+  authenticate(user: string, password: string): string;
+}
+
+class AuthService implements IAuthService {
+  authenticate(user: string, password: string): string {
+    return "JWT_TOKEN";
+  }
+}
+
+class AuthProxy implements IAuthService {
+  private authService: IAuthService;
+  private cache: Map<string, string>;
+  
+  constructor(authService: IAuthService) {
+    this.authService = authService;
+    this.cache = new Map(); // Simulate Redis
+  }
+  
+  authenticate(user: string, password: string): string {
+    const key = `${user}:${password}`;
+    if (this.cache.has(key)) {
+      return this.cache.get(key)!;
+    }
+    const token = this.authService.authenticate(user, password);
+    this.cache.set(key, token);
+    return token;
+  }
+}
+
+// Usage
+const proxy = new AuthProxy(new AuthService());
+console.log(proxy.authenticate("user", "pass")); // JWT_TOKEN (cached)
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class IAuthService {
+          <<interface>>
+          +authenticate(user, pass) string
+      }
+      class AuthService {
+          +authenticate(user, pass) string
+      }
+      class AuthProxy {
+          -authService: IAuthService
+          -cache: Map
+          +authenticate(user, pass) string
+      }
+      IAuthService <|.. AuthService
+      IAuthService <|.. AuthProxy
+      AuthProxy --> AuthService
+  ```
+- **Dependencies**: FR-003 (User Authentication), NFR-001, NFR-003.
+
+**Assumptions/Constraints**:
+- Assumes Redis cache với TTL 24h cho JWT.
+- Constraint: Proxy không được lưu plaintext passwords.
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service, Redis.
+- Risks: Cache staleness → Mitigation: TTL and cache invalidation.
+
+**Acceptance Criteria/Testable Items**:
+- Proxy cache JWT trong <10ms.
+- Cache hit rate >90%.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.2.4 Decorator Pattern
+
+**References**: Part04_Functional_Requirements (FR-010), Part05_Non_Functional_Requirements (NFR-006)
+
+**Mục đích**: Thêm logging cho notifications mà không sửa code chính.
+
+**Ý nghĩa**: Tăng NFR-006 (Auditability) với audit logs cho Notification Service.
+
+**Cách làm**: Áp dụng Decorator Pattern để thêm logging vào `NotificationService`.
+
+**Nội dung cần có**:
+- **Mô tả**: Decorator Pattern thêm logging cho SMS/Email notifications (FR-010) mà không sửa code `NotificationService`.
+- **Use Case**: Ghi log mỗi khi gửi notification để audit.
+- **Code Example**:
+```typescript
+interface INotificationService {
+  send(message: string): void;
+}
+
+class NotificationService implements INotificationService {
+  send(message: string) {
+    console.log(`Sending: ${message}`);
+  }
+}
+
+class LoggingDecorator implements INotificationService {
+  private service: INotificationService;
+  constructor(service: INotificationService) {
+    this.service = service;
+  }
+  send(message: string) {
+    console.log(`Log: Sending message at ${new Date()}`);
+    this.service.send(message);
+  }
+}
+
+// Usage
+const service = new LoggingDecorator(new NotificationService());
+service.send("Welcome!"); // Log: Sending message at [date], Sending: Welcome!
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class INotificationService {
+          <<interface>>
+          +send(message: string)
+      }
+      class NotificationService {
+          +send(message: string)
+      }
+      class LoggingDecorator {
+          -service: INotificationService
+          +send(message: string)
+      }
+      INotificationService <|.. NotificationService
+      INotificationService <|.. LoggingDecorator
+      LoggingDecorator --> NotificationService
+  ```
+- **Dependencies**: FR-010 (Notification System), NFR-006 (Auditability).
+
+**Assumptions/Constraints**:
+- Assumes logs được lưu vào CloudWatch.
+- Constraint: Logging không được tăng latency quá 10ms.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, CloudWatch.
+- Risks: Log overhead → Mitigation: Async logging.
+
+**Acceptance Criteria/Testable Items**:
+- Logs được ghi trước khi gửi notification.
+- Logging latency <10ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.1.3 Behavioral Patterns
+
+#### 06B.1.3.1 Strategy Pattern
+
+**References**: Part04_Functional_Requirements (FR-011), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Chọn thuật toán fraud detection động.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) bằng cách cho phép thay đổi thuật toán fraud detection.
+
+**Cách làm**: Áp dụng Strategy Pattern trong Fraud Detection Service.
+
+**Nội dung cần có**:
+- **Mô tả**: Strategy Pattern cho phép chọn thuật toán fraud detection (rule-based, ML-based) tại runtime (FR-011).
+- **Use Case**: Áp dụng rule-based hoặc ML-based fraud scoring tùy cấu hình.
+- **Code Example**:
+```typescript
+interface IFraudStrategy {
+  calculateScore(data: FraudData): number;
+}
+
+class RuleBasedFraudStrategy implements IFraudStrategy {
+  calculateScore(data: FraudData): number {
+    return data.attempts > 5 ? 0.9 : 0.1;
+  }
+}
+
+class MLBasedFraudStrategy implements IFraudStrategy {
+  calculateScore(data: FraudData): number {
+    return 0.7; // Simulate ML model
+  }
+}
+
+class FraudDetectionService {
+  private strategy: IFraudStrategy;
+  constructor(strategy: IFraudStrategy) {
+    this.strategy = strategy;
+  }
+  setStrategy(strategy: IFraudStrategy) {
+    this.strategy = strategy;
+  }
+  calculateScore(data: FraudData): number {
+    return this.strategy.calculateScore(data);
+  }
+}
+
+// Usage
+const fraudService = new FraudDetectionService(new RuleBasedFraudStrategy());
+console.log(fraudService.calculateScore({ attempts: 6 })); // 0.9
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class IFraudStrategy {
+          <<interface>>
+          +calculateScore(data: FraudData) number
+      }
+      class RuleBasedFraudStrategy {
+          +calculateScore(data: FraudData) number
+      }
+      class MLBasedFraudStrategy {
+          +calculateScore(data: FraudData) number
+      }
+      class FraudDetectionService {
+          -strategy: IFraudStrategy
+          +setStrategy(strategy: IFraudStrategy)
+          +calculateScore(data: FraudData) number
+      }
+      IFraudStrategy <|.. RuleBasedFraudStrategy
+      IFraudStrategy <|.. MLBasedFraudStrategy
+      FraudDetectionService --> IFraudStrategy
+  ```
+- **Dependencies**: FR-011 (Fraud Detection), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes ít nhất 2 thuật toán (rule-based, ML-based).
+- Constraint: Thay đổi strategy không được gây downtime.
+
+**Dependencies/Risks**:
+- Dependencies: Fraud Detection Service.
+- Risks: Strategy không tối ưu → Mitigation: Performance tests.
+
+**Acceptance Criteria/Testable Items**:
+- Strategy trả về fraud score đúng.
+- Thay đổi strategy tại runtime không lỗi.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.3.2 Observer Pattern
+
+**References**: Part04_Functional_Requirements (FR-010), Part05_Non_Functional_Requirements (NFR-006)
+
+**Mục đích**: Thông báo multiple services khi redemption hoàn tất.
+
+**Ý nghĩa**: Tăng NFR-006 (Auditability) và hỗ trợ async notifications.
+
+**Cách làm**: Áp dụng Observer Pattern trong Redemption Service để thông báo Analytics và Notification Services.
+
+**Nội dung cần có**:
+- **Mô tả**: Observer Pattern cho phép Analytics và Notification Services đăng ký để nhận redemption events (FR-010).
+- **Use Case**: Gửi thông báo và cập nhật analytics khi barcode được redeem.
+- **Code Example**:
+```typescript
+interface IObserver {
+  update(event: RedemptionEvent): void;
+}
+
+class RedemptionService {
+  private observers: IObserver[] = [];
+  addObserver(observer: IObserver) {
+    this.observers.push(observer);
+  }
+  async redeem(barcode: string) {
+    const event = { barcode, timestamp: new Date() };
+    this.observers.forEach(observer => observer.update(event));
+  }
+}
+
+class AnalyticsObserver implements IObserver {
+  update(event: RedemptionEvent) {
+    console.log(`Analytics: Redemption ${event.barcode}`);
+  }
+}
+
+class NotificationObserver implements IObserver {
+  update(event: RedemptionEvent) {
+    console.log(`Notification: Redemption ${event.barcode}`);
+  }
+}
+
+// Usage
+const redemptionService = new RedemptionService();
+redemptionService.addObserver(new AnalyticsObserver());
+redemptionService.addObserver(new NotificationObserver());
+redemptionService.redeem("12345");
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class IObserver {
+          <<interface>>
+          +update(event: RedemptionEvent)
+      }
+      class RedemptionService {
+          -observers: IObserver[]
+          +addObserver(observer: IObserver)
+          +redeem(barcode: string)
+      }
+      class AnalyticsObserver {
+          +update(event: RedemptionEvent)
+      }
+      class NotificationObserver {
+          +update(event: RedemptionEvent)
+      }
+      IObserver <|.. AnalyticsObserver
+      IObserver <|.. NotificationObserver
+      RedemptionService --> IObserver
+  ```
+- **Dependencies**: FR-007, FR-010, NFR-006 (Auditability).
+
+**Assumptions/Constraints**:
+- Assumes events được xử lý async qua SQS.
+- Constraint: Observers không được block redemption process.
+
+**Dependencies/Risks**:
+- Dependencies: Redemption Service, Notification Service.
+- Risks: Observer overload → Mitigation: Async processing.
+
+**Acceptance Criteria/Testable Items**:
+- Observers nhận đúng redemption events.
+- Event processing <5s (NFR-001).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.3.3 Command Pattern
+
+**References**: Part04_Functional_Requirements (FR-012), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Quản lý A/B testing commands trong Intelligence Service.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) bằng cách tách logic A/B testing.
+
+**Cách làm**: Áp dụng Command Pattern để xử lý A/B testing experiments (FR-012).
+
+**Nội dung cần có**:
+- **Mô tả**: Command Pattern tách logic khởi tạo, chạy, và phân tích A/B tests.
+- **Use Case**: Tạo và chạy A/B test cho ads formats.
+- **Code Example**:
+```typescript
+interface ICommand {
+  execute(): void;
+}
+
+class StartABTestCommand implements ICommand {
+  private experimentId: string;
+  constructor(experimentId: string) {
+    this.experimentId = experimentId;
+  }
+  execute() {
+    console.log(`Starting A/B test: ${this.experimentId}`);
+  }
+}
+
+class ABTestingService {
+  executeCommand(command: ICommand) {
+    command.execute();
+  }
+}
+
+// Usage
+const abTestService = new ABTestingService();
+abTestService.executeCommand(new StartABTestCommand("exp123"));
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class ICommand {
+          <<interface>>
+          +execute()
+      }
+      class StartABTestCommand {
+          -experimentId: string
+          +execute()
+      }
+      class ABTestingService {
+          +executeCommand(command: ICommand)
+      }
+      ICommand <|.. StartABTestCommand
+      ABTestingService --> ICommand
+  ```
+- **Dependencies**: FR-012 (A/B Testing), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes commands là idempotent.
+- Constraint: Commands phải xử lý trong <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service.
+- Risks: Command complexity → Mitigation: Keep commands simple.
+
+**Acceptance Criteria/Testable Items**:
+- Commands thực thi đúng A/B test logic.
+- Command execution <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.1.3.4 Chain of Responsibility Pattern
+
+**References**: Part04_Functional_Requirements (FR-007), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Xử lý redemption requests qua chuỗi validation steps.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) và NFR-007 (Usability) bằng cách chia nhỏ validation logic.
+
+**Cách làm**: Áp dụng Chain of Responsibility trong Redemption Service.
+
+**Nội dung cần có**:
+- **Mô tả**: Chain of Responsibility xử lý redemption (FR-007) qua các bước: barcode validation, fraud check, DB save.
+- **Use Case**: Validate barcode trước khi redeem.
+- **Code Example**:
+```typescript
+interface IHandler {
+  setNext(handler: IHandler): IHandler;
+  handle(request: RedemptionRequest): boolean;
+}
+
+class BarcodeValidator implements IHandler {
+  private next: IHandler | null = null;
+  setNext(handler: IHandler): IHandler {
+    this.next = handler;
+    return handler;
+  }
+  handle(request: RedemptionRequest): boolean {
+    if (!request.isValidBarcode) return false;
+    return this.next ? this.next.handle(request) : true;
+  }
+}
+
+class FraudChecker implements IHandler {
+  private next: IHandler | null = null;
+  setNext(handler: IHandler): IHandler {
+    this.next = handler;
+    return handler;
+  }
+  handle(request: RedemptionRequest): boolean {
+    if (request.fraudScore > 0.8) return false;
+    return this.next ? this.next.handle(request) : true;
+  }
+}
+
+// Usage
+const validator = new BarcodeValidator();
+const fraudChecker = new FraudChecker();
+validator.setNext(fraudChecker);
+const result = validator.handle({ isValidBarcode: true, fraudScore: 0.5 }); // true
+```
+- **Diagram**:
+  ```mermaid
+  classDiagram
+      class IHandler {
+          <<interface>>
+          +setNext(handler: IHandler)
+          +handle(request: RedemptionRequest) boolean
+      }
+      class BarcodeValidator {
+          -next: IHandler
+          +setNext(handler: IHandler)
+          +handle(request: RedemptionRequest) boolean
+      }
+      class FraudChecker {
+          -next: IHandler
+          +setNext(handler: IHandler)
+          +handle(request: RedemptionRequest) boolean
+      }
+      IHandler <|.. BarcodeValidator
+      IHandler <|.. FraudChecker
+      BarcodeValidator --> FraudChecker
+  ```
+- **Dependencies**: FR-007 (Barcode Redemption), NFR-003, NFR-007.
+
+**Assumptions/Constraints**:
+- Assumes chuỗi validation gồm 3 bước.
+- Constraint: Mỗi handler xử lý trong <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Redemption Service, Fraud Detection Service.
+- Risks: Chain quá dài → Mitigation: Limit handlers.
+
+**Acceptance Criteria/Testable Items**:
+- Chain xử lý redemption request đúng.
+- Tổng latency <500ms (NFR-001).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part06B - Design Patterns (Section 2)
+
+## Structure of Part06B (Section 2)
+```
+Part06B_Design_Patterns/
+├── 06B.2_Interface_Definitions/
+│   ├── 06B.2.1_Service_Interfaces/
+│   │   ├── 06B.2.1.1_ICampaignService.md
+│   │   ├── 06B.2.1.2_IBarcodeService.md
+│   │   ├── 06B.2.1.3_IAuthService.md
+│   │   ├── 06B.2.1.4_IUserService.md
+│   │   ├── 06B.2.1.5_IAnalyticsService.md
+│   │   ├── 06B.2.1.6_INotificationService.md
+│   │   ├── 06B.2.1.7_IFraudDetectionService.md
+│   │   ├── 06B.2.1.8_IABTestingService.md
+│   │   └── 06B.2.1.9_IRecommendationService.md
+│   ├── 06B.2.2_Repository_Interfaces/
+│   │   ├── 06B.2.2.1_IRepository_Base.md
+│   │   ├── 06B.2.2.2_ICampaignRepository.md
+│   │   ├── 06B.2.2.3_IUserRepository.md
+│   │   ├── 06B.2.2.4_IBarcodeRepository.md
+│   │   ├── 06B.2.2.5_IFraudScoreRepository.md
+│   │   ├── 06B.2.2.6_IUserPreferenceRepository.md
+│   │   ├── 06B.2.2.7_IExperimentRepository.md
+│   │   └── 06B.2.2.8_IRecommendationRepository.md
+│   ├── 06B.2.3_External_Integration_Interfaces/
+│   │   ├── 06B.2.3.1_ICRMConnector.md
+│   │   ├── 06B.2.3.2_ISMSProvider.md
+│   │   ├── 06B.2.3.3_IEmailProvider.md
+│   │   └── 06B.2.3.4_IPOSConnector.md
+```
+
+---
+
+## 06B.2 Interface Definitions
+
+### 06B.2.1 Service Interfaces
+
+#### 06B.2.1.1 ICampaignService
+
+**References**: Part04_Functional_Requirements (FR-001, FR-002, FR-006), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Định nghĩa interface cho Campaign Management Service để quản lý chiến dịch và quảng cáo.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) bằng cách chuẩn hóa các phương thức quản lý campaign.
+
+**Cách làm**: Cung cấp interface TypeScript với các phương thức CRUD và ads format management.
+
+**Nội dung cần có**:
+- **Mô tả**: `ICampaignService` xử lý các chức năng liên quan đến chiến dịch (FR-001), barcode (FR-002), và ads format (FR-006).
+- **Interface Definition**:
+```typescript
+interface ICampaignService {
+  createCampaign(campaign: CampaignDTO): Promise<Campaign>;
+  updateCampaign(id: string, campaign: CampaignDTO): Promise<Campaign>;
+  deleteCampaign(id: string): Promise<void>;
+  getCampaign(id: string): Promise<Campaign>;
+  listCampaigns(filter: CampaignFilter): Promise<Campaign[]>;
+  generateBarcode(campaignId: string, format: string): Promise<Barcode>;
+  createAdsFormat(campaignId: string, format: AdsFormatDTO): Promise<AdsFormat>;
+}
+```
+- **Dependencies**: FR-001 (Campaign CRUD), FR-002 (Barcode Management), FR-006 (Ads Format Management), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes CampaignDTO chứa name, startDate, endDate, adsFormat.
+- Constraint: Methods phải idempotent và trả về trong <500ms (NFR-001).
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service, PostgreSQL.
+- Risks: Input validation errors → Mitigation: Use BaseValidator (06B.3.4).
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-001, FR-002, FR-006.
+- Methods trả về đúng data types.
+- Unit tests đạt 80% coverage (NFR-005).
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.1.2 IBarcodeService
+
+**References**: Part04_Functional_Requirements (FR-002, FR-007), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Định nghĩa interface cho Barcode Service để quản lý và validate barcode.
+
+**Ý nghĩa**: Hỗ trợ FR-007 (Barcode Redemption) và NFR-001 (Performance).
+
+**Cách làm**: Cung cấp interface TypeScript cho barcode generation và validation.
+
+**Nội dung cần có**:
+- **Mô tả**: `IBarcodeService` xử lý tạo và validate barcode (FR-002, FR-007).
+- **Interface Definition**:
+```typescript
+interface IBarcodeService {
+  generateBarcode(campaignId: string, format: "QR" | "Code128" | "DataMatrix"): Promise<Barcode>;
+  validateBarcode(barcodeId: string): Promise<boolean>;
+  getBarcode(barcodeId: string): Promise<Barcode>;
+}
+```
+- **Dependencies**: FR-002 (Barcode Management), FR-007 (Barcode Redemption), NFR-001 (Performance).
+
+**Assumptions/Constraints**:
+- Assumes barcode formats là QR, Code128, DataMatrix.
+- Constraint: Validation phải hoàn tất trong <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service, Redemption Service.
+- Risks: Barcode collision → Mitigation: Unique barcode IDs.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-002, FR-007.
+- Validation latency <100ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.1.3 IAuthService
+
+**References**: Part04_Functional_Requirements (FR-003, FR-005), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Định nghĩa interface cho authentication trong Identity Service.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với chuẩn hóa authentication logic.
+
+**Cách làm**: Cung cấp interface TypeScript cho login, SSO, và OTP.
+
+**Nội dung cần có**:
+- **Mô tả**: `IAuthService` xử lý user authentication và OTP verification (FR-003, FR-005).
+- **Interface Definition**:
+```typescript
+interface IAuthService {
+  login(credentials: CredentialsDTO): Promise<JWTToken>;
+  loginSSO(provider: string, token: string): Promise<JWTToken>;
+  generateOTP(userId: string): Promise<string>;
+  verifyOTP(userId: string, otp: string): Promise<boolean>;
+}
+```
+- **Dependencies**: FR-003 (User Authentication), FR-005 (OTP Verification), NFR-003 (Security).
+
+**Assumptions/Constraints**:
+- Assumes JWT tokens có TTL 24h.
+- Constraint: OTP verification phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service, Redis.
+- Risks: Token leakage → Mitigation: mTLS, KMS encryption.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-003, FR-005.
+- OTP verification latency <100ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.1.4 IUserService
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Định nghĩa interface cho quản lý user profiles.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) và NFR-005 (Maintainability) cho user management.
+
+**Cách làm**: Cung cấp interface TypeScript cho CRUD user.
+
+**Nội dung cần có**:
+- **Mô tả**: `IUserService` xử lý tạo, cập nhật, và quản lý user profiles (FR-004).
+- **Interface Definition**:
+```typescript
+interface IUserService {
+  createUser(user: UserDTO): Promise<User>;
+  updateUser(id: string, user: UserDTO): Promise<User>;
+  deleteUser(id: string): Promise<void>;
+  getUser(id: string): Promise<User>;
+  listUsers(filter: UserFilter): Promise<User[]>;
+}
+```
+- **Dependencies**: FR-004 (User Management), NFR-003, NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes UserDTO chứa name, email, role.
+- Constraint: PII phải được mã hóa (NFR-003).
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service, PostgreSQL.
+- Risks: Data leakage → Mitigation: AES-256 encryption.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-004.
+- CRUD operations hoàn tất trong <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.1.5 IAnalyticsService
+
+**References**: Part04_Functional_Requirements (FR-008), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Định nghĩa interface cho real-time analytics.
+
+**Ý nghĩa**: Hỗ trợ FR-008 (Real-Time Analytics) và NFR-001 (Performance).
+
+**Cách làm**: Cung cấp interface TypeScript cho metrics và analytics.
+
+**Nội dung cần có**:
+- **Mô tả**: `IAnalyticsService` cung cấp real-time metrics và funnel analytics (FR-008).
+- **Interface Definition**:
+```typescript
+interface IAnalyticsService {
+  getRealTimeMetrics(campaignId: string): Promise<Metrics>;
+  getFunnelAnalytics(campaignId: string, period: DateRange): Promise<FunnelData>;
+}
+```
+- **Dependencies**: FR-008 (Real-Time Analytics), NFR-001 (Performance).
+
+**Assumptions/Constraints**:
+- Assumes metrics được lưu trong MongoDB.
+- Constraint: Queries phải trả về trong <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Analytics Service, MongoDB.
+- Risks: Query performance → Mitigation: Index optimization.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-008.
+- Metrics queries <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.1.6 INotificationService
+
+**References**: Part04_Functional_Requirements (FR-009, FR-010), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Định nghĩa interface cho notification và CRM sync.
+
+**Ý nghĩa**: Hỗ trợ FR-010 (Notification System) và NFR-001 (Performance).
+
+**Cách làm**: Cung cấp interface TypeScript cho SMS, Email, và CRM sync.
+
+**Nội dung cần có**:
+- **Mô tả**: `INotificationService` xử lý gửi SMS/Email/Push và đồng bộ CRM (FR-009, FR-010).
+- **Interface Definition**:
+```typescript
+interface INotificationService {
+  sendSMS(phone: string, message: string): Promise<void>;
+  sendEmail(email: string, subject: string, body: string): Promise<void>;
+  sendPush(userId: string, message: string): Promise<void>;
+  syncToCRM(user: UserDTO): Promise<void>;
+}
+```
+- **Dependencies**: FR-009 (CRM Integration), FR-010 (Notification System), NFR-001.
+
+**Assumptions/Constraints**:
+- Assumes Twilio xử lý SMS/Email.
+- Constraint: Notifications phải gửi trong <5s.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, Twilio, SQS.
+- Risks: Third-party downtime → Mitigation: Retries, DLQ.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-009, FR-010.
+- Notifications gửi trong <5s.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.1.7 IFraudDetectionService
+
+**References**: Part04_Functional_Requirements (FR-011), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Định nghĩa interface cho fraud detection.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với fraud scoring logic.
+
+**Cách làm**: Cung cấp interface TypeScript cho fraud score và rules.
+
+**Nội dung cần có**:
+- **Mô tả**: `IFraudDetectionService` tính fraud score và quản lý rules (FR-011).
+- **Interface Definition**:
+```typescript
+interface IFraudDetectionService {
+  calculateFraudScore(data: FraudData): Promise<number>;
+  addFraudRule(rule: FraudRule): Promise<void>;
+  getFraudHistory(deviceId: string): Promise<FraudRecord[]>;
+}
+```
+- **Dependencies**: FR-011 (Fraud Detection), NFR-003 (Security).
+
+**Assumptions/Constraints**:
+- Assumes fraud score từ 0-1.
+- Constraint: Scoring phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Fraud Detection Service, MongoDB.
+- Risks: False positives → Mitigation: Rule tuning.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-011.
+- Scoring latency <100ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.1.8 IABTestingService
+
+**References**: Part04_Functional_Requirements (FR-012), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Định nghĩa interface cho A/B testing.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho A/B testing experiments.
+
+**Cách làm**: Cung cấp interface TypeScript cho quản lý experiments.
+
+**Nội dung cần có**:
+- **Mô tả**: `IABTestingService` quản lý và chạy A/B tests (FR-012).
+- **Interface Definition**:
+```typescript
+interface IABTestingService {
+  createExperiment(experiment: ExperimentDTO): Promise<Experiment>;
+  runExperiment(experimentId: string): Promise<void>;
+  getExperimentResults(experimentId: string): Promise<ExperimentResults>;
+}
+```
+- **Dependencies**: FR-012 (A/B Testing), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes experiments có variants (A/B).
+- Constraint: Results trả về trong <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service, MongoDB.
+- Risks: Experiment bias → Mitigation: Randomization.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-012.
+- Experiment results trả về trong <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.1.9 IRecommendationService
+
+**References**: Part04_Functional_Requirements (FR-013), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Định nghĩa interface cho recommendation engine.
+
+**Ý nghĩa**: Hỗ trợ FR-013 (Recommendation Engine) và NFR-001 (Performance).
+
+**Cách làm**: Cung cấp interface TypeScript cho recommendations.
+
+**Nội dung cần có**:
+- **Mô tả**: `IRecommendationService` cung cấp gợi ý quà tặng dựa trên user preferences (FR-013).
+- **Interface Definition**:
+```typescript
+interface IRecommendationService {
+  getRecommendations(userId: string): Promise<Recommendation[]>;
+  updateUserPreferences(userId: string, preferences: PreferenceDTO): Promise<void>;
+}
+```
+- **Dependencies**: FR-013 (Recommendation Engine), NFR-001 (Performance).
+
+**Assumptions/Constraints**:
+- Assumes recommendations dựa trên collaborative filtering.
+- Constraint: Recommendations trả về trong <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service, MongoDB.
+- Risks: Low-quality recommendations → Mitigation: Model training.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-013.
+- Recommendations latency <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.2.2 Repository Interfaces
+
+#### 06B.2.2.1 IRepository_Base
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Định nghĩa base interface cho tất cả repositories.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với chuẩn hóa repository operations.
+
+**Cách làm**: Cung cấp interface TypeScript generic cho CRUD operations.
+
+**Nội dung cần có**:
+- **Mô tả**: `IRepository` là base interface cho các repository, cung cấp CRUD methods chung.
+- **Interface Definition**:
+```typescript
+interface IRepository<T> {
+  create(entity: T): Promise<T>;
+  update(id: string, entity: Partial<T>): Promise<T>;
+  delete(id: string): Promise<void>;
+  findById(id: string): Promise<T | null>;
+  findAll(filter: Partial<T>): Promise<T[]>;
+}
+```
+- **Dependencies**: NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes generic type T cho mọi entity.
+- Constraint: Methods phải thread-safe.
+
+**Dependencies/Risks**:
+- Dependencies: All Repository Interfaces.
+- Risks: Interface quá chung → Mitigation: Specific repository interfaces.
+
+**Acceptance Criteria/Testable Items**:
+- Interface được implement bởi tất cả repositories.
+- Methods trả về đúng data types.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.2.2 ICampaignRepository
+
+**References**: Part04_Functional_Requirements (FR-001), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Định nghĩa interface cho repository của Campaign.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho campaign data access.
+
+**Cách làm**: Cung cấp interface TypeScript kế thừa `IRepository`.
+
+**Nội dung cần có**:
+- **Mô tả**: `ICampaignRepository` xử lý truy cập dữ liệu campaigns (FR-001).
+- **Interface Definition**:
+```typescript
+interface ICampaignRepository extends IRepository<Campaign> {
+  findByDateRange(start: Date, end: Date): Promise<Campaign[]>;
+}
+```
+- **Dependencies**: FR-001 (Campaign CRUD), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes campaigns lưu trong PostgreSQL.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service, PostgreSQL.
+- Risks: Query performance → Mitigation: Indexing.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-001.
+- Queries trả về trong <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.2.3 IUserRepository
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Định nghĩa interface cho repository của User.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) và NFR-005 (Maintainability).
+
+**Cách làm**: Cung cấp interface TypeScript kế thừa `IRepository`.
+
+**Nội dung cần có**:
+- **Mô tả**: `IUserRepository` xử lý truy cập dữ liệu users (FR-004).
+- **Interface Definition**:
+```typescript
+interface IUserRepository extends IRepository<User> {
+  findByEmail(email: string): Promise<User | null>;
+}
+```
+- **Dependencies**: FR-004 (User Management), NFR-003, NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes users lưu trong PostgreSQL.
+- Constraint: PII phải mã hóa (NFR-003).
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service, PostgreSQL.
+- Risks: Data leakage → Mitigation: Encryption.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-004.
+- Queries trả về trong <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.2.4 IBarcodeRepository
+
+**References**: Part04_Functional_Requirements (FR-002, FR-007), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Định nghĩa interface cho repository của Barcode.
+
+**Ý nghĩa**: Hỗ trợ FR-002, FR-007 và NFR-001 (Performance).
+
+**Cách làm**: Cung cấp interface TypeScript kế thừa `IRepository`.
+
+**Nội dung cần có**:
+- **Mô tả**: `IBarcodeRepository` xử lý truy cập dữ liệu barcodes (FR-002, FR-007).
+- **Interface Definition**:
+```typescript
+interface IBarcodeRepository extends IRepository<Barcode> {
+  findByCampaignId(campaignId: string): Promise<Barcode[]>;
+  markAsRedeemed(barcodeId: string): Promise<void>;
+}
+```
+- **Dependencies**: FR-002 (Barcode Management), FR-007 (Barcode Redemption), NFR-001.
+
+**Assumptions/Constraints**:
+- Assumes barcodes lưu trong PostgreSQL.
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service, Redemption Service.
+- Risks: Barcode collision → Mitigation: Unique constraints.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-002, FR-007.
+- Queries trả về trong <100ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.2.5 IFraudScoreRepository
+
+**References**: Part04_Functional_Requirements (FR-011), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Định nghĩa interface cho repository của Fraud Scores.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) và NFR-005 (Maintainability).
+
+**Cách làm**: Cung cấp interface TypeScript kế thừa `IRepository`.
+
+**Nội dung cần có**:
+- **Mô tả**: `IFraudScoreRepository` xử lý truy cập dữ liệu fraud scores (FR-011).
+- **Interface Definition**:
+```typescript
+interface IFraudScoreRepository extends IRepository<FraudScore> {
+  findByDeviceId(deviceId: string): Promise<FraudScore[]>;
+}
+```
+- **Dependencies**: FR-011 (Fraud Detection), NFR-003, NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes fraud scores lưu trong MongoDB.
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Fraud Detection Service, MongoDB.
+- Risks: Data volume → Mitigation: Sharding.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-011.
+- Queries trả về trong <100ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.2.6 IUserPreferenceRepository
+
+**References**: Part04_Functional_Requirements (FR-013), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Định nghĩa interface cho repository của User Preferences.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho recommendation engine.
+
+**Cách làm**: Cung cấp interface TypeScript kế thừa `IRepository`.
+
+**Nội dung cần có**:
+- **Mô tả**: `IUserPreferenceRepository` xử lý truy cập dữ liệu user preferences (FR-013).
+- **Interface Definition**:
+```typescript
+interface IUserPreferenceRepository extends IRepository<UserPreference> {
+  findByUserId(userId: string): Promise<UserPreference[]>;
+}
+```
+- **Dependencies**: FR-013 (Recommendation Engine), NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes preferences lưu trong MongoDB.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service, MongoDB.
+- Risks: Data growth → Mitigation: Sharding.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-013.
+- Queries trả về trong <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.2.7 IExperimentRepository
+
+**References**: Part04_Functional_Requirements (FR-012), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Định nghĩa interface cho repository của A/B Testing Experiments.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho A/B testing.
+
+**Cách làm**: Cung cấp interface TypeScript kế thừa `IRepository`.
+
+**Nội dung cần có**:
+- **Mô tả**: `IExperimentRepository` xử lý truy cập dữ liệu experiments (FR-012).
+- **Interface Definition**:
+```typescript
+interface IExperimentRepository extends IRepository<Experiment> {
+  findByCampaignId(campaignId: string): Promise<Experiment[]>;
+}
+```
+- **Dependencies**: FR-012 (A/B Testing), NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes experiments lưu trong MongoDB.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service, MongoDB.
+- Risks: Data volume → Mitigation: Indexing.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-012.
+- Queries trả về trong <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.2.8 IRecommendationRepository
+
+**References**: Part04_Functional_Requirements (FR-013), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Định nghĩa interface cho repository của Recommendations.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho recommendation engine.
+
+**Cách làm**: Cung cấp interface TypeScript kế thừa `IRepository`.
+
+**Nội dung cần có**:
+- **Mô tả**: `IRecommendationRepository` xử lý truy cập dữ liệu recommendations (FR-013).
+- **Interface Definition**:
+```typescript
+interface IRecommendationRepository extends IRepository<Recommendation> {
+  findByUserId(userId: string): Promise<Recommendation[]>;
+}
+```
+- **Dependencies**: FR-013 (Recommendation Engine), NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes recommendations lưu trong MongoDB.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service, MongoDB.
+- Risks: Data growth → Mitigation: Sharding.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-013.
+- Queries trả về trong <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.2.3 External Integration Interfaces
+
+#### 06B.2.3.1 ICRMConnector
+
+**References**: Part04_Functional_Requirements (FR-009), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Định nghĩa interface cho tích hợp CRM (HubSpot, Salesforce).
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với chuẩn hóa CRM sync.
+
+**Cách làm**: Cung cấp interface TypeScript cho CRM integration.
+
+**Nội dung cần có**:
+- **Mô tả**: `ICRMConnector` xử lý đồng bộ customer data với CRM (FR-009).
+- **Interface Definition**:
+```typescript
+interface ICRMConnector {
+  syncCustomer(customer: CustomerDTO): Promise<void>;
+  syncCampaign(campaign: CampaignDTO): Promise<void>;
+}
+```
+- **Dependencies**: FR-009 (CRM Integration), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes HubSpot/Salesforce APIs ổn định.
+- Constraint: Sync phải idempotent.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, HubSpot/Salesforce.
+- Risks: API downtime → Mitigation: Retries, DLQ.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-009.
+- Sync hoàn tất trong <5s.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.3.2 ISMSProvider
+
+**References**: Part04_Functional_Requirements (FR-010), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Định nghĩa interface cho SMS provider (Twilio).
+
+**Ý nghĩa**: Hỗ trợ FR-010 (Notification System) và NFR-001 (Performance).
+
+**Cách làm**: Cung cấp interface TypeScript cho SMS notifications.
+
+**Nội dung cần có**:
+- **Mô tả**: `ISMSProvider` xử lý gửi SMS notifications (FR-010).
+- **Interface Definition**:
+```typescript
+interface ISMSProvider {
+  sendSMS(phone: string, message: string): Promise<void>;
+}
+```
+- **Dependencies**: FR-010 (Notification System), NFR-001 (Performance).
+
+**Assumptions/Constraints**:
+- Assumes Twilio API xử lý SMS.
+- Constraint: SMS gửi trong <5s.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, Twilio.
+- Risks: Twilio downtime → Mitigation: Fallback providers.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-010.
+- SMS gửi trong <5s.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.3.3 IEmailProvider
+
+**References**: Part04_Functional_Requirements (FR-010), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Định nghĩa interface cho Email provider (Twilio).
+
+**Ý nghĩa**: Hỗ trợ FR-010 (Notification System) và NFR-001 (Performance).
+
+**Cách làm**: Cung cấp interface TypeScript cho Email notifications.
+
+**Nội dung cần có**:
+- **Mô tả**: `IEmailProvider` xử lý gửi Email notifications (FR-010).
+- **Interface Definition**:
+```typescript
+interface IEmailProvider {
+  sendEmail(email: string, subject: string, body: string): Promise<void>;
+}
+```
+- **Dependencies**: FR-010 (Notification System), NFR-001 (Performance).
+
+**Assumptions/Constraints**:
+- Assumes Twilio API xử lý Email.
+- Constraint: Email gửi trong <5s.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, Twilio.
+- Risks: Email delivery failures → Mitigation: Retries, DLQ.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-010.
+- Email gửi trong <5s.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 06B.2.3.4 IPOSConnector
+
+**References**: Part04_Functional_Requirements (FR-007), Part05_Non_Functional_Requirements (NFR-007)
+
+**Mục đích**: Định nghĩa interface cho POS device integration.
+
+**Ý nghĩa**: Hỗ trợ FR-007 (Barcode Redemption) và NFR-007 (Usability).
+
+**Cách làm**: Cung cấp interface TypeScript cho offline redemption.
+
+**Nội dung cần có**:
+- **Mô tả**: `IPOSConnector` xử lý redemption trên POS devices (FR-007).
+- **Interface Definition**:
+```typescript
+interface IPOSConnector {
+  redeemOffline(barcode: string): Promise<boolean>;
+  syncOfflineData(): Promise<void>;
+}
+```
+- **Dependencies**: FR-007 (Barcode Redemption), NFR-007 (Usability).
+
+**Assumptions/Constraints**:
+- Assumes POS devices sử dụng LocalDB (SQLite).
+- Constraint: Offline redemption phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Redemption Service, LocalDB.
+- Risks: Sync failures → Mitigation: Retry mechanisms.
+
+**Acceptance Criteria/Testable Items**:
+- Interface hỗ trợ đầy đủ FR-007.
+- Offline redemption latency <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part06B - Design Patterns (Section 3)
+
+## Structure of Part06B (Section 3)
+```
+Part06B_Design_Patterns/
+├── 06B.3_Abstract_Base_Classes/
+│   ├── 06B.3.1_BaseService.md
+│   ├── 06B.3.2_BaseRepository.md
+│   ├── 06B.3.3_BaseController.md
+│   ├── 06B.3.4_BaseValidator.md
+├── 06B.4_Dependency_Injection/
+│   ├── 06B.4.1_DI_Container_Setup.md
+│   ├── 06B.4.2_Service_Registration.md
+│   ├── 06B.4.3_Lifetime_Management.md
+│   ├── 06B.4.4_Configuration_Pattern.md
+├── 06B.5_Module_Independence/
+│   ├── 06B.5.1_Module_Boundaries.md
+│   ├── 06B.5.2_Inter_Module_Communication.md
+│   ├── 06B.5.3_Event_Bus_Pattern.md
+│   ├── 06B.5.4_API_Contracts.md
+│   ├── 06B.5.5_Versioning_Strategy.md
+├── 06B.6_Code_Organization/
+│   ├── 06B.6.1_Folder_Structure.md
+│   ├── 06B.6.2_Naming_Conventions.md
+│   ├── 06B.6.3_File_Organization.md
+│   ├── 06B.6.4_Package_Structure.md
+├── 06B.7_Documentation_Standards/
+│   ├── 06B.7.1_Code_Comments.md
+│   ├── 06B.7.2_API_Documentation.md
+│   ├── 06B.7.3_Architecture_Decision_Records.md
+│   ├── 06B.7.4_README_Templates.md
+```
+
+---
+
+## 06B.3 Abstract Base Classes
+
+### 06B.3.1 BaseService
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Cung cấp base class cho tất cả services để chuẩn hóa logic chung.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với logging và error handling thống nhất.
+
+**Cách làm**: Định nghĩa abstract TypeScript class với logging và error handling.
+
+**Nội dung cần có**:
+- **Mô tả**: `BaseService` cung cấp các phương thức chung như logging và error handling cho các services (Campaign, Identity, etc.).
+- **Code Example**:
+```typescript
+import { Logger } from "winston";
+
+abstract class BaseService {
+  protected logger: Logger;
+  
+  constructor(logger: Logger) {
+    this.logger = logger;
+  }
+  
+  protected async execute<T>(operation: string, fn: () => Promise<T>): Promise<T> {
+    try {
+      this.logger.info(`Executing ${operation}`);
+      const result = await fn();
+      this.logger.info(`Completed ${operation}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error in ${operation}: ${error.message}`);
+      throw new Error(`Failed to execute ${operation}: ${error.message}`);
+    }
+  }
+}
+
+// Usage in CampaignService
+class CampaignService extends BaseService implements ICampaignService {
+  async createCampaign(campaign: CampaignDTO): Promise<Campaign> {
+    return this.execute("createCampaign", async () => {
+      // Implementation
+      return { id: "123", ...campaign };
+    });
+  }
+}
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.2.1 (Service Interfaces).
+
+**Assumptions/Constraints**:
+- Assumes Winston logger được cấu hình với CloudWatch.
+- Constraint: Logging không được tăng latency quá 10ms.
+
+**Dependencies/Risks**:
+- Dependencies: Winston, CloudWatch.
+- Risks: Log overhead → Mitigation: Async logging.
+
+**Acceptance Criteria/Testable Items**:
+- BaseService log mọi operation đúng format.
+- Error handling trả về lỗi rõ ràng.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.3.2 BaseRepository
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Cung cấp base class cho tất cả repositories để chuẩn hóa data access.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với CRUD operations chung.
+
+**Cách làm**: Định nghĩa abstract TypeScript class kế thừa `IRepository`.
+
+**Nội dung cần có**:
+- **Mô tả**: `BaseRepository` cung cấp triển khai chung cho CRUD operations, kết nối DB (PostgreSQL/MongoDB).
+- **Code Example**:
+```typescript
+import { IRepository } from "./IRepository";
+
+abstract class BaseRepository<T> implements IRepository<T> {
+  protected db: any; // PostgreSQL/MongoDB client
+  
+  constructor(db: any) {
+    this.db = db;
+  }
+  
+  async create(entity: T): Promise<T> {
+    // Generic DB insert
+    return entity;
+  }
+  
+  async update(id: string, entity: Partial<T>): Promise<T> {
+    // Generic DB update
+    return { id, ...entity } as T;
+  }
+  
+  async delete(id: string): Promise<void> {
+    // Generic DB delete
+  }
+  
+  async findById(id: string): Promise<T | null> {
+    // Generic DB find
+    return null;
+  }
+  
+  async findAll(filter: Partial<T>): Promise<T[]> {
+    // Generic DB query
+    return [];
+  }
+}
+
+// Usage in CampaignRepository
+class CampaignRepository extends BaseRepository<Campaign> implements ICampaignRepository {
+  async findByDateRange(start: Date, end: Date): Promise<Campaign[]> {
+    // Specific implementation
+    return [];
+  }
+}
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.2.2.1 (IRepository_Base).
+
+**Assumptions/Constraints**:
+- Assumes DB client được inject qua constructor.
+- Constraint: Operations phải <500ms (NFR-001).
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL, MongoDB.
+- Risks: DB connection errors → Mitigation: Connection pooling.
+
+**Acceptance Criteria/Testable Items**:
+- BaseRepository hỗ trợ đầy đủ CRUD.
+- Operations trả về đúng data types.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.3.3 BaseController
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Cung cấp base class cho REST controllers để chuẩn hóa API handling.
+
+**Ý nghĩa**: Tăng NFR-001 (Performance) và NFR-005 (Maintainability).
+
+**Cách làm**: Định nghĩa abstract TypeScript class cho REST API endpoints.
+
+**Nội dung cần có**:
+- **Mô tả**: `BaseController` chuẩn hóa xử lý API requests với error handling và logging.
+- **Code Example**:
+```typescript
+import { Request, Response } from "express";
+import { Logger } from "winston";
+
+abstract class BaseController {
+  protected logger: Logger;
+  
+  constructor(logger: Logger) {
+    this.logger = logger;
+  }
+  
+  protected async handleRequest<T>(req: Request, res: Response, fn: () => Promise<T>) {
+    try {
+      const result = await fn();
+      res.status(200).json(result);
+    } catch (error) {
+      this.logger.error(`Error in ${req.path}: ${error.message}`);
+      res.status(500).json({ error: error.message });
+    }
+  }
+}
+
+// Usage in CampaignController
+class CampaignController extends BaseController {
+  constructor(logger: Logger, private campaignService: ICampaignService) {
+    super(logger);
+  }
+  
+  async createCampaign(req: Request, res: Response) {
+    await this.handleRequest(req, res, () => this.campaignService.createCampaign(req.body));
+  }
+}
+```
+- **Dependencies**: NFR-001 (Performance), NFR-005 (Maintainability), 06B.2.1 (Service Interfaces).
+
+**Assumptions/Constraints**:
+- Assumes Express.js cho API routing.
+- Constraint: API responses phải <500ms (NFR-001).
+
+**Dependencies/Risks**:
+- Dependencies: Express.js, Winston.
+- Risks: Error handling thiếu → Mitigation: Comprehensive try-catch.
+
+**Acceptance Criteria/Testable Items**:
+- BaseController xử lý API requests đúng.
+- Responses trả về trong <500ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.3.4 BaseValidator
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Cung cấp base class cho input validation.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với input validation thống nhất.
+
+**Cách làm**: Định nghĩa abstract TypeScript class với validation logic.
+
+**Nội dung cần có**:
+- **Mô tả**: `BaseValidator` cung cấp phương thức validate chung, tích hợp Joi hoặc Zod.
+- **Code Example**:
+```typescript
+import { z, ZodError } from "zod";
+
+abstract class BaseValidator<T> {
+  protected schema: z.ZodSchema<T>;
+  
+  constructor(schema: z.ZodSchema<T>) {
+    this.schema = schema;
+  }
+  
+  validate(data: unknown): T {
+    try {
+      return this.schema.parse(data);
+    } catch (error) {
+      throw new ZodError((error as ZodError).errors);
+    }
+  }
+}
+
+// Usage in CampaignValidator
+const campaignSchema = z.object({
+  name: z.string().min(3),
+  startDate: z.date(),
+});
+
+class CampaignValidator extends BaseValidator<CampaignDTO> {
+  constructor() {
+    super(campaignSchema);
+  }
+}
+```
+- **Dependencies**: NFR-003 (Security), 06B.2.1 (Service Interfaces).
+
+**Assumptions/Constraints**:
+- Assumes Zod cho validation.
+- Constraint: Validation phải <10ms.
+
+**Dependencies/Risks**:
+- Dependencies: Zod.
+- Risks: Schema complexity → Mitigation: Modular schemas.
+
+**Acceptance Criteria/Testable Items**:
+- BaseValidator validate input đúng.
+- Validation latency <10ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 06B.4 Dependency Injection
+
+### 06B.4.1 DI Container Setup
+
+**References**: Part05_Non_Functional_Requirements (NFR-005), 06B.2.1 (Service Interfaces)
+
+**Mục đích**: Mô tả setup DI container với inversifyJS.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với DI thống nhất.
+
+**Cách làm**: Cung cấp cấu hình inversifyJS cho microservices.
+
+**Nội dung cần có**:
+- **Mô tả**: Sử dụng inversifyJS để quản lý dependencies cho 7 microservices.
+- **Code Example**:
+```typescript
+import { Container } from "inversify";
+import { ICampaignService } from "./ICampaignService";
+import { CampaignService } from "./CampaignService";
+
+const container = new Container();
+container.bind<ICampaignService>("ICampaignService").to(CampaignService).inSingletonScope();
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.2.1 (Service Interfaces).
+
+**Assumptions/Constraints**:
+- Assumes inversifyJS là DI container.
+- Constraint: Container setup không được tăng startup time quá 100ms.
+
+**Dependencies/Risks**:
+- Dependencies: inversifyJS.
+- Risks: Misconfiguration → Mitigation: Unit tests.
+
+**Acceptance Criteria/Testable Items**:
+- Container bind đúng services.
+- Startup time <100ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.4.2 Service Registration
+
+**References**: Part05_Non_Functional_Requirements (NFR-005), 06B.2.1 (Service Interfaces)
+
+**Mục đích**: Mô tả cách đăng ký services vào DI container.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với service registration thống nhất.
+
+**Cách làm**: Cung cấp code đăng ký services với inversifyJS.
+
+**Nội dung cần có**:
+- **Mô tả**: Đăng ký tất cả services (Campaign, Identity, etc.) vào container.
+- **Code Example**:
+```typescript
+import { Container } from "inversify";
+import { TYPES } from "./types";
+
+const container = new Container();
+container.bind<ICampaignService>(TYPES.ICampaignService).to(CampaignService).inSingletonScope();
+container.bind<IAuthService>(TYPES.IAuthService).to(AuthService).inSingletonScope();
+container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService).inTransientScope();
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.2.1 (Service Interfaces).
+
+**Assumptions/Constraints**:
+- Assumes TYPES là enum cho service identifiers.
+- Constraint: Registration phải hoàn tất trong <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: inversifyJS.
+- Risks: Wrong scope → Mitigation: Scope validation.
+
+**Acceptance Criteria/Testable Items**:
+- Tất cả services được bind đúng.
+- Registration time <100ms.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.4.3 Lifetime Management
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả quản lý lifetime của dependencies.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với scope phù hợp.
+
+**Cách làm**: Mô tả singleton, transient, và request scopes.
+
+**Nội dung cần có**:
+- **Mô tả**: 
+  - **Singleton**: AuthService, CampaignService (shared instance).
+  - **Transient**: NotificationService (new instance mỗi request).
+  - **Request**: Controllers (per HTTP request).
+- **Code Example**:
+```typescript
+import { Container } from "inversify";
+
+const container = new Container();
+container.bind<IAuthService>(TYPES.IAuthService).to(AuthService).inSingletonScope();
+container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService).inTransientScope();
+container.bind<CampaignController>(TYPES.CampaignController).to(CampaignController).inRequestScope();
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.4.1 (DI Container Setup).
+
+**Assumptions/Constraints**:
+- Assumes inversifyJS hỗ trợ request scope.
+- Constraint: Singleton không được giữ large state.
+
+**Dependencies/Risks**:
+- Dependencies: inversifyJS.
+- Risks: Memory leaks → Mitigation: Monitor memory usage.
+
+**Acceptance Criteria/Testable Items**:
+- Singleton services duy trì 1 instance.
+- Transient services tạo instance mới mỗi request.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.4.4 Configuration Pattern
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả cách quản lý configuration qua DI.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với config injection.
+
+**Cách làm**: Cung cấp code inject configuration vào services.
+
+**Nội dung cần có**:
+- **Mô tả**: Sử dụng DI để inject configuration (e.g., DB URLs, API keys).
+- **Code Example**:
+```typescript
+import { Container } from "inversify";
+
+interface IConfig {
+  dbUrl: string;
+  twilioApiKey: string;
+}
+
+class ConfigService {
+  constructor(private config: IConfig) {}
+  getDbUrl() { return this.config.dbUrl; }
+}
+
+const container = new Container();
+container.bind<IConfig>(TYPES.IConfig).toConstantValue({
+  dbUrl: process.env.DB_URL,
+  twilioApiKey: process.env.TWILIO_API_KEY,
+});
+container.bind<ConfigService>(TYPES.ConfigService).to(ConfigService).inSingletonScope();
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.4.1 (DI Container Setup).
+
+**Assumptions/Constraints**:
+- Assumes configs từ environment variables.
+- Constraint: Configs phải immutable sau khởi tạo.
+
+**Dependencies/Risks**:
+- Dependencies: inversifyJS, dotenv.
+- Risks: Missing env vars → Mitigation: Default configs.
+
+**Acceptance Criteria/Testable Items**:
+- Configs được inject đúng vào services.
+- Immutable configs được duy trì.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 06B.5 Module Independence
+
+### 06B.5.1 Module Boundaries
+
+**References**: Part05_Non_Functional_Requirements (NFR-002, NFR-005), 06B.2.1 (Service Interfaces)
+
+**Mục đích**: Mô tả ranh giới giữa các microservices.
+
+**Ý nghĩa**: Tăng NFR-002 (Scalability) và NFR-005 (Maintainability) với loose coupling.
+
+**Cách làm**: Mô tả ranh giới và dependencies giữa 7 microservices.
+
+**Nội dung cần có**:
+- **Mô tả**: Mỗi microservice (Campaign, Identity, etc.) có ranh giới rõ ràng, giao tiếp qua REST APIs hoặc SQS.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[Campaign Management] -->|REST| B[Identity]
+      A -->|SQS| C[Notification]
+      D[Redemption] -->|REST| E[Fraud Detection]
+      D -->|SQS| F[Analytics]
+      G[Intelligence] -->|SQS| F
+  ```
+- **Dependencies**: NFR-002, NFR-005, 06B.2.1 (Service Interfaces).
+
+**Assumptions/Constraints**:
+- Assumes REST APIs và SQS cho inter-service communication.
+- Constraint: Services phải độc lập về DB.
+
+**Dependencies/Risks**:
+- Dependencies: AWS API Gateway, SQS.
+- Risks: Tight coupling → Mitigation: Strict API contracts.
+
+**Acceptance Criteria/Testable Items**:
+- Services giao tiếp chỉ qua APIs/SQS.
+- Không có DB sharing giữa services.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.5.2 Inter-Module Communication
+
+**References**: Part05_Non_Functional_Requirements (NFR-001, NFR-002), 06B.5.1 (Module Boundaries)
+
+**Mục đích**: Mô tả giao tiếp giữa các modules (REST, SQS).
+
+**Ý nghĩa**: Tăng NFR-001 (Performance) và NFR-002 (Scalability).
+
+**Cách làm**: Mô tả REST APIs và SQS cho inter-service communication.
+
+**Nội dung cần có**:
+- **Mô tả**: 
+  - **REST**: Synchronous calls (e.g., Redemption → Fraud Detection).
+  - **SQS**: Async events (e.g., Redemption → Analytics).
+- **Diagram**:
+  ```mermaid
+  sequenceDiagram
+      participant Redemption
+      participant FraudDetection
+      participant SQS
+      participant Analytics
+      Redemption->>FraudDetection: POST /api/fraud/score (REST)
+      FraudDetection-->>Redemption: Score
+      Redemption->>SQS: Publish redemption.completed
+      SQS->>Analytics: Poll event
+  ```
+- **Dependencies**: NFR-001, NFR-002, 06B.5.1 (Module Boundaries).
+
+**Assumptions/Constraints**:
+- Assumes mTLS cho REST, DLQ cho SQS.
+- Constraint: REST latency <500ms, SQS <5s.
+
+**Dependencies/Risks**:
+- Dependencies: AWS API Gateway, SQS.
+- Risks: Message loss → Mitigation: DLQ.
+
+**Acceptance Criteria/Testable Items**:
+- REST calls hoàn tất trong <500ms.
+- SQS events xử lý trong <5s.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.5.3 Event Bus Pattern
+
+**References**: Part04_Functional_Requirements (FR-010), Part05_Non_Functional_Requirements (NFR-002)
+
+**Mục đích**: Mô tả event bus cho async communication.
+
+**Ý nghĩa**: Tăng NFR-002 (Scalability) với loose coupling.
+
+**Cách làm**: Mô tả AWS SNS/SQS cho event bus.
+
+**Nội dung cần có**:
+- **Mô tả**: Event bus sử dụng SNS/SQS cho events như `redemption.completed`, `campaign.created`.
+- **Code Example**:
+```typescript
+import { SNS } from "aws-sdk";
+
+class EventBus {
+  private sns: SNS;
+  constructor() {
+    this.sns = new SNS();
+  }
+  
+  async publish(event: string, data: any) {
+    await this.sns.publish({
+      TopicArn: `arn:aws:sns:us-east-1:123456789:events`,
+      Message: JSON.stringify({ event, data }),
+    }).promise();
+  }
+}
+
+// Usage
+const eventBus = new EventBus();
+await eventBus.publish("redemption.completed", { barcode: "12345" });
+```
+- **Dependencies**: FR-010 (Notification System), NFR-002 (Scalability).
+
+**Assumptions/Constraints**:
+- Assumes SNS topics được cấu hình trước.
+- Constraint: Events xử lý trong <5s.
+
+**Dependencies/Risks**:
+- Dependencies: AWS SNS/SQS.
+- Risks: Event duplication → Mitigation: Idempotent consumers.
+
+**Acceptance Criteria/Testable Items**:
+- Events được publish và consume đúng.
+- Event processing <5s.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.5.4 API Contracts
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả API contracts giữa microservices.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với API specs rõ ràng.
+
+**Cách làm**: Cung cấp OpenAPI specs cho key endpoints.
+
+**Nội dung cần có**:
+- **Mô tả**: API contracts sử dụng OpenAPI 3.0 cho REST endpoints.
+- **Code Example**:
+```yaml
+openapi: 3.0.3
+paths:
+  /api/redemptions/online:
+    post:
+      summary: Redeem a barcode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                barcode: { type: string }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: boolean
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.2.1 (Service Interfaces).
+
+**Assumptions/Constraints**:
+- Assumes OpenAPI 3.0 cho API documentation.
+- Constraint: Contracts phải versioned.
+
+**Dependencies/Risks**:
+- Dependencies: Swagger/OpenAPI.
+- Risks: Inconsistent contracts → Mitigation: Automated validation.
+
+**Acceptance Criteria/Testable Items**:
+- API contracts đúng với service interfaces.
+- OpenAPI specs validate thành công.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.5.5 Versioning Strategy
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả chiến lược versioning cho APIs.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với backward compatibility.
+
+**Cách làm**: Mô tả URI versioning và deprecation policy.
+
+**Nội dung cần có**:
+- **Mô tả**: 
+  - **URI Versioning**: `/api/v1/redemptions`.
+  - **Deprecation**: 6-month notice cho API versions cũ.
+- **Code Example**:
+```typescript
+// Express route with version
+app.post("/api/v1/redemptions/online", async (req, res) => {
+  // Redemption logic
+});
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.5.4 (API Contracts).
+
+**Assumptions/Constraints**:
+- Assumes version tăng với breaking changes.
+- Constraint: Backward compatibility phải duy trì 6 tháng.
+
+**Dependencies/Risks**:
+- Dependencies: Express.js.
+- Risks: Version proliferation → Mitigation: Deprecation policy.
+
+**Acceptance Criteria/Testable Items**:
+- APIs hỗ trợ versioning qua URI.
+- Deprecation notice được document.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 06B.6 Code Organization
+
+### 06B.6.1 Folder Structure
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả folder structure cho microservices.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với tổ chức code rõ ràng.
+
+**Cách làm**: Cung cấp cấu trúc thư mục cho mỗi microservice.
+
+**Nội dung cần có**:
+- **Mô tả**: Mỗi microservice có cấu trúc:
+  ```
+  campaign-management/
+  ├── src/
+  │   ├── controllers/
+  │   ├── services/
+  │   ├── repositories/
+  │   ├── validators/
+  │   ├── models/
+  │   ├── types/
+  │   └── config/
+  ├── tests/
+  ├── package.json
+  └── Dockerfile
+  ```
+- **Dependencies**: NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes monorepo cho 7 microservices.
+- Constraint: Structure phải hỗ trợ CI/CD.
+
+**Dependencies/Risks**:
+- Dependencies: Node.js, Docker.
+- Risks: Inconsistent structures → Mitigation: Enforce linter.
+
+**Acceptance Criteria/Testable Items**:
+- Mỗi microservice tuân theo folder structure.
+- CI/CD pipeline tương thích structure.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.6.2 Naming Conventions
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả naming conventions cho code.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với tên nhất quán.
+
+**Cách làm**: Mô tả camelCase, PascalCase, và prefix conventions.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Classes**: PascalCase (e.g., `CampaignService`).
+  - **Interfaces**: PascalCase với prefix `I` (e.g., `ICampaignService`).
+  - **Variables/Methods**: camelCase (e.g., `createCampaign`).
+  - **Files**: kebab-case (e.g., `campaign-service.ts`).
+- **Dependencies**: NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes ESLint để enforce conventions.
+- Constraint: Tên phải rõ ràng, không quá 50 ký tự.
+
+**Dependencies/Risks**:
+- Dependencies: ESLint.
+- Risks: Inconsistent naming → Mitigation: Linter rules.
+
+**Acceptance Criteria/Testable Items**:
+- Code tuân theo naming conventions.
+- ESLint không báo lỗi naming.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.6.3 File Organization
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả tổ chức file trong microservices.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với file placement rõ ràng.
+
+**Cách làm**: Mô tả placement của controllers, services, repositories.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **Controllers**: `src/controllers/*.controller.ts`
+  - **Services**: `src/services/*.service.ts`
+  - **Repositories**: `src/repositories/*.repository.ts`
+  - **Validators**: `src/validators/*.validator.ts`
+- **Dependencies**: NFR-005 (Maintainability), 06B.6.1 (Folder Structure).
+
+**Assumptions/Constraints**:
+- Assumes 1 file per class.
+- Constraint: File size <500 lines.
+
+**Dependencies/Risks**:
+- Dependencies: Node.js.
+- Risks: Large files → Mitigation: Enforce file splitting.
+
+**Acceptance Criteria/Testable Items**:
+- Files được đặt đúng thư mục.
+- File size <500 lines.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.6.4 Package Structure
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả package structure cho monorepo.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với quản lý dependencies.
+
+**Cách làm**: Mô tả package.json và monorepo setup.
+
+**Nội dung cần có**:
+- **Mô tả**: Monorepo với `package.json` riêng cho mỗi microservice, sử dụng Yarn workspaces.
+- **Code Example**:
+```json
+{
+  "name": "campaign-management",
+  "version": "1.0.0",
+  "dependencies": {
+    "inversify": "^6.0.0",
+    "express": "^4.18.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0"
+  }
+}
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.6.1 (Folder Structure).
+
+**Assumptions/Constraints**:
+- Assumes Yarn workspaces cho monorepo.
+- Constraint: Dependencies phải pinned versions.
+
+**Dependencies/Risks**:
+- Dependencies: Yarn, Node.js.
+- Risks: Dependency conflicts → Mitigation: Yarn resolutions.
+
+**Acceptance Criteria/Testable Items**:
+- Package.json đúng cấu hình.
+- No dependency conflicts.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 06B.7 Documentation Standards
+
+### 06B.7.1 Code Comments
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả chuẩn comment code.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với comments rõ ràng.
+
+**Cách làm**: Mô tả JSDoc và inline comments.
+
+**Nội dung cần có**:
+- **Mô tả**:
+  - **JSDoc**: Cho classes, methods, interfaces.
+  - **Inline Comments**: Giải thích complex logic.
+- **Code Example**:
+```typescript
+/**
+ * Creates a new campaign
+ * @param campaign - Campaign data
+ * @returns Created campaign
+ */
+async createCampaign(campaign: CampaignDTO): Promise<Campaign> {
+  // Validate input using Zod
+  const validated = this.validator.validate(campaign);
+  return this.repository.create(validated);
+}
+```
+- **Dependencies**: NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes JSDoc cho public APIs.
+- Constraint: Comments không được dài quá 80 ký tự.
+
+**Dependencies/Risks**:
+- Dependencies: JSDoc.
+- Risks: Over-commenting → Mitigation: Focus on critical logic.
+
+**Acceptance Criteria/Testable Items**:
+- JSDoc cho 100% public APIs.
+- Inline comments cho complex logic.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.7.2 API Documentation
+
+**References**: Part05_Non_Functional_Requirements (NFR-005), 06B.5.4 (API Contracts)
+
+**Mục đích**: Mô tả chuẩn API documentation với OpenAPI.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với API specs rõ ràng.
+
+**Cách làm**: Mô tả sử dụng Swagger/OpenAPI.
+
+**Nội dung cần có**:
+- **Mô tả**: API documentation sử dụng OpenAPI 3.0, lưu trong `api-docs.yaml`.
+- **Code Example**:
+```yaml
+openapi: 3.0.3
+paths:
+  /api/v1/campaigns:
+    post:
+      summary: Create a campaign
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignDTO"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+```
+- **Dependencies**: NFR-005 (Maintainability), 06B.5.4 (API Contracts).
+
+**Assumptions/Constraints**:
+- Assumes Swagger UI cho API visualization.
+- Constraint: Docs phải cập nhật sau mỗi release.
+
+**Dependencies/Risks**:
+- Dependencies: Swagger/OpenAPI.
+- Risks: Outdated docs → Mitigation: Automated generation.
+
+**Acceptance Criteria/Testable Items**:
+- API docs đúng với OpenAPI 3.0.
+- Swagger UI hiển thị đúng endpoints.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.7.3 Architecture Decision Records
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả chuẩn ADR để ghi lại quyết định kiến trúc.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với lịch sử quyết định.
+
+**Cách làm**: Mô tả template ADR và lưu trữ.
+
+**Nội dung cần có**:
+- **Mô tả**: ADRs lưu trong `docs/adr/`, sử dụng template:
+  - Title, Context, Decision, Status, Consequences.
+- **Code Example**:
+```markdown
+# ADR-001: Use inversifyJS for DI
+**Context**: Need DI for maintainability.
+**Decision**: Use inversifyJS for TypeScript compatibility.
+**Status**: Approved
+**Consequences**: Faster service injection, learning curve.
+```
+- **Dependencies**: NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes ADRs được review bởi Tech Lead.
+- Constraint: ADRs phải được cập nhật trước release.
+
+**Dependencies/Risks**:
+- Dependencies: Markdown.
+- Risks: Missing ADRs → Mitigation: Enforce in CI/CD.
+
+**Acceptance Criteria/Testable Items**:
+- ADRs tuân theo template.
+- Mỗi major decision có ADR.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 06B.7.4 README Templates
+
+**References**: Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Mô tả chuẩn README cho microservices.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với hướng dẫn rõ ràng.
+
+**Cách làm**: Cung cấp template README.
+
+**Nội dung cần có**:
+- **Mô tả**: README chứa: Overview, Setup, Run, Test, Dependencies.
+- **Code Example**:
+```markdown
+# Campaign Management Service
+## Overview
+Manages campaigns and barcodes for PSP.
+## Setup
+1. `yarn install`
+2. Configure `.env`
+## Run
+`yarn start`
+## Test
+`yarn test`
+## Dependencies
+- Node.js 18
+- TypeScript 5
+```
+- **Dependencies**: NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes README lưu ở root mỗi microservice.
+- Constraint: README phải <500 từ.
+
+**Dependencies/Risks**:
+- Dependencies: Markdown.
+- Risks: Outdated README → Mitigation: CI/CD validation.
+
+**Acceptance Criteria/Testable Items**:
+- README tuân theo template.
+- Hướng dẫn setup/test chạy đúng.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part07 - Database Design (Session 1)
+
+## Structure of Part07 (Session 1)
+```
+Part07_Database_Design/
+├── 07.1_Data_Model_Overview.md
+├── 07.2_Entity_Relationship_Diagram.md
+├── 07.3_Table_Schemas/
+│   ├── 07.3.1_Campaign_Management_Service_Tables/
+│   │   ├── 07.3.1.1_Brands_Table.md
+│   │   ├── 07.3.1.2_Campaigns_Table.md
+│   │   ├── 07.3.1.3_Barcode_Pools_Table.md
+│   │   ├── 07.3.1.4_Barcodes_Table.md
+│   │   └── 07.3.1.5_Ads_Formats_Table.md
+│   ├── 07.3.2_Identity_Service_Tables/
+│   │   ├── 07.3.2.1_Users_Table.md
+│   │   ├── 07.3.2.2_User_Profiles_Table.md
+│   │   ├── 07.3.2.3_User_Preferences_Table.md
+│   │   ├── 07.3.2.4_Consent_History_Table.md
+│   │   ├── 07.3.2.5_Sessions_Table.md
+│   │   ├── 07.3.2.6_Roles_Table.md
+│   │   └── 07.3.2.7_User_Roles_Table.md
+```
+
+---
+
+## 07.1 Data Model Overview
+
+**References**: Part04_Functional_Requirements (FR-001, FR-002, FR-003, FR-004, FR-006), Part05_Non_Functional_Requirements (NFR-001, NFR-002, NFR-003, NFR-005), Part06B (Interface Definitions)
+
+**Mục đích**: Cung cấp cái nhìn tổng quan về data model cho PSP.
+
+**Ý nghĩa**: Đảm bảo NFR-005 (Maintainability) và NFR-002 (Scalability) với thiết kế database tối ưu.
+
+**Cách làm**: Mô tả các entities chính, relationships, và database choices (PostgreSQL cho Campaign Management và Identity Services, MongoDB cho Analytics và Intelligence).
+
+**Nội dung cần có**:
+- **Mô tả**: Data model bao gồm:
+  - **Entities**: Brands, Campaigns, Barcode Pools, Barcodes, Ads Formats (Campaign Management Service); Users, User Profiles, User Preferences, Consent History, Sessions, Roles, User Roles (Identity Service).
+  - **Database Choices**: PostgreSQL cho dữ liệu có cấu trúc (Campaign Management, Identity); MongoDB cho dữ liệu phi cấu trúc (Analytics, Intelligence); Redis cho caching (sessions, JWT tokens).
+  - **Relationships**: 1:N (Brands-Campaigns, Campaigns-Barcode Pools, Barcode Pools-Barcodes); N:N (Users-Roles via User Roles).
+  - **Normalization**: 3NF cho PostgreSQL để đảm bảo consistency và giảm redundancy.
+- **Dependencies**: FR-001 (Campaign CRUD), FR-002 (Barcode Management), FR-003 (User Authentication), FR-004 (User Management), FR-006 (Ads Format Management), NFR-001, NFR-002, NFR-003, NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes PostgreSQL 15 cho Campaign Management và Identity Services.
+- Constraint: Queries phải hoàn tất trong <500ms (NFR-001).
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL, MongoDB, Redis.
+- Risks: Data inconsistency → Mitigation: ACID transactions, constraints.
+
+**Acceptance Criteria/Testable Items**:
+- Data model hỗ trợ đầy đủ FR-001, FR-002, FR-003, FR-004, FR-006.
+- Queries trả về trong <500ms.
+- Unit tests đạt 80% coverage (NFR-005).
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 07.2 Entity Relationship Diagram
+
+**References**: Part04_Functional_Requirements, Part05_Non_Functional_Requirements (NFR-002, NFR-005), 07.1 (Data Model Overview)
+
+**Mục đích**: Cung cấp ERD cho Campaign Management và Identity Services.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với visualization của relationships.
+
+**Cách làm**: Sử dụng Mermaid để vẽ ERD cho các tables trong PostgreSQL.
+
+**Nội dung cần có**:
+- **Mô tả**: ERD mô tả entities và relationships giữa Brands, Campaigns, Barcode Pools, Barcodes, Ads Formats, Users, User Profiles, User Preferences, Consent History, Sessions, Roles, và User Roles.
+- **Diagram**:
+  ```mermaid
+  erDiagram
+      Brands ||--o{ Campaigns : owns
+      Campaigns ||--o{ Barcode_Pools : contains
+      Barcode_Pools ||--o{ Barcodes : manages
+      Campaigns ||--o{ Ads_Formats : has
+      Users ||--o{ User_Profiles : has
+      Users ||--o{ User_Preferences : has
+      Users ||--o{ Consent_History : tracks
+      Users ||--o{ Sessions : has
+      Users }o--o{ Roles : assigned
+      Users ||--o{ User_Roles : maps
+      Roles ||--o{ User_Roles : maps
+
+      Brands {
+          uuid brand_id PK
+          string name
+          string description
+          timestamp created_at
+          timestamp updated_at
+      }
+      Campaigns {
+          uuid campaign_id PK
+          uuid brand_id FK
+          string name
+          date start_date
+          date end_date
+          timestamp created_at
+          timestamp updated_at
+      }
+      Barcode_Pools {
+          uuid pool_id PK
+          uuid campaign_id FK
+          string pool_name
+          integer total_barcodes
+          timestamp created_at
+          timestamp updated_at
+      }
+      Barcodes {
+          uuid barcode_id PK
+          uuid pool_id FK
+          string code
+          string format
+          boolean is_redeemed
+          timestamp created_at
+          timestamp updated_at
+      }
+      Ads_Formats {
+          uuid ads_format_id PK
+          uuid campaign_id FK
+          string format_type
+          string content
+          timestamp created_at
+          timestamp updated_at
+      }
+      Users {
+          uuid user_id PK
+          string email
+          string password_hash
+          timestamp created_at
+          timestamp updated_at
+      }
+      User_Profiles {
+          uuid profile_id PK
+          uuid user_id FK
+          string full_name
+          string phone
+          timestamp created_at
+          timestamp updated_at
+      }
+      User_Preferences {
+          uuid preference_id PK
+          uuid user_id FK
+          string preference_key
+          string preference_value
+          timestamp created_at
+          timestamp updated_at
+      }
+      Consent_History {
+          uuid consent_id PK
+          uuid user_id FK
+          string consent_type
+          boolean is_granted
+          timestamp granted_at
+          timestamp revoked_at
+      }
+      Sessions {
+          uuid session_id PK
+          uuid user_id FK
+          string token
+          timestamp expires_at
+          timestamp created_at
+      }
+      Roles {
+          uuid role_id PK
+          string role_name
+          string description
+          timestamp created_at
+          timestamp updated_at
+      }
+      User_Roles {
+          uuid user_id FK
+          uuid role_id FK
+          timestamp assigned_at
+      }
+  ```
+- **Dependencies**: NFR-002 (Scalability), NFR-005 (Maintainability), 07.1 (Data Model Overview).
+
+**Assumptions/Constraints**:
+- Assumes 1:N và N:N relationships như mô tả.
+- Constraint: ERD phải phản ánh đúng schemas trong 07.3.
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL.
+- Risks: Complex relationships → Mitigation: Proper indexing.
+
+**Acceptance Criteria/Testable Items**:
+- ERD phản ánh đúng relationships.
+- Tất cả entities có PK và FK đúng.
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 07.3 Table Schemas
+
+### 07.3.1 Campaign Management Service Tables
+
+#### 07.3.1.1 Brands Table
+
+**References**: Part04_Functional_Requirements (FR-001), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu thông tin về các brands tham gia PSP.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với schema rõ ràng.
+
+**Cách làm**: Định nghĩa SQL schema cho Brands table trong PostgreSQL.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu brand details (name, description) cho Campaign Management Service.
+- **Schema**:
+```sql
+CREATE TABLE Brands (
+    brand_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_brand_name UNIQUE (name)
+);
+CREATE INDEX idx_brands_name ON Brands(name);
+```
+- **Dependencies**: FR-001 (Campaign CRUD), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes `name` là unique để tránh trùng brand.
+- Constraint: `name` <100 ký tự.
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL.
+- Risks: Duplicate brands → Mitigation: Unique constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng brand data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.1.2 Campaigns Table
+
+**References**: Part04_Functional_Requirements (FR-001), Part05_Non_Functional_Requirements (NFR-001, NFR-005)
+
+**Mục đích**: Lưu thông tin về các chiến dịch quảng cáo.
+
+**Ý nghĩa**: Hỗ trợ FR-001 (Campaign CRUD) và NFR-001 (Performance).
+
+**Cách làm**: Định nghĩa SQL schema cho Campaigns table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu campaign details (name, dates) liên kết với Brands.
+- **Schema**:
+```sql
+CREATE TABLE Campaigns (
+    campaign_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    brand_id UUID NOT NULL REFERENCES Brands(brand_id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_campaign_name_per_brand UNIQUE (brand_id, name),
+    CONSTRAINT check_dates CHECK (end_date IS NULL OR end_date >= start_date)
+);
+CREATE INDEX idx_campaigns_brand_id ON Campaigns(brand_id);
+CREATE INDEX idx_campaigns_dates ON Campaigns(start_date, end_date);
+```
+- **Dependencies**: FR-001 (Campaign CRUD), NFR-001, NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes `end_date` có thể null nếu campaign ongoing.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Brands table, PostgreSQL.
+- Risks: Invalid dates → Mitigation: Check constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng campaign data.
+- Indexes hỗ trợ query nhanh (<500ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.1.3 Barcode Pools Table
+
+**References**: Part04_Functional_Requirements (FR-002), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu thông tin về barcode pools cho mỗi campaign.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với quản lý barcode pools.
+
+**Cách làm**: Định nghĩa SQL schema cho Barcode Pools table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu barcode pool details (name, total barcodes) liên kết với Campaigns.
+- **Schema**:
+```sql
+CREATE TABLE Barcode_Pools (
+    pool_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id UUID NOT NULL REFERENCES Campaigns(campaign_id) ON DELETE CASCADE,
+    pool_name VARCHAR(100) NOT NULL,
+    total_barcodes INTEGER NOT NULL CHECK (total_barcodes >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_pool_name_per_campaign UNIQUE (campaign_id, pool_name)
+);
+CREATE INDEX idx_barcode_pools_campaign_id ON Barcode_Pools(campaign_id);
+```
+- **Dependencies**: FR-002 (Barcode Management), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes `total_barcodes` không âm.
+- Constraint: Pool name unique trong campaign.
+
+**Dependencies/Risks**:
+- Dependencies: Campaigns table, PostgreSQL.
+- Risks: Pool size errors → Mitigation: Check constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng barcode pool data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.1.4 Barcodes Table
+
+**References**: Part04_Functional_Requirements (FR-002, FR-007), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Lưu thông tin về từng barcode.
+
+**Ý nghĩa**: Hỗ trợ FR-002 (Barcode Management), FR-007 (Barcode Redemption), và NFR-001 (Performance).
+
+**Cách làm**: Định nghĩa SQL schema cho Barcodes table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu barcode details (code, format, redemption status) liên kết với Barcode Pools.
+- **Schema**:
+```sql
+CREATE TABLE Barcodes (
+    barcode_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    pool_id UUID NOT NULL REFERENCES Barcode_Pools(pool_id) ON DELETE CASCADE,
+    code VARCHAR(50) NOT NULL,
+    format VARCHAR(20) NOT NULL CHECK (format IN ('QR', 'Code128', 'DataMatrix')),
+    is_redeemed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_barcode_code UNIQUE (code)
+);
+CREATE INDEX idx_barcodes_pool_id ON Barcodes(pool_id);
+CREATE INDEX idx_barcodes_code ON Barcodes(code);
+```
+- **Dependencies**: FR-002, FR-007, NFR-001.
+
+**Assumptions/Constraints**:
+- Assumes `format` giới hạn ở QR, Code128, DataMatrix.
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Barcode Pools table, PostgreSQL.
+- Risks: Barcode collision → Mitigation: Unique constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng barcode data.
+- Indexes hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.1.5 Ads Formats Table
+
+**References**: Part04_Functional_Requirements (FR-006), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu thông tin về ads formats cho campaigns.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với quản lý ads formats.
+
+**Cách làm**: Định nghĩa SQL schema cho Ads Formats table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu ads format details (type, content) liên kết với Campaigns.
+- **Schema**:
+```sql
+CREATE TABLE Ads_Formats (
+    ads_format_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id UUID NOT NULL REFERENCES Campaigns(campaign_id) ON DELETE CASCADE,
+    format_type VARCHAR(20) NOT NULL CHECK (format_type IN ('Banner', 'Video', 'QR')),
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_ads_formats_campaign_id ON Ads_Formats(campaign_id);
+```
+- **Dependencies**: FR-006 (Ads Format Management), NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes `format_type` giới hạn ở Banner, Video, QR.
+- Constraint: Content phải <10MB.
+
+**Dependencies/Risks**:
+- Dependencies: Campaigns table, PostgreSQL.
+- Risks: Large content → Mitigation: Content size limit.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng ads format data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 07.3.2 Identity Service Tables
+
+#### 07.3.2.1 Users Table
+
+**References**: Part04_Functional_Requirements (FR-003, FR-004), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu thông tin về users trong PSP.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với quản lý user credentials.
+
+**Cách làm**: Định nghĩa SQL schema cho Users table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu user credentials (email, password hash) cho Identity Service.
+- **Schema**:
+```sql
+CREATE TABLE Users (
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_email UNIQUE (email)
+);
+CREATE INDEX idx_users_email ON Users(email);
+```
+- **Dependencies**: FR-003 (User Authentication), FR-004 (User Management), NFR-003.
+
+**Assumptions/Constraints**:
+- Assumes password_hash sử dụng bcrypt.
+- Constraint: Email phải unique, PII mã hóa (NFR-003).
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL, AWS KMS.
+- Risks: PII leakage → Mitigation: AES-256 encryption.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng user data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.2.2 User Profiles Table
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu thông tin profile của users.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) và NFR-005 (Maintainability).
+
+**Cách làm**: Định nghĩa SQL schema cho User Profiles table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu user profile details (full name, phone) liên kết với Users.
+- **Schema**:
+```sql
+CREATE TABLE User_Profiles (
+    profile_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
+    full_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_user_profiles_user_id ON User_Profiles(user_id);
+```
+- **Dependencies**: FR-004 (User Management), NFR-003, NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes `phone` có thể null.
+- Constraint: PII phải mã hóa (NFR-003).
+
+**Dependencies/Risks**:
+- Dependencies: Users table, PostgreSQL.
+- Risks: PII leakage → Mitigation: Encryption.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng profile data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.2.3 User Preferences Table
+
+**References**: Part04_Functional_Requirements (FR-013), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu user preferences cho recommendation engine.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho Intelligence Service.
+
+**Cách làm**: Định nghĩa SQL schema cho User Preferences table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu key-value preferences của users liên kết với Users.
+- **Schema**:
+```sql
+CREATE TABLE User_Preferences (
+    preference_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
+    preference_key VARCHAR(50) NOT NULL,
+    preference_value TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_user_preferences_user_id ON User_Preferences(user_id);
+```
+- **Dependencies**: FR-013 (Recommendation Engine), NFR-005.
+
+**Assumptions/Constraints**:
+- Assumes key-value pairs cho preferences.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Users table, PostgreSQL.
+- Risks: Large preference data → Mitigation: Data size limits.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng preference data.
+- Index hỗ trợ query nhanh (<500ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.2.4 Consent History Table
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu lịch sử consent của users.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với audit trail cho consent.
+
+**Cách làm**: Định nghĩa SQL schema cho Consent History table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu consent details (type, granted/revoked) liên kết với Users.
+- **Schema**:
+```sql
+CREATE TABLE Consent_History (
+    consent_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
+    consent_type VARCHAR(50) NOT NULL CHECK (consent_type IN ('marketing', 'data_sharing')),
+    is_granted BOOLEAN NOT NULL,
+    granted_at TIMESTAMP WITH TIME ZONE,
+    revoked_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT check_consent_dates CHECK (revoked_at IS NULL OR revoked_at >= granted_at)
+);
+CREATE INDEX idx_consent_history_user_id ON Consent_History(user_id);
+```
+- **Dependencies**: FR-004 (User Management), NFR-003.
+
+**Assumptions/Constraints**:
+- Assumes `consent_type` giới hạn ở marketing, data_sharing.
+- Constraint: Consent history immutable.
+
+**Dependencies/Risks**:
+- Dependencies: Users table, PostgreSQL.
+- Risks: Data volume → Mitigation: Archiving.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng consent data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.2.5 Sessions Table
+
+**References**: Part04_Functional_Requirements (FR-003), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu thông tin sessions cho user authentication.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với quản lý sessions.
+
+**Cách làm**: Định nghĩa SQL schema cho Sessions table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu session details (token, expiry) liên kết với Users.
+- **Schema**:
+```sql
+CREATE TABLE Sessions (
+    session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
+    token VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_session_token UNIQUE (token)
+);
+CREATE INDEX idx_sessions_user_id ON Sessions(user_id);
+CREATE INDEX idx_sessions_token ON Sessions(token);
+```
+- **Dependencies**: FR-003 (User Authentication), NFR-003.
+
+**Assumptions/Constraints**:
+- Assumes `token` là JWT với TTL 24h.
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Users table, PostgreSQL, Redis (caching).
+- Risks: Token leakage → Mitigation: mTLS, KMS.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng session data.
+- Indexes hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.2.6 Roles Table
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu thông tin về roles trong PSP.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với RBAC.
+
+**Cách làm**: Định nghĩa SQL schema cho Roles table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu role details (name, description) cho Identity Service.
+- **Schema**:
+```sql
+CREATE TABLE Roles (
+    role_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    role_name VARCHAR(50) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_role_name UNIQUE (role_name)
+);
+CREATE INDEX idx_roles_role_name ON Roles(role_name);
+```
+- **Dependencies**: FR-004 (User Management), NFR-003.
+
+**Assumptions/Constraints**:
+- Assumes `role_name` là unique.
+- Constraint: Role names <50 ký tự.
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL.
+- Risks: Role conflicts → Mitigation: Unique constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng role data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.2.7 User Roles Table
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu mapping giữa users và roles (N:N).
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với RBAC implementation.
+
+**Cách làm**: Định nghĩa SQL schema cho User Roles table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu mapping giữa Users và Roles để hỗ trợ RBAC.
+- **Schema**:
+```sql
+CREATE TABLE User_Roles (
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
+    role_id UUID NOT NULL REFERENCES Roles(role_id) ON DELETE CASCADE,
+    assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, role_id)
+);
+CREATE INDEX idx_user_roles_user_id ON User_Roles(user_id);
+CREATE INDEX idx_user_roles_role_id ON User_Roles(role_id);
+```
+- **Dependencies**: FR-004 (User Management), NFR-003.
+
+**Assumptions/Constraints**:
+- Assumes composite PK (user_id, role_id).
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Users table, Roles table, PostgreSQL.
+- Risks: Duplicate mappings → Mitigation: Composite PK.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng user-role mappings.
+- Indexes hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part07 - Database Design (Session 2)
+
+## Structure of Part07 (Session 2)
+```
+Part07_Database_Design/
+├── 07.3_Table_Schemas/
+│   ├── 07.3.3_Redemption_Service_Tables/
+│   │   ├── 07.3.3.1_Redemptions_Table.md
+│   │   └── 07.3.3.2_Locations_Table.md
+│   ├── 07.3.4_Fraud_Service_Tables/
+│   │   ├── 07.3.4.1_Fraud_Scores_Table.md
+│   │   ├── 07.3.4.2_Device_Fingerprints_Table.md
+│   │   └── 07.3.4.3_Fraud_Rules_Table.md
+│   ├── 07.3.5_Intelligence_Service_Tables/
+│   │   ├── 07.3.5.1_Experiments_Table.md
+│   │   ├── 07.3.5.2_Experiment_Variants_Table.md
+│   │   └── 07.3.5.3_Experiment_Assignments_Table.md
+│   ├── 07.3.6_Analytics_Service_Collections/
+│   │   ├── 07.3.6.1_Events_Collection.md
+│   │   ├── 07.3.6.2_User_Journey_Collection.md
+│   │   ├── 07.3.6.3_Cohorts_Collection.md
+│   │   ├── 07.3.6.4_Aggregations_Collection.md
+│   │   └── 07.3.6.5_Recommendations_Collection.md
+│   ├── 07.3.7_Shared_Tables/
+│   │   └── 07.3.7.1_Audit_Logs_Table.md
+```
+
+---
+
+## 07.3 Table Schemas (Continued)
+
+### 07.3.3 Redemption Service Tables
+
+#### 07.3.3.1 Redemptions Table
+
+**References**: Part04_Functional_Requirements (FR-007), Part05_Non_Functional_Requirements (NFR-001, NFR-003)
+
+**Mục đích**: Lưu thông tin về redemption transactions.
+
+**Ý nghĩa**: Hỗ trợ FR-007 (Barcode Redemption) và NFR-001 (Performance).
+
+**Cách làm**: Định nghĩa SQL schema cho Redemptions table trong PostgreSQL.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu redemption details (barcode, user, location, timestamp) liên kết với Barcodes và Users.
+- **Schema**:
+```sql
+CREATE TABLE Redemptions (
+    redemption_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    barcode_id UUID NOT NULL REFERENCES Barcodes(barcode_id) ON DELETE RESTRICT,
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE RESTRICT,
+    location_id UUID REFERENCES Locations(location_id),
+    redemption_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_online BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_redemptions_barcode_id ON Redemptions(barcode_id);
+CREATE INDEX idx_redemptions_user_id ON Redemptions(user_id);
+CREATE INDEX idx_redemptions_redemption_time ON Redemptions(redemption_time);
+```
+- **Dependencies**: FR-007 (Barcode Redemption), NFR-001 (Performance), NFR-003 (Security), 07.3.1.4 (Barcodes Table), 07.3.2.1 (Users Table).
+
+**Assumptions/Constraints**:
+- Assumes `location_id` có thể null cho online redemptions.
+- Constraint: Queries phải <100ms (NFR-001).
+
+**Dependencies/Risks**:
+- Dependencies: Barcodes table, Users table, Locations table, PostgreSQL.
+- Risks: Duplicate redemptions → Mitigation: Unique barcode_id per redemption.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng redemption data.
+- Indexes hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage (NFR-005).
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.3.2 Locations Table
+
+**References**: Part04_Functional_Requirements (FR-007), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu thông tin về redemption locations.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với quản lý location data.
+
+**Cách làm**: Định nghĩa SQL schema cho Locations table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu location details (name, coordinates) cho offline redemptions.
+- **Schema**:
+```sql
+CREATE TABLE Locations (
+    location_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    latitude DECIMAL(9,6),
+    longitude DECIMAL(9,6),
+    address TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_locations_coordinates ON Locations(latitude, longitude);
+```
+- **Dependencies**: FR-007 (Barcode Redemption), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes `latitude` và `longitude` có thể null nếu không có tọa độ.
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL.
+- Risks: Inaccurate coordinates → Mitigation: Validation rules.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng location data.
+- Index hỗ trợ geospatial queries (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 07.3.4 Fraud Service Tables
+
+#### 07.3.4.1 Fraud Scores Table
+
+**References**: Part04_Functional_Requirements (FR-011), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu fraud scores cho redemption attempts.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với fraud detection data.
+
+**Cách làm**: Định nghĩa SQL schema cho Fraud Scores table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu fraud scores (score, device fingerprint) liên kết với Users và Device Fingerprints.
+- **Schema**:
+```sql
+CREATE TABLE Fraud_Scores (
+    score_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE RESTRICT,
+    device_fingerprint_id UUID REFERENCES Device_Fingerprints(fingerprint_id),
+    score DECIMAL(3,2) NOT NULL CHECK (score BETWEEN 0 AND 1),
+    calculated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_fraud_scores_user_id ON Fraud_Scores(user_id);
+CREATE INDEX idx_fraud_scores_calculated_at ON Fraud_Scores(calculated_at);
+```
+- **Dependencies**: FR-011 (Fraud Detection), NFR-003 (Security), 07.3.2.1 (Users Table), 07.3.4.2 (Device Fingerprints Table).
+
+**Assumptions/Constraints**:
+- Assumes `score` từ 0.00 đến 1.00.
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Users table, Device Fingerprints table, PostgreSQL.
+- Risks: False positives → Mitigation: Score calibration.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng fraud score data.
+- Indexes hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.4.2 Device Fingerprints Table
+
+**References**: Part04_Functional_Requirements (FR-011), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu device fingerprints cho fraud detection.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với device tracking.
+
+**Cách làm**: Định nghĩa SQL schema cho Device Fingerprints table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu device fingerprint details (hash, metadata).
+- **Schema**:
+```sql
+CREATE TABLE Device_Fingerprints (
+    fingerprint_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    fingerprint_hash VARCHAR(255) NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_fingerprint_hash UNIQUE (fingerprint_hash)
+);
+CREATE INDEX idx_device_fingerprints_hash ON Device_Fingerprints(fingerprint_hash);
+```
+- **Dependencies**: FR-011 (Fraud Detection), NFR-003 (Security).
+
+**Assumptions/Constraints**:
+- Assumes `fingerprint_hash` là unique.
+- Constraint: JSONB metadata <1MB.
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL.
+- Risks: Fingerprint collisions → Mitigation: Unique constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng fingerprint data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.4.3 Fraud Rules Table
+
+**References**: Part04_Functional_Requirements (FR-011), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu fraud detection rules.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) với rule management.
+
+**Cách làm**: Định nghĩa SQL schema cho Fraud Rules table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu rule details (name, logic) cho Fraud Detection Service.
+- **Schema**:
+```sql
+CREATE TABLE Fraud_Rules (
+    rule_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    rule_name VARCHAR(100) NOT NULL,
+    rule_logic JSONB NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_rule_name UNIQUE (rule_name)
+);
+CREATE INDEX idx_fraud_rules_is_active ON Fraud_Rules(is_active);
+```
+- **Dependencies**: FR-011 (Fraud Detection), NFR-005 (Maintainability).
+
+**Assumptions/Constraints**:
+- Assumes `rule_logic` lưu trong JSONB (e.g., { "max_attempts": 3 }).
+- Constraint: JSONB <1MB.
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL.
+- Risks: Invalid rule logic → Mitigation: Validation before save.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng rule data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 07.3.5 Intelligence Service Tables
+
+#### 07.3.5.1 Experiments Table
+
+**References**: Part04_Functional_Requirements (FR-012), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu thông tin về A/B testing experiments.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho Intelligence Service.
+
+**Cách làm**: Định nghĩa SQL schema cho Experiments table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu experiment details (name, campaign) liên kết với Campaigns.
+- **Schema**:
+```sql
+CREATE TABLE Experiments (
+    experiment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id UUID NOT NULL REFERENCES Campaigns(campaign_id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    start_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_experiment_name_per_campaign UNIQUE (campaign_id, name),
+    CONSTRAINT check_experiment_dates CHECK (end_date IS NULL OR end_date >= start_date)
+);
+CREATE INDEX idx_experiments_campaign_id ON Experiments(campaign_id);
+```
+- **Dependencies**: FR-012 (A/B Testing), NFR-005 (Maintainability), 07.3.1.2 (Campaigns Table).
+
+**Assumptions/Constraints**:
+- Assumes `end_date` có thể null nếu experiment ongoing.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Campaigns table, PostgreSQL.
+- Risks: Invalid dates → Mitigation: Check constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng experiment data.
+- Index hỗ trợ query nhanh (<500ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.5.2 Experiment Variants Table
+
+**References**: Part04_Functional_Requirements (FR-012), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu thông tin về experiment variants.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho A/B testing.
+
+**Cách làm**: Định nghĩa SQL schema cho Experiment Variants table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu variant details (name, configuration) liên kết với Experiments.
+- **Schema**:
+```sql
+CREATE TABLE Experiment_Variants (
+    variant_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    experiment_id UUID NOT NULL REFERENCES Experiments(experiment_id) ON DELETE CASCADE,
+    name VARCHAR(50) NOT NULL,
+    configuration JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_variant_name_per_experiment UNIQUE (experiment_id, name)
+);
+CREATE INDEX idx_experiment_variants_experiment_id ON Experiment_Variants(experiment_id);
+```
+- **Dependencies**: FR-012 (A/B Testing), NFR-005 (Maintainability), 07.3.5.1 (Experiments Table).
+
+**Assumptions/Constraints**:
+- Assumes `configuration` lưu trong JSONB (e.g., { "button_color": "blue" }).
+- Constraint: JSONB <1MB.
+
+**Dependencies/Risks**:
+- Dependencies: Experiments table, PostgreSQL.
+- Risks: Invalid configuration → Mitigation: Validation before save.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng variant data.
+- Index hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.5.3 Experiment Assignments Table
+
+**References**: Part04_Functional_Requirements (FR-012), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu mapping giữa users và experiment variants.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho A/B testing assignments.
+
+**Cách làm**: Định nghĩa SQL schema cho Experiment Assignments table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu assignment details (user, variant) liên kết với Users và Experiment Variants.
+- **Schema**:
+```sql
+CREATE TABLE Experiment_Assignments (
+    assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
+    variant_id UUID NOT NULL REFERENCES Experiment_Variants(variant_id) ON DELETE CASCADE,
+    assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_experiment_assignments_user_id ON Experiment_Assignments(user_id);
+CREATE INDEX idx_experiment_assignments_variant_id ON Experiment_Assignments(variant_id);
+```
+- **Dependencies**: FR-012 (A/B Testing), NFR-005 (Maintainability), 07.3.2.1 (Users Table), 07.3.5.2 (Experiment Variants Table).
+
+**Assumptions/Constraints**:
+- Assumes 1 user chỉ được assign 1 variant per experiment.
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: Users table, Experiment Variants table, PostgreSQL.
+- Risks: Duplicate assignments → Mitigation: Unique constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng assignment data.
+- Indexes hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 07.3.6 Analytics Service Collections (MongoDB)
+
+#### 07.3.6.1 Events Collection
+
+**References**: Part04_Functional_Requirements (FR-008), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Lưu analytics events cho user interactions.
+
+**Ý nghĩa**: Hỗ trợ FR-008 (Real-Time Analytics) và NFR-001 (Performance).
+
+**Cách làm**: Định nghĩa MongoDB schema cho Events collection.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu event details (type, user, timestamp) cho Analytics Service.
+- **Schema**:
+```json
+{
+  "_id": "ObjectId",
+  "event_type": "string", // e.g., "page_view", "redemption"
+  "user_id": "UUID",
+  "campaign_id": "UUID",
+  "timestamp": "ISODate",
+  "metadata": {
+    "page": "string",
+    "action": "string"
+  },
+  "created_at": "ISODate"
+}
+```
+- **Indexes**:
+```javascript
+db.events.createIndex({ user_id: 1, timestamp: -1 });
+db.events.createIndex({ campaign_id: 1 });
+```
+- **Dependencies**: FR-008 (Real-Time Analytics), NFR-001 (Performance), 07.3.2.1 (Users Table), 07.3.1.2 (Campaigns Table).
+
+**Assumptions/Constraints**:
+- Assumes `event_type` được định nghĩa trước.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: MongoDB.
+- Risks: High data volume → Mitigation: TTL indexes, sharding.
+
+**Acceptance Criteria/Testable Items**:
+- Collection lưu trữ đúng event data.
+- Indexes hỗ trợ query nhanh (<500ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.6.2 User Journey Collection
+
+**References**: Part04_Functional_Requirements (FR-008), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Lưu user journey data cho funnel analytics.
+
+**Ý nghĩa**: Hỗ trợ FR-008 (Real-Time Analytics) và NFR-001 (Performance).
+
+**Cách làm**: Định nghĩa MongoDB schema cho User Journey collection.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu user journey steps (user, funnel stage, timestamp).
+- **Schema**:
+```json
+{
+  "_id": "ObjectId",
+  "user_id": "UUID",
+  "funnel_id": "string",
+  "stage": "string", // e.g., "view", "register", "redeem"
+  "timestamp": "ISODate",
+  "metadata": {
+    "campaign_id": "UUID",
+    "source": "string"
+  },
+  "created_at": "ISODate"
+}
+```
+- **Indexes**:
+```javascript
+db.user_journey.createIndex({ user_id: 1, timestamp: -1 });
+db.user_journey.createIndex({ funnel_id: 1, stage: 1 });
+```
+- **Dependencies**: FR-008 (Real-Time Analytics), NFR-001 (Performance), 07.3.2.1 (Users Table).
+
+**Assumptions/Constraints**:
+- Assumes `funnel_id` định danh unique funnel.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: MongoDB.
+- Risks: Data volume → Mitigation: Sharding, aggregation pipelines.
+
+**Acceptance Criteria/Testable Items**:
+- Collection lưu trữ đúng journey data.
+- Indexes hỗ trợ query nhanh (<500ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.6.3 Cohorts Collection
+
+**References**: Part04_Functional_Requirements (FR-008), Part05_Non_Functional_Requirements (NFR-005)
+
+**Mục đích**: Lưu cohort data cho analytics segmentation.
+
+**Ý nghĩa**: Tăng NFR-005 (Maintainability) cho cohort analysis.
+
+**Cách làm**: Định nghĩa MongoDB schema cho Cohorts collection.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu cohort details (name, criteria, users).
+- **Schema**:
+```json
+{
+  "_id": "ObjectId",
+  "cohort_name": "string",
+  "criteria": {
+    "start_date": "ISODate",
+    "end_date": "ISODate",
+    "attributes": {}
+  },
+  "user_ids": ["UUID"],
+  "created_at": "ISODate",
+  "updated_at": "ISODate"
+}
+```
+- **Indexes**:
+```javascript
+db.cohorts.createIndex({ cohort_name: 1 });
+db.cohorts.createIndex({ "criteria.start_date": 1, "criteria.end_date": 1 });
+```
+- **Dependencies**: FR-008 (Real-Time Analytics), NFR-005 (Maintainability), 07.3.2.1 (Users Table).
+
+**Assumptions/Constraints**:
+- Assumes `criteria` linh hoạt với JSONB-like structure.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: MongoDB.
+- Risks: Large user_ids array → Mitigation: Pagination.
+
+**Acceptance Criteria/Testable Items**:
+- Collection lưu trữ đúng cohort data.
+- Indexes hỗ trợ query nhanh (<500ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.6.4 Aggregations Collection
+
+**References**: Part04_Functional_Requirements (FR-008), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Lưu pre-computed analytics aggregations.
+
+**Ý nghĩa**: Hỗ trợ FR-008 (Real-Time Analytics) và NFR-001 (Performance).
+
+**Cách làm**: Định nghĩa MongoDB schema cho Aggregations collection.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu aggregated metrics (e.g., redemption count, campaign performance).
+- **Schema**:
+```json
+{
+  "_id": "ObjectId",
+  "aggregation_type": "string", // e.g., "daily_redemptions"
+  "campaign_id": "UUID",
+  "metrics": {
+    "count": "number",
+    "average": "number"
+  },
+  "period_start": "ISODate",
+  "period_end": "ISODate",
+  "created_at": "ISODate",
+  "updated_at": "ISODate"
+}
+```
+- **Indexes**:
+```javascript
+db.aggregations.createIndex({ campaign_id: 1, period_start: -1 });
+db.aggregations.createIndex({ aggregation_type: 1 });
+```
+- **Dependencies**: FR-008 (Real-Time Analytics), NFR-001 (Performance), 07.3.1.2 (Campaigns Table).
+
+**Assumptions/Constraints**:
+- Assumes aggregations được cập nhật hàng ngày.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: MongoDB.
+- Risks: Stale aggregations → Mitigation: Scheduled jobs.
+
+**Acceptance Criteria/Testable Items**:
+- Collection lưu trữ đúng aggregation data.
+- Indexes hỗ trợ query nhanh (<500ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 07.3.6.5 Recommendations Collection
+
+**References**: Part04_Functional_Requirements (FR-013), Part05_Non_Functional_Requirements (NFR-001)
+
+**Mục đích**: Lưu recommendations cho Intelligence Service.
+
+**Ý nghĩa**: Hỗ trợ FR-013 (Recommendation Engine) và NFR-001 (Performance).
+
+**Cách làm**: Định nghĩa MongoDB schema cho Recommendations collection.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu recommendation details (user, items) cho Intelligence Service, shared với Analytics.
+- **Schema**:
+```json
+{
+  "_id": "ObjectId",
+  "user_id": "UUID",
+  "recommendations": [
+    {
+      "item_id": "UUID", // e.g., campaign_id
+      "score": "number",
+      "reason": "string"
+    }
+  ],
+  "created_at": "ISODate",
+  "updated_at": "ISODate"
+}
+```
+- **Indexes**:
+```javascript
+db.recommendations.createIndex({ user_id: 1, created_at: -1 });
+```
+- **Dependencies**: FR-013 (Recommendation Engine), NFR-001 (Performance), 07.3.2.1 (Users Table).
+
+**Assumptions/Constraints**:
+- Assumes `recommendations` array <100 items.
+- Constraint: Queries phải <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: MongoDB.
+- Risks: Low-quality recommendations → Mitigation: Model validation.
+
+**Acceptance Criteria/Testable Items**:
+- Collection lưu trữ đúng recommendation data.
+- Index hỗ trợ query nhanh (<500ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 07.3.7 Shared Tables
+
+#### 07.3.7.1 Audit Logs Table
+
+**References**: Part04_Functional_Requirements (FR-004, FR-011), Part05_Non_Functional_Requirements (NFR-003)
+
+**Mục đích**: Lưu audit logs cho tất cả microservices.
+
+**Ý nghĩa**: Tăng NFR-003 (Security) với audit trail.
+
+**Cách làm**: Định nghĩa SQL schema cho Audit Logs table.
+
+**Nội dung cần có**:
+- **Mô tả**: Lưu audit log details (user, action, timestamp) cho tất cả services.
+- **Schema**:
+```sql
+CREATE TABLE Audit_Logs (
+    log_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES Users(user_id),
+    service_name VARCHAR(50) NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    details JSONB,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_audit_logs_user_id ON Audit_Logs(user_id);
+CREATE INDEX idx_audit_logs_timestamp ON Audit_Logs(timestamp);
+```
+- **Dependencies**: FR-004 (User Management), FR-011 (Fraud Detection), NFR-003 (Security), 07.3.2.1 (Users Table).
+
+**Assumptions/Constraints**:
+- Assumes `user_id` có thể null nếu action không liên quan user.
+- Constraint: Queries phải <100ms.
+
+**Dependencies/Risks**:
+- Dependencies: PostgreSQL.
+- Risks: Large log volume → Mitigation: Archiving, partitioning.
+
+**Acceptance Criteria/Testable Items**:
+- Table lưu trữ đúng audit log data.
+- Indexes hỗ trợ query nhanh (<100ms).
+- Unit tests đạt 80% coverage.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
