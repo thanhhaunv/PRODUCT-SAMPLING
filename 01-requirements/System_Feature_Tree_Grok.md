@@ -8,7 +8,7 @@
 
 ---
 
-## 1. Must-Have (Core - MVP, Q1–Q2 2025)
+## 1. Must-Have (Core - Microservice, Q1–Q2 2025)
 Chức năng cốt lõi cho pilot (5–10 brands, 10K verified users), hỗ trợ hybrid distribution, OTP verification, data collection, và user experience.
 
 ### 1.1. Quản lý Campaign (Campaign Management)
