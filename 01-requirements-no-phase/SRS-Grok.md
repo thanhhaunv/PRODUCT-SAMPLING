@@ -9761,3 +9761,1719 @@ Part08_API_Design/
 | PM | [TBD] | - | - |
 | Tech Lead | [TBD] | - | - |
 
+# Part08 - API Design (Analytics and Notification Services)
+
+## Structure of Part08 (Analytics and Notification)
+```
+Part08_API_Design/
+├── 08.2_REST_API_Endpoints/
+│   ├── 08.2.4_Analytics_Service_APIs/
+│   │   ├── 08.2.4.1_Dashboard_APIs.md
+│   │   ├── 08.2.4.2_Funnel_Metrics_APIs.md
+│   │   ├── 08.2.4.3_Cohort_Analysis_APIs.md 🆕
+│   │   └── 08.2.4.4_Custom_Reports_APIs.md 🆕
+│   ├── 08.2.5_Notification_Service_APIs/
+│   │   ├── 08.2.5.1_OTP_APIs.md
+│   │   ├── 08.2.5.2_SMS_APIs.md
+│   │   ├── 08.2.5.3_Email_APIs.md
+│   │   ├── 08.2.5.4_Push_Notification_APIs.md 🆕
+│   │   └── 08.2.5.5_CRM_Sync_APIs.md
+```
+
+---
+
+### 08.2.4 Analytics Service APIs
+
+#### 08.2.4.1 Dashboard APIs
+
+**References**: Part04_Functional_Requirements (FR-008_Analytics), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.4.1_Analytics_Events_Table)
+
+**Mục đích**: Cung cấp endpoints để lấy dữ liệu dashboard, hiển thị metrics tổng quan (scans, forms, redemptions) cho campaigns.
+
+**Ý nghĩa**: Hỗ trợ Brand Admin theo dõi hiệu quả campaign quà thấp giá (~$1), tối ưu scan-to-form rate (>80%).
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `GET /api/v1/analytics/dashboard`: Lấy dữ liệu dashboard (Role: Platform Admin, Brand Admin).
+    - Query Params: `?campaign_id=UUID&start_date=date&end_date=date`
+    - Response: 200 JSON `{metrics: {total_scans: int, total_forms: int, total_redemptions: int, conversion_rate: float}}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant AnalyticsService
+      participant DB
+      BrandAdmin->>API: GET /api/v1/analytics/dashboard
+      API->>AnalyticsService: Validate JWT
+      AnalyticsService->>DB: Query Analytics_Events
+      DB-->>AnalyticsService: Aggregated Data
+      AnalyticsService-->>API: Metrics
+      API-->>BrandAdmin: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-008, NFR-006, 07.3.4.1
+- **Thể hiện yêu cầu**: FR-008
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Dashboard, cung cấp cái nhìn tổng quan về campaign.
+
+**Assumptions/Constraints**:
+- Assumes metrics aggregated realtime.
+- Constraint: Response time <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Analytics Service, Analytics_Events table.
+- Risks: Data staleness → Mitigation: Realtime aggregation.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint trả metrics đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.4.2 Funnel Metrics APIs
+
+**References**: Part04_Functional_Requirements (FR-008_Analytics), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.4.1_Analytics_Events_Table)
+
+**Mục đích**: Cung cấp endpoints để lấy funnel metrics (scan → form → redemption) cho campaigns.
+
+**Ý nghĩa**: Hỗ trợ Brand Admin phân tích drop-off, tối ưu conversion rate cho quà thấp giá.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `GET /api/v1/analytics/funnel`: Lấy funnel metrics (Role: Platform Admin, Brand Admin).
+    - Query Params: `?campaign_id=UUID&start_date=date&end_date=date`
+    - Response: 200 JSON `{funnel: [{stage: string, count: int, dropoff_rate: float}]}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant AnalyticsService
+      participant DB
+      BrandAdmin->>API: GET /api/v1/analytics/funnel
+      API->>AnalyticsService: Validate JWT
+      AnalyticsService->>DB: Query Analytics_Events
+      DB-->>AnalyticsService: Funnel Data
+      AnalyticsService-->>API: Metrics
+      API-->>BrandAdmin: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-008, NFR-006, 07.3.4.1
+- **Thể hiện yêu cầu**: FR-008
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Funnel Metrics, tối ưu quà thấp giá.
+
+**Assumptions/Constraints**:
+- Assumes stages: scan, form_submit, redemption.
+- Constraint: Response time <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Analytics Service, Analytics_Events table.
+- Risks: High query load → Mitigation: Caching.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint trả funnel metrics đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.4.3 Cohort Analysis APIs
+
+**References**: Part04_Functional_Requirements (FR-008_Analytics), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.4.1_Analytics_Events_Table)
+
+**Mục đích**: Cung cấp endpoints để phân tích cohort, đo lường hành vi khách hàng theo nhóm (e.g., campaign, location, ads format) để tối ưu ROI quà thấp giá.
+
+**Ý nghĩa**: Hỗ trợ Brand Admin hiểu hiệu quả campaign, cải thiện scan-to-form rate (>80%).
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `GET /api/v1/analytics/cohorts`: Lấy cohort analysis (Role: Platform Admin, Brand Admin).
+    - Query Params: `?campaign_id=UUID&start_date=date&end_date=date&group_by=string`
+    - Response: 200 JSON `{cohorts: [{group: string, metrics: {scans: int, forms: int, redemptions: int}]}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant AnalyticsService
+      participant DB
+      BrandAdmin->>API: GET /api/v1/analytics/cohorts
+      API->>AnalyticsService: Validate JWT
+      AnalyticsService->>DB: Query Analytics_Events
+      DB-->>AnalyticsService: Cohort Data
+      AnalyticsService-->>API: Aggregated Metrics
+      API-->>BrandAdmin: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-008, NFR-006, 07.3.4.1
+- **Thể hiện yêu cầu**: FR-008
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Cohort Analysis, tối ưu campaign quà thấp giá.
+
+**Assumptions/Constraints**:
+- Assumes group_by: campaign_id, location_id, ads_format_id.
+- Constraint: Response time <500ms for 10K events.
+
+**Dependencies/Risks**:
+- Dependencies: Analytics Service, Analytics_Events table.
+- Risks: Data volume lớn → Mitigation: Indexing, caching.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint trả cohort metrics đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.4.4 Custom Reports APIs
+
+**References**: Part04_Functional_Requirements (FR-008_Analytics), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.4.1_Analytics_Events_Table)
+
+**Mục đích**: Cung cấp endpoints để tạo và lấy custom reports, hỗ trợ Brand Admin tùy chỉnh báo cáo theo campaign, ads format, location.
+
+**Ý nghĩa**: Tăng ROI bằng báo cáo chi tiết, tối ưu chiến lược quà thấp giá (~$1).
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/analytics/reports`: Tạo custom report (Role: Platform Admin, Brand Admin).
+    - Request: JSON `{campaign_id: UUID, metrics: [string], filters: {key: string, value: string}}`
+    - Response: 201 JSON `{report_id: UUID}`
+  - `GET /api/v1/analytics/reports/{id}`: Lấy report (Role: Platform Admin, Brand Admin).
+    - Response: 200 JSON `{report_id: UUID, data: {metrics: object}}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant AnalyticsService
+      participant DB
+      BrandAdmin->>API: POST /api/v1/analytics/reports
+      API->>AnalyticsService: Validate JWT
+      AnalyticsService->>DB: Generate Report
+      DB-->>AnalyticsService: Success
+      AnalyticsService-->>API: Report ID
+      API-->>BrandAdmin: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-008, NFR-006, 07.3.4.1
+- **Thể hiện yêu cầu**: FR-008
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Custom Reports, hỗ trợ tối ưu ROI.
+
+**Assumptions/Constraints**:
+- Assumes metrics: scans, forms, redemptions; filters: campaign_id, location_id.
+- Constraint: Report generation <5s.
+
+**Dependencies/Risks**:
+- Dependencies: Analytics Service, Analytics_Events table.
+- Risks: Complex queries chậm → Mitigation: Pre-aggregated data.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints tạo/lấy report đúng.
+- Response time <5s.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 08.2.5 Notification Service APIs
+
+#### 08.2.5.1 OTP APIs
+
+**References**: Part04_Functional_Requirements (FR-005_OTP_Verification), Part05_Non_Functional_Requirements (NFR-004), Part07_Database_Design (07.3.5.1_OTP_Records_Table)
+
+**Mục đích**: Cung cấp endpoints để gửi và xác thực OTP cho form submission.
+
+**Ý nghĩa**: Chống spam, đảm bảo user hợp lệ, tăng trust cho quà thấp giá (~$1).
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/notifications/otp/send`: Gửi OTP (Role: Customer, System).
+    - Request: JSON `{user_id: UUID, channel: string, contact: string}`
+    - Response: 200 JSON `{otp_id: UUID}`
+  - `POST /api/v1/notifications/otp/verify`: Xác thực OTP (Role: Customer).
+    - Request: JSON `{otp_id: UUID, code: string}`
+    - Response: 200 JSON `{verified: boolean}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor Customer
+      participant API
+      participant NotificationService
+      participant DB
+      Customer->>API: POST /api/v1/notifications/otp/send
+      API->>NotificationService: Validate JWT
+      NotificationService->>DB: Insert OTP_Records
+      DB-->>NotificationService: Success
+      NotificationService-->>API: OTP ID
+      API-->>Customer: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-005, NFR-004, 07.3.5.1
+- **Thể hiện yêu cầu**: FR-005
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho OTP Verification.
+
+**Assumptions/Constraints**:
+- Assumes `channel`: sms, email; OTP expiry 5 phút.
+- Constraint: Response time <200ms.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, OTP_Records table.
+- Risks: OTP spam → Mitigation: Rate limiting.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints gửi/xác thực OTP đúng.
+- Response time <200ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.5.2 SMS APIs
+
+**References**: Part04_Functional_Requirements (FR-009_Notification), Part05_Non_Functional_Requirements (NFR-004), Part07_Database_Design (07.3.5.2_Notification_Logs_Table)
+
+**Mục đích**: Cung cấp endpoints để gửi SMS notifications.
+
+**Ý nghĩa**: Gửi reminders, OTP, tăng engagement quà thấp giá.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/notifications/sms`: Gửi SMS (Role: System, Brand Admin).
+    - Request: JSON `{user_id: UUID, phone: string, message: string}`
+    - Response: 200 JSON `{notification_id: UUID}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor System
+      participant API
+      participant NotificationService
+      participant DB
+      System->>API: POST /api/v1/notifications/sms
+      API->>NotificationService: Validate JWT
+      NotificationService->>DB: Insert Notification_Logs
+      DB-->>NotificationService: Success
+      NotificationService-->>API: Notification ID
+      API-->>System: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-009, NFR-004, 07.3.5.2
+- **Thể hiện yêu cầu**: FR-009
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho SMS Notifications.
+
+**Assumptions/Constraints**:
+- Assumes Twilio/SNS integration.
+- Constraint: Response time <200ms.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, Notification_Logs table.
+- Risks: Delivery failures → Mitigation: Retry mechanism.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint gửi SMS đúng.
+- Response time <200ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.5.3 Email APIs
+
+**References**: Part04_Functional_Requirements (FR-009_Notification), Part05_Non_Functional_Requirements (NFR-004), Part07_Database_Design (07.3.5.2_Notification_Logs_Table)
+
+**Mục đích**: Cung cấp endpoints để gửi email notifications.
+
+**Ý nghĩa**: Gửi reminders, OTP, tăng engagement quà thấp giá.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/notifications/email`: Gửi email (Role: System, Brand Admin).
+    - Request: JSON `{user_id: UUID, email: string, subject: string, body: string}`
+    - Response: 200 JSON `{notification_id: UUID}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor System
+      participant API
+      participant NotificationService
+      participant DB
+      System->>API: POST /api/v1/notifications/email
+      API->>NotificationService: Validate JWT
+      NotificationService->>DB: Insert Notification_Logs
+      DB-->>NotificationService: Success
+      NotificationService-->>API: Notification ID
+      API-->>System: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-009, NFR-004, 07.3.5.2
+- **Thể hiện yêu cầu**: FR-009
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Email Notifications.
+
+**Assumptions/Constraints**:
+- Assumes SES/SendGrid integration.
+- Constraint: Response time <200ms.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, Notification_Logs table.
+- Risks: Spam flags → Mitigation: Email validation.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint gửi email đúng.
+- Response time <200ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.5.4 Push Notification APIs
+
+**References**: Part04_Functional_Requirements (FR-009_Notification), Part05_Non_Functional_Requirements (NFR-004), Part07_Database_Design (07.3.5.2_Notification_Logs_Table)
+
+**Mục đích**: Cung cấp endpoints để gửi push notifications qua PWA.
+
+**Ý nghĩa**: Tăng engagement bằng reminders trực tiếp, khuyến khích scan QR và hoàn thành form.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/notifications/push`: Gửi push notification (Role: System, Brand Admin).
+    - Request: JSON `{user_id: UUID, device_token: string, message: string}`
+    - Response: 200 JSON `{notification_id: UUID}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor System
+      participant API
+      participant NotificationService
+      participant DB
+      System->>API: POST /api/v1/notifications/push
+      API->>NotificationService: Validate JWT
+      NotificationService->>DB: Insert Notification_Logs
+      DB-->>NotificationService: Success
+      NotificationService-->>API: Notification ID
+      API-->>System: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-009, NFR-004, 07.3.5.2
+- **Thể hiện yêu cầu**: FR-009
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Push Notifications.
+
+**Assumptions/Constraints**:
+- Assumes Firebase Cloud Messaging.
+- Constraint: Response time <200ms.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, Notification_Logs table.
+- Risks: Device token expiry → Mitigation: Token refresh.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint gửi push đúng.
+- Response time <200ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.5.5 CRM Sync APIs
+
+**References**: Part04_Functional_Requirements (FR-010_CRM_Integration), Part05_Non_Functional_Requirements (NFR-004), Part07_Database_Design (07.3.5.3_CRM_Sync_Logs_Table)
+
+**Mục đích**: Cung cấp endpoints để đồng bộ dữ liệu user với CRM (HubSpot, Salesforce).
+
+**Ý nghĩa**: Tăng hiệu quả bằng cách tích hợp dữ liệu khách hàng từ quà thấp giá vào CRM.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/notifications/crm-sync`: Đồng bộ dữ liệu user (Role: System).
+    - Request: JSON `{user_id: UUID, data: {key: string, value: string}}`
+    - Response: 200 JSON `{sync_id: UUID}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor System
+      participant API
+      participant NotificationService
+      participant DB
+      System->>API: POST /api/v1/notifications/crm-sync
+      API->>NotificationService: Validate JWT
+      NotificationService->>DB: Insert CRM_Sync_Logs
+      DB-->>NotificationService: Success
+      NotificationService-->>API: Sync ID
+      API-->>System: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-010, NFR-004, 07.3.5.3
+- **Thể hiện yêu cầu**: FR-010
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho CRM Sync.
+
+**Assumptions/Constraints**:
+- Assumes HubSpot/Salesforce APIs.
+- Constraint: Response time <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Notification Service, CRM_Sync_Logs table.
+- Risks: Sync failures → Mitigation: Retry queue.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint đồng bộ dữ liệu đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part08 - API Design (Session 3)
+
+## Structure of Part08 (Session 3)
+```
+Part08_API_Design/
+├── 08.2_REST_API_Endpoints/
+│   ├── 08.2.6_Fraud_Service_APIs/
+│   │   ├── 08.2.6.1_Fraud_Check_APIs.md 🆕
+│   │   ├── 08.2.6.2_Fraud_Rules_APIs.md 🆕
+│   │   ├── 08.2.6.3_Device_Tracking_APIs.md 🆕
+│   │   └── 08.2.6.4_Fraud_Alerts_APIs.md 🆕
+│   ├── 08.2.7_Intelligence_Service_APIs/
+│   │   ├── 08.2.7.1_AB_Testing_APIs.md 🆕
+│   │   ├── 08.2.7.2_Recommendation_APIs.md 🆕
+│   │   └── 08.2.7.3_ML_Model_APIs.md 🆕
+├── 08.4_API_Gateway_Configuration/
+│   ├── 08.4.1_Routing_Rules.md 🆕
+│   ├── 08.4.2_Rate_Limiting.md 🔄
+│   ├── 08.4.3_Authentication.md 🔄
+│   └── 08.4.4_Load_Balancing.md 🆕
+```
+
+---
+
+### 08.2.6 Fraud Service APIs
+
+#### 08.2.6.1 Fraud Check APIs
+
+**References**: Part04_Functional_Requirements (FR-011_Fraud_Detection), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.6.1_Fraud_Events_Table)
+
+**Mục đích**: Cung cấp endpoints để kiểm tra fraud trong quá trình đăng ký và redeem quà mẫu giá thấp (~$1).
+
+**Ý nghĩa**: Giảm fraud (<5%), bảo vệ tính toàn vẹn của campaign, tăng trust để khuyến khích khách hàng đăng ký.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/fraud/check`: Kiểm tra fraud (Role: Platform Admin, Fraud Service).
+    - Request: JSON `{user_id: UUID, barcode_id: UUID, action: string, device_info: JSONB}`
+    - Response: 200 JSON `{fraud_score: float, is_suspicious: boolean}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor System
+      participant API
+      participant FraudService
+      participant DB
+      System->>API: POST /api/v1/fraud/check
+      API->>FraudService: Validate JWT, Compute Score
+      FraudService->>DB: Query Fraud_Events
+      DB-->>FraudService: Event Data
+      FraudService-->>API: Fraud Score
+      API-->>System: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-011, NFR-006, 07.3.6.1
+- **Thể hiện yêu cầu**: FR-011
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs kiểm tra fraud, đảm bảo an toàn cho quà thấp giá.
+
+**Assumptions/Constraints**:
+- Assumes `action`: form_submit, redemption; fraud_score 0-1.
+- Constraint: Response time <200ms.
+
+**Dependencies/Risks**:
+- Dependencies: Fraud Service, Fraud_Events table.
+- Risks: False positives → Mitigation: ML model tuning.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint trả fraud score chính xác.
+- Response time <200ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.6.2 Fraud Rules APIs
+
+**References**: Part04_Functional_Requirements (FR-011_Fraud_Detection), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.6.2_Fraud_Rules_Table)
+
+**Mục đích**: Cung cấp endpoints để quản lý fraud rules.
+
+**Ý nghĩa**: Cho phép Platform Admin định nghĩa rules để phát hiện fraud, bảo vệ campaign quà thấp giá.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/fraud/rules`: Tạo fraud rule (Role: Platform Admin).
+    - Request: JSON `{name: string, conditions: JSONB, action: string}`
+    - Response: 201 JSON `{rule_id: UUID}`
+  - `GET /api/v1/fraud/rules/{id}`: Lấy fraud rule (Role: Platform Admin).
+    - Response: 200 JSON `{rule_id: UUID, name: string, conditions: JSONB, action: string}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor PlatformAdmin
+      participant API
+      participant FraudService
+      participant DB
+      PlatformAdmin->>API: POST /api/v1/fraud/rules
+      API->>FraudService: Validate JWT
+      FraudService->>DB: Insert into Fraud_Rules
+      DB-->>FraudService: Success
+      FraudService-->>API: Rule ID
+      API-->>PlatformAdmin: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-011, NFR-006, 07.3.6.2
+- **Thể hiện yêu cầu**: FR-011
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs quản lý fraud rules.
+
+**Assumptions/Constraints**:
+- Assumes `conditions`: JSONB (e.g., `{"max_attempts": 3}`), `action`: block, flag.
+- Constraint: Response time <200ms.
+
+**Dependencies/Risks**:
+- Dependencies: Fraud Service, Fraud_Rules table.
+- Risks: Invalid rules → Mitigation: Validation schema.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints CRUD rules đúng.
+- Response time <200ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.6.3 Device Tracking APIs
+
+**References**: Part04_Functional_Requirements (FR-011_Fraud_Detection), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.6.3_Device_Fingerprints_Table)
+
+**Mục đích**: Cung cấp endpoints để theo dõi device fingerprints, phát hiện fraud.
+
+**Ý nghĩa**: Tăng bảo mật, giảm lạm dụng quà thấp giá bằng device tracking.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/fraud/devices`: Ghi device fingerprint (Role: Fraud Service).
+    - Request: JSON `{user_id: UUID, fingerprint: JSONB}`
+    - Response: 201 JSON `{device_id: UUID}`
+  - `GET /api/v1/fraud/devices/{user_id}`: Lấy fingerprints (Role: Platform Admin).
+    - Response: 200 JSON `{devices: [{device_id: UUID, fingerprint: JSONB}]}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor System
+      participant API
+      participant FraudService
+      participant DB
+      System->>API: POST /api/v1/fraud/devices
+      API->>FraudService: Validate JWT
+      FraudService->>DB: Insert into Device_Fingerprints
+      DB-->>FraudService: Success
+      FraudService-->>API: Device ID
+      API-->>System: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-011, NFR-006, 07.3.6.3
+- **Thể hiện yêu cầu**: FR-011
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs device tracking.
+
+**Assumptions/Constraints**:
+- Assumes `fingerprint`: JSONB (e.g., `{"os": "Android", "ip": "x.x.x.x"}`).
+- Constraint: Response time <200ms.
+
+**Dependencies/Risks**:
+- Dependencies: Fraud Service, Device_Fingerprints table.
+- Risks: Privacy concerns → Mitigation: GDPR compliance.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints ghi/lấy fingerprints đúng.
+- Response time <200ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.6.4 Fraud Alerts APIs
+
+**References**: Part04_Functional_Requirements (FR-011_Fraud_Detection), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.6.1_Fraud_Events_Table)
+
+**Mục đích**: Cung cấp endpoints để gửi và lấy fraud alerts.
+
+**Ý nghĩa**: Cảnh báo Platform Admin về hành vi đáng ngờ, bảo vệ campaign quà thấp giá.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/fraud/alerts`: Tạo alert (Role: Fraud Service).
+    - Request: JSON `{user_id: UUID, fraud_score: float, details: string}`
+    - Response: 201 JSON `{alert_id: UUID}`
+  - `GET /api/v1/fraud/alerts`: Lấy alerts (Role: Platform Admin).
+    - Response: 200 JSON `{alerts: [{alert_id: UUID, user_id: UUID, fraud_score: float, details: string}]}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor System
+      participant API
+      participant FraudService
+      participant DB
+      System->>API: POST /api/v1/fraud/alerts
+      API->>FraudService: Validate JWT
+      FraudService->>DB: Insert into Fraud_Events
+      DB-->>FraudService: Success
+      FraudService-->>API: Alert ID
+      API-->>System: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-011, NFR-006, 07.3.6.1
+- **Thể hiện yêu cầu**: FR-011
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs fraud alerts.
+
+**Assumptions/Constraints**:
+- Assumes `fraud_score` >0.8 là suspicious.
+- Constraint: Response time <200ms.
+
+**Dependencies/Risks**:
+- Dependencies: Fraud Service, Fraud_Events table.
+- Risks: Alert spam → Mitigation: Rate limiting.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints tạo/lấy alerts đúng.
+- Response time <200ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 08.2.7 Intelligence Service APIs
+
+#### 08.2.7.1 A/B Testing APIs
+
+**References**: Part04_Functional_Requirements (FR-012_AB_Testing), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.7.1_AB_Tests_Table)
+
+**Mục đích**: Cung cấp endpoints để quản lý A/B tests cho ads formats, tối ưu scan-to-form rate (>80%).
+
+**Ý nghĩa**: Tăng ROI bằng cách thử nghiệm ads formats khác nhau, đặc biệt cho quà thấp giá (~$1).
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/intelligence/ab-tests`: Tạo A/B test (Role: Brand Admin).
+    - Request: JSON `{campaign_id: UUID, ads_format_ids: [UUID], split_ratio: float}`
+    - Response: 201 JSON `{test_id: UUID}`
+  - `GET /api/v1/intelligence/ab-tests/{id}`: Lấy kết quả A/B test (Role: Brand Admin).
+    - Response: 200 JSON `{test_id: UUID, metrics: {variant: string, scans: int, forms: int}}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant IntelligenceService
+      participant DB
+      BrandAdmin->>API: POST /api/v1/intelligence/ab-tests
+      API->>IntelligenceService: Validate JWT
+      IntelligenceService->>DB: Insert into AB_Tests
+      DB-->>IntelligenceService: Success
+      IntelligenceService-->>API: Test ID
+      API-->>BrandAdmin: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-012, NFR-006, 07.3.7.1
+- **Thể hiện yêu cầu**: FR-012
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs A/B Testing, tối ưu quà thấp giá.
+
+**Assumptions/Constraints**:
+- Assumes `split_ratio`: 0-1, metrics: scans, forms.
+- Constraint: Response time <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service, AB_Tests table.
+- Risks: Statistical errors → Mitigation: Confidence level >95%.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints tạo/lấy A/B test đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.7.2 Recommendation APIs
+
+**References**: Part04_Functional_Requirements (FR-013_Recommendation_Engine), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.7.2_Recommendations_Table)
+
+**Mục đích**: Cung cấp endpoints để gợi ý ads formats, campaigns dựa trên ML, tăng scan-to-form rate.
+
+**Ý nghĩa**: Tăng engagement quà thấp giá bằng recommendations cá nhân hóa.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `GET /api/v1/intelligence/recommendations`: Lấy gợi ý (Role: Brand Admin).
+    - Query Params: `?campaign_id=UUID&user_id=UUID`
+    - Response: 200 JSON `{recommendations: [{ads_format_id: UUID, score: float}]}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant IntelligenceService
+      participant DB
+      BrandAdmin->>API: GET /api/v1/intelligence/recommendations
+      API->>IntelligenceService: Validate JWT
+      IntelligenceService->>DB: Query Recommendations
+      DB-->>IntelligenceService: Data
+      IntelligenceService-->>API: Recommendations
+      API-->>BrandAdmin: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-013, NFR-006, 07.3.7.2
+- **Thể hiện yêu cầu**: FR-013
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs Recommendation Engine.
+
+**Assumptions/Constraints**:
+- Assumes ML model pre-trained, score 0-1.
+- Constraint: Response time <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service, Recommendations table.
+- Risks: Low accuracy → Mitigation: Model retraining.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint trả recommendations đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.7.3 ML Model APIs
+
+**References**: Part04_Functional_Requirements (FR-014_ML_Model_Management), Part05_Non_Functional_Requirements (NFR-006), Part07_Database_Design (07.3.7.3_ML_Models_Table)
+
+**Mục đích**: Cung cấp endpoints để quản lý ML models cho fraud và recommendations.
+
+**Ý nghĩa**: Hỗ trợ Platform Admin quản lý models, tối ưu quà thấp giá.
+
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/intelligence/models`: Tạo ML model (Role: Platform Admin).
+    - Request: JSON `{model_name: string, type: string, config: JSONB}`
+    - Response: 201 JSON `{model_id: UUID}`
+  - `GET /api/v1/intelligence/models/{id}`: Lấy ML model (Role: Platform Admin).
+    - Response: 200 JSON `{model_id: UUID, model_name: string, type: string, config: JSONB}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor PlatformAdmin
+      participant API
+      participant IntelligenceService
+      participant DB
+      PlatformAdmin->>API: POST /api/v1/intelligence/models
+      API->>IntelligenceService: Validate JWT
+      IntelligenceService->>DB: Insert into ML_Models
+      DB-->>IntelligenceService: Success
+      IntelligenceService-->>API: Model ID
+      API-->>PlatformAdmin: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-014, NFR-006, 07.3.7.3
+- **Thể hiện yêu cầu**: FR-014
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs ML Model Management.
+
+**Assumptions/Constraints**:
+- Assumes `type`: fraud, recommendation.
+- Constraint: Response time <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Intelligence Service, ML_Models table.
+- Risks: Model errors → Mitigation: Validation.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints CRUD models đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 08.4 API Gateway Configuration
+
+#### 08.4.1 Routing Rules
+
+**References**: Part06_System_Architecture, Part05_Non_Functional_Requirements (NFR-002)
+
+**Mục đích**: Định nghĩa routing rules cho Kong API Gateway để điều hướng requests đến microservices.
+
+**Ý nghĩa**: Đảm bảo requests đến đúng service, hỗ trợ scalability cho quà thấp giá traffic.
+
+**Cách làm**: Mô tả rules, service mappings.
+
+**Nội dung cần có**:
+- **Routing Rules**:
+  - `/api/v1/campaigns/*` → Campaign Management Service
+  - `/api/v1/auth/*`, `/api/v1/users/*`, `/api/v1/consent/*`, `/api/v1/portal/*` → Identity Service
+  - `/api/v1/redemptions/*` → Redemption Service
+  - `/api/v1/analytics/*` → Analytics Service
+  - `/api/v1/notifications/*` → Notification Service
+  - `/api/v1/fraud/*` → Fraud Service
+  - `/api/v1/intelligence/*` → Intelligence Service
+- **Flow**:
+  ```mermaid
+  graph TD
+      Client[Client/PWA] -->|HTTPS| Gateway[Kong API Gateway]
+      Gateway --> Campaign[Campaign Management]
+      Gateway --> Identity[Identity]
+      Gateway --> Redemption[Redemption]
+      Gateway --> Analytics[Analytics]
+      Gateway --> Notification[Notification]
+      Gateway --> Fraud[Fraud]
+      Gateway --> Intelligence[Intelligence]
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: Part06, NFR-002
+- **Thể hiện yêu cầu**: NFR-002
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết routing rules.
+
+**Assumptions/Constraints**:
+- Assumes Kong Gateway, HTTPS only.
+- Constraint: Zero downtime routing.
+
+**Dependencies/Risks**:
+- Dependencies: Kong Gateway.
+- Risks: Misrouting → Mitigation: Automated tests.
+
+**Acceptance Criteria/Testable Items**:
+- Requests route đúng service.
+- Zero routing errors.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.4.2 Rate Limiting
+
+**References**: Part05_Non_Functional_Requirements (NFR-002), Part06_System_Architecture
+
+**Mục đích**: Cấu hình rate limiting để bảo vệ hệ thống trước high traffic từ quà thấp giá.
+
+**Ý nghĩa**: Đảm bảo scalability, ngăn abuse (e.g., spam form submissions).
+
+**Cách làm**: Mô tả rate limit policies.
+
+**Nội dung cần có**:
+- **Policies**:
+  - Global: 1000 requests/minute/IP
+  - Per endpoint: `/api/v1/consent/*` (10/minute/user), `/api/v1/redemptions/*` (5/minute/user)
+- **Response on Limit Exceeded**: 429 JSON `{error: "Rate limit exceeded"}`
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-002, Part06
+- **Thể hiện yêu cầu**: NFR-002
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết rate limiting.
+
+**Assumptions/Constraints**:
+- Assumes Kong plugin rate-limiting.
+- Constraint: Config không ảnh hưởng latency.
+
+**Dependencies/Risks**:
+- Dependencies: Kong Gateway.
+- Risks: Over-limiting → Mitigation: Dynamic adjustment.
+
+**Acceptance Criteria/Testable Items**:
+- Rate limits áp dụng đúng.
+- 429 trả khi vượt limit.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.4.3 Authentication
+
+**References**: Part05_Non_Functional_Requirements (NFR-003), Part06_System_Architecture
+
+**Mục đích**: Cấu hình authentication cho API Gateway.
+
+**Ý nghĩa**: Bảo mật APIs, đảm bảo chỉ authorized users truy cập.
+
+**Cách làm**: Mô tả auth mechanisms.
+
+**Nội dung cần có**:
+- **Mechanisms**:
+  - JWT (Bearer token) cho tất cả endpoints.
+  - mTLS giữa Gateway và services.
+- **JWT Validation**: Issuer, expiry, role-based access (RBAC).
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-003, Part06
+- **Thể hiện yêu cầu**: NFR-003
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết authentication.
+
+**Assumptions/Constraints**:
+- Assumes Keycloak for JWT issuance.
+- Constraint: Token validation <50ms.
+
+**Dependencies/Risks**:
+- Dependencies: Keycloak, Kong Gateway.
+- Risks: Token leakage → Mitigation: Short-lived tokens.
+
+**Acceptance Criteria/Testable Items**:
+- JWT validation đúng.
+- Unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.4.4 Load Balancing
+
+**References**: Part05_Non_Functional_Requirements (NFR-002), Part06_System_Architecture
+
+**Mục đích**: Cấu hình load balancing để phân phối traffic.
+
+**Ý nghĩa**: Đảm bảo scalability, xử lý high traffic từ QR scans.
+
+**Cách làm**: Mô tả load balancing strategies.
+
+**Nội dung cần có**:
+- **Strategies**:
+  - Round-robin cho Campaign, Identity, Analytics services.
+  - Least connections cho Redemption Service (high write load).
+- **Health Checks**: Ping endpoints `/health` mỗi 10s.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-002, Part06
+- **Thể hiện yêu cầu**: NFR-002
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết load balancing.
+
+**Assumptions/Constraints**:
+- Assumes Kong Gateway, Kubernetes.
+- Constraint: Zero downtime failover.
+
+**Dependencies/Risks**:
+- Dependencies: Kong Gateway, Kubernetes.
+- Risks: Uneven load → Mitigation: Auto-scaling.
+
+**Acceptance Criteria/Testable Items**:
+- Traffic phân phối đều.
+- Health checks pass 100%.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part08 - API Design (Session 4)
+
+## Structure of Part08 (Session 4)
+```
+Part08_API_Design/
+├── 08.5_Service_To_Service_APIs/
+│   ├── 08.5.1_Internal_API_Contracts.md 🆕
+│   ├── 08.5.2_mTLS_Configuration.md 🆕
+│   └── 08.5.3_Circuit_Breaker_Pattern.md 🆕
+├── 08.6_Error_Handling/
+│   ├── 08.6.1_Error_Response_Format.md
+│   ├── 08.6.2_HTTP_Status_Codes.md
+│   └── 08.6.3_Error_Code_Catalog.md
+├── 08.7_API_Versioning/
+│   ├── 08.7.1_Versioning_Strategy.md
+│   └── 08.7.2_Deprecation_Policy.md
+├── 08.8_OpenAPI_Specification/
+│   ├── 08.8.1_OpenAPI_Schema_Per_Service.md 🆕
+│   └── 08.8.2_Swagger_Documentation.md
+```
+
+---
+
+### 08.5 Service-to-Service APIs
+
+#### 08.5.1 Internal API Contracts
+
+**References**: Part06_System_Architecture, Part05_Non_Functional_Requirements (NFR-002, NFR-003)
+
+**Mục đích**: Định nghĩa hợp đồng API giữa các microservices (Campaign, Identity, Redemption, Analytics, Notification, Fraud, Intelligence) để đảm bảo giao tiếp nội bộ hiệu quả, hỗ trợ quà thấp giá (~$1).
+
+**Ý nghĩa**: Đảm bảo tính nhất quán, giảm latency, tăng reliability cho flow QR scan → form → redeem.
+
+**Cách làm**: Mô tả internal API contracts, schemas, và service interactions.
+
+**Nội dung cần có**:
+- **Contracts**:
+  - **Campaign Management → Identity**: Gửi `user_id` để validate RBAC.
+  - **Identity → Fraud**: Gửi `user_id`, `device_info` để check fraud score.
+  - **Redemption → Analytics**: Gửi `barcode_id`, `redeem_date` để log metrics.
+  - **Analytics → Intelligence**: Gửi aggregated metrics cho A/B testing, recommendations.
+  - **Notification → Identity**: Gửi `user_id`, `channel` để gửi OTP.
+- **Schema Example** (Fraud Check):
+  ```json
+  {
+    "user_id": "UUID",
+    "action": "string",
+    "device_info": {"os": "string", "ip": "string"},
+    "response": {"fraud_score": "float", "is_suspicious": "boolean"}
+  }
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      participant Campaign
+      participant Identity
+      participant Fraud
+      Campaign->>Identity: Validate user_id
+      Identity->>Fraud: Check fraud score
+      Fraud-->>Identity: Fraud score
+      Identity-->>Campaign: Validation result
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: Part06, NFR-002, NFR-003
+- **Thể hiện yêu cầu**: NFR-002, NFR-003
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết hợp đồng API nội bộ.
+
+**Assumptions/Constraints**:
+- Assumes gRPC cho internal APIs, JSON schemas.
+- Constraint: Latency <50ms.
+
+**Dependencies/Risks**:
+- Dependencies: gRPC, Service Mesh (Istio).
+- Risks: Service coupling → Mitigation: Contract-first design.
+
+**Acceptance Criteria/Testable Items**:
+- Contracts được tất cả services tuân thủ.
+- Latency <50ms.
+- No contract violations.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.5.2 mTLS Configuration
+
+**References**: Part05_Non_Functional_Requirements (NFR-003), Part06_System_Architecture
+
+**Mục đích**: Cấu hình mTLS cho giao tiếp service-to-service.
+
+**Ý nghĩa**: Đảm bảo bảo mật nội bộ, ngăn data leakage trong flow quà thấp giá.
+
+**Cách làm**: Mô tả mTLS setup, certificate management.
+
+**Nội dung cần có**:
+- **Configuration**:
+  - mTLS required cho tất cả internal APIs.
+  - Certificates issued bởi internal CA (Vault).
+  - Certificate rotation mỗi 90 ngày.
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      participant ServiceA
+      participant ServiceB
+      ServiceA->>ServiceB: gRPC Request with mTLS
+      ServiceB->>ServiceA: Validate Certificate
+      ServiceB-->>ServiceA: Response
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-003, Part06
+- **Thể hiện yêu cầu**: NFR-003
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết mTLS config.
+
+**Assumptions/Constraints**:
+- Assumes Vault cho certificate management.
+- Constraint: Overhead <10ms.
+
+**Dependencies/Risks**:
+- Dependencies: Vault, Istio.
+- Risks: Cert expiry → Mitigation: Auto-rotation.
+
+**Acceptance Criteria/Testable Items**:
+- mTLS áp dụng 100% internal APIs.
+- No unauthorized access.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.5.3 Circuit Breaker Pattern
+
+**References**: Part05_Non_Functional_Requirements (NFR-002), Part06_System_Architecture
+
+**Mục đích**: Áp dụng circuit breaker để bảo vệ services trước failures.
+
+**Ý nghĩa**: Đảm bảo hệ thống ổn định khi high traffic từ QR scans.
+
+**Cách làm**: Mô tả circuit breaker config, thresholds.
+
+**Nội dung cần có**:
+- **Configuration**:
+  - Circuit breaker per service (e.g., Campaign, Redemption).
+  - Thresholds: 50% error rate trong 10s → open circuit.
+  - Retry sau 30s.
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      participant Client
+      participant CircuitBreaker
+      participant Service
+      Client->>CircuitBreaker: Request
+      CircuitBreaker->>Service: Forward if closed
+      Service-->>CircuitBreaker: Error
+      CircuitBreaker-->>Client: Fallback if open
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-002, Part06
+- **Thể hiện yêu cầu**: NFR-002
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết circuit breaker.
+
+**Assumptions/Constraints**:
+- Assumes Istio circuit breaker.
+- Constraint: No false positives.
+
+**Dependencies/Risks**:
+- Dependencies: Istio.
+- Risks: Over-sensitive breaker → Mitigation: Fine-tune thresholds.
+
+**Acceptance Criteria/Testable Items**:
+- Circuit breaker mở/đóng đúng.
+- Fallback responses trả <200ms.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 08.6 Error Handling
+
+#### 08.6.1 Error Response Format
+
+**References**: Part05_Non_Functional_Requirements (NFR-007), Part06_System_Architecture
+
+**Mục đích**: Định nghĩa format cho error responses.
+
+**Ý nghĩa**: Đảm bảo client (PWA, POS) xử lý errors dễ dàng, tăng usability.
+
+**Cách làm**: Mô tả JSON error format.
+
+**Nội dung cần có**:
+- **Format**:
+  ```json
+  {
+    "code": "string",
+    "message": "string",
+    "details": "object"
+  }
+  ```
+- **Example**:
+  ```json
+  {
+    "code": "INVALID_BARCODE",
+    "message": "Barcode not found or already redeemed",
+    "details": {"barcode_id": "UUID"}
+  }
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-007, Part06
+- **Thể hiện yêu cầu**: NFR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chuẩn hóa error responses.
+
+**Assumptions/Constraints**:
+- Assumes JSON format.
+- Constraint: Consistent across services.
+
+**Dependencies/Risks**:
+- Dependencies: None.
+- Risks: Inconsistent formats → Mitigation: Centralized schema.
+
+**Acceptance Criteria/Testable Items**:
+- Tất cả errors theo format.
+- Client parse errors đúng.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.6.2 HTTP Status Codes
+
+**References**: Part05_Non_Functional_Requirements (NFR-007), Part06_System_Architecture
+
+**Mục đích**: Định nghĩa HTTP status codes cho APIs.
+
+**Ý nghĩa**: Đảm bảo client hiểu response status, tăng usability.
+
+**Cách làm**: Liệt kê codes, use cases.
+
+**Nội dung cần có**:
+- **Codes**:
+  - 200: Success (GET, PUT).
+  - 201: Created (POST).
+  - 204: No Content (DELETE).
+  - 400: Bad Request (Invalid input).
+  - 401: Unauthorized (Invalid JWT).
+  - 429: Too Many Requests (Rate limit).
+  - 500: Internal Server Error.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-007, Part06
+- **Thể hiện yêu cầu**: NFR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chuẩn hóa HTTP status codes.
+
+**Assumptions/Constraints**:
+- Assumes REST standards.
+- Constraint: Consistent usage.
+
+**Dependencies/Risks**:
+- Dependencies: None.
+- Risks: Misuse codes → Mitigation: API guidelines.
+
+**Acceptance Criteria/Testable Items**:
+- Codes áp dụng đúng context.
+- Client xử lý codes đúng.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.6.3 Error Code Catalog
+
+**References**: Part05_Non_Functional_Requirements (NFR-007), Part06_System_Architecture
+
+**Mục đích**: Liệt kê error codes và mô tả.
+
+**Ý nghĩa**: Giúp developers xử lý errors, tăng debuggability.
+
+**Cách làm**: Mô tả catalog.
+
+**Nội dung cần có**:
+- **Catalog**:
+  - `INVALID_BARCODE`: Barcode không tồn tại hoặc đã redeem.
+  - `RATE_LIMIT_EXCEEDED`: Vượt giới hạn requests.
+  - `UNAUTHORIZED_ACCESS`: Không đủ quyền.
+  - `CONSENT_REQUIRED`: Thiếu consent marketing.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-007, Part06
+- **Thể hiện yêu cầu**: NFR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Cung cấp error code catalog.
+
+**Assumptions/Constraints**:
+- Assumes unique codes.
+- Constraint: Catalog dưới 100 codes.
+
+**Dependencies/Risks**:
+- Dependencies: None.
+- Risks: Missing codes → Mitigation: Regular updates.
+
+**Acceptance Criteria/Testable Items**:
+- Catalog đầy đủ, rõ ràng.
+- Tất cả errors có code.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 08.7 API Versioning
+
+#### 08.7.1 Versioning Strategy
+
+**References**: Part05_Non_Functional_Requirements (NFR-007), Part06_System_Architecture
+
+**Mục đích**: Định nghĩa chiến lược versioning cho APIs.
+
+**Ý nghĩa**: Đảm bảo backward compatibility, hỗ trợ client upgrades.
+
+**Cách làm**: Mô tả versioning approach.
+
+**Nội dung cần có**:
+- **Strategy**:
+  - URI versioning: `/api/v1/{service}`.
+  - New major version mỗi 12 tháng.
+  - Minor updates không phá vỡ compatibility.
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      participant Client
+      participant Gateway
+      Client->>Gateway: GET /api/v1/campaigns
+      Gateway->>Service: Route to v1
+      Service-->>Gateway: Response
+      Gateway-->>Client: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-007, Part06
+- **Thể hiện yêu cầu**: NFR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết versioning strategy.
+
+**Assumptions/Constraints**:
+- Assumes v1 active tối thiểu 18 tháng.
+- Constraint: No breaking changes trong minor versions.
+
+**Dependencies/Risks**:
+- Dependencies: Kong Gateway.
+- Risks: Version conflicts → Mitigation: Clear deprecation.
+
+**Acceptance Criteria/Testable Items**:
+- Versioning áp dụng đúng.
+- Client truy cập v1 không lỗi.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.7.2 Deprecation Policy
+
+**References**: Part05_Non_Functional_Requirements (NFR-007), Part06_System_Architecture
+
+**Mục đích**: Định nghĩa chính sách deprecation cho APIs.
+
+**Ý nghĩa**: Đảm bảo client có thời gian chuyển đổi phiên bản.
+
+**Cách làm**: Mô tả deprecation process.
+
+**Nội dung cần có**:
+- **Policy**:
+  - Notify 6 tháng trước deprecation.
+  - Deprecation header: `Deprecation: date`.
+  - Sunset sau 12 tháng kể từ thông báo.
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      participant Client
+      participant Gateway
+      Client->>Gateway: GET /api/v1/campaigns
+      Gateway-->>Client: 200 OK with Deprecation header
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-007, Part06
+- **Thể hiện yêu cầu**: NFR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết deprecation policy.
+
+**Assumptions/Constraints**:
+- Assumes notification qua email, docs.
+- Constraint: Minimum 6 tháng notice.
+
+**Dependencies/Risks**:
+- Dependencies: None.
+- Risks: Client non-compliance → Mitigation: Clear docs.
+
+**Acceptance Criteria/Testable Items**:
+- Deprecation headers trả đúng.
+- Sunset theo timeline.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 08.8 OpenAPI Specification
+
+#### 08.8.1 OpenAPI Schema Per Service
+
+**References**: Part05_Non_Functional_Requirements (NFR-007), Part06_System_Architecture
+
+**Mục đích**: Cung cấp OpenAPI schemas cho mỗi service.
+
+**Ý nghĩa**: Tăng developer experience, dễ tích hợp với client, POS, CRM.
+
+**Cách làm**: Mô tả schema structure.
+
+**Nội dung cần có**:
+- **Schemas**:
+  - Campaign Management: `/api/v1/campaigns`, `/api/v1/barcodes`, `/api/v1/ads-formats`.
+  - Identity: `/api/v1/auth`, `/api/v1/users`, `/api/v1/consent`, `/api/v1/portal`.
+  - Redemption: `/api/v1/redemptions`.
+  - Analytics: `/api/v1/analytics`.
+  - Notification: `/api/v1/notifications`.
+  - Fraud: `/api/v1/fraud`.
+  - Intelligence: `/api/v1/intelligence`.
+- **Example** (Ads Format):
+  ```yaml
+  paths:
+    /api/v1/ads-formats:
+      post:
+        summary: Create ads format
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaign_id: {type: string, format: uuid}
+                  type: {type: string}
+                  content: {type: string}
+                  qr_zone: {type: object}
+                  qr_size: {type: integer}
+                  utm_tag: {type: string}
+        responses:
+          '201':
+            description: Created
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    id: {type: string, format: uuid}
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-007, Part06
+- **Thể hiện yêu cầu**: NFR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết OpenAPI schemas.
+
+**Assumptions/Constraints**:
+- Assumes OpenAPI 3.0.
+- Constraint: Schemas auto-generated.
+
+**Dependencies/Risks**:
+- Dependencies: Swagger tooling.
+- Risks: Schema drift → Mitigation: CI validation.
+
+**Acceptance Criteria/Testable Items**:
+- Schemas đúng với API contracts.
+- Validated bởi Swagger.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.8.2 Swagger Documentation
+
+**References**: Part05_Non_Functional_Requirements (NFR-007), Part06_System_Architecture
+
+**Mục đích**: Cung cấp Swagger docs cho APIs.
+
+**Ý nghĩa**: Tăng developer experience, hỗ trợ tích hợp.
+
+**Cách làm**: Mô tả Swagger setup.
+
+**Nội dung cần có**:
+- **Setup**:
+  - Swagger UI tại `/api/docs`.
+  - Auto-generated từ OpenAPI schemas.
+  - Hỗ trợ try-it-out cho non-auth endpoints.
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      participant Developer
+      participant SwaggerUI
+      Developer->>SwaggerUI: Access /api/docs
+      SwaggerUI-->>Developer: Render API Docs
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: NFR-007, Part06
+- **Thể hiện yêu cầu**: NFR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết Swagger docs.
+
+**Assumptions/Constraints**:
+- Assumes Swagger UI hosted on Gateway.
+- Constraint: Docs update real-time.
+
+**Dependencies/Risks**:
+- Dependencies: Swagger tooling.
+- Risks: Outdated docs → Mitigation: Auto-generation.
+
+**Acceptance Criteria/Testable Items**:
+- Swagger UI hiển thị đúng APIs.
+- Try-it-out hoạt động cho public endpoints.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
