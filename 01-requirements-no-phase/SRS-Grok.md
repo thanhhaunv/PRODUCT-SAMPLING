@@ -9322,28 +9322,31 @@ Part08_API_Design/
 | PM | [TBD] | - | - |
 | Tech Lead | [TBD] | - | - |
 
-#### 08.2.1.3 Ads Format APIs
+### 08.2.1.3 Ads Format APIs
 
-**References**: Part04_Functional_Requirements (FR-006), Part05_Non_Functional_Requirements (NFR-007), Part07_Database_Design (07.3.1.5 Ads Formats Table)
+**References**: Part04_Functional_Requirements (FR-006_Ads_Format_Management), Part05_Non_Functional_Requirements (NFR-007), Part07_Database_Design (07.3.1.5_Ads_Formats_Table)
 
-**Mục đích**: Định nghĩa APIs cho quản lý ads formats.
+**Mục đích**: Cung cấp endpoints để quản lý ads formats, bao gồm tạo, lấy, cập nhật, xóa và tạo QR code cho quảng cáo, hỗ trợ tracking scan-to-form cho quà mẫu giá thấp (~$1).
 
-**Ý nghĩa**: Hỗ trợ Brand Admin tạo landing pages, banners cho campaigns.
+**Ý nghĩa**: Hỗ trợ Brand Admin tùy chỉnh quảng cáo (flyer, poster, landing page) với QR code để tăng engagement, thu thập dữ liệu khách hàng.
 
-**Cách làm**: Mô tả endpoints với request/response schemas.
+**Cách làm**: Liệt kê endpoints, methods, request/response schemas, bao gồm QR code generation.
 
 **Nội dung cần có**:
 - **Endpoints**:
-  - `POST /api/v1/ads-formats`: Tạo ads format (Role: Brand Admin).
-    - Request: JSON `{campaign_id, type, content}`
-    - Response: 201 JSON `{ads_format_id}`
-  - `GET /api/v1/ads-formats/:id`: Lấy ads format (Role: Platform Admin, Brand Admin).
-    - Response: 200 JSON `{id, type, content}`
-  - `PUT /api/v1/ads-formats/:id`: Cập nhật ads format (Role: Brand Admin).
-    - Request: JSON `{type, content}`
-    - Response: 200 JSON `{updated_ads_format}`
-  - `DELETE /api/v1/ads-formats/:id`: Xóa ads format (Role: Platform Admin).
+  - `POST /api/v1/ads-formats`: Tạo ads format.
+    - Request: JSON `{campaign_id: UUID, type: string, content: string, qr_zone: JSONB, qr_size: integer, utm_tag: string}` 🆕
+    - Response: 201 JSON `{id: UUID}`
+  - `GET /api/v1/ads-formats/{id}`: Lấy ads format.
+    - Response: 200 JSON `{id: UUID, campaign_id: UUID, type: string, content: string, qr_zone: JSONB, qr_size: integer, utm_tag: string}` 🆕
+  - `PUT /api/v1/ads-formats/{id}`: Cập nhật ads format.
+    - Request: JSON `{type: string, content: string, qr_zone: JSONB, qr_size: integer, utm_tag: string}` 🆕
+    - Response: 200 JSON `{updated: boolean}`
+  - `DELETE /api/v1/ads-formats/{id}`: Xóa ads format.
     - Response: 204 No Content
+  - `POST /api/v1/ads-formats/qr-generate`: Tạo QR code cho ads format (Role: Brand Admin). 🆕
+    - Request: JSON `{ads_format_id: UUID, qr_zone: JSONB, qr_size: integer, utm_tag: string}`
+    - Response: 201 JSON `{qr_code_url: string}`
 - **Flow**:
   ```mermaid
   sequenceDiagram
@@ -9353,52 +9356,36 @@ Part08_API_Design/
       participant DB
       BrandAdmin->>API: POST /api/v1/ads-formats
       API->>Service: Validate JWT
-      Service->>DB: Insert ads format
+      Service->>DB: Insert into Ads_Formats
       DB-->>Service: Success
       Service-->>API: Ads Format ID
       API-->>BrandAdmin: 201 Created
+      BrandAdmin->>API: POST /api/v1/ads-formats/qr-generate
+      API->>Service: Validate JWT, Generate QR
+      Service-->>API: QR Code URL
+      API-->>BrandAdmin: 201 Created
   ```
-
-- **Endpoints** (thêm):
-  - `POST /api/v1/ads-formats/qr-generate`: Tạo QR code for ads format.
-    - Request: `{ads_format_id: UUID, utm_tag: string, qr_size: integer}`
-    - Response: 201 `{qr_code_url: string}` 🆕
-- **Flow** (thêm QR):
-  ```mermaid
-  sequenceDiagram
-      actor Admin
-      participant API
-      participant Service
-      participant DB
-      Admin->>API: POST /api/v1/ads-formats/qr-generate
-      API->>Service: Validate JWT
-      Service->>DB: Update Ads_Formats with QR details
-      DB-->>Service: Success
-      Service-->>API: QR URL
-      API-->>Admin: 201 Created
-  ```
-
-- **Assumptions/Constraints**: QR generation with UTM for tracking, size >=2cm 🆕
 
 **Tài liệu tham khảo**:
 - **Đầu vào từ**: FR-006, NFR-007, 07.3.1.5
 - **Thể hiện yêu cầu**: FR-006
 - **Kết nối với**: Part08.1_API_Overview
 
-**Mục đích của node này**: Chi tiết APIs cho Ads Format Management.
+**Mục đích của node này**: Chi tiết APIs cho Ads Format Management, bao gồm QR code generation để tăng scan rate.
 
 **Assumptions/Constraints**:
-- Assumes content là JSON/HTML string.
-- Constraint: File size <1MB.
+- Assumes content là HTML/JSON string, qr_zone là JSONB (e.g., `{"x": 10, "y": 10, "width": 5, "height": 5}`), qr_size >= 2cm, utm_tag cho tracking.
+- Constraint: File size <1MB, QR scannability đảm bảo với safe zone 1cm.
 
 **Dependencies/Risks**:
-- Dependencies: Campaign Management Service.
-- Risks: Invalid content → Mitigation: Validation.
+- Dependencies: Campaign Management Service, AWS S3 (QR storage).
+- Risks: Invalid QR content → Mitigation: Validation schema.
 
 **Acceptance Criteria/Testable Items**:
-- Endpoints CRUD ads format đúng.
-- Response time <500ms.
+- Endpoints CRUD ads format và QR generation đúng.
+- Response time <200ms.
 - RBAC áp dụng, unauthorized trả 401.
+- QR code scan dẫn đến landing page với UTM tracking.
 
 **Approval Sign-Off**:
 | Role | Name | Signature | Date |
