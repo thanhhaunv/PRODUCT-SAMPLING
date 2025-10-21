@@ -377,6 +377,7 @@ PSP_SRS_V2/
 │   │   │   ├── 08.2.1.1_Campaign_APIs.md
 │   │   │   ├── 08.2.1.2_Barcode_APIs.md
 │   │   │   └── 08.2.1.3_Ads_Format_APIs.md 🆕
+│   │   │   └── 08.2.1.4_QR_Generate_APIs.md 🆕
 │   │   │
 │   │   ├── 08.2.2_Identity_Service_APIs/ 🔄
 │   │   │   ├── 08.2.2.1_Authentication_APIs.md
