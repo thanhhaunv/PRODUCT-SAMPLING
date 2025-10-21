@@ -374,6 +374,7 @@ Quản lý các templates và formats cho campaign assets bao gồm landing page
   - **Kích Thước & Dimensions**: Quản lý specs cho mỗi format 🆕
   - **Responsive Design**: Mobile, tablet, desktop variants 🆕
   - **Asset Requirements**: Image dimensions, file sizes, copy limits 🆕
+  - **QR**: QR code generation with zone specification, size, safe zone, UTM tags for tracking scan-to-form completion 🆕
 
 - **Asset Management** 🆕
   - **Image Library**: Upload, crop, resize images 🆕
@@ -824,7 +825,7 @@ graph TD
 
 | Service | Primary Features | Supporting Features 🆕 |
 |---------|-----------------|------------------------|
-| **Campaign Management Service** 🆕 | Campaign Management, Barcode Management, Ads Format Management 🆕 | A/B Testing (variants) 🆕 |
+| **Campaign Management Service** 🆕 | Campaign Management, Barcode Management, Ads Format Management 🆕; QR Code Integration: Owned by Campaign Management Service, dependencies with Ads Format 🆕 | A/B Testing (variants) 🆕 |
 | **Identity Service** 🆕 | User Authentication, User Management 🆕 | Fraud detection (data) 🆕, Recommendations 🆕 |
 | **Redemption Service** | Barcode Redemption | Fraud detection (patterns) 🆕 |
 | **Analytics Service** | Real-time Analytics, Advanced Reporting 🆕 | A/B Testing (tracking) 🆕, Recommendations (training) 🆕 |
@@ -933,6 +934,7 @@ graph TD
 | **A/B Test** 🆕 | Experiment so sánh campaign variants 🆕 |
 | **Recommendation** 🆕 | ML-generated campaign suggestions cho users 🆕 |
 | **Ads Format** 🆕 | Templates cho campaign assets (landing pages, banners, emails) 🆕 |
+| **QR Code** 🆕 | Mã vạch 2D cho ads formats, hỗ trợ tracking UTM và unique per flyer 🆕 |
 
 ---
 
