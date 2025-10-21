@@ -114,6 +114,7 @@ PSP_SRS_V2/
 │   │       ├── 04.2.6.4_Asset_Management.md 🆕
 │   │       ├── 04.2.6.5_Service_Ownership.md 🆕
 │   │       └── 04.2.6.6_Acceptance_Criteria.md 🆕
+│   │       └── 04.2.6.7_QR_Code_Integration.md 🆕
 │   │
 │   ├── 04.3_Operational_Features/ 🔄 (4 features)
 │   │   ├── 04.3.1_FR-007_Barcode_Redemption/
