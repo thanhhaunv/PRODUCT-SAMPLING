@@ -1,11 +1,18 @@
 Cấu trúc mở rộng hoàn chỉnh, dùng được cho cả SRS (requirement-level) và SDS (design-level), giúp dev code(và placeholder) ngay không hỏi lại:
+
+
 🧩 Cấu trúc chuẩn mỗi node (Full Extended SRS/SDS Hybrid)
+
 1️⃣ References
 → BRD.md, System_Feature_Tree.md, Access_Control_Tree_Grok.md, Architecture Guidelines, Design System, API Spec...
+
 2️⃣ Purpose / Ý nghĩa / Cách làm
 → Tại sao có phần này, thuộc module/service nào, mục tiêu business & kỹ thuật.
+
 3️⃣ Specifications / Main Content
+
 Tùy loại node:
+
 🔹 Nếu là Functional / API / Logic
 
 * Input / Output Specification
@@ -93,9 +100,13 @@ Tùy loại node:
 * Integration / Security
 
 8️⃣ Approval Sign-Off
+
 Role Name Signature Date
+
 9️⃣ (Optional) Design Extension Section
+
 💡 Dành riêng cho Dev/Architect
+
 
 * UML Class Diagram / Abstract Interfaces
 
