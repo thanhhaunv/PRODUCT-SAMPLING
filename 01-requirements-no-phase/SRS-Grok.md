@@ -11477,3 +11477,1040 @@ Part08_API_Design/
 | PM | [TBD] | - | - |
 | Tech Lead | [TBD] | - | - |
 
+
+# Part09 - Use Cases (Session 1)
+
+## Structure of Part09 (Session 1)
+```
+Part09_Use_Cases/
+├── 09.1_Use_Case_Overview.md 🔄
+├── 09.2_Core_Use_Cases/
+│   ├── 09.2.1_UC-001_Create_Campaign/
+│   │   ├── 09.2.1.1_Basic_Flow.md
+│   │   ├── 09.2.1.2_Alternative_Flows.md
+│   │   ├── 09.2.1.3_Exception_Flows.md
+│   │   └── 09.2.1.4_Sequence_Diagram.md 🔄
+│   ├── 09.2.2_UC-002_Import_Barcodes/
+│   │   ├── 09.2.2.1_Basic_Flow.md
+│   │   ├── 09.2.2.2_Alternative_Flows.md
+│   │   ├── 09.2.2.3_Exception_Flows.md
+│   │   └── 09.2.2.4_Sequence_Diagram.md
+│   ├── 09.2.3_UC-003_User_Registration/
+│   │   ├── 09.2.3.1_Basic_Flow.md
+│   │   ├── 09.2.3.2_Alternative_Flows.md
+│   │   ├── 09.2.3.3_Exception_Flows.md
+│   │   └── 09.2.3.4_Sequence_Diagram.md 🔄
+│   ├── 09.2.4_UC-004_Verify_OTP/
+│   │   ├── 09.2.4.1_Basic_Flow.md
+│   │   ├── 09.2.4.2_Alternative_Flows.md
+│   │   ├── 09.2.4.3_Exception_Flows.md
+│   │   └── 09.2.4.4_Sequence_Diagram.md
+```
+
+---
+
+### 09.2 Core Use Cases
+
+#### 09.2.1 UC-001 Create Campaign
+
+##### 09.2.1.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-001_Campaign_Management), Part08_API_Design (08.2.1.1_Campaign_APIs)
+
+**Actor**: Brand Admin
+
+**Mục đích**: Tạo campaign để phát quà thấp giá (~$1) với QR code integration.
+
+**Preconditions**:
+- Brand Admin đã đăng nhập, có quyền `campaign_create`.
+
+**Basic Flow**:
+1. Brand Admin truy cập dashboard, chọn "Create Campaign".
+2. Nhập thông tin: tên, ngày bắt đầu/kết thúc, budget, ads format (QR code).
+3. Hệ thống validate input, lưu campaign vào DB.
+4. Hệ thống trả campaign_id và trạng thái "Created".
+
+**Postconditions**:
+- Campaign được tạo, sẵn sàng cho barcode import và ads distribution.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-001, 08.2.1.1
+- **Thể hiện yêu cầu**: FR-001
+
+**Mục đích của node này**: Mô tả flow tạo campaign với QR code.
+
+##### 09.2.1.2 Alternative Flows
+- **A1**: Brand Admin chọn template ads format có sẵn → Hệ thống áp dụng template, lưu campaign.
+- **A2**: Campaign có location-based targeting → Nhập thêm location_id.
+
+##### 09.2.1.3 Exception Flows
+- **E1**: Input không hợp lệ (e.g., budget <0) → Hệ thống trả error 400.
+- **E2**: Unauthorized access → Hệ thống trả error 401.
+
+##### 09.2.1.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor BrandAdmin
+    participant UI
+    participant API
+    participant CampaignService
+    participant DB
+    BrandAdmin->>UI: Click "Create Campaign"
+    UI->>API: POST /api/v1/campaigns
+    API->>CampaignService: Validate JWT, Input
+    CampaignService->>DB: Insert Campaigns
+    DB-->>CampaignService: Success
+    CampaignService-->>API: Campaign ID
+    API-->>UI: 201 Created
+    UI-->>BrandAdmin: Show Campaign ID
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.2.2 UC-002 Import Barcodes
+
+##### 09.2.2.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-002_Barcode_Management), Part08_API_Design (08.2.1.2_Barcode_APIs)
+
+**Actor**: Brand Admin
+
+**Mục đích**: Import barcodes cho campaign để phát quà thấp giá.
+
+**Preconditions**:
+- Campaign đã được tạo (UC-001).
+- Brand Admin có quyền `barcode_import`.
+
+**Basic Flow**:
+1. Brand Admin truy cập dashboard, chọn "Import Barcodes".
+2. Upload file CSV chứa barcode data (code, campaign_id).
+3. Hệ thống validate file, lưu barcodes vào DB.
+4. Hệ thống trả số lượng barcodes imported.
+
+**Postconditions**:
+- Barcodes sẵn sàng cho issuance.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-002, 08.2.1.2
+- **Thể hiện yêu cầu**: FR-002
+
+**Mục đích của node này**: Mô tả flow import barcodes.
+
+##### 09.2.2.2 Alternative Flows
+- **A1**: Import qua API → Gửi POST request với JSON payload.
+- **A2**: Partial import → Lưu barcodes hợp lệ, báo lỗi cho invalid entries.
+
+##### 09.2.2.3 Exception Flows
+- **E1**: File CSV sai format → Hệ thống trả error 400.
+- **E2**: Campaign_id không tồn tại → Hệ thống trả error 404.
+
+##### 09.2.2.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor BrandAdmin
+    participant UI
+    participant API
+    participant CampaignService
+    participant DB
+    BrandAdmin->>UI: Upload CSV
+    UI->>API: POST /api/v1/barcodes/import
+    API->>CampaignService: Validate JWT, CSV
+    CampaignService->>DB: Insert Barcodes
+    DB-->>CampaignService: Success
+    CampaignService-->>API: Import Count
+    API-->>UI: 200 OK
+    UI-->>BrandAdmin: Show Import Count
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.2.3 UC-003 User Registration
+
+##### 09.2.3.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-004_User_Management), Part08_API_Design (08.2.2.2_User_APIs, 08.2.2.3_Consent_APIs)
+
+**Actor**: Customer
+
+**Mục đích**: Đăng ký tài khoản để tham gia campaign, nhận quà thấp giá (~$1) qua QR scan.
+
+**Preconditions**:
+- Customer truy cập PWA qua QR code.
+
+**Basic Flow**:
+1. Customer scan QR code, vào landing page.
+2. Nhập thông tin: email, phone, name, consent (marketing, data sharing).
+3. Hệ thống gửi OTP qua email/phone.
+4. Customer nhập OTP, hệ thống validate.
+5. Hệ thống lưu user vào DB, trả user_id.
+
+**Postconditions**:
+- User được tạo, sẵn sàng nhận barcode.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-004, 08.2.2.2, 08.2.2.3
+- **Thể hiện yêu cầu**: FR-004
+
+**Mục đích của node này**: Mô tả flow đăng ký user với QR và OTP.
+
+##### 09.2.3.2 Alternative Flows
+- **A1**: Đăng ký qua social login (Google, Facebook) → Hệ thống map social ID.
+- **A2**: Consent chỉ cho marketing → Hệ thống lưu consent giới hạn.
+
+##### 09.2.3.3 Exception Flows
+- **E1**: Email/phone đã tồn tại → Hệ thống trả error 409.
+- **E2**: OTP sai → Hệ thống trả error 400.
+
+##### 09.2.3.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant PWA
+    participant API
+    participant IdentityService
+    participant NotificationService
+    participant DB
+    Customer->>PWA: Scan QR, Submit Form
+    PWA->>API: POST /api/v1/users
+    API->>IdentityService: Validate Input
+    IdentityService->>NotificationService: Request OTP
+    NotificationService->>DB: Insert OTP_Records
+    DB-->>NotificationService: Success
+    NotificationService-->>IdentityService: OTP ID
+    IdentityService-->>API: OTP Sent
+    API-->>PWA: 200 OK
+    Customer->>PWA: Enter OTP
+    PWA->>API: POST /api/v1/notifications/otp/verify
+    API->>IdentityService: Verify OTP
+    IdentityService->>DB: Insert Users
+    DB-->>IdentityService: Success
+    IdentityService-->>API: User ID
+    API-->>PWA: 200 OK
+    PWA-->>Customer: Show Success
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.2.4 UC-004 Verify OTP
+
+##### 09.2.4.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-005_OTP_Verification), Part08_API_Design (08.2.5.1_OTP_APIs)
+
+**Actor**: Customer
+
+**Mục đích**: Xác thực OTP để hoàn thành đăng ký hoặc form submission cho quà thấp giá.
+
+**Preconditions**:
+- OTP đã được gửi (UC-003).
+- Customer có OTP ID.
+
+**Basic Flow**:
+1. Customer nhận OTP qua email/phone.
+2. Nhập OTP vào PWA.
+3. Hệ thống validate OTP, cập nhật trạng thái user.
+4. Hệ thống trả kết quả xác thực.
+
+**Postconditions**:
+- OTP verified, user được xác thực.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-005, 08.2.5.1
+- **Thể hiện yêu cầu**: FR-005
+
+**Mục đích của node này**: Mô tả flow xác thực OTP.
+
+##### 09.2.4.2 Alternative Flows
+- **A1**: Resend OTP → Hệ thống gửi lại OTP mới.
+- **A2**: OTP qua SMS thay vì email → Hệ thống gửi qua channel khác.
+
+##### 09.2.4.3 Exception Flows
+- **E1**: OTP hết hạn (5 phút) → Hệ thống trả error 400.
+- **E2**: OTP sai quá 3 lần → Hệ thống khóa OTP, yêu cầu resend.
+
+##### 09.2.4.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant PWA
+    participant API
+    participant NotificationService
+    participant DB
+    Customer->>PWA: Enter OTP
+    PWA->>API: POST /api/v1/notifications/otp/verify
+    API->>NotificationService: Validate OTP
+    NotificationService->>DB: Check OTP_Records
+    DB-->>NotificationService: Valid
+    NotificationService-->>API: Verified
+    API-->>PWA: 200 OK
+    PWA-->>Customer: Show Success
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part09 - Use Cases (Session 2)
+
+## Structure of Part09 (Session 2)
+```
+Part09_Use_Cases/
+├── 09.2_Core_Use_Cases/
+│   ├── 09.2.5_UC-005_Issue_Barcode/
+│   │   ├── 09.2.5.1_Basic_Flow.md
+│   │   ├── 09.2.5.2_Alternative_Flows.md
+│   │   ├── 09.2.5.3_Exception_Flows.md
+│   │   └── 09.2.5.4_Sequence_Diagram.md 🔄
+│   ├── 09.2.6_UC-006_Redeem_Barcode/
+│   │   ├── 09.2.6.1_Basic_Flow.md
+│   │   ├── 09.2.6.2_Alternative_Flows.md
+│   │   ├── 09.2.6.3_Exception_Flows.md
+│   │   └── 09.2.6.4_Sequence_Diagram.md 🔄
+│   ├── 09.2.7_UC-007_View_Analytics/
+│   │   ├── 09.2.7.1_Basic_Flow.md
+│   │   ├── 09.2.7.2_Alternative_Flows.md
+│   │   ├── 09.2.7.3_Exception_Flows.md
+│   │   └── 09.2.7.4_Sequence_Diagram.md
+│   ├── 09.2.8_UC-008_Sync_To_CRM/
+│   │   ├── 09.2.8.1_Basic_Flow.md
+│   │   ├── 09.2.8.2_Alternative_Flows.md
+│   │   ├── 09.2.8.3_Exception_Flows.md
+│   │   └── 09.2.8.4_Sequence_Diagram.md
+```
+
+---
+
+### 09.2 Core Use Cases
+
+#### 09.2.5 UC-005 Issue Barcode
+
+##### 09.2.5.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-002_Barcode_Management), Part08_API_Design (08.2.1.2_Barcode_APIs)
+
+**Actor**: Customer, System
+
+**Mục đích**: Phát hành barcode cho Customer sau khi hoàn thành form đăng ký qua QR code để nhận quà thấp giá (~$1).
+
+**Preconditions**:
+- Customer đã đăng ký và xác thực OTP (UC-003, UC-004).
+- Campaign có barcodes sẵn (UC-002).
+
+**Basic Flow**:
+1. Customer hoàn thành form trên landing page (PWA).
+2. Hệ thống kiểm tra user_id và campaign_id.
+3. Hệ thống chọn barcode từ pool, gán cho user_id.
+4. Hệ thống lưu barcode issuance vào DB, gửi barcode qua PWA/email.
+5. Customer nhận barcode (QR code hoặc text).
+
+**Postconditions**:
+- Barcode được gán, sẵn sàng để redeem.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-002, 08.2.1.2
+- **Thể hiện yêu cầu**: FR-002
+
+**Mục đích của node này**: Mô tả flow phát hành barcode với QR code.
+
+##### 09.2.5.2 Alternative Flows
+- **A1**: Barcode gửi qua SMS thay vì email → Hệ thống gửi qua channel khác.
+- **A2**: Auto-issue barcode sau OTP verification → Bỏ qua bước form riêng.
+
+##### 09.2.5.3 Exception Flows
+- **E1**: Không còn barcode trong pool → Hệ thống trả error 400.
+- **E2**: User không đủ điều kiện (e.g., no consent) → Hệ thống trả error 403.
+
+##### 09.2.5.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant PWA
+    participant API
+    participant CampaignService
+    participant IdentityService
+    participant DB
+    Customer->>PWA: Complete Form
+    PWA->>API: POST /api/v1/barcodes/issue
+    API->>IdentityService: Validate user_id
+    IdentityService-->>API: Valid
+    API->>CampaignService: Issue Barcode
+    CampaignService->>DB: Update Barcodes
+    DB-->>CampaignService: Success
+    CampaignService-->>API: Barcode Data
+    API-->>PWA: 200 OK
+    PWA-->>Customer: Show Barcode
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.2.6 UC-006 Redeem Barcode
+
+##### 09.2.6.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-003_Redemption), Part08_API_Design (08.2.3.1_Redemption_APIs)
+
+**Actor**: Customer, POS Staff
+
+**Mục đích**: Redeem barcode tại điểm POS để nhận quà thấp giá (~$1).
+
+**Preconditions**:
+- Customer có barcode hợp lệ (UC-005).
+- POS Staff có quyền `barcode_redeem`.
+
+**Basic Flow**:
+1. Customer xuất trình barcode (QR code/text) tại POS.
+2. POS Staff scan barcode qua POS app.
+3. Hệ thống validate barcode_id, user_id, campaign_id.
+4. Hệ thống đánh dấu barcode là redeemed, lưu log.
+5. Hệ thống thông báo thành công, Customer nhận quà.
+
+**Postconditions**:
+- Barcode marked as redeemed, quà được phát.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-003, 08.2.3.1
+- **Thể hiện yêu cầu**: FR-003
+
+**Mục đích của node này**: Mô tả flow redeem barcode.
+
+##### 09.2.6.2 Alternative Flows
+- **A1**: Redeem qua PWA (self-service) → Customer scan QR tại kiosk.
+- **A2**: Offline redemption → Sync khi POS online (08.2.3.2).
+
+##### 09.2.6.3 Exception Flows
+- **E1**: Barcode không hợp lệ/đã redeem → Hệ thống trả error 400.
+- **E2**: POS Staff không có quyền → Hệ thống trả error 403.
+
+##### 09.2.6.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor Customer
+    actor POSStaff
+    participant POSApp
+    participant API
+    participant RedemptionService
+    participant DB
+    Customer->>POSStaff: Show Barcode
+    POSStaff->>POSApp: Scan Barcode
+    POSApp->>API: POST /api/v1/redemptions
+    API->>RedemptionService: Validate Barcode
+    RedemptionService->>DB: Update Barcodes
+    DB-->>RedemptionService: Success
+    RedemptionService-->>API: Redeemed
+    API-->>POSApp: 200 OK
+    POSApp-->>POSStaff: Show Success
+    POSStaff-->>Customer: Deliver Gift
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.2.7 UC-007 View Analytics
+
+##### 09.2.7.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-008_Analytics), Part08_API_Design (08.2.4.1_Dashboard_APIs, 08.2.4.2_Funnel_Metrics_APIs, 08.2.4.3_Cohort_Analysis_APIs)
+
+**Actor**: Brand Admin
+
+**Mục đích**: Xem analytics (dashboard, funnel, cohort) để đánh giá hiệu quả campaign quà thấp giá (~$1).
+
+**Preconditions**:
+- Brand Admin đã đăng nhập, có quyền `analytics_view`.
+
+**Basic Flow**:
+1. Brand Admin truy cập dashboard, chọn campaign.
+2. Hệ thống hiển thị metrics: total scans, forms, redemptions, conversion rate.
+3. Brand Admin chọn funnel hoặc cohort analysis.
+4. Hệ thống trả dữ liệu theo yêu cầu (e.g., drop-off rates, cohort metrics).
+5. Brand Admin xem kết quả trên UI.
+
+**Postconditions**:
+- Brand Admin nhận insights để tối ưu campaign.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-008, 08.2.4.1, 08.2.4.2, 08.2.4.3
+- **Thể hiện yêu cầu**: FR-008
+
+**Mục đích của node này**: Mô tả flow xem analytics.
+
+##### 09.2.7.2 Alternative Flows
+- **A1**: Export analytics report → Hệ thống tạo file CSV.
+- **A2**: Filter theo location/time → Hệ thống trả dữ liệu filtered.
+
+##### 09.2.7.3 Exception Flows
+- **E1**: Campaign không có dữ liệu → Hệ thống trả empty response.
+- **E2**: Unauthorized access → Hệ thống trả error 401.
+
+##### 09.2.7.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor BrandAdmin
+    participant UI
+    participant API
+    participant AnalyticsService
+    participant DB
+    BrandAdmin->>UI: Select Campaign
+    UI->>API: GET /api/v1/analytics/dashboard
+    API->>AnalyticsService: Validate JWT
+    AnalyticsService->>DB: Query Analytics_Events
+    DB-->>AnalyticsService: Metrics
+    AnalyticsService-->>API: Aggregated Data
+    API-->>UI: 200 OK
+    UI-->>BrandAdmin: Show Dashboard
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.2.8 UC-008 Sync To CRM
+
+##### 09.2.8.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-010_CRM_Integration), Part08_API_Design (08.2.5.5_CRM_Sync_APIs)
+
+**Actor**: System
+
+**Mục đích**: Đồng bộ dữ liệu user từ form submission (QR scan) vào CRM (HubSpot, Salesforce).
+
+**Preconditions**:
+- User đã đăng ký và cung cấp consent (UC-003).
+- CRM integration được cấu hình.
+
+**Basic Flow**:
+1. System phát hiện new user/form submission.
+2. Hệ thống thu thập dữ liệu: user_id, email, phone, name, consent.
+3. Hệ thống gửi dữ liệu tới CRM qua API.
+4. CRM xác nhận sync thành công.
+5. Hệ thống lưu log sync vào DB.
+
+**Postconditions**:
+- User data có trong CRM, sẵn sàng cho marketing.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-010, 08.2.5.5
+- **Thể hiện yêu cầu**: FR-010
+
+**Mục đích của node này**: Mô tả flow đồng bộ CRM.
+
+##### 09.2.8.2 Alternative Flows
+- **A1**: Partial sync (chỉ email, phone) → Hệ thống sync dữ liệu có sẵn.
+- **A2**: Async sync qua queue → Hệ thống đẩy vào queue, xử lý sau.
+
+##### 09.2.8.3 Exception Flows
+- **E1**: CRM API failure → Hệ thống retry 3 lần, log error.
+- **E2**: Missing consent → Hệ thống bỏ qua sync, log warning.
+
+##### 09.2.8.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant System
+    participant API
+    participant NotificationService
+    participant CRM
+    participant DB
+    System->>API: POST /api/v1/notifications/crm-sync
+    API->>NotificationService: Validate Data
+    NotificationService->>CRM: Sync User Data
+    CRM-->>NotificationService: Success
+    NotificationService->>DB: Insert CRM_Sync_Logs
+    DB-->>NotificationService: Success
+    NotificationService-->>API: Sync ID
+    API-->>System: 200 OK
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+# Part09 - Use Cases (Session 3)
+
+## Structure of Part09 (Session 3)
+```
+Part09_Use_Cases/
+├── 09.3_Advanced_Use_Cases/
+│   ├── 09.3.1_UC-009_Detect_Fraud/
+│   │   ├── 09.3.1.1_Basic_Flow.md
+│   │   ├── 09.3.1.2_Alternative_Flows.md
+│   │   ├── 09.3.1.3_Exception_Flows.md
+│   │   └── 09.3.1.4_Sequence_Diagram.md
+│   ├── 09.3.2_UC-010_Manage_Consent/
+│   │   ├── 09.3.2.1_Basic_Flow.md
+│   │   ├── 09.3.2.2_Alternative_Flows.md
+│   │   ├── 09.3.2.3_Exception_Flows.md
+│   │   └── 09.3.2.4_Sequence_Diagram.md
+│   ├── 09.3.3_UC-011_Analyze_Cohorts/
+│   │   ├── 09.3.3.1_Basic_Flow.md
+│   │   ├── 09.3.3.2_Alternative_Flows.md
+│   │   ├── 09.3.3.3_Exception_Flows.md
+│   │   └── 09.3.3.4_Sequence_Diagram.md
+├── 09.4_Intelligence_Use_Cases/
+│   ├── 09.4.1_UC-012_Run_AB_Test/
+│   │   ├── 09.4.1.1_Basic_Flow.md
+│   │   ├── 09.4.1.2_Alternative_Flows.md
+│   │   ├── 09.4.1.3_Exception_Flows.md
+│   │   └── 09.4.1.4_Sequence_Diagram.md
+│   ├── 09.4.2_UC-013_Generate_Recommendations/
+│   │   ├── 09.4.2.1_Basic_Flow.md
+│   │   ├── 09.4.2.2_Alternative_Flows.md
+│   │   ├── 09.4.2.3_Exception_Flows.md
+│   │   └── 09.4.2.4_Sequence_Diagram.md
+│   ├── 09.4.3_UC-014_Create_Custom_Report/
+│   │   ├── 09.4.3.1_Basic_Flow.md
+│   │   ├── 09.4.3.2_Alternative_Flows.md
+│   │   ├── 09.4.3.3_Exception_Flows.md
+│   │   └── 09.4.3.4_Sequence_Diagram.md
+├── 09.5_Use_Case_Traceability_Matrix.md
+```
+
+---
+
+### 09.3 Advanced Use Cases
+
+#### 09.3.1 UC-009 Detect Fraud
+
+##### 09.3.1.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-011_Fraud_Detection), Part08_API_Design (08.2.6.1_Fraud_Check_APIs, 08.2.6.4_Fraud_Alerts_APIs)
+
+**Actor**: System, Platform Admin
+
+**Mục đích**: Phát hiện hành vi gian lận trong đăng ký form hoặc redeem quà thấp giá (~$1) qua QR code.
+
+**Preconditions**:
+- User thực hiện hành động (form submission, redemption).
+- Fraud Service được cấu hình với rules và ML model.
+
+**Basic Flow**:
+1. User gửi form hoặc redeem barcode.
+2. System thu thập device_info, user_id, action_type.
+3. Fraud Service tính fraud_score dựa trên rules và ML model.
+4. Nếu fraud_score >0.8, System gửi alert tới Platform Admin.
+5. System log sự kiện vào Fraud_Events table.
+
+**Postconditions**:
+- Fraud được phát hiện, alert gửi nếu cần.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-011, 08.2.6.1, 08.2.6.4
+- **Thể hiện yêu cầu**: FR-011
+
+**Mục đích của node này**: Mô tả flow phát hiện fraud để bảo vệ campaign.
+
+##### 09.3.1.2 Alternative Flows
+- **A1**: Manual review → Platform Admin xem alert và quyết định hành động.
+- **A2**: Low fraud_score (<0.5) → System cho phép hành động tiếp tục.
+
+##### 09.3.1.3 Exception Flows
+- **E1**: Fraud Service lỗi → System fallback to default rules, log error.
+- **E2**: Thiếu device_info → System trả error 400.
+
+##### 09.3.1.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor User
+    participant API
+    participant FraudService
+    participant NotificationService
+    participant DB
+    User->>API: POST /api/v1/redemptions
+    API->>FraudService: Check Fraud
+    FraudService->>DB: Query Fraud_Events
+    DB-->>FraudService: Data
+    FraudService->>NotificationService: Send Alert if fraud_score >0.8
+    NotificationService->>DB: Insert Fraud_Alerts
+    NotificationService-->>FraudService: Success
+    FraudService-->>API: Fraud Result
+    API-->>User: 200 OK or Error
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.3.2 UC-010 Manage Consent
+
+##### 09.3.2.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-004_User_Management), Part08_API_Design (08.2.2.3_Consent_APIs)
+
+**Actor**: Customer, Platform Admin
+
+**Mục đích**: Quản lý consent (opt-in/out) để tuân thủ GDPR/PDPA và tăng trust khi đăng ký quà thấp giá.
+
+**Preconditions**:
+- Customer đã đăng ký (UC-003).
+- Customer/Platform Admin có quyền `consent_manage`.
+
+**Basic Flow**:
+1. Customer truy cập PWA, vào mục Preferences.
+2. Customer chọn opt-in/out cho marketing/data sharing.
+3. Hệ thống validate request, lưu consent vào Consent_History table.
+4. Hệ thống trả xác nhận cập nhật.
+
+**Postconditions**:
+- Consent được cập nhật, tuân thủ pháp lý.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-004, 08.2.2.3
+- **Thể hiện yêu cầu**: FR-004
+
+**Mục đích của node này**: Mô tả flow quản lý consent.
+
+##### 09.3.2.2 Alternative Flows
+- **A1**: Platform Admin cập nhật consent thay Customer → Gửi request qua API.
+- **A2**: Bulk consent update → Platform Admin upload CSV.
+
+##### 09.3.2.3 Exception Flows
+- **E1**: Consent không hợp lệ → Hệ thống trả error 400.
+- **E2**: Unauthorized access → Hệ thống trả error 401.
+
+##### 09.3.2.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant PWA
+    participant API
+    participant IdentityService
+    participant DB
+    Customer->>PWA: Update Consent
+    PWA->>API: POST /api/v1/consent/opt-in
+    API->>IdentityService: Validate JWT
+    IdentityService->>DB: Insert Consent_History
+    DB-->>IdentityService: Success
+    IdentityService-->>API: Consent ID
+    API-->>PWA: 200 OK
+    PWA-->>Customer: Show Success
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.3.3 UC-011 Analyze Cohorts
+
+##### 09.3.3.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-008_Analytics), Part08_API_Design (08.2.4.3_Cohort_Analysis_APIs)
+
+**Actor**: Brand Admin
+
+**Mục đích**: Phân tích cohort để đánh giá hành vi khách hàng theo nhóm (campaign, location, ads format) cho quà thấp giá.
+
+**Preconditions**:
+- Brand Admin đã đăng nhập, có quyền `analytics_view`.
+- Campaign có dữ liệu analytics.
+
+**Basic Flow**:
+1. Brand Admin truy cập dashboard, chọn "Cohort Analysis".
+2. Chọn campaign_id, date range, group_by (e.g., location, ads format).
+3. Hệ thống truy vấn Analytics_Events, tính metrics (scans, forms, redemptions).
+4. Hệ thống hiển thị cohort data trên UI.
+
+**Postconditions**:
+- Brand Admin nhận insights để tối ưu campaign.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-008, 08.2.4.3
+- **Thể hiện yêu cầu**: FR-008
+
+**Mục đích của node này**: Mô tả flow phân tích cohort.
+
+##### 09.3.3.2 Alternative Flows
+- **A1**: Export cohort data → Hệ thống tạo file CSV.
+- **A2**: Custom group_by (e.g., device type) → Hệ thống xử lý thêm filter.
+
+##### 09.3.3.3 Exception Flows
+- **E1**: Không có dữ liệu → Hệ thống trả empty response.
+- **E2**: Unauthorized access → Hệ thống trả error 401.
+
+##### 09.3.3.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor BrandAdmin
+    participant UI
+    participant API
+    participant AnalyticsService
+    participant DB
+    BrandAdmin->>UI: Select Cohort Analysis
+    UI->>API: GET /api/v1/analytics/cohorts
+    API->>AnalyticsService: Validate JWT
+    AnalyticsService->>DB: Query Analytics_Events
+    DB-->>AnalyticsService: Cohort Data
+    AnalyticsService-->>API: Metrics
+    API-->>UI: 200 OK
+    UI-->>BrandAdmin: Show Cohort Data
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 09.4 Intelligence Use Cases
+
+#### 09.4.1 UC-012 Run A/B Test
+
+##### 09.4.1.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-012_AB_Testing), Part08_API_Design (08.2.7.1_AB_Testing_APIs)
+
+**Actor**: Brand Admin
+
+**Mục đích**: Chạy A/B test để so sánh hiệu quả ads formats, tối ưu scan-to-form rate (>80%).
+
+**Preconditions**:
+- Brand Admin có quyền `ab_test_manage`.
+- Campaign có nhiều ads formats.
+
+**Basic Flow**:
+1. Brand Admin truy cập dashboard, chọn "Run A/B Test".
+2. Chọn campaign_id, ads_format_ids, split_ratio.
+3. Hệ thống validate input, khởi chạy A/B test.
+4. Hệ thống phân phối ads formats, thu thập metrics.
+5. Hệ thống hiển thị kết quả trên UI.
+
+**Postconditions**:
+- A/B test chạy, kết quả sẵn sàng để xem.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-012, 08.2.7.1
+- **Thể hiện yêu cầu**: FR-012
+
+**Mục đích của node này**: Mô tả flow chạy A/B test.
+
+##### 09.4.1.2 Alternative Flows
+- **A1**: Auto-select ads formats → Hệ thống chọn dựa trên historical data.
+- **A2**: Pause test → Brand Admin tạm dừng test, lưu trạng thái.
+
+##### 09.4.1.3 Exception Flows
+- **E1**: Invalid split_ratio → Hệ thống trả error 400.
+- **E2**: Unauthorized access → Hệ thống trả error 401.
+
+##### 09.4.1.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor BrandAdmin
+    participant UI
+    participant API
+    participant IntelligenceService
+    participant DB
+    BrandAdmin->>UI: Run A/B Test
+    UI->>API: POST /api/v1/intelligence/ab-tests
+    API->>IntelligenceService: Validate JWT
+    IntelligenceService->>DB: Insert AB_Tests
+    DB-->>IntelligenceService: Success
+    IntelligenceService-->>API: Test ID
+    API-->>UI: 201 Created
+    UI-->>BrandAdmin: Show Test ID
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.4.2 UC-013 Generate Recommendations
+
+##### 09.4.2.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-013_Recommendation_Engine), Part08_API_Design (08.2.7.2_Recommendation_APIs)
+
+**Actor**: Brand Admin, System
+
+**Mục đích**: Tạo gợi ý ads formats/campaigns dựa trên ML để tăng engagement quà thấp giá.
+
+**Preconditions**:
+- Brand Admin có quyền `recommendation_view`.
+- ML model đã được train.
+
+**Basic Flow**:
+1. Brand Admin truy cập dashboard, chọn "Recommendations".
+2. Hệ thống truy vấn ML model với campaign_id/user_id.
+3. Hệ thống trả danh sách ads_format_ids với score.
+4. Hệ thống hiển thị recommendations trên UI.
+
+**Postconditions**:
+- Recommendations sẵn sàng để áp dụng.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-013, 08.2.7.2
+- **Thể hiện yêu cầu**: FR-013
+
+**Mục đích của node này**: Mô tả flow tạo recommendations.
+
+##### 09.4.2.2 Alternative Flows
+- **A1**: Auto-apply recommendations → Hệ thống tự động chọn ads format.
+- **A2**: Recommendations cho user cụ thể → Gửi user_id thay campaign_id.
+
+##### 09.4.2.3 Exception Flows
+- **E1**: ML model lỗi → Hệ thống fallback to default ads format.
+- **E2**: Unauthorized access → Hệ thống trả error 401.
+
+##### 09.4.2.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor BrandAdmin
+    participant UI
+    participant API
+    participant IntelligenceService
+    participant DB
+    BrandAdmin->>UI: Request Recommendations
+    UI->>API: GET /api/v1/intelligence/recommendations
+    API->>IntelligenceService: Validate JWT
+    IntelligenceService->>DB: Query Recommendations
+    DB-->>IntelligenceService: Data
+    IntelligenceService-->>API: Recommendations
+    API-->>UI: 200 OK
+    UI-->>BrandAdmin: Show Recommendations
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+#### 09.4.3 UC-014 Create Custom Report
+
+##### 09.4.3.1 Basic Flow
+**References**: Part04_Functional_Requirements (FR-008_Analytics), Part08_API_Design (08.2.4.4_Custom_Reports_APIs)
+
+**Actor**: Brand Admin
+
+**Mục đích**: Tạo báo cáo tùy chỉnh để phân tích hiệu quả campaign quà thấp giá (~$1).
+
+**Preconditions**:
+- Brand Admin có quyền `report_create`.
+- Campaign có dữ liệu analytics.
+
+**Basic Flow**:
+1. Brand Admin truy cập dashboard, chọn "Custom Report".
+2. Chọn campaign_id, metrics (scans, forms, redemptions), filters (location, date).
+3. Hệ thống validate input, tạo report.
+4. Hệ thống lưu report_id, trả dữ liệu trên UI hoặc export CSV.
+
+**Postconditions**:
+- Custom report được tạo, sẵn sàng để xem/export.
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-008, 08.2.4.4
+- **Thể hiện yêu cầu**: FR-008
+
+**Mục đích của node này**: Mô tả flow tạo custom report.
+
+##### 09.4.3.2 Alternative Flows
+- **A1**: Schedule report → Hệ thống chạy định kỳ, gửi qua email.
+- **A2**: Save report template → Brand Admin lưu cấu hình để reuse.
+
+##### 09.3.3.3 Exception Flows
+- **E1**: Invalid metrics/filters → Hệ thống trả error 400.
+- **E2**: Unauthorized access → Hệ thống trả error 401.
+
+##### 09.4.3.4 Sequence Diagram
+```mermaid
+sequenceDiagram
+    actor BrandAdmin
+    participant UI
+    participant API
+    participant AnalyticsService
+    participant DB
+    BrandAdmin->>UI: Create Custom Report
+    UI->>API: POST /api/v1/analytics/reports
+    API->>AnalyticsService: Validate JWT
+    AnalyticsService->>DB: Generate Report
+    DB-->>AnalyticsService: Success
+    AnalyticsService-->>API: Report ID
+    API-->>UI: 201 Created
+    UI-->>BrandAdmin: Show Report
+```
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 09.5 Use Case Traceability Matrix
+
+**References**: Part04_Functional_Requirements, Part08_API_Design
+
+**Mục đích**: Liên kết use cases với yêu cầu chức năng và APIs.
+
+**Nội dung cần có**:
+- **Matrix**:
+  | UC ID | Use Case Name | FR Reference | API Reference |
+  |-------|----------------|--------------|---------------|
+  | UC-009 | Detect Fraud | FR-011 | 08.2.6.1, 08.2.6.4 |
+  | UC-010 | Manage Consent | FR-004 | 08.2.2.3 |
+  | UC-011 | Analyze Cohorts | FR-008 | 08.2.4.3 |
+  | UC-012 | Run A/B Test | FR-012 | 08.2.7.1 |
+  | UC-013 | Generate Recommendations | FR-013 | 08.2.7.2 |
+  | UC-014 | Create Custom Report | FR-008 | 08.2.4.4 |
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: Part04, Part08
+- **Thể hiện yêu cầu**: All FRs
+
+**Mục đích của node này**: Cung cấp traceability matrix.
+
+**Assumptions/Constraints**:
+- Assumes all use cases được map với FR và API.
+- Constraint: Matrix phải hoàn chỉnh.
+
+**Dependencies/Risks**:
+- Dependencies: None.
+- Risks: Missing mappings → Mitigation: Cross-check.
+
+**Acceptance Criteria/Testable Items**:
+- Matrix đầy đủ, chính xác.
+- Tất cả use cases có API mapping.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
