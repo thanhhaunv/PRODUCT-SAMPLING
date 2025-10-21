@@ -39,6 +39,7 @@ PSP cung cấp unified platform với:
 - ✅ Seamless CRM integration (HubSpot, Salesforce)
 - ✅ Offline-first redemption (POS staff)
 - ✅ A/B testing và personalized recommendations 🆕
+- ✅ QR code generation and tracking for ads formats to facilitate easy scanning and data collection for low-value gifts (~$1) 🆕
 
 ### Lợi Ích Kinh Doanh
 
@@ -48,6 +49,7 @@ PSP cung cấp unified platform với:
 | **Tăng redemption rate** | Từ 40% → 70%+ (với better targeting) |
 | **Giảm fraud** | Từ 15% → <5% (ML fraud detection) 🆕 |
 | **Tăng ROI** | 30-50% improvement (optimized campaigns với A/B testing) 🆕 |
+| **Tăng engagement với quà thấp giá** | QR code in ads formats tăng scan rate >80% 🆕 |
 
 ---
 
@@ -64,6 +66,7 @@ PSP cung cấp unified platform với:
    - Tối ưu targeting với personalized recommendations 🆕
    - A/B testing để improve conversion 🆕
    - Target: 70%+ redemption rate (từ 40% baseline)
+   - QR code tracking for ads to boost scan-to-form completion 🆕
 
 3. **Giảm fraud và abuse**
    - ML-based fraud detection 🆕
@@ -88,6 +91,7 @@ PSP cung cấp unified platform với:
 - 95%+ barcode tracking accuracy
 - < 2s dashboard load time
 - 90%+ user satisfaction (NPS > 50)
+- 80% QR scan-to-form completion rate 🆕
 
 **Advanced Features**: 🆕
 - Fraud detection: <5% false positives 🆕
@@ -112,13 +116,14 @@ PSP cung cấp unified platform với:
 
 Tất cả 14 tính năng được phát triển đồng thời: 🆕
 
-**1. Tính Năng Cốt Lõi** (6 tính năng):
+**1. Tính Năng Cốt Lõi** (7 tính năng):
 - Campaign Management (CRUD, lifecycle, scheduling)
 - Barcode Management (generation, import, pools)
 - User Authentication & Authorization (JWT, RBAC - 6 roles)
 - User Management (profiles, consent, portal) 🆕
 - OTP Verification (SMS, Email với rate limiting)
 - Ads Format Management (templates, assets, A/B variants) 🆕
+- Ads Format Management with QR code integration (generation, zone specification, UTM tracking) 🆕
 
 **2. Tính Năng Vận Hành** (4 tính năng):
 - Barcode Redemption (online/offline, POS integration)
