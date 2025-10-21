@@ -9110,3 +9110,667 @@ CREATE INDEX idx_audit_logs_timestamp ON Audit_Logs(timestamp);
 |------|------|-----------|------|
 | PM | [TBD] | - | - |
 | Tech Lead | [TBD] | - | - |
+
+# Part08 - API Design (Session 1)
+
+## Structure of Part08 (Session 1)
+```
+Part08_API_Design/
+├── 08.1_API_Overview.md
+├── 08.2_REST_API_Endpoints/
+│   ├── 08.2.1_Campaign_Management_Service_APIs/
+│   │   ├── 08.2.1.1_Campaign_APIs.md
+│   │   ├── 08.2.1.2_Barcode_APIs.md
+│   │   └── 08.2.1.3_Ads_Format_APIs.md
+│   ├── 08.2.2_Identity_Service_APIs/
+│   │   ├── 08.2.2.1_Authentication_APIs.md
+│   │   ├── 08.2.2.2_User_APIs.md
+│   │   ├── 08.2.2.3_Consent_APIs.md
+│   │   └── 08.2.2.4_Portal_APIs.md
+│   ├── 08.2.3_Redemption_Service_APIs/
+│   │   ├── 08.2.3.1_Redemption_APIs.md
+│   │   └── 08.2.3.2_Offline_Sync_APIs.md
+```
+
+---
+
+## 08.1 API Overview
+
+**References**: Part04_Functional_Requirements (all FRs), Part05_Non_Functional_Requirements (NFR-001, NFR-003, NFR-007), Part06_System_Architecture (06.5 Communication Patterns, 06.6 Scalability Patterns)
+
+**Mục đích**: Cung cấp cái nhìn tổng quan về APIs của PSP, bao gồm REST endpoints cho 7 microservices.
+
+**Ý nghĩa**: Đảm bảo APIs hỗ trợ FRs (e.g., FR-001 Campaign CRUD, FR-003 Authentication) và NFRs (e.g., <500ms response time, mTLS security).
+
+**Cách làm**: Tổng hợp từ Part04 và Part06, mô tả kiến trúc API Gateway, versioning, và authentication.
+
+**Nội dung cần có**:
+- **Tổng quan**: PSP sử dụng REST APIs qua AWS API Gateway với mTLS (Istio), JWT authentication, và rate limiting. APIs được phân bổ theo 7 microservices, hỗ trợ quà mẫu giá thấp (~$1) với engagement cao (>90% form completion).
+- **Kiến trúc**:
+  - **Base URL**: `/api/v1/{service}`
+  - **Authentication**: JWT (Bearer token) cho tất cả endpoints trừ public (e.g., OTP send).
+  - **Versioning**: URI versioning (v1, v2).
+  - **Error Format**: JSON `{error_code, message, details}`.
+- **Diagram**:
+  ```mermaid
+  graph TD
+      A[Client] -->|HTTPS, JWT| B[API Gateway]
+      B --> C[Campaign Management]
+      B --> D[Identity]
+      B --> E[Redemption]
+      B --> F[Analytics]
+      B --> G[Notification]
+      B --> H[Fraud Detection]
+      B --> I[Intelligence]
+      B --> J[Istio: mTLS, Rate Limiting]
+      B --> K[CloudWatch: Monitoring]
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: Part04, Part05, Part06
+- **Thể hiện yêu cầu**: All FRs, NFR-001, NFR-003
+- **Kết nối với**: Part08.2_REST_API_Endpoints, Part07_Database_Design
+
+**Mục đích của node này**: Tóm tắt kiến trúc API để định hướng triển khai.
+
+**Assumptions/Constraints**:
+- Assumes REST cho synchronous, SQS cho async.
+- Constraint: APIs phải <500ms (NFR-001).
+
+**Dependencies/Risks**:
+- Dependencies: AWS API Gateway, Istio.
+- Risks: Rate limiting sai → Mitigation: Test with 10K users.
+
+**Acceptance Criteria/Testable Items**:
+- APIs hỗ trợ tất cả FRs.
+- JWT authentication áp dụng đúng.
+- Response time <500ms trong test.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+## 08.2 REST API Endpoints
+
+### 08.2.1 Campaign Management Service APIs
+
+#### 08.2.1.1 Campaign APIs
+
+**References**: Part04_Functional_Requirements (FR-001), Part05_Non_Functional_Requirements (NFR-001, NFR-003), Part07_Database_Design (07.3.1.2 Campaigns Table)
+
+**Mục đích**: Định nghĩa APIs cho CRUD campaigns.
+
+**Ý nghĩa**: Hỗ trợ Brand Admin, Customer Account quản lý chiến dịch.
+
+**Cách làm**: Mô tả endpoints với request/response schemas, HTTP methods.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/campaigns`: Tạo campaign (Role: Brand Admin, Customer Account).
+    - Request: JSON `{brand_id, name, start_date, end_date}`
+    - Response: 201 JSON `{campaign_id}`
+  - `GET /api/v1/campaigns/:id`: Lấy campaign (Role: Platform Admin, Brand Admin, Customer Account).
+    - Response: 200 JSON `{id, brand_id, name, start_date, end_date}`
+  - `PUT /api/v1/campaigns/:id`: Cập nhật campaign (Role: Brand Admin, Customer Account).
+    - Request: JSON `{name, start_date, end_date}`
+    - Response: 200 JSON `{updated_campaign}`
+  - `DELETE /api/v1/campaigns/:id`: Xóa campaign (Role: Platform Admin, Brand Admin).
+    - Response: 204 No Content
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant Service
+      participant DB
+      BrandAdmin->>API: POST /api/v1/campaigns
+      API->>Service: Validate JWT
+      Service->>DB: Insert campaign
+      DB-->>Service: Success
+      Service-->>API: Campaign ID
+      API-->>BrandAdmin: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-001, NFR-001, 07.3.1.2
+- **Thể hiện yêu cầu**: FR-001
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Campaign CRUD.
+
+**Assumptions/Constraints**:
+- Assumes JWT auth với RBAC.
+- Constraint: Response time <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service.
+- Risks: Unauthorized access → Mitigation: RBAC checks.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints CRUD campaign đúng.
+- 200/201/204 status codes trả về đúng.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.1.2 Barcode APIs
+
+**References**: Part04_Functional_Requirements (FR-002), Part05_Non_Functional_Requirements (NFR-001, NFR-003), Part07_Database_Design (07.3.1.4 Barcodes Table)
+
+**Mục đích**: Định nghĩa APIs cho quản lý barcode.
+
+**Ý nghĩa**: Hỗ trợ Brand Admin tạo và gán barcode cho campaigns.
+
+**Cách làm**: Mô tả endpoints với request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/barcodes`: Tạo barcode batch (Role: Brand Admin).
+    - Request: JSON `{campaign_id, format, count}`
+    - Response: 201 JSON `{barcode_ids}`
+  - `GET /api/v1/barcodes/:id`: Lấy barcode (Role: Platform Admin, Brand Admin).
+    - Response: 200 JSON `{id, code, format, is_redeemed}`
+  - `PUT /api/v1/barcodes/:id/assign`: Gán barcode (Role: Brand Admin).
+    - Request: JSON `{campaign_id}`
+    - Response: 200 JSON `{assigned_barcode}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant Service
+      participant DB
+      BrandAdmin->>API: POST /api/v1/barcodes
+      API->>Service: Validate JWT
+      Service->>DB: Insert barcodes
+      DB-->>Service: Success
+      Service-->>API: Barcode IDs
+      API-->>BrandAdmin: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-002, NFR-001, 07.3.1.4
+- **Thể hiện yêu cầu**: FR-002
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Barcode Management.
+
+**Assumptions/Constraints**:
+- Assumes barcode format: QR, Code128, DataMatrix.
+- Constraint: Batch size <10K per request.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service.
+- Risks: Duplicate codes → Mitigation: Unique constraints.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints tạo và gán barcode đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.1.3 Ads Format APIs
+
+**References**: Part04_Functional_Requirements (FR-006), Part05_Non_Functional_Requirements (NFR-007), Part07_Database_Design (07.3.1.5 Ads Formats Table)
+
+**Mục đích**: Định nghĩa APIs cho quản lý ads formats.
+
+**Ý nghĩa**: Hỗ trợ Brand Admin tạo landing pages, banners cho campaigns.
+
+**Cách làm**: Mô tả endpoints với request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/ads-formats`: Tạo ads format (Role: Brand Admin).
+    - Request: JSON `{campaign_id, type, content}`
+    - Response: 201 JSON `{ads_format_id}`
+  - `GET /api/v1/ads-formats/:id`: Lấy ads format (Role: Platform Admin, Brand Admin).
+    - Response: 200 JSON `{id, type, content}`
+  - `PUT /api/v1/ads-formats/:id`: Cập nhật ads format (Role: Brand Admin).
+    - Request: JSON `{type, content}`
+    - Response: 200 JSON `{updated_ads_format}`
+  - `DELETE /api/v1/ads-formats/:id`: Xóa ads format (Role: Platform Admin).
+    - Response: 204 No Content
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor BrandAdmin
+      participant API
+      participant Service
+      participant DB
+      BrandAdmin->>API: POST /api/v1/ads-formats
+      API->>Service: Validate JWT
+      Service->>DB: Insert ads format
+      DB-->>Service: Success
+      Service-->>API: Ads Format ID
+      API-->>BrandAdmin: 201 Created
+  ```
+
+- **Endpoints** (thêm):
+  - `POST /api/v1/ads-formats/qr-generate`: Tạo QR code for ads format.
+    - Request: `{ads_format_id: UUID, utm_tag: string, qr_size: integer}`
+    - Response: 201 `{qr_code_url: string}` 🆕
+- **Flow** (thêm QR):
+  ```mermaid
+  sequenceDiagram
+      actor Admin
+      participant API
+      participant Service
+      participant DB
+      Admin->>API: POST /api/v1/ads-formats/qr-generate
+      API->>Service: Validate JWT
+      Service->>DB: Update Ads_Formats with QR details
+      DB-->>Service: Success
+      Service-->>API: QR URL
+      API-->>Admin: 201 Created
+  ```
+
+- **Assumptions/Constraints**: QR generation with UTM for tracking, size >=2cm 🆕
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-006, NFR-007, 07.3.1.5
+- **Thể hiện yêu cầu**: FR-006
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Ads Format Management.
+
+**Assumptions/Constraints**:
+- Assumes content là JSON/HTML string.
+- Constraint: File size <1MB.
+
+**Dependencies/Risks**:
+- Dependencies: Campaign Management Service.
+- Risks: Invalid content → Mitigation: Validation.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints CRUD ads format đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+---
+
+### 08.2.2 Identity Service APIs
+
+#### 08.2.2.1 Authentication APIs
+
+**References**: Part04_Functional_Requirements (FR-003), Part05_Non_Functional_Requirements (NFR-003), Part07_Database_Design (07.3.2.1 Users Table, 07.3.2.5 Sessions Table)
+
+**Mục đích**: Định nghĩa APIs cho user authentication.
+
+**Ý nghĩa**: Hỗ trợ all personas đăng nhập an toàn.
+
+**Cách làm**: Mô tả endpoints với request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/auth/login`: Đăng nhập email/password (Role: All).
+    - Request: JSON `{email, password}`
+    - Response: 200 JSON `{token, refresh_token}`
+  - `POST /api/v1/auth/sso`: Đăng nhập SSO (Role: All).
+    - Request: JSON `{provider, code}`
+    - Response: 200 JSON `{token, refresh_token}`
+  - `POST /api/v1/auth/logout`: Đăng xuất (Role: Authenticated).
+    - Response: 204 No Content
+  - `POST /api/v1/auth/refresh`: Refresh token (Role: Authenticated).
+    - Request: JSON `{refresh_token}`
+    - Response: 200 JSON `{new_token}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor User
+      participant API
+      participant Service
+      participant DB
+      User->>API: POST /api/v1/auth/login
+      API->>Service: Validate credentials
+      Service->>DB: Query Users
+      DB-->>Service: Success
+      Service-->>API: JWT Token
+      API-->>User: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-003, NFR-003, 07.3.2.1, 07.3.2.5
+- **Thể hiện yêu cầu**: FR-003
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Authentication.
+
+**Assumptions/Constraints**:
+- Assumes JWT với RSA signing.
+- Constraint: Token expiry 1h, refresh 24h.
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service.
+- Risks: Brute force → Mitigation: Rate limiting.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints login/logout/refresh đúng.
+- Token valid, unauthorized trả 401.
+- Response time <500ms.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.2.2 User APIs
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-003), Part07_Database_Design (07.3.2.1 Users Table)
+
+**Mục đích**: Định nghĩa APIs cho CRUD users.
+
+**Ý nghĩa**: Hỗ trợ Platform Admin, Brand Admin quản lý users.
+
+**Cách làm**: Mô tả endpoints với request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/users`: Tạo user (Role: Platform Admin, Brand Admin).
+    - Request: JSON `{email, password, role}`
+    - Response: 201 JSON `{user_id}`
+  - `GET /api/v1/users/:id`: Lấy user (Role: Platform Admin, Brand Admin).
+    - Response: 200 JSON `{id, email, role}`
+  - `PUT /api/v1/users/:id`: Cập nhật user (Role: Platform Admin, Brand Admin).
+    - Request: JSON `{email, role}`
+    - Response: 200 JSON `{updated_user}`
+  - `DELETE /api/v1/users/:id`: Xóa user (Role: Platform Admin).
+    - Response: 204 No Content
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor Admin
+      participant API
+      participant Service
+      participant DB
+      Admin->>API: POST /api/v1/users
+      API->>Service: Validate JWT
+      Service->>DB: Insert user
+      DB-->>Service: Success
+      Service-->>API: User ID
+      API-->>Admin: 201 Created
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-004, NFR-003, 07.3.2.1
+- **Thể hiện yêu cầu**: FR-004
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho User Management.
+
+**Assumptions/Constraints**:
+- Assumes password hashed trước lưu.
+- Constraint: PII encrypted (NFR-003).
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service.
+- Risks: Duplicate emails → Mitigation: Unique constraint.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints CRUD user đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.2.3 Consent APIs
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-003), Part07_Database_Design (07.3.2.4 Consent History Table)
+
+**Mục đích**: Định nghĩa APIs cho quản lý consent.
+
+**Ý nghĩa**: Hỗ trợ Customer opt-in/out, tuân thủ GDPR/PDPA.
+
+**Cách làm**: Mô tả endpoints với request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/consent/opt-in`: Opt-in consent (Role: Customer).
+    - Request: JSON `{type, granted}`
+    - Response: 200 JSON `{consent_id}`
+  - `POST /api/v1/consent/opt-out`: Opt-out consent (Role: Customer).
+    - Request: JSON `{type}`
+    - Response: 200 JSON `{status: "revoked"}`
+  - `GET /api/v1/consent/:user_id`: Lấy consent history (Role: Platform Admin, Customer).
+    - Response: 200 JSON `{consents}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor Customer
+      participant API
+      participant Service
+      participant DB
+      Customer->>API: POST /api/v1/consent/opt-in
+      API->>Service: Validate JWT
+      Service->>DB: Insert consent
+      DB-->>Service: Success
+      Service-->>API: Consent ID
+      API-->>Customer: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-004, NFR-003, 07.3.2.4
+- **Thể hiện yêu cầu**: FR-004
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Consent Management.
+
+**Assumptions/Constraints**:
+- Assumes `type`: marketing, data_sharing.
+- Constraint: Consent immutable sau revoke.
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service.
+- Risks: Consent leakage → Mitigation: Encryption.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints opt-in/out đúng.
+- History trả về đầy đủ.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.2.4 Portal APIs
+
+**References**: Part04_Functional_Requirements (FR-004), Part05_Non_Functional_Requirements (NFR-007), Part07_Database_Design (07.3.2.1 Users Table)
+
+**Mục đích**: Định nghĩa APIs cho User Portal (PWA).
+
+**Ý nghĩa**: Hỗ trợ Customer xem barcodes, preferences.
+
+**Cách làm**: Mô tả endpoints với request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `GET /api/v1/portal/barcodes`: Lấy barcodes (Role: Customer).
+    - Response: 200 JSON `{barcodes}`
+  - `GET /api/v1/portal/preferences`: Lấy preferences (Role: Customer).
+    - Response: 200 JSON `{preferences}`
+  - `PUT /api/v1/portal/preferences`: Cập nhật preferences (Role: Customer).
+    - Request: JSON `{key, value}`
+    - Response: 200 JSON `{updated_preferences}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor Customer
+      participant API
+      participant Service
+      participant DB
+      Customer->>API: GET /api/v1/portal/barcodes
+      API->>Service: Validate JWT
+      Service->>DB: Query Barcodes
+      DB-->>Service: Barcodes
+      Service-->>API: Response
+      API-->>Customer: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-004, NFR-007, 07.3.2.1
+- **Thể hiện yêu cầu**: FR-004
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho User Portal.
+
+**Assumptions/Constraints**:
+- Assumes PWA gọi APIs với JWT.
+- Constraint: Queries <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Identity Service.
+- Risks: Data exposure → Mitigation: RBAC.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints trả về đúng data.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+### 08.2.3 Redemption Service APIs
+
+#### 08.2.3.1 Redemption APIs
+
+**References**: Part04_Functional_Requirements (FR-007), Part05_Non_Functional_Requirements (NFR-001), Part07_Database_Design (07.3.3.1 Redemptions Table)
+
+**Mục đích**: Định nghĩa APIs cho redemption online/offline.
+
+**Ý nghĩa**: Hỗ trợ POS Staff và Customer redeem barcodes.
+
+**Cách làm**: Mô tả endpoints với request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/redemptions`: Redeem barcode (Role: POS Staff, Customer).
+    - Request: JSON `{barcode_id, location_id}`
+    - Response: 200 JSON `{redemption_id}`
+  - `GET /api/v1/redemptions/:id`: Lấy redemption (Role: Platform Admin, Brand Admin).
+    - Response: 200 JSON `{id, barcode_id, user_id, redemption_time}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor POSStaff
+      participant API
+      participant Service
+      participant DB
+      POSStaff->>API: POST /api/v1/redemptions
+      API->>Service: Validate JWT
+      Service->>DB: Insert redemption
+      DB-->>Service: Success
+      Service-->>API: Redemption ID
+      API-->>POSStaff: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-007, NFR-001, 07.3.3.1
+- **Thể hiện yêu cầu**: FR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Redemption.
+
+**Assumptions/Constraints**:
+- Assumes barcode single-use.
+- Constraint: Redemption <500ms.
+
+**Dependencies/Risks**:
+- Dependencies: Redemption Service.
+- Risks: Duplicate redemptions → Mitigation: Transaction locks.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoints redeem và lấy data đúng.
+- Response time <500ms.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
+#### 08.2.3.2 Offline Sync APIs
+
+**References**: Part04_Functional_Requirements (FR-007), Part05_Non_Functional_Requirements (NFR-004), Part07_Database_Design (07.3.3.1 Redemptions Table)
+
+**Mục đích**: Định nghĩa APIs cho offline sync redemption.
+
+**Ý nghĩa**: Hỗ trợ POS Staff sync data khi online.
+
+**Cách làm**: Mô tả endpoints với request/response schemas.
+
+**Nội dung cần có**:
+- **Endpoints**:
+  - `POST /api/v1/redemptions/offline-sync`: Sync redemption batch (Role: POS Staff).
+    - Request: JSON `{redemptions: [{barcode_id, location_id, timestamp}] }`
+    - Response: 200 JSON `{synced_count}`
+- **Flow**:
+  ```mermaid
+  sequenceDiagram
+      actor POSStaff
+      participant API
+      participant Service
+      participant DB
+      POSStaff->>API: POST /api/v1/redemptions/offline-sync
+      API->>Service: Validate JWT
+      Service->>DB: Insert batch
+      DB-->>Service: Success
+      Service-->>API: Synced Count
+      API-->>POSStaff: 200 OK
+  ```
+
+**Tài liệu tham khảo**:
+- **Đầu vào từ**: FR-007, NFR-004, 07.3.3.1
+- **Thể hiện yêu cầu**: FR-007
+- **Kết nối với**: Part08.1_API_Overview
+
+**Mục đích của node này**: Chi tiết APIs cho Offline Sync.
+
+**Assumptions/Constraints**:
+- Assumes batch size <1000.
+- Constraint: Sync <5s/100 items.
+
+**Dependencies/Risks**:
+- Dependencies: Redemption Service.
+- Risks: Data conflicts → Mitigation: Idempotent sync.
+
+**Acceptance Criteria/Testable Items**:
+- Endpoint sync batch đúng.
+- Response time <5s.
+- RBAC áp dụng, unauthorized trả 401.
+
+**Approval Sign-Off**:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| PM | [TBD] | - | - |
+| Tech Lead | [TBD] | - | - |
+
