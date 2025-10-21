@@ -7744,6 +7744,9 @@ Part07_Database_Design/
           uuid campaign_id FK
           string format_type
           string content
+          JSONB qr_zone
+          INTEGER qr_size
+          string utm_tag
           timestamp created_at
           timestamp updated_at
       }
@@ -8032,6 +8035,9 @@ CREATE TABLE Ads_Formats (
     campaign_id UUID NOT NULL REFERENCES Campaigns(campaign_id) ON DELETE CASCADE,
     format_type VARCHAR(20) NOT NULL CHECK (format_type IN ('Banner', 'Video', 'QR')),
     content TEXT NOT NULL,
+    qr_zone JSONB,
+    qr_size INTEGER,
+    utm_tag STRING,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
