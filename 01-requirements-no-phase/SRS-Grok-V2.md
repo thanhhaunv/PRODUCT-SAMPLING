@@ -9767,8 +9767,7 @@ graph TB
     pspPlatform -->|"REST\nSMS delivery <5s"| twilio
     pspPlatform -->|"REST\nEmail delivery <10s"| sendgrid
     pspPlatform -->|"gRPC\nReal-time redemption"| posSystems
-
-
+```
   - **C4 Model - Containers Diagram**:  
 ```mermaid
 graph LR
