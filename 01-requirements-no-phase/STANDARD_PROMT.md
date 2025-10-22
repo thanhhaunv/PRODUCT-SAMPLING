@@ -6,7 +6,7 @@
 2️⃣ **Purpose / Ý nghĩa / Cách làm**  
 → **Mục đích**: Tại sao có phần này, thuộc module/service nào (e.g., Introduction Module), mục tiêu business & kỹ thuật (e.g., giới thiệu tổng quan PSP với QR integration).  
 → **Ý nghĩa**: Làm cầu nối BA ↔ Dev/QA, đảm bảo unambiguous, traceable (từ GeeksforGeeks), hỗ trợ validate mà không hỏi lại.  
-→ **Cách làm**: Sử dụng markdown với headings/tables/Mermaid, tổ chức theo 16 Parts, tích hợp microservices/RBAC/QR details; ngắn gọn (200-300 từ cho overview nodes), explicit/self-contained (từ IEEE: Avoid vague).
+→ **Cách làm**: Sử dụng markdown với headings/tables/Mermaid, tổ chức theo 16 Parts, tích hợp microservices/RBAC/QR details; -short gọn (200-300 từ cho overview nodes)- +chi tiết và mở rộng (250-400 từ cho overview nodes để bao quát đầy đủ key features, lists, và diagrams)+, explicit/self-contained (từ IEEE: Avoid vague). +Nhấn mạnh sử dụng bullet lists cho key features và Mermaid cho architecture để làm nội dung "tuyệt vời" và hybrid SDS-ready.+
 
 3️⃣ **Specifications / Main Content / Nội dung chính**  
 Tùy loại node, merge requirement + design:  
@@ -17,14 +17,14 @@ Tùy loại node, merge requirement + design:
 - Architecture: High-level Diagram, Integration Points.  
 - Database: ER Diagram, Field Constraints.  
 - Pattern: Type (Repository/CQRS), Code Snippets.  
-Từ IEEE: Complete, verifiable; GeeksforGeeks: Measurable.
+Từ IEEE: Complete, verifiable; GeeksforGeeks: Measurable. +Luôn bao gồm: Bullet lists cho key features (ít nhất 5-8 items với chi tiết như CRUD operations, lifecycle states); Mermaid diagram cho architecture hoặc flows (e.g., graph TB cho services); Tích hợp ví dụ cụ thể từ System_Feature_Tree.md (như 7 services, QR integration); Giữ độ dài đủ để hybrid SDS, hỗ trợ dev code ngay (e.g., mô tả QR với UTM tracking).+
 
 4️⃣ **Traceability Links / Liên kết truy xuất**  
 - Đầu vào từ: (e.g., BRD.md Section 1, System_Feature_Tree.md Section 3).  
 - Thể hiện yêu cầu: (e.g., FR-001 Campaign Management, NFR-001 Performance).  
 - Kết nối với: (e.g., Part02_System_Overview).  
 - **Tài liệu tham chiếu**: Variant để liệt kê specific sources như System_Feature_Tree.md (14 features).  
-Từ IEEE: Trace to higher-level reqs.
+Từ IEEE: Trace to higher-level reqs. +Thêm ít nhất 3-4 links cụ thể, bao gồm cross-references đến FR/NFR và diagrams để tăng tính traceable.+
 
 5️⃣ **Assumptions / Constraints / Giả định & Ràng buộc**  
 - Giả định: (e.g., microservices với polyglot persistence, users có smartphone cho QR).  
@@ -34,15 +34,14 @@ Từ GeeksforGeeks: Verifiable; IEEE: Avoid ambiguity.
 6️⃣ **Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro**  
 - Dependencies: (e.g., Part02 cho architecture details, external APIs như Twilio).  
 - Risks & Mitigation: (e.g., Risk: Hiểu sai tính năng → Mitigation: Validate với BRD; Risk: Latency QR scan → Mitigation: Auto-scaling).  
-Từ IEEE: Hỗ trợ risk management.
+Từ IEEE: Hỗ trợ risk management. +Liệt kê ít nhất 3 risks/mitigations, tập trung vào microservices và QR-specific (e.g., latency cao khi scale QR).+
 
 7️⃣ **Acceptance Criteria / Testable Items / Tiêu chí chấp nhận**  
 - Functional: (e.g., SRS cover 100% tính năng, overview cover key features như QR).  
 - Performance: (e.g., System hỗ trợ 100K redemptions/day, <200ms latency).  
 - UI Consistency: (e.g., Wireframes tuân thủ WCAG 2.1).  
 - Integration / Security: (e.g., Test cases cover 100% reqs, zero data leakage).  
-Từ GeeksforGeeks: SRS phải testable/measurable; Từ IEEE: Specific, verifiable criteria.
-
+Từ GeeksforGeeks: SRS phải testable/measurable; Từ IEEE: Specific, verifiable criteria. +Mở rộng với 4-6 criteria, bao gồm verifiable items cho diagrams/lists (e.g., cover 100% 14 tính năng, traceable đến System_Feature_Tree).+
 
 8️⃣ **Approval Sign-Off / Phê duyệt**  
 | Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
@@ -59,4 +58,4 @@ Từ IEEE: Formalize approval.
 - **Reusable Design Pattern Implementation Notes**: (e.g., Repository pattern cho DB access, CQRS cho Analytics service).  
 
 - **Mục đích của node này**: Tóm tắt ngắn gọn vai trò node (e.g., Giới thiệu tổng quan PSP).  
-Từ guideline gốc: Hybrid SDS, giúp dev code ngay; thêm ví dụ từ node như Mermaid architecture.
+Từ guideline gốc: Hybrid SDS, giúp dev code ngay; thêm ví dụ từ node như Mermaid architecture. +Luôn bao gồm ít nhất 2-3 elements (e.g., Sequence Diagram với Mermaid, API stubs cụ thể như /qr/generate), để làm phần này "tuyệt vời" và hỗ trợ triển khai ngay.+
