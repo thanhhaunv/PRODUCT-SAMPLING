@@ -1,3 +1,5 @@
+# Một giải pháp rất hay và đơn giản để lấy thông tin user là User quay/click lấy mã xong SMS cho sđt/tổng đài của mình xác nhận => Mình đọc(gửi lại zalo mã xác nhận).
+
 # Vấn đề là vừa phải thuyết phục Agency sử dụng hệ thống của mình/sử dụng sản phẩm của mình, vừa phải thuyết phục cả end-user sử dụng nữa
 
 Bạn đã chỉ ra đúng **mâu thuẫn kép (Dual Challenge)** trong mô hình kinh doanh này: Bạn cần thuyết phục cả **Khách hàng B2B (Agency/Brand)** và **Người dùng cuối (End-User)**.
