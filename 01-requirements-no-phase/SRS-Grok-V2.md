@@ -9746,28 +9746,28 @@ sequenceDiagram
   - **C4 Model - Context Diagram**:  
 ```mermaid
 graph TB
-    title["PSP Platform Architecture - System Context"]
-    
+    %% PSP Platform Architecture - System Context
+
     subgraph Users
-        customer["👤 Customer<br/>Scans barcodes via mobile app"]
-        brandAdmin["👤 Brand Admin<br/>Creates campaigns, monitors ROI"]
-        platformAdmin["👤 Platform Admin<br/>Manages infrastructure"]
+        customer["Customer\nScans barcodes via mobile app"]
+        brandAdmin["Brand Admin\nCreates campaigns, monitors ROI"]
+        platformAdmin["Platform Admin\nManages infrastructure"]
     end
 
     subgraph Systems
-        pspPlatform["🧩 PSP Platform<br/>Microservices + K8s + Istio<br/>100K users/day, <3s P99"]
-        twilio["☁️ Twilio<br/>SMS Provider - FR-010"]
-        sendgrid["☁️ SendGrid<br/>Email Provider - FR-010"]
-        posSystems["🏪 POS Systems<br/>Retail POS Integration - FR-007"]
+        pspPlatform["PSP Platform\nMicroservices + K8s + Istio\n100K users/day, <3s P99"]
+        twilio["Twilio\nSMS Provider - FR-010"]
+        sendgrid["SendGrid\nEmail Provider - FR-010"]
+        posSystems["POS Systems\nRetail POS Integration - FR-007"]
     end
 
-    customer -->|HTTPS/gRPC<br/>Barcode redemption FR-007| pspPlatform
-    brandAdmin -->|HTTPS<br/>Campaign mgmt FR-008| pspPlatform
-    platformAdmin -->|HTTPS<br/>Monitoring NFR-006| pspPlatform
-    pspPlatform -->|REST<br/>SMS delivery <5s| twilio
-    pspPlatform -->|REST<br/>Email delivery <10s| sendgrid
-    pspPlatform -->|gRPC<br/>Real-time redemption| posSystems
-```
+    customer -->|"HTTPS/gRPC\nBarcode redemption FR-007"| pspPlatform
+    brandAdmin -->|"HTTPS\nCampaign mgmt FR-008"| pspPlatform
+    platformAdmin -->|"HTTPS\nMonitoring NFR-006"| pspPlatform
+    pspPlatform -->|"REST\nSMS delivery <5s"| twilio
+    pspPlatform -->|"REST\nEmail delivery <10s"| sendgrid
+    pspPlatform -->|"gRPC\nReal-time redemption"| posSystems
+
 
   - **C4 Model - Containers Diagram**:  
 ```mermaid
@@ -9778,23 +9778,23 @@ graph LR
 
     %% --- External Layer ---
     subgraph EXT["👥 External Users"]
-        customer["👤 Customer<br/><small>Mobile App</small>"]
-        brandAdmin["👤 Brand Admin<br/><small>Web Dashboard</small>"]
+        customer["👤 Customer\n<small>Mobile App</small>"]
+        brandAdmin["👤 Brand Admin\n<small>Web Dashboard</small>"]
     end
 
     %% --- App Layer ---
     subgraph APP["🧩 PSP Platform (App Layer)"]
-        mobileApp["📱 Mobile App<br/><small>React Native + Expo</small><br/>Barcode Scanner"]
-        webApp["🖥️ Web App<br/><small>React + Vite + shadcn/ui</small><br/>Brand Admin Dashboard"]
+        mobileApp["📱 Mobile App\n<small>React Native + Expo</small>\nBarcode Scanner"]
+        webApp["🖥️ Web App\n<small>React + Vite + shadcn/ui</small>\nBrand Admin Dashboard"]
     end
 
     %% --- Infrastructure Layer ---
     subgraph INFRA["☸️ EKS Cluster (Deployment View)"]
-        lb["🌐 AWS LoadBalancer (NLB/ALB)<br/><small>Ingress Entry Point</small>"]
-        istioIngress["🔐 Istio Ingress Gateway<br/><small>mTLS + Routing Rules</small>"]
-        apiGateway["🚪 Kong API Gateway<br/><small>Auth, Rate Limit</small>"]
+        lb["🌐 AWS LoadBalancer (NLB/ALB)\n<small>Ingress Entry Point</small>"]
+        istioIngress["🔐 Istio Ingress Gateway\n<small>mTLS + Routing Rules</small>"]
+        apiGateway["🚪 Kong API Gateway\n<small>Auth, Rate Limit</small>"]
         
-        subgraph svcgrp["🔧 PSP Microservices<br/><small>14 Node.js 20 + NestJS</small>"]
+        subgraph svcgrp["🔧 PSP Microservices\n<small>14 Node.js 20 + NestJS</small>"]
             svcAuth["🔒 Auth Service"]
             svcCampaign["🎯 Campaign Service"]
             svcRedemption["🎟️ Redemption Service"]
@@ -9811,16 +9811,16 @@ graph LR
 
     %% --- Data Layer ---
     subgraph DATA["💾 Data & Messaging Layer"]
-        postgres["🗄️ PostgreSQL 16<br/><small>Citus 16 shards</small>"]
-        redis["⚡ Redis 7.2<br/><small>Session + Cache</small>"]
-        rabbitmq["🐇 RabbitMQ 3.13<br/><small>Event Bus</small>"]
-        clickhouse["📊 ClickHouse<br/><small>OLAP Analytics</small>"]
-        s3["🪣 AWS S3<br/><small>Campaign Assets</small>"]
+        postgres["🗄️ PostgreSQL 16\n<small>Citus 16 shards</small>"]
+        redis["⚡ Redis 7.2\n<small>Session + Cache</small>"]
+        rabbitmq["🐇 RabbitMQ 3.13\n<small>Event Bus</small>"]
+        clickhouse["📊 ClickHouse\n<small>OLAP Analytics</small>"]
+        s3["🪣 AWS S3\n<small>Campaign Assets</small>"]
     end
 
     %% --- Monitoring Layer ---
     subgraph CLOUD["☁️ AWS Monitoring"]
-        cloudwatch["🧩 CloudWatch<br/><small>Metrics + Alarms</small>"]
+        cloudwatch["🧩 CloudWatch\n<small>Metrics + Alarms</small>"]
         grafana["📈 Grafana Dashboards"]
     end
 
