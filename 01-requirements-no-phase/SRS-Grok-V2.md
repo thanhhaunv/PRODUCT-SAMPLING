@@ -9745,58 +9745,118 @@ sequenceDiagram
 
   - **C4 Model - Context Diagram**:  
 ```mermaid
-C4Context
-    title PSP Platform Architecture - System Context
-    Person(customer, "Customer", "Scans barcodes via mobile app")
-    Person(brandAdmin, "Brand Admin", "Creates campaigns, monitors ROI")
-    Person(platformAdmin, "Platform Admin", "Manages infrastructure")
+graph TB
+    title["PSP Platform Architecture - System Context"]
     
-    System(pspPlatform, "PSP Platform", "Microservices + K8s + Istio\n100K users/day, <3s P99")
-    
-    SystemExt(twilio, "Twilio", "SMS Provider - FR-010")
-    SystemExt(sendgrid, "SendGrid", "Email Provider - FR-010")
-    SystemExt(posSystems, "POS Systems", "Retail POS Integration - FR-007")
-    
-    Rel(customer, pspPlatform, "HTTPS/gRPC\nBarcode redemption FR-007")
-    Rel(brandAdmin, pspPlatform, "HTTPS\nCampaign mgmt FR-008")
-    Rel(platformAdmin, pspPlatform, "HTTPS\nMonitoring NFR-006")
-    Rel(pspPlatform, twilio, "REST\nSMS delivery <5s")
-    Rel(pspPlatform, sendgrid, "REST\nEmail delivery <10s")
-    Rel(pspPlatform, posSystems, "gRPC\nReal-time redemption")
+    subgraph Users
+        customer["👤 Customer<br/>Scans barcodes via mobile app"]
+        brandAdmin["👤 Brand Admin<br/>Creates campaigns, monitors ROI"]
+        platformAdmin["👤 Platform Admin<br/>Manages infrastructure"]
+    end
+
+    subgraph Systems
+        pspPlatform["🧩 PSP Platform<br/>Microservices + K8s + Istio<br/>100K users/day, <3s P99"]
+        twilio["☁️ Twilio<br/>SMS Provider - FR-010"]
+        sendgrid["☁️ SendGrid<br/>Email Provider - FR-010"]
+        posSystems["🏪 POS Systems<br/>Retail POS Integration - FR-007"]
+    end
+
+    customer -->|HTTPS/gRPC<br/>Barcode redemption FR-007| pspPlatform
+    brandAdmin -->|HTTPS<br/>Campaign mgmt FR-008| pspPlatform
+    platformAdmin -->|HTTPS<br/>Monitoring NFR-006| pspPlatform
+    pspPlatform -->|REST<br/>SMS delivery <5s| twilio
+    pspPlatform -->|REST<br/>Email delivery <10s| sendgrid
+    pspPlatform -->|gRPC<br/>Real-time redemption| posSystems
 ```
 
   - **C4 Model - Containers Diagram**:  
 ```mermaid
-C4Container
-    title PSP Platform - Containers
-    Person(customer, "Customer", "Mobile App")
-    Person(brandAdmin, "Brand Admin", "Web Dashboard")
-    
-    System_Boundary(pspPlatform, "PSP Platform") {
-        Container(mobileApp, "Mobile App", "React Native 0.74 + Expo", "Barcode scanner UI")
-        Container(webApp, "Web App", "React 18 + Vite + shadcn/ui", "Brand Admin Dashboard")
+graph LR
+    %% ======================================
+    %% PSP Platform - Container + Deployment Hybrid (C4 + Infra)
+    %% ======================================
+
+    %% --- External Layer ---
+    subgraph EXT["👥 External Users"]
+        customer["👤 Customer<br/><small>Mobile App</small>"]
+        brandAdmin["👤 Brand Admin<br/><small>Web Dashboard</small>"]
+    end
+
+    %% --- App Layer ---
+    subgraph APP["🧩 PSP Platform (App Layer)"]
+        mobileApp["📱 Mobile App<br/><small>React Native + Expo</small><br/>Barcode Scanner"]
+        webApp["🖥️ Web App<br/><small>React + Vite + shadcn/ui</small><br/>Brand Admin Dashboard"]
+    end
+
+    %% --- Infrastructure Layer ---
+    subgraph INFRA["☸️ EKS Cluster (Deployment View)"]
+        lb["🌐 AWS LoadBalancer (NLB/ALB)<br/><small>Ingress Entry Point</small>"]
+        istioIngress["🔐 Istio Ingress Gateway<br/><small>mTLS + Routing Rules</small>"]
+        apiGateway["🚪 Kong API Gateway<br/><small>Auth, Rate Limit</small>"]
         
-        ContainerDb(postgres, "PostgreSQL 16", "Citus 16 shards + 5 replicas/shard", "Primary OLTP")
-        ContainerDb(redis, "Redis 7.2", "Cluster 3 nodes", "Sessions + Cache")
-        ContainerDb(clickhouse, "ClickHouse", "OLAP cluster", "Analytics FR-009/014")
+        subgraph svcgrp["🔧 PSP Microservices<br/><small>14 Node.js 20 + NestJS</small>"]
+            svcAuth["🔒 Auth Service"]
+            svcCampaign["🎯 Campaign Service"]
+            svcRedemption["🎟️ Redemption Service"]
+            svcReport["📈 Reporting Service"]
+        end
         
-        Container(rabbitmq, "RabbitMQ 3.13", "Cluster 3 nodes", "Event Bus")
-    }
-    
-    System_Boundary(k8sCluster, "EKS Cluster") {
-        Container(apiGateway, "API Gateway", "Kong + Istio Ingress", "mTLS termination")
-        ContainerGroup(microservices, "14 Microservices", "Node.js 20 + NestJS", "FR-007→FR-014")
-        Container(otelCollector, "OpenTelemetry Collector", "Jaeger/Prometheus/Loki", "Observability")
-    }
-    
-    Rel(customer, mobileApp, "HTTPS/WebSocket")
-    Rel(brandAdmin, webApp, "HTTPS")
-    Rel(mobileApp, apiGateway, "gRPC/REST")
-    Rel(webApp, apiGateway, "gRPC/REST")
-    Rel(apiGateway, microservices, "mTLS + Istio")
-    Rel(microservices, postgres, "TLS Connection Pool")
-    Rel(microservices, redis, "RESP")
-    Rel(microservices, rabbitmq, "AMQP")
+        subgraph obs["🧭 Observability Stack"]
+            otelCollector["🛰️ OpenTelemetry Collector"]
+            prometheus["📊 Prometheus"]
+            loki["📜 Loki"]
+            jaeger["🕵️ Jaeger"]
+        end
+    end
+
+    %% --- Data Layer ---
+    subgraph DATA["💾 Data & Messaging Layer"]
+        postgres["🗄️ PostgreSQL 16<br/><small>Citus 16 shards</small>"]
+        redis["⚡ Redis 7.2<br/><small>Session + Cache</small>"]
+        rabbitmq["🐇 RabbitMQ 3.13<br/><small>Event Bus</small>"]
+        clickhouse["📊 ClickHouse<br/><small>OLAP Analytics</small>"]
+        s3["🪣 AWS S3<br/><small>Campaign Assets</small>"]
+    end
+
+    %% --- Monitoring Layer ---
+    subgraph CLOUD["☁️ AWS Monitoring"]
+        cloudwatch["🧩 CloudWatch<br/><small>Metrics + Alarms</small>"]
+        grafana["📈 Grafana Dashboards"]
+    end
+
+    %% --- Relationships (Directional Flow) ---
+    customer -->|HTTPS / WebSocket| mobileApp
+    brandAdmin -->|HTTPS| webApp
+
+    mobileApp -->|gRPC / REST| lb
+    webApp -->|HTTPS| lb
+    lb --> istioIngress --> apiGateway
+    apiGateway --> svcgrp
+    svcgrp --> postgres
+    svcgrp --> redis
+    svcgrp --> rabbitmq
+    svcgrp --> clickhouse
+    svcgrp --> s3
+    svcgrp --> otelCollector
+    otelCollector --> prometheus
+    otelCollector --> loki
+    otelCollector --> jaeger
+    prometheus --> grafana
+    loki --> grafana
+    cloudwatch --> grafana
+
+    %% --- Styling ---
+    classDef user fill:#fff8e1,stroke:#ffb300,stroke-width:1px,color:#000;
+    classDef app fill:#e3f2fd,stroke:#1e88e5,stroke-width:1px,color:#000;
+    classDef infra fill:#ede7f6,stroke:#6a1b9a,stroke-width:1px,color:#000;
+    classDef data fill:#f1f8e9,stroke:#558b2f,stroke-width:1px,color:#000;
+    classDef mon fill:#fce4ec,stroke:#ad1457,stroke-width:1px,color:#000;
+
+    class customer,brandAdmin user;
+    class mobileApp,webApp app;
+    class lb,istioIngress,apiGateway,svcAuth,svcCampaign,svcRedemption,svcReport,otelCollector,prometheus,loki,jaeger infra;
+    class postgres,redis,rabbitmq,clickhouse,s3 data;
+    class grafana,cloudwatch mon;
 ```
 
 ###### Traceability Links / Liên kết truy xuất
