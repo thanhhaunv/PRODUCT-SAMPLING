@@ -9718,7 +9718,149 @@ sequenceDiagram
 - **Mục đích của node này**: Prioritize NFRs.
 
 
+### 06.1_Architecture_Overview.md 🔄
 
+###### References / Tham chiếu
+- BRD.md Section 9 (Technical Requirements), System_Feature_Tree.md Section 2 (Services), Part04_Features (FR-007→FR-014), Part05_Non_Functional_Requirements (NFR-001→NFR-008), TOGAF 9.2, CNCF Cloud Native Architecture, IEEE 830-1998.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Cung cấp tổng quan kiến trúc hệ thống PSP platform hỗ trợ tất cả features FR-007→FR-014.  
+**Ý nghĩa**: Blueprint cho 50+ engineers implement microservices, Kubernetes, Istio Service Mesh. Đảm bảo unambiguous requirements, 100% traceability từ BRD→code, hỗ trợ parallel development teams.  
+**Cách làm**: Markdown với C4 Model diagrams, 8 architecture principles, capacity planning tables, explicit/self-contained per IEEE 830 standards.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: PSP platform architecture hỗ trợ barcode redemption (FR-007: 50K TPS), fraud detection (FR-011: ML scoring), A/B testing (FR-012), advanced reporting (FR-014) cho 100K users/day. 14 microservices trên Kubernetes + Istio Service Mesh, Event-Driven Architecture (RabbitMQ), Redis caching, PostgreSQL Citus (16 shards), full observability (OpenTelemetry→Prometheus/Grafana/ELK). Đạt NFR-001 (<3s transactions), NFR-002 (100K users), NFR-003 (OWASP/GDPR), NFR-004 (99.9% uptime). Clean Architecture với hexagonal boundaries, contract-first APIs (OpenAPI 3.0 + gRPC).  
+  - **Architecture Principles (8 Key Principles)**:  
+    | # | Principle | Description | PSP Implementation |
+    |---|-----------|-------------|-------------------|
+    | 1 | Microservices | Independent, scalable services | 14 Bounded Contexts (FR-007→FR-014) |
+    | 2 | Event-Driven | Async communication | RabbitMQ cho FR-010 notifications, FR-011 fraud |
+    | 3 | 12-Factor App | Stateless, config via env vars | Zero-downtime ArgoCD deployments |
+    | 4 | CQRS | Separate read/write models | FR-014 reporting, FR-009 analytics |
+    | 5 | Domain-Driven Design | Bounded contexts | Campaign/Redemption/Fraud/Analytics domains |
+    | 6 | Observability | 100% trace/slog/metric | OpenTelemetry → Jaeger/Prometheus/Loki |
+    | 7 | GitOps | Declarative deployments | ArgoCD + Terraform IaC |
+    | 8 | Zero Trust | mTLS, RBAC, Vault | Istio mTLS + Kyverno policies |
+
+  - **C4 Model - Context Diagram**:  
+```mermaid
+C4Context
+    title PSP Platform Architecture - System Context
+    Person(customer, "Customer", "Scans barcodes via mobile app")
+    Person(brandAdmin, "Brand Admin", "Creates campaigns, monitors ROI")
+    Person(platformAdmin, "Platform Admin", "Manages infrastructure")
+    
+    System(pspPlatform, "PSP Platform", "Microservices + K8s + Istio\n100K users/day, <3s P99")
+    
+    SystemExt(twilio, "Twilio", "SMS Provider - FR-010")
+    SystemExt(sendgrid, "SendGrid", "Email Provider - FR-010")
+    SystemExt(posSystems, "POS Systems", "Retail POS Integration - FR-007")
+    
+    Rel(customer, pspPlatform, "HTTPS/gRPC\nBarcode redemption FR-007")
+    Rel(brandAdmin, pspPlatform, "HTTPS\nCampaign mgmt FR-008")
+    Rel(platformAdmin, pspPlatform, "HTTPS\nMonitoring NFR-006")
+    Rel(pspPlatform, twilio, "REST\nSMS delivery <5s")
+    Rel(pspPlatform, sendgrid, "REST\nEmail delivery <10s")
+    Rel(pspPlatform, posSystems, "gRPC\nReal-time redemption")
+```
+
+  - **C4 Model - Containers Diagram**:  
+```mermaid
+C4Container
+    title PSP Platform - Containers
+    Person(customer, "Customer", "Mobile App")
+    Person(brandAdmin, "Brand Admin", "Web Dashboard")
+    
+    System_Boundary(pspPlatform, "PSP Platform") {
+        Container(mobileApp, "Mobile App", "React Native 0.74 + Expo", "Barcode scanner UI")
+        Container(webApp, "Web App", "React 18 + Vite + shadcn/ui", "Brand Admin Dashboard")
+        
+        ContainerDb(postgres, "PostgreSQL 16", "Citus 16 shards + 5 replicas/shard", "Primary OLTP")
+        ContainerDb(redis, "Redis 7.2", "Cluster 3 nodes", "Sessions + Cache")
+        ContainerDb(clickhouse, "ClickHouse", "OLAP cluster", "Analytics FR-009/014")
+        
+        Container(rabbitmq, "RabbitMQ 3.13", "Cluster 3 nodes", "Event Bus")
+    }
+    
+    System_Boundary(k8sCluster, "EKS Cluster") {
+        Container(apiGateway, "API Gateway", "Kong + Istio Ingress", "mTLS termination")
+        ContainerGroup(microservices, "14 Microservices", "Node.js 20 + NestJS", "FR-007→FR-014")
+        Container(otelCollector, "OpenTelemetry Collector", "Jaeger/Prometheus/Loki", "Observability")
+    }
+    
+    Rel(customer, mobileApp, "HTTPS/WebSocket")
+    Rel(brandAdmin, webApp, "HTTPS")
+    Rel(mobileApp, apiGateway, "gRPC/REST")
+    Rel(webApp, apiGateway, "gRPC/REST")
+    Rel(apiGateway, microservices, "mTLS + Istio")
+    Rel(microservices, postgres, "TLS Connection Pool")
+    Rel(microservices, redis, "RESP")
+    Rel(microservices, rabbitmq, "AMQP")
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, System_Feature_Tree.md Section 2, Part04_Features (FR-007→FR-014), Part05_NFRs (NFR-001→NFR-008).  
+- **Thể hiện yêu cầu**: Complete architecture cho tất cả FRs + NFRs.  
+- **Kết nối với**: 06.2_Logical_Architecture, 06.3_Physical_Architecture, Part06B_Design_Patterns.  
+- **Tài liệu tham chiếu**: TOGAF 9.2, CNCF Cloud Native Architecture, C4 Model (Simon Brown).
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: AWS/GCP cloud provider, team familiar Kubernetes/Docker/Istio, customers có smartphones cho barcode scanning.  
+- **Ràng buộc**: <50ms inter-service latency (NFR-001), 99.9% uptime (NFR-004), GDPR compliance (NFR-008), cost < $10K/month cho 100K users/day.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: Kubernetes 1.29+, Istio 1.20+, Node.js 20.11 LTS, PostgreSQL 16+, RabbitMQ 3.13+.  
+- **Risks**: 
+  1. Service coupling cao → **Mitigation**: Strict bounded contexts (06.2.3), Istio circuit breakers  
+  2. Observability gaps → **Mitigation**: OpenTelemetry mandatory 100% coverage  
+  3. Deployment complexity → **Mitigation**: GitOps với ArgoCD, blue-green deployments  
+  4. Database sharding complexity → **Mitigation**: Citus managed service
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Cover 100% FR-007→FR-014 + NFR-001→NFR-008 mapping trong diagrams.  
+- **Performance**: C4 diagrams render correctly, <2s page load time trên GitHub/Markdown viewers.  
+- **UI Consistency**: Mermaid diagrams WCAG 2.1 AA compliant (color contrast, readable fonts).  
+- **Integration/Security**: 100% service coverage trong containers diagram, mTLS enforced.  
+- **Verifiable**: 100% traceability links clickable và valid.  
+- **Testable**: Architecture validates 100K users/day capacity qua load simulation (K6).
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |
+|----------------|------------|---------------------|-------------|
+| Product Manager | [TBD] | - | - |
+| Technical Lead | [TBD] | - | - |
+| Solution Architect | [TBD] | - | - |
+| DevOps Lead | [TBD] | - | - |
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: 
+```mermaid
+classDiagram
+    class IArchitectureValidator {
+        +validateScalability(features: Feature[], nfrs: NFR[]): ValidationResult
+        +validateDeployment(topology: DeploymentDiagram): boolean
+    }
+```
+- **Sequence Diagram**: Architecture Validation Flow:
+```mermaid
+sequenceDiagram
+    Architect->>+Validator: validate(features: FR-007..014, nfrs: NFR-001..008)
+    Validator->>+ServiceCatalog: checkBoundedContexts()
+    Validator->>+K8sCluster: validateScaling(100K_users)
+    Validator->>+IstioMesh: checkMTLS()
+    K8sCluster-->>-Validator: capacity_ok
+    IstioMesh-->>-Validator: mTLS_enforced
+    Validator-->>-Architect: Architecture_VALIDATED
+```
+- **API Endpoint Stubs / Contracts**: 
+```
+GET /architecture/validate 
+{ "features": ["FR-007", "FR-008"], "nfrs": ["NFR-001"] }
+→ { "valid": true, "capacity": "100K_users/day", "issues": [] }
+```
+- **Reusable Design Pattern Implementation Notes**: Facade pattern cho architecture validation, Strategy pattern cho deployment targets (AWS/GCP/Azure).  
+- **Mục đích của node này**: Cung cấp complete architecture overview cho PSP platform với C4 Model và 8 principles.
 
 
 
