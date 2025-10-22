@@ -8971,6 +8971,752 @@ sequenceDiagram
 - **Mục đích của node này**: Provide traceability for Part04 features.
 
 
+## Part05_Non_Functional_Requirements/
+
+### 05.1_Overview.md
+
+###### References / Tham chiếu
+- BRD.md Section 9 (Technical Requirements), System_Feature_Tree.md Section 2 (Services), Product-Sampling-Vision-and-Strategy Document.md Section 4 (Strategic Positioning).
+- IEEE 830-1998 for non-functional requirements, ISO/IEC 25010 for quality attributes.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Provide an overview of non-functional requirements (NFRs) for the PSP platform, ensuring performance, scalability, security, and compliance.  
+**Ý nghĩa**: Defines system quality attributes to support functional features (FR-007 to FR-014).  
+**Cách làm**: Markdown with headings, tables, Mermaid diagrams, 250-400 words, bullet lists (5-8 items), explicit/self-contained per IEEE guidelines.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Part05 defines NFRs for the PSP platform, ensuring robust performance, scalability, security, reliability, maintainability, auditability, usability, and compliance. Supports features like barcode redemption (FR-007), fraud detection (FR-011), and advanced reporting (FR-014) in a microservices architecture. Pain point: Low-value gift fraud (~1 USD) requires efficient, secure systems; goal: <3s transaction processing, 99.9% uptime, GDPR compliance. Integrates with Redemption Service, Analytics Service, and Fraud Detection Service (System_Feature_Tree.md Section 2). Scalable for 100K users/day, with audit logs and RBAC for access control.  
+  - **Tính năng chính / Key NFRs**:  
+    - Performance: <3s transaction processing, <5s report generation.  
+    - Scalability: Handle 100K users/day, auto-scaling Kubernetes.  
+    - Security: Zero PII leakage, OWASP-compliant.  
+    - Reliability: 99.9% uptime, fault-tolerant services.  
+    - Maintainability: >90% code test coverage, modular design.  
+    - Auditability: 100% action logging, GDPR-compliant audits.  
+    - Usability: WCAG 2.1 compliant UI, <5s learning curve for admins.  
+    - Compliance: GDPR, PCI-DSS for payment data.  
+  - **Kiến trúc / Architecture**: NFR integration flow.  
+
+```mermaid
+graph TB
+    NFRs --> Services[Microservices]
+    NFRs --> Compliance[GDPR, PCI-DSS]
+    NFRs --> Audit[Audit Logs]
+    NFRs --> UI[WCAG 2.1 UI]
+    Services --> RedemptionService[Redemption Service]
+    Services --> AnalyticsService[Analytics Service]
+    Services --> FraudDetection[Fraud Detection Service]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9, System_Feature_Tree.md Section 2, Access_Control_Tree_Grok.md Section 2.  
+- Thể hiện yêu cầu: NFR-001 to NFR-008.  
+- Kết nối với: Part04_Features, Part08_API_Design.  
+- **Tài liệu tham chiếu**: ISO/IEC 25010.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Stable cloud infrastructure, trained admin users.  
+- Ràng buộc: GDPR/PCI-DSS mandatory, <50ms inter-service latency.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: All services (Redemption, Analytics, Fraud Detection).  
+- Risks: Performance bottlenecks → Mitigation: Caching; Risk: Non-compliance → Mitigation: Audits; Risk: Downtime → Mitigation: Redundancy.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% NFRs, list 5-8 items.  
+- Performance: <3s transaction processing, <5s report generation.  
+- UI Consistency: WCAG 2.1 compliant.  
+- Integration / Security: 100% test coverage, zero PII leakage.  
+- Verifiable: Traceable to requirements.  
+- Testable: Diagram renders correctly.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: NFRValidator (validateNFR(): Result).  
+- **Sequence Diagram**: NFR Validation Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    QA->>System: Validate NFRs
+    System->>Services: Check Compliance
+    Services->>QA: Result
+```
+- **API Endpoint Stubs / Contracts**: /nfr/validate (POST, {nfrId: string}).  
+- **Reusable Design Pattern Implementation Notes**: Decorator pattern for NFR validation.  
+- **Mục đích của node này**: Provide overview of NFRs.
+
+### 05.2_NFR-001_Performance.md
+
+###### References / Tham chiếu
+- BRD.md Section 9.1, System_Feature_Tree.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define performance requirements for the PSP platform.  
+**Ý nghĩa**: Ensure fast transaction and report processing for user satisfaction.  
+**Cách làm**: Markdown with tables, Mermaid diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR-001 ensures <3s transaction processing (e.g., barcode redemption, fraud checks) and <5s report generation, supporting 100K users/day.  
+  - **Functional Specifications**:  
+    - Barcode redemption processing <3s.  
+    - Fraud detection checks <3s, >95% accuracy.  
+    - Report generation <5s, 100% accuracy.  
+    - API response time <50ms (inter-service).  
+    - Support 100K concurrent users/day.  
+    - Caching with Redis for <1s data retrieval.  
+    - Load balancing for even traffic distribution.  
+    - Real-time dashboard updates <5s.  
+  - **Kiến trúc / Architecture**: Performance flow.  
+
+```mermaid
+sequenceDiagram
+    Customer->>RedemptionService: Redeem Barcode
+    RedemptionService->>Cache: Check Cache
+    Cache->>RedemptionService: Data
+    RedemptionService->>Customer: Success (<3s)
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9.1, System_Feature_Tree.md Section 2.  
+- Thể hiện yêu cầu: NFR-001.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: ISO/IEC 25010.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Stable cloud infrastructure, optimized databases.  
+- Ràng buộc: <3s transaction processing, <5s report generation.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Redemption Service, Analytics Service, Cache (Redis).  
+- Risks: Latency spikes → Mitigation: Caching, load balancing; Risk: Overload → Mitigation: Auto-scaling.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% performance metrics, list 5-8 items.  
+- Performance: <3s transactions, <5s reports.  
+- UI Consistency: WCAG 2.1 for dashboards.  
+- Integration / Security: 100% test coverage.  
+- Verifiable: Traceable to requirements.  
+- Testable: Metrics verifiable via load testing.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: PerformanceMonitor (monitorLatency(): Result).  
+- **Sequence Diagram**: Performance Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    System->>Cache: Fetch Data
+    Cache->>System: Response (<1s)
+```
+- **API Endpoint Stubs / Contracts**: /performance/monitor (GET, {metrics: array}).  
+- **Reusable Design Pattern Implementation Notes**: Observer pattern for performance monitoring.  
+- **Mục đích của node này**: Define performance requirements.
+
+### 05.3_NFR-002_Scalability.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9.2, System_Feature_Tree.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Update scalability requirements for the PSP platform.  
+**Ý nghĩa**: Ensure system handles growing user base and traffic.  
+**Cách làm**: Markdown with tables, Mermaid diagrams, updated to reflect 100K users/day.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR-002 ensures scalability to support 100K users/day, 100K transactions/day, and 100K reports/month using auto-scaling Kubernetes.  
+  - **Functional Specifications**:  
+    - Auto-scale services for 100K users/day.  
+    - Handle 100K transactions/day without latency increase.  
+    - Support 100K reports/month with <5s generation.  
+    - Horizontal scaling for microservices.  
+    - Load balancing across regions.  
+    - Graceful degradation during peak loads.  
+    - Support multi-region deployments.  
+    - Monitor scaling via Prometheus/Grafana.  
+  - **Kiến trúc / Architecture**: Scalability flow.  
+
+```mermaid
+graph TB
+    Traffic --> LoadBalancer[Load Balancer]
+    LoadBalancer --> ServiceA[Service Instance 1]
+    LoadBalancer --> ServiceB[Service Instance 2]
+    ServiceA --> Kubernetes[Kubernetes Auto-scaling]
+    ServiceB --> Kubernetes
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9.2, System_Feature_Tree.md Section 2.  
+- Thể hiện yêu cầu: NFR-002.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: ISO/IEC 25010.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Cloud provider supports auto-scaling, stable Kubernetes.  
+- Ràng buộc: No latency increase at peak, cost-effective scaling.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Kubernetes, Load Balancer, Monitoring Services.  
+- Risks: Scaling lag → Mitigation: Proactive auto-scaling; Risk: Cost overruns → Mitigation: Cost monitoring.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% scalability metrics, list 5-8 items.  
+- Performance: Handle 100K users/day, no errors.  
+- UI Consistency: N/A.  
+- Integration / Security: 100% test coverage.  
+- Verifiable: Traceable to requirements.  
+- Testable: Scalability verifiable via stress testing.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ScalabilityManager (scaleService(): Result).  
+- **Sequence Diagram**: Scaling Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    Traffic->>Kubernetes: Increase Load
+    Kubernetes->>Service: Spin Up Instance
+    Service->>Traffic: Handle Request
+```
+- **API Endpoint Stubs / Contracts**: /scale/monitor (GET, {metrics: array}).  
+- **Reusable Design Pattern Implementation Notes**: Factory pattern for instance scaling.  
+- **Mục đích của node này**: Update scalability requirements.
+
+### 05.4_NFR-003_Security.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9.3, Access_Control_Tree_Grok.md Section 2, OWASP Top 10.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Update security requirements for the PSP platform.  
+**Ý nghĩa**: Protect against fraud, data breaches, and ensure compliance.  
+**Cách làm**: Markdown with tables, Mermaid diagrams, updated for OWASP compliance.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR-003 ensures zero PII leakage, OWASP-compliant security, and RBAC for all services, protecting features like fraud detection (FR-011).  
+  - **Functional Specifications**:  
+    - Zero PII leakage, GDPR-compliant.  
+    - OWASP Top 10 protections (e.g., SQL injection, XSS).  
+    - RBAC for all services (Access_Control_Tree_Grok.md).  
+    - End-to-end encryption for data in transit.  
+    - Audit logs for 100% security events.  
+    - Regular penetration testing.  
+    - Secure APIs with OAuth 2.0.  
+    - Automated vulnerability scanning.  
+  - **Kiến trúc / Architecture**: Security flow.  
+
+```mermaid
+sequenceDiagram
+    Customer->>API: Request Access
+    API->>AuthService: Validate Token (OAuth 2.0)
+    AuthService->>RBAC: Check Permissions
+    API->>Customer: Authorized Response
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9.3, Access_Control_Tree_Grok.md Section 2.  
+- Thể hiện yêu cầu: NFR-003.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: OWASP Guidelines.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Secure cloud provider, trained security team.  
+- Ràng buộc: GDPR/PCI-DSS mandatory, zero PII leakage.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Auth Service, RBAC, Audit Logs.  
+- Risks: Security breaches → Mitigation: Penetration testing; Risk: Non-compliance → Mitigation: Audits.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% security measures, list 5-8 items.  
+- Performance: N/A.  
+- UI Consistency: WCAG 2.1 for security alerts.  
+- Integration / Security: 100% test coverage, zero vulnerabilities.  
+- Verifiable: Traceable to requirements.  
+- Testable: Security verifiable via penetration tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: SecurityGuard (secureRequest(): Result).  
+- **Sequence Diagram**: Security Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    API->>AuthService: Validate Request
+    AuthService->>API: Secure Response
+```
+- **API Endpoint Stubs / Contracts**: /security/validate (POST, {request: object}).  
+- **Reusable Design Pattern Implementation Notes**: Decorator pattern for security checks.  
+- **Mục đích của node này**: Update security requirements.
+
+### 05.5_NFR-004_Reliability.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9.4, System_Feature_Tree.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Update reliability requirements for the PSP platform.  
+**Ý nghĩa**: Ensure 99.9% uptime and fault tolerance.  
+**Cách làm**: Markdown with tables, Mermaid diagrams, updated for redundancy.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR-004 ensures 99.9% uptime, fault-tolerant microservices, and graceful degradation for features like redemption (FR-007).  
+  - **Functional Specifications**:  
+    - Achieve 99.9% uptime for all services.  
+    - Fault-tolerant microservices with redundancy.  
+    - Graceful degradation during failures.  
+    - Automated failover for critical services.  
+    - Monitor uptime via Prometheus/Grafana.  
+    - Retry policies for failed transactions.  
+    - Backup and restore within 1 hour.  
+    - Handle 100K transactions/day reliably.  
+  - **Kiến trúc / Architecture**: Reliability flow.  
+
+```mermaid
+graph TB
+    Service --> Redundancy[Redundant Instances]
+    Service --> Failover[Automated Failover]
+    Service --> Monitoring[Prometheus/Grafana]
+    Service --> Backup[Backup System]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9.4, System_Feature_Tree.md Section 2.  
+- Thể hiện yêu cầu: NFR-004.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: ISO/IEC 25010.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Redundant infrastructure, stable monitoring tools.  
+- Ràng buộc: 99.9% uptime, <1h recovery.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Kubernetes, Monitoring Services, Backup System.  
+- Risks: Downtime → Mitigation: Redundancy; Risk: Data loss → Mitigation: Backups.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% reliability metrics, list 5-8 items.  
+- Performance: 99.9% uptime, <1h recovery.  
+- UI Consistency: N/A.  
+- Integration / Security: 100% test coverage.  
+- Verifiable: Traceable to requirements.  
+- Testable: Reliability verifiable via uptime tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ReliabilityManager (ensureUptime(): Result).  
+- **Sequence Diagram**: Reliability Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    Service->>Failover: Detect Failure
+    Failover->>Service: Switch Instance
+```
+- **API Endpoint Stubs / Contracts**: /reliability/monitor (GET, {metrics: array}).  
+- **Reusable Design Pattern Implementation Notes**: Circuit Breaker pattern for fault tolerance.  
+- **Mục đích của node này**: Update reliability requirements.
+
+### 05.6_NFR-005_Maintainability.md
+
+###### References / Tham chiếu
+- BRD.md Section 9.5, System_Feature_Tree.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define maintainability requirements for the PSP platform.  
+**Ý nghĩa**: Ensure ease of updates and code maintenance.  
+**Cách làm**: Markdown with tables, Mermaid diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR-005 ensures >90% code test coverage, modular microservices, and easy updates for features like A/B testing (FR-012).  
+  - **Functional Specifications**:  
+    - >90% unit test coverage for all services.  
+    - Modular microservices architecture.  
+    - Automated CI/CD pipelines for updates.  
+    - Clear documentation for APIs and code.  
+    - Zero-downtime deployments.  
+    - Support for hotfixes within 1 hour.  
+    - Code linting and style consistency.  
+    - Versioned APIs for backward compatibility.  
+  - **Kiến trúc / Architecture**: Maintainability flow.  
+
+```mermaid
+graph TB
+    Codebase --> CI_CD[CI/CD Pipeline]
+    Codebase --> Tests[Unit Tests]
+    Codebase --> Docs[API Documentation]
+    Codebase --> Deployment[Zero-Downtime Deployment]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9.5, System_Feature_Tree.md Section 2.  
+- Thể hiện yêu cầu: NFR-005.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: ISO/IEC 25010.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Skilled dev team, stable CI/CD tools.  
+- Ràng buộc: >90% test coverage, zero-downtime updates.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: CI/CD Tools, Testing Frameworks.  
+- Risks: Code debt → Mitigation: Refactoring; Risk: Deployment errors → Mitigation: Rollbacks.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% maintainability metrics, list 5-8 items.  
+- Performance: Zero-downtime deployments.  
+- UI Consistency: N/A.  
+- Integration / Security: 100% test coverage.  
+- Verifiable: Traceable to requirements.  
+- Testable: Maintainability verifiable via code reviews.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: MaintenanceManager (updateSystem(): Result).  
+- **Sequence Diagram**: Maintenance Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    Dev->>CI_CD: Deploy Update
+    CI_CD->>Service: Apply Update
+    Service->>Dev: Success
+```
+- **API Endpoint Stubs / Contracts**: /maintain/update (POST, {update: object}).  
+- **Reusable Design Pattern Implementation Notes**: Facade pattern for modular updates.  
+- **Mục đích của node này**: Define maintainability requirements.
+
+### 05.7_NFR-006_Auditability.md
+
+###### References / Tham chiếu
+- BRD.md Section 9.6, Access_Control_Tree_Grok.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define auditability requirements for the PSP platform.  
+**Ý nghĩa**: Ensure traceability of actions for compliance and fraud detection (FR-011).  
+**Cách làm**: Markdown with tables, Mermaid diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR-006 ensures 100% action logging, GDPR-compliant audits, and traceable events for all services.  
+  - **Functional Specifications**:  
+    - Log 100% of user and system actions.  
+    - GDPR-compliant audit logs.  
+    - Store logs for 1 year (compliance).  
+    - Real-time audit log access (<5s).  
+    - RBAC for log access control.  
+    - Export logs in JSON/CSV.  
+    - Audit fraud detection events (FR-011).  
+    - Immutable log storage.  
+  - **Kiến trúc / Architecture**: Auditability flow.  
+
+```mermaid
+sequenceDiagram
+    User->>Service: Perform Action
+    Service->>AuditService: Log Action
+    AuditService->>DB: Store Log
+    AuditService->>Admin: Provide Access
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9.6, Access_Control_Tree_Grok.md Section 2.  
+- Thể hiện yêu cầu: NFR-006.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: GDPR Guidelines.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Stable audit storage, secure access control.  
+- Ràng buộc: 100% action logging, GDPR compliance.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Audit Service, RBAC, Storage.  
+- Risks: Log tampering → Mitigation: Immutable storage; Risk: Access breaches → Mitigation: RBAC.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% audit metrics, list 5-8 items.  
+- Performance: <5s log access.  
+- UI Consistency: WCAG 2.1 for audit UI.  
+- Integration / Security: 100% test coverage, zero leakage.  
+- Verifiable: Traceable to requirements.  
+- Testable: Audit logs verifiable via compliance checks.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: AuditLogger (logAction(): Result).  
+- **Sequence Diagram**: Audit Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    Service->>AuditService: Log Event
+    AuditService->>DB: Store
+```
+- **API Endpoint Stubs / Contracts**: /audit/logs (GET, {logs: array}).  
+- **Reusable Design Pattern Implementation Notes**: Observer pattern for logging.  
+- **Mục đích của node này**: Define auditability requirements.
+
+### 05.8_NFR-007_Usability.md
+
+###### References / Tham chiếu
+- BRD.md Section 9.7, System_Feature_Tree.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define usability requirements for the PSP platform.  
+**Ý nghĩa**: Ensure intuitive interfaces for Customers and Brand Admins.  
+**Cách làm**: Markdown with tables, Mermaid diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR-007 ensures WCAG 2.1 compliant UI, <5s learning curve for admins, and intuitive redemption for Customers.  
+  - **Functional Specifications**:  
+    - WCAG 2.1 compliant UI for accessibility.  
+    - <5s learning curve for Brand Admin tasks.  
+    - Intuitive barcode redemption for Customers.  
+    - Multilingual support (5+ languages).  
+    - Responsive design for web/mobile.  
+    - User feedback collection mechanism.  
+    - Consistent UI across services.  
+    - Error messages clear and actionable.  
+  - **Kiến trúc / Architecture**: Usability flow.  
+
+```mermaid
+graph TB
+    User --> UI[WCAG 2.1 UI]
+    UI --> RedemptionService[Redemption Service]
+    UI --> AnalyticsService[Analytics Service]
+    UI --> Feedback[User Feedback]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9.7, System_Feature_Tree.md Section 2.  
+- Thể hiện yêu cầu: NFR-007.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: WCAG 2.1 Guidelines.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Users familiar with digital platforms, stable UI framework.  
+- Ràng buộc: WCAG 2.1 mandatory, <5s learning curve.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: UI Framework, Redemption Service, Analytics Service.  
+- Risks: Poor usability → Mitigation: User testing; Risk: Accessibility issues → Mitigation: WCAG audits.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% usability metrics, list 5-8 items.  
+- Performance: <5s learning curve.  
+- UI Consistency: WCAG 2.1 compliant.  
+- Integration / Security: 100% test coverage.  
+- Verifiable: Traceable to requirements.  
+- Testable: Usability verifiable via user testing.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: UsabilityTester (testUI(): Result).  
+- **Sequence Diagram**: Usability Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    User->>UI: Perform Task
+    UI->>Service: Process
+    UI->>User: Feedback
+```
+- **API Endpoint Stubs / Contracts**: /usability/feedback (POST, {feedback: object}).  
+- **Reusable Design Pattern Implementation Notes**: Facade pattern for UI consistency.  
+- **Mục đích của node này**: Define usability requirements.
+
+### 05.9_NFR-008_Compliance.md
+
+###### References / Tham chiếu
+- BRD.md Section 9.8, Access_Control_Tree_Grok.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define compliance requirements for the PSP platform.  
+**Ý nghĩa**: Ensure adherence to GDPR, PCI-DSS, and other regulations.  
+**Cách làm**: Markdown with tables, Mermaid diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR-008 ensures GDPR and PCI-DSS compliance for data handling, especially for fraud detection (FR-011) and reporting (FR-014).  
+  - **Functional Specifications**:  
+    - GDPR-compliant PII handling.  
+    - PCI-DSS for payment-related data.  
+    - Regular compliance audits.  
+    - Data retention policies (1 year for logs).  
+    - User consent management for data collection.  
+    - Anonymization for analytics and reporting.  
+    - Audit logs for compliance events.  
+    - Support for regulatory reporting.  
+  - **Kiến trúc / Architecture**: Compliance flow.  
+
+```mermaid
+sequenceDiagram
+    User->>Service: Provide Data
+    Service->>ComplianceService: Validate GDPR/PCI-DSS
+    ComplianceService->>AuditService: Log Compliance
+    Service->>User: Success
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9.8, Access_Control_Tree_Grok.md Section 2.  
+- Thể hiện yêu cầu: NFR-008.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: GDPR, PCI-DSS Standards.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Stable compliance tools, trained legal team.  
+- Ràng buộc: GDPR/PCI-DSS mandatory, audited compliance.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Compliance Service, Audit Service.  
+- Risks: Non-compliance → Mitigation: Regular audits; Risk: Data breaches → Mitigation: Encryption.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% compliance metrics, list 5-8 items.  
+- Performance: N/A.  
+- UI Consistency: WCAG 2.1 for consent UI.  
+- Integration / Security: 100% test coverage, zero leakage.  
+- Verifiable: Traceable to requirements.  
+- Testable: Compliance verifiable via audits.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ComplianceChecker (checkCompliance(): Result).  
+- **Sequence Diagram**: Compliance Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    Service->>ComplianceService: Validate Data
+    ComplianceService->>Service: Result
+```
+- **API Endpoint Stubs / Contracts**: /compliance/check (POST, {data: object}).  
+- **Reusable Design Pattern Implementation Notes**: Strategy pattern for compliance checks.  
+- **Mục đích của node này**: Define compliance requirements.
+
+### 05.10_NFR_Priorities_Matrix.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, System_Feature_Tree.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Prioritize NFRs (NFR-001 to NFR-008) for the PSP platform.  
+**Ý nghĩa**: Guide development and testing focus based on NFR importance.  
+**Cách làm**: Markdown with table, mapping priorities.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: NFR Priorities Matrix ranks NFRs by criticality, impact, and feasibility, ensuring focus on security, performance, and compliance for features like fraud detection (FR-011).  
+  - **Priorities Matrix**:  
+
+| NFR ID | NFR Name | Priority | Impact | Feasibility | Dependencies | Features Supported |  
+|--------|----------|----------|--------|-------------|--------------|-------------------|  
+| NFR-001 | Performance | High | High user satisfaction | High (caching, load balancing) | Redemption, Analytics | FR-007, FR-011, FR-014 |  
+| NFR-002 | Scalability | High | Supports growth | High (Kubernetes) | All Services | FR-007 to FR-014 |  
+| NFR-003 | Security | Critical | Prevents breaches | High (OWASP, RBAC) | Auth, RBAC | FR-011, FR-013 |  
+| NFR-004 | Reliability | High | Ensures uptime | High (redundancy) | All Services | FR-007, FR-011 |  
+| NFR-005 | Maintainability | Medium | Eases updates | High (CI/CD) | All Services | FR-012, FR-013 |  
+| NFR-006 | Auditability | High | Ensures compliance | High (logging) | Audit Service | FR-011, FR-014 |  
+| NFR-007 | Usability | Medium | Improves UX | High (WCAG 2.1) | UI, Redemption | FR-007, FR-014 |  
+| NFR-008 | Compliance | Critical | Legal requirement | High (GDPR tools) | Compliance Service | FR-011, FR-013, FR-014 |  
+
+- **Kiến trúc / Architecture**: Priority mapping.  
+
+```mermaid
+graph TB
+    NFRs --> Priority[Priority Matrix]
+    Priority --> Critical[Critical: Security, Compliance]
+    Priority --> High[High: Performance, Scalability, Reliability, Auditability]
+    Priority --> Medium[Medium: Maintainability, Usability]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9, System_Feature_Tree.md Section 2.  
+- Thể hiện yêu cầu: NFR-001 to NFR-008.  
+- Kết nối với: 05.1_Overview, Part04_Features.  
+- **Tài liệu tham chiếu**: ISO/IEC 25010.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Clear prioritization criteria, stable infrastructure.  
+- Ràng buộc: Critical NFRs (Security, Compliance) mandatory.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: All services, compliance tools.  
+- Risks: Misprioritization → Mitigation: Stakeholder reviews; Risk: Resource constraints → Mitigation: Phased implementation.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Cover 100% NFRs in matrix, list 5-8 items.  
+- Performance: N/A.  
+- UI Consistency: N/A.  
+- Integration / Security: 100% traceability.  
+- Verifiable: Traceable to requirements.  
+- Testable: Matrix verifiable via review.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: PriorityMapper (mapNFR(): Matrix).  
+- **Sequence Diagram**: Priority Flow, Mermaid:  
+```mermaid
+sequenceDiagram
+    QA->>PriorityMatrix: Verify Priorities
+    PriorityMatrix->>DB: Check NFRs
+    DB->>QA: Result
+```
+- **API Endpoint Stubs / Contracts**: /nfr/priorities (GET, {nfrs: array}).  
+- **Reusable Design Pattern Implementation Notes**: Singleton pattern for priority matrix.  
+- **Mục đích của node này**: Prioritize NFRs.
+
 
 
 
