@@ -9884,6 +9884,793 @@ Response: 200 {
 - **Reusable Design Pattern Implementation Notes**: **Facade Pattern** cho architecture validation, **Strategy Pattern** cho multi-cloud deployment (AWS/GCP/Azure), **Observer Pattern** cho capacity alerts.  
 - **Mục đích của node này**: Cung cấp complete production-ready architecture blueprint cho PSP platform với C4 Model, capacity math, và 8 core principles.
 
+## Part06_System_Architecture/
+
+### 06.2_Logical_Architecture/
+
+#### 06.2.1_Layered_Architecture.md
+
+###### References / Tham chiếu
+- BRD.md Section 9 (Technical Requirements), System_Feature_Tree.md Section 2 (Services), Clean Architecture (Uncle Bob), IEEE 830-1998, GeeksforGeeks Layered Architecture.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Định nghĩa 4-layer Clean Architecture cho 14 microservices, hỗ trợ FR-007→FR-014.  
+**Ý nghĩa**: Đảm bảo dependency inversion, dễ maintain (NFR-005), test coverage 100%, decoupled domain logic từ infra.  
+**Cách làm**: Markdown headings/tables/Mermaid, tổ hợp Clean Arch + DDD, chi tiết 300 từ, bullet lists 5-8 items, Mermaid diagrams cho architecture flows.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: 4-layer Clean Architecture (Presentation, Application, Domain, Infrastructure) áp dụng cho tất cả microservices như Redemption Service (FR-007). Presentation xử lý API requests, Application orchestrate use cases, Domain chứa business rules (entities/value objects), Infrastructure implement repos/external adapters. Hỗ trợ NFR-001 (<3s transactions) qua caching, NFR-003 (OWASP security) qua decorators.  
+  - **Key Layers (6 items)**:  
+    - Presentation: Controllers, DTOs, API validation (NestJS/Fastify).  
+    - Application: Use cases, CQRS handlers, business orchestration.  
+    - Domain: Entities, aggregates, domain services (pure TypeScript).  
+    - Infrastructure: Repositories, external APIs (Prisma, Twilio adapters).  
+    - Dependency Rule: Outer → Inner only, interfaces in Domain.  
+    - Testability: 100% unit/integration tests per layer.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    P[Presentation Layer: Controllers + DTOs] --> A[Application Layer: Use Cases + CQRS]
+    A --> D[Domain Layer: Entities + Services]
+    D --> I[Infrastructure Layer: Repos + Adapters]
+    I -.-> D[Interfaces]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9, System_Feature_Tree.md Section 2, Part04 Features.  
+- Thể hiện yêu cầu: NFR-005 Maintainability, FR-007 Redemption.  
+- Kết nối với: 06.2.2_Microservices_Design, Part06B.3_Base_Classes.  
+- **Tài liệu tham chiếu**: Clean Architecture (Uncle Bob), GeeksforGeeks Layered Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Team familiar Clean Arch, TypeScript strict mode.  
+- Ràng buộc: No circular dependencies, >90% test coverage.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: NestJS, Prisma, TypeScript.  
+- Risks: Layer violations → Mitigation: ESLint plugin; Risks: Low test coverage → Mitigation: CI thresholds; Risks: Framework lock-in → Mitigation: Domain independence.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: 100% services implement 4 layers.  
+- Performance: Domain execution <10ms.  
+- UI Consistency: N/A.  
+- Integration / Security: Dependency inversion verified.  
+- Verifiable: Traceable to Clean Arch.  
+- Testable: >90% coverage per layer.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: Define IRepository cho Infrastructure.  
+- **Sequence Diagram**: (e.g., Redemption Use Case → Barcode Validation, Mermaid).  
+```mermaid
+sequenceDiagram
+    Controller->>UseCase: execute(redemption)
+    UseCase->>Domain: validate(barcode)
+    Domain->>Repo: findById(barcode)
+    Repo-->>Domain
+    Domain-->>UseCase
+    UseCase-->>Controller
+```
+- **API Endpoint Stubs / Contracts**: REST /layer/validate (POST, {layer: string}).  
+- **Reusable Design Pattern Implementation Notes**: Dependency Injection cho layers.  
+- **Mục đích của node này**: Define layered architecture cho microservices.
+
+#### 06.2.2_Microservices_Design.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, System_Feature_Tree.md Section 2, Part04 Features, DDD (Eric Evans), GeeksforGeeks Microservices.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Design 14 microservices với bounded contexts cho FR-007→FR-014.  
+**Ý nghĩa**: Independent scaling, single responsibility, giảm coupling 80%.  
+**Cách làm**: Matrix tables, Mermaid graphs, capacity planning.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: 14 microservices theo DDD bounded contexts, database-per-service (polyglot), sync gRPC + async RabbitMQ. Hỗ trợ 100K TPS (NFR-002), <50ms latency (NFR-001), zero downtime (NFR-004).  
+  - **Microservices List (14 items)**:  
+    - AuthService: JWT/RBAC.  
+    - UserService: Profiles/GDPR.  
+    - CampaignService: FR-008 CRUD.  
+    - RedemptionService: FR-007 scan.  
+    - FraudService: FR-011 ML.  
+    - NotificationService: FR-010 channels.  
+    - AnalyticsService: FR-009 metrics.  
+    - ABTestingService: FR-012 experiments.  
+    - RecommendationService: FR-013 ML.  
+    - ReportingService: FR-014 custom.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Auth[AuthService] --> User[UserService]
+    Campaign[CampaignService] --> Redemption[RedemptionService]
+    Redemption --> Fraud[FraudService]
+    Redemption --> Notification[NotificationService]
+    Notification --> Analytics[AnalyticsService]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9, System_Feature_Tree.md Section 2, Part04.  
+- Thể hiện yêu cầu: FR-007→FR-014.  
+- Kết nối với: 06.2.3_Service_Boundaries.  
+- **Tài liệu tham chiếu**: DDD (Evans), Microservices.io.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Eventual consistency OK.  
+- Ràng buộc: <50ms sync calls.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: RabbitMQ, Istio.  
+- Risks: Coupling → Mitigation: ACL; Risks: Consistency → Mitigation: Saga; Risks: Discovery → Mitigation: Istio.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: 14 services with boundaries.  
+- Performance: TPS achievable.  
+- UI Consistency: N/A.  
+- Integration / Security: Event schemas defined.  
+- Verifiable: Traceable to FRs.  
+- Testable: Contract testing 95%.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IServiceRegistry.  
+- **Sequence Diagram**: Service Interaction.  
+```mermaid
+sequenceDiagram
+    Redemption->>Fraud: gRPC score
+    Fraud-->>Redemption: Score
+```
+- **API Endpoint Stubs / Contracts**: GET /services.  
+- **Reusable Design Pattern Implementation Notes**: Bounded Context.  
+- **Mục đích của node này**: Design microservices.
+
+#### 06.2.3_Service_Boundaries.md 🆕
+
+###### References / Tham chiếu
+- 06.2.2_Microservices_Design, DDD Strategic Patterns, Part04 Features.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define strict bounded contexts cho 14 services.  
+**Ý nghĩa**: Single responsibility, giảm coupling.  
+**Cách làm**: Table boundaries, Mermaid flows.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Bounded contexts theo DDD cho FR-007→FR-014, database-per-service, ACL chống corruption.  
+  - **Service Boundaries (8 examples)**:  
+    - **Redemption**: Barcode validation/redemption.  
+    - **Fraud**: Risk scoring/blocking.  
+    - **Notification**: Delivery channels.  
+    - **Analytics**: Metrics/reporting.  
+    - **ABTesting**: Experiments/analysis.  
+    - **Recommendation**: Personalized offers.  
+    - **Reporting**: Custom/scheduled reports.  
+    - **Auth**: JWT/RBAC.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Redemption -->|ACL| Fraud
+    Redemption -->|Event| Notification
+    Notification -->|ACL| Analytics
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: 06.2.2_Microservices_Design, Part04.  
+- Thể hiện yêu cầu: NFR-005 Maintainability.  
+- Kết nối với: 06.2.4_Service_Dependencies.  
+- **Tài liệu tham chiếu**: DDD (Evans), GeeksforGeeks Bounded Contexts.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: DDD training.  
+- Ràng buộc: No shared DB.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: ACL adapters.  
+- Risks: Boundary violations → Mitigation: Code reviews; Risks: Data silos → Mitigation: Events; Risks: Over-partitioning → Mitigation: Aggregate roots.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: 100% services bounded.  
+- Performance: N/A.  
+- UI Consistency: N/A.  
+- Integration / Security: ACL implemented.  
+- Verifiable: Traceable to DDD.  
+- Testable: Integration tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IBoundaryValidator.  
+- **Sequence Diagram**:  
+```mermaid
+sequenceDiagram
+    ServiceA->>ACL: Request
+    ACL->>ServiceB: Translate
+    ServiceB-->>ACL
+    ACL-->>ServiceA
+```
+- **API Endpoint Stubs / Contracts**: POST /boundaries/validate.  
+- **Reusable Design Pattern Implementation Notes**: Anti-Corruption Layer.  
+- **Mục đích của node này**: Define service boundaries.
+
+#### 06.2.4_Service_Dependencies.md 🆕
+
+###### References / Tham chiếu
+- 06.2.3_Service_Boundaries, Part04 Features.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Map sync/async dependencies cho 14 services.  
+**Ý nghĩa**: Giảm coupling, dễ fault isolation.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Dependencies theo matrix, sync gRPC (<50ms), async events (RabbitMQ). Hỗ trợ FR-007 redemption → FR-011 fraud.  
+  - **Dependency Matrix (6 examples)**:  
+    | Service ↓ / Calls → | Auth | Campaign | Redemption | Fraud | Notification | Analytics |
+    |---------------------|------|----------|------------|-------|--------------|-----------|
+    | Redemption | X | X | | X | X | X |
+    | Fraud | | | | | | X |
+    | Notification | | | | | | X |
+  - **Architecture Diagram**:  
+
+```mermaid
+graph LR
+    Redemption -->|gRPC| Fraud  
+    Redemption -->|Event| Notification
+    Notification -->|gRPC| Analytics
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: 06.2.3_Service_Boundaries, Part04.  
+- Thể hiện yêu cầu: NFR-001 Latency.  
+- Kết nối với: 06.2.5_Service_Catalog.  
+- **Tài liệu tham chiếu**: Microservices.io Dependencies.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Async preferred.  
+- Ràng buộc: Max 3 sync dependencies/service.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: RabbitMQ, gRPC.  
+- Risks: Circular deps → Mitigation: Dep graph analysis; Risks: Async failures → Mitigation: Dead letter queues; Risks: Tight coupling → Mitigation: ACL.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Matrix covers 100% services.  
+- Performance: <50ms sync calls.  
+- UI Consistency: N/A.  
+- Integration / Security: Dependency injection verified.  
+- Verifiable: Traceable to FRs.  
+- Testable: Dep graph no cycles.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IDependencyAnalyzer.  
+- **Sequence Diagram**:  
+```mermaid
+sequenceDiagram
+    Redemption->>Fraud: sync gRPC
+    Fraud-->>Redemption
+    Redemption->>EventBus: async event
+    Notification->>EventBus: subscribe
+```
+- **API Endpoint Stubs / Contracts**: GET /dependencies/matrix.  
+- **Reusable Design Pattern Implementation Notes**: Service Locator.  
+- **Mục đích của node này**: Map service dependencies.
+
+#### 06.2.5_Service_Catalog.md 🆕
+
+###### References / Tham chiếu
+- System_Feature_Tree.md Section 2, Part04 Features.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Complete catalog 14 microservices với APIs, events, DB.  
+**Ý nghĩa**: Quick reference cho dev/onboarding.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Catalog chi tiết 14 services, hỗ trợ 100K users/day.  
+  - **Service Catalog (8 examples)**:  
+    | Service | APIs | Events | DB | TPS |
+    |---------|------|--------|----|-----|
+    | AuthService | 8 | 2 | PostgreSQL | 10K |
+    | RedemptionService | 12 | 5 | PostgreSQL | 50K |
+    | FraudService | 10 | 3 | PostgreSQL | 50K |
+    | NotificationService | 15 | 8 | Redis | 100K |
+    | AnalyticsService | 20 | 10 | ClickHouse | 2K |
+    | ABTestingService | 8 | 4 | PostgreSQL | 5K |
+    | RecommendationService | 6 | 3 | PostgreSQL | 10K |
+    | ReportingService | 12 | 5 | ClickHouse | 1K |
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    AuthService --> UserService
+    CampaignService --> RedemptionService
+    RedemptionService --> FraudService
+    RedemptionService --> NotificationService
+    NotificationService --> AnalyticsService
+    AnalyticsService --> ABTestingService
+    AnalyticsService --> RecommendationService
+    AnalyticsService --> ReportingService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: System_Feature_Tree.md Section 2, Part04.  
+- Thể hiện yêu cầu: NFR-005.  
+- Kết nối với: 06.3.1_Deployment_Diagram.  
+- **Tài liệu tham chiếu**: Service Catalog Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: OpenAPI auto-gen.  
+- Ràng buộc: TPS targets per service.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: OpenAPI tools.  
+- Risks: Outdated catalog → Mitigation: CI gen; Risks: TPS overload → Mitigation: Scaling; Risks: Missing events → Mitigation: Event catalog.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: 100% 14 services documented.  
+- Performance: TPS verifiable.  
+- UI Consistency: N/A.  
+- Integration / Security: APIs secured.  
+- Verifiable: Traceable to FRs.  
+- Testable: Catalog gen in CI.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IServiceCatalog.  
+- **Sequence Diagram**:  
+```mermaid
+sequenceDiagram
+    Dev->>Catalog: queryService("Redemption")
+    Catalog->>DB: fetch
+    DB-->>Catalog
+    Catalog-->>Dev
+```
+- **API Endpoint Stubs / Contracts**: GET /services/catalog.  
+- **Reusable Design Pattern Implementation Notes**: Singleton catalog.  
+- **Mục đích của node này**: Complete service inventory.
+
+### 06.3_Physical_Architecture/
+
+#### 06.3.1_Deployment_Diagram.md 🔄
+
+###### References / Tham chiếu
+- 06.1_Architecture_Overview, AWS Well-Architected.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Production deployment topology cho 100K users/day.  
+**Ý nghĩa**: Blue-green deploys, zero downtime (NFR-004).  
+**Cách làm**: C4 Deployment diagram, YAML snippets.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Deployment trên AWS EKS với 3 AZs, 140 pods, Istio Gateway, auto-scaling HPA.  
+  - **Key Components (8 items)**:  
+    - EKS Control Plane: 3 AZs.  
+    - Worker Nodes: Fargate 80 vCPU.  
+    - API Gateway: Kong + Istio.  
+    - Services: 14 deployments.  
+    - Databases: Citus 16 shards.  
+    - Cache: Redis 3 nodes.  
+    - Event Bus: RabbitMQ 3 nodes.  
+    - Observability: OTEL + Grafana.  
+  - **Architecture Diagram**:  
+
+```mermaid
+C4Deployment
+    title PSP Deployment Topology (AWS EKS)
+    
+    Deployment_Node(internet, "Internet", "Global") {
+        Deployment_Node(alb, "AWS ALB", "HTTPS 443")
+    }
+    
+    Deployment_Node(vpc, "VPC Private", "3 AZs") {
+        Deployment_Node(eks, "EKS Cluster", "1.29") {
+            Deployment_Node(gateway, "Istio Gateway", "mTLS")
+            Deployment_Node(services, "14 Services", "Node.js Pods")
+            Deployment_Node(postgres, "PostgreSQL Citus", "16 Shards")
+            Deployment_Node(redis, "Redis Cluster", "3 Nodes")
+            Deployment_Node(rabbitmq, "RabbitMQ", "3 Nodes")
+            Deployment_Node(otel, "OpenTelemetry", "Jaeger/Prometheus/Loki")
+        }
+    }
+    
+    Rel(alb, gateway, "HTTPS")
+    Rel(gateway, services, "mTLS gRPC")
+    Rel(services, postgres, "TLS")
+    Rel(services, redis, "RESP")
+    Rel(services, rabbitmq, "AMQP")
+    Rel(services, otel, "OTLP")
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: 06.1_Architecture_Overview, System_Feature_Tree.md Section 2.  
+- Thể hiện yêu cầu: NFR-002 Scalability, NFR-004 Reliability.  
+- Kết nối với: 06.3.2_Infrastructure_Components.  
+- **Tài liệu tham chiếu**: AWS Well-Architected, C4 Model.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: AWS region us-east-1, Fargate for serverless compute.  
+- Ràng buộc: 3 AZs minimum, blue-green deploys <5min.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: EKS Fargate, Istio 1.20.  
+- Risks: AZ outage → Mitigation: 3 AZ redundancy; Risks: Scaling lag → Mitigation: HPA custom metrics; Risks: Config errors → Mitigation: GitOps ArgoCD.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: Diagram covers 100% components.  
+- Performance: <5min deploy time.  
+- UI Consistency: N/A.  
+- Integration / Security: mTLS verified.  
+- Verifiable: Traceable to NFRs.  
+- Testable: Deployment testable via ArgoCD sync.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Deployment Diagram / Abstract Interfaces**: IDeploymentValidator.  
+- **Sequence Diagram**: Deployment Flow.  
+```mermaid
+sequenceDiagram
+    Dev->>ArgoCD: Git Push
+    ArgoCD->>K8s: Sync Deployment
+    K8s->>Services: Rollout Pods
+    K8s->>Istio: Update Routing
+```
+- **API Endpoint Stubs / Contracts**: POST /deploy/validate.  
+- **Reusable Design Pattern Implementation Notes**: GitOps Pattern.  
+- **Mục đích của node này**: Define deployment topology.
+
+#### 06.3.2_Infrastructure_Components.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, AWS Well-Architected Framework.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define AWS infrastructure components for 100K users/day.  
+**Ý nghĩa**: Cost-optimized ($8.2K/month), reliable (99.9% uptime).  
+**Cách làm**: Table components, capacity calculations, YAML snippets.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: AWS infrastructure: EKS for compute, RDS for DB, ElastiCache for caching, S3 for assets, supporting 100K users/day (1.16 req/s avg, 500 peak).  
+  - **Key Components (8 items)**:  
+    | Component | Type | Spec | Monthly Cost |
+    |-----------|------|------|--------------|
+    | EKS Control Plane | Managed | 3 AZs | $72 |
+    | Fargate Pods | Serverless | 140 pods x 1 vCPU | $3,200 |
+    | RDS PostgreSQL | Citus | 16 shards x db.m7g.large | $2,800 |
+    | ElastiCache Redis | Cluster | 3 nodes cache.r7g.medium | $600 |
+    | RabbitMQ on EC2 | Cluster | 3 m7g.medium | $400 |
+    | S3 Storage | Standard | 10TB | $230 |
+    | ALB | Internet-facing | 10Gbps | $100 |
+    | VPC + NAT | Private | 3 AZs | $200 |
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    ALB[AWS ALB 10Gbps] --> VPC[VPC Private 3 AZs]
+    VPC --> EKS[EKS Fargate 140 pods]
+    EKS --> RDS[RDS Citus 16 shards]
+    EKS --> Redis[ElastiCache Redis 3 nodes]
+    EKS --> RabbitMQ[RabbitMQ Cluster 3 nodes]
+    EKS --> S3[S3 10TB]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: BRD.md Section 9, 06.3.1_Deployment_Diagram.  
+- Thể hiện yêu cầu: NFR-002 Scalability.  
+- Kết nối với: 06.3.3_Network_Topology.  
+- **Tài liệu tham chiếu**: AWS Well-Architected, Cost Explorer.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: us-east-1 region, steady traffic pattern.  
+- Ràng buộc: <$10K/month, 99.9% uptime.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: AWS EKS, RDS, ElastiCache.  
+- Risks: Cost overrun → Mitigation: Reserved Instances; Risks: Single AZ failure → Mitigation: 3 AZs; Risks: Vendor lock-in → Mitigation: Multi-cloud Terraform modules.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: 100% components specified.  
+- Performance: Capacity for 100K users.  
+- UI Consistency: N/A.  
+- Integration / Security: AWS IAM verified.  
+- Verifiable: Cost estimate traceable.  
+- Testable: Infrastructure testable via Terraform apply.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Component Diagram**: IInfrastructureSpec.  
+- **Sequence Diagram**: Infra Provision:  
+```mermaid
+sequenceDiagram
+    DevOps->>Terraform: apply
+    Terraform->>AWS: create EKS
+    Terraform->>AWS: create RDS
+    Terraform-->>DevOps: Complete
+```
+- **API Endpoint Stubs / Contracts**: GET /infra/status.  
+- **Reusable Design Pattern Implementation Notes**: IaC Pattern.  
+- **Mục đích của node này**: Define infrastructure components.
+
+#### 06.3.3_Network_Topology.md
+
+###### References / Tham chiếu
+- AWS VPC Best Practices, Zero Trust (NIST).
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define zero-trust network topology cho PSP.  
+**Ý nghĩa**: Secure mTLS traffic, no direct DB access.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Zero-Trust VPC với 3 AZs, ALB public, Istio mTLS private, no internet egress from services (NAT Gateway only). Hỗ trợ <50ms latency (NFR-001).  
+  - **Key Topology Elements (8 items)**:  
+    - Public Subnets: ALB only.  
+    - Private Subnets: EKS pods, DBs.  
+    - NAT Gateways: 3 (1/AZ) cho outbound.  
+    - Security Groups: Least privilege.  
+    - Network ACLs: Deny all inbound private.  
+    - VPC Flow Logs: 100% traffic logged.  
+    - WAF: OWASP rules.  
+    - VPN: For admin access.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    PublicInternet --> ALB[AWS ALB HTTPS]
+    ALB --> PublicSubnet[Public Subnets 3 AZs]
+    PublicSubnet --> PrivateSubnet[Private Subnets 3 AZs]
+    PrivateSubnet --> EKS[EKS Pods mTLS]
+    EKS --> RDS[RDS TLS]
+    EKS --> Redis[Redis AUTH]
+    PrivateSubnet --> NAT[NAT Gateway 3 AZs]
+    NAT --> PublicInternet
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: 06.3.2_Infrastructure_Components, NFR-003.  
+- Thể hiện yêu cầu: NFR-003 Security.  
+- Kết nối với: 06.3.4_Kubernetes_Architecture.  
+- **Tài liệu tham chiếu**: NIST Zero Trust, AWS VPC.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: AWS VPC peering if multi-account.  
+- Ràng buộc: No public DB access, mTLS mandatory.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: AWS VPC, NAT, WAF.  
+- Risks: Network breaches → Mitigation: WAF + Flow Logs; Risks: Latency from NAT → Mitigation: PrivateLink; Risks: Config errors → Mitigation: IaC Terraform.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: 100% traffic mTLS.  
+- Performance: <50ms latency.  
+- UI Consistency: N/A.  
+- Integration / Security: Zero trust verified.  
+- Verifiable: Traceable to NFR-003.  
+- Testable: Network penetration testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| Security Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Component Diagram**: INetworkValidator.  
+- **Sequence Diagram**: Network Traffic:  
+```mermaid
+sequenceDiagram
+    Internet->>ALB: HTTPS Request
+    ALB->>Istio: Forward
+    Istio->>Pod: mTLS
+    Pod->>DB: TLS
+```
+- **API Endpoint Stubs / Contracts**: GET /network/status.  
+- **Reusable Design Pattern Implementation Notes**: Zero Trust Pattern.  
+- **Mục đích của node này**: Define zero-trust network topology.
+
+#### 06.3.4_Kubernetes_Architecture.md 🆕
+
+###### References / Tham chiếu
+- Kubernetes Docs 1.29, EKS Best Practices.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define EKS cluster architecture cho 14 services.  
+**Ý nghĩa**: Auto-scaling, 99.9% uptime (NFR-004).  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: EKS Fargate cluster với 3 AZs, 140 pods, HPA custom metrics, ArgoCD GitOps. Hỗ trợ 100K users/day.  
+  - **Key Elements (8 items)**:  
+    - Control Plane: Managed, 3 AZs.  
+    - Workers: Fargate serverless, 80 vCPU.  
+    - Namespaces: core, intelligence, infra.  
+    - Resource Quotas: 10 vCPU/namespace.  
+    - HPA: CPU 70%, custom "redemptions/s" 1000.  
+    - PDB: 80% availability during upgrades.  
+    - Secrets: AWS Secrets Manager.  
+    - Networking: CNI Calico.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    ControlPlane[EKS Control Plane 3 AZs] --> Workers[Fargate Workers 140 pods]
+    Workers --> Namespaces[Namespaces: core/intelligence/infra]
+    Namespaces --> HPA[HPA CPU 70%]
+    HPA --> Metrics[Custom Metrics API]
+    Workers --> PDB[Pod Disruption Budget 80%]
+    Workers --> Secrets[AWS Secrets Manager]
+    Workers --> Networking[Calico CNI]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: 06.3.3_Network_Topology, NFR-002.  
+- Thể hiện yêu cầu: NFR-002 Scalability.  
+- Kết nối với: 06.3.5_Service_Mesh_Design.  
+- **Tài liệu tham chiếu**: Kubernetes Docs, EKS Blueprints.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Fargate for serverless, no EC2.  
+- Ràng buộc: 3 AZs minimum, HPA triggers <1min.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: EKS 1.29, Fargate, HPA.  
+- Risks: Scaling lag → Mitigation: Custom metrics; Risks: Pod evictions → Mitigation: PDB; Risks: Secrets leakage → Mitigation: Secrets Manager.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: 100% pods auto-scalable.  
+- Performance: <1min scale time.  
+- UI Consistency: N/A.  
+- Integration / Security: Secrets injected.  
+- Verifiable: Traceable to NFR-002.  
+- Testable: HPA testable qua K6.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Component Diagram**: IK8sValidator.  
+- **Sequence Diagram**: Scaling Flow.  
+```mermaid
+sequenceDiagram
+    MetricsAPI->>HPA: Trigger Scale
+    HPA->>K8s: Add Pods
+    K8s->>Services: Deploy
+```
+- **API Endpoint Stubs / Contracts**: GET /k8s/status.  
+- **Reusable Design Pattern Implementation Notes**: Auto-Scaling Pattern.  
+- **Mục đích của node này**: Define Kubernetes architecture.
+
+#### 06.3.5_Service_Mesh_Design.md 🆕
+
+###### References / Tham chiếu
+- Istio Docs 1.20, CNCF Service Mesh.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Design Istio service mesh cho mTLS, traffic mgmt.  
+**Ý nghĩa**: Zero trust, circuit breaking, observability.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Istio 1.20 trên EKS với mTLS strict, canary routing, observability.  
+  - **Key Designs (8 items)**:  
+    - mTLS: Strict mode 100% traffic.  
+    - VirtualServices: Weighted routing.  
+    - DestinationRules: Circuit breaker.  
+    - Gateways: HTTPS termination.  
+    - Kiali: Dashboard.  
+    - Jaeger: Tracing.  
+    - Prometheus: Metrics.  
+    - Envoy: Sidecar proxies.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Pod[Pod 1] --> Envoy[Envoy Sidecar]
+    Pod2[Pod 2] --> Envoy2[Envoy Sidecar]
+    Envoy --> Istio[Istio Control Plane]
+    Envoy2 --> Istio
+    Istio --> Kiali[Kiali Dashboard]
+    Istio --> Jaeger[Jaeger Tracing]
+    Istio --> Prometheus[Prometheus Metrics]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- Đầu vào từ: 06.3.4_Kubernetes_Architecture, NFR-003.  
+- Thể hiện yêu cầu: NFR-003 Security.  
+- Kết nối với: 06.5_Communication_Patterns.  
+- **Tài liệu tham chiếu**: Istio.io, CNCF.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: Envoy sidecars on all pods.  
+- Ràng buộc: mTLS mandatory, <10ms overhead.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Istio 1.20, K8s.  
+- Risks: Overhead latency → Mitigation: Tuning; Risks: Config errors → Mitigation: IstioOperator; Risks: Security holes → Mitigation: Auto mTLS.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- Functional: 100% mTLS coverage.  
+- Performance: <10ms mesh overhead.  
+- UI Consistency: N/A.  
+- Integration / Security: Circuit breaker tested.  
+- Verifiable: Traceable to NFR-003.  
+- Testable: Kiali verifiable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Component Diagram**: IMeshValidator.  
+- **Sequence Diagram**: Mesh Traffic:  
+```mermaid
+sequenceDiagram
+    Pod1->>Envoy: Request
+    Envoy->>Istio: Route
+    Istio->>Envoy2: Circuit Check
+    Envoy2->>Pod2: Deliver
+```
+- **API Endpoint Stubs / Contracts**: GET /mesh/status.  
+- **Reusable Design Pattern Implementation Notes**: Service Mesh Pattern.  
+- **Mục đích của node này**: Design Istio service mesh.
+
+
+
 
 
 
