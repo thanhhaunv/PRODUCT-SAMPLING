@@ -12139,6 +12139,6691 @@ sequenceDiagram
 - **Reusable Design Pattern Implementation Notes**: Database Sharding Pattern.  
 - **Mục đích của node này**: Define database partitioning.
 
+## Part06B_Design_Patterns/
+
+### 06B.1_Design_Patterns_Catalog/
+
+#### 06B.1.1_Creational_Patterns/
+
+##### 06B.1.1.1_Factory_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.10 (Notification System), System_Feature_Tree.md Section 1.10, GoF Design Patterns, IEEE 830-1998, GeeksforGeeks Factory Pattern.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Factory Pattern cho creating notification channels in FR-010, hỗ trợ multi-channel delivery (SMS, Email, Push) without direct instantiation.  
+**Ý nghĩa**: Giảm coupling, dễ extend new channels (e.g., WhatsApp for low-value gift alerts), đảm bảo scalable notification system.  
+**Cách làm**: Markdown with TypeScript code snippets, UML diagrams, PSP-specific use case, chi tiết 250-400 từ, bullet lists 5-8 items, Mermaid for architecture flows.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Factory Pattern creates concrete notification channels dynamically, based on user preference or fallback logic. For PSP, this supports FR-010 by abstracting Twilio/SendGrid/FCM, enabling easy provider switching without code changes. Pain point: Hard-coded channels lead to tight coupling; goal: Extendable to new providers with zero downtime.  
+  - **Key Features (8 items)**:  
+    - Abstract Factory interface for channels.  
+    - Concrete factories for SMS/Email/Push.  
+    - Runtime selection based on config.  
+    - Supports FR-010 multi-channel.  
+    - Reduces dependency injection complexity.  
+    - Testable with mock factories.  
+    - Scalable for 100K msgs/day.  
+    - GDPR-compliant by abstracting PII handling.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Client[Client] --> Factory[NotificationFactory]
+    Factory --> SMS[SMSChannel: Twilio]
+    Factory --> Email[EmailChannel: SendGrid]
+    Factory --> Push[PushChannel: FCM]
+    SMS --> Send[Send Message]
+    Email --> Send[Send Message]
+    Push --> Send[Send Message]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.10, System_Feature_Tree.md Section 1.10, Part04 FR-010.  
+- **Thể hiện yêu cầu**: FR-010 Notification System, NFR-002 Scalability.  
+- **Kết nối với**: 06B.1.1.2_Builder_Pattern, 04.3.4_Notification_System.  
+- **Tài liệu tham chiếu**: GoF Factory Pattern, GeeksforGeeks Factory Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Channel config from env vars, users have valid contact info.  
+- **Ràng buộc**: Factory must support at least 3 channels, <10ms instantiation.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: Twilio SDK, SendGrid SDK, FCM SDK.  
+- **Risks**: Wrong channel instantiation → Mitigation: Unit tests; Risks: Performance overhead → Mitigation: Lazy loading; Risks: Provider failure → Mitigation: Fallback factory; Risks: Security → Mitigation: mTLS wrappers; Risks: Scalability → Mitigation: Stateless factories.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Factory creates all channels correctly.  
+- **Performance**: Instantiation <10ms.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Channels GDPR compliant.  
+- **Verifiable**: Traceable to FR-010.  
+- **Testable**: Jest tests 100% coverage.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: INotificationChannelFactory.  
+- **Sequence Diagram**: Factory Creation:  
+```mermaid
+sequenceDiagram
+    Client->>Factory: create('SMS')
+    Factory->>SMSChannel: new
+    SMSChannel->>Client: Channel Instance
+```
+- **API Endpoint Stubs / Contracts**: POST /notification/factory.  
+- **Reusable Design Pattern Implementation Notes**: Abstract Factory for channels.  
+- **Mục đích của node này**: Define Factory Pattern for notification channels.
+
+##### 06B.1.1.2_Builder_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.8 (Campaign), System_Feature_Tree.md Section 1.8, GoF Builder Pattern.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Builder Pattern cho constructing complex campaign objects in FR-008.  
+**Ý nghĩa**: Fluent API, dễ create variants cho A/B testing (FR-012).  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Builder Pattern builds campaign objects step-by-step, supporting optional params like QR codes, budgets. For PSP, this enables flexible campaign creation with validation at build time.  
+  - **Key Features (8 items)**:  
+    - Fluent interface for chaining.  
+    - Optional params (QR, budget).  
+    - Validation at build().  
+    - Supports FR-008 campaigns.  
+    - Immutable built objects.  
+    - Testable with partial builds.  
+    - Scalable for 1K campaigns/day.  
+    - GDPR check in builder.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Builder[CampaignBuilder] --> withName[withName(string)]
+    Builder --> withBudget[withBudget(number)]
+    Builder --> withQR[withQR(string)]
+    Builder --> build[build(): Campaign]
+    build --> Campaign[Campaign Object]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.8, System_Feature_Tree.md Section 1.8.  
+- **Thể hiện yêu cầu**: FR-008 Campaign.  
+- **Kết nối với**: 06B.1.1.1_Factory_Pattern, 04.2.1_Campaign_Management.  
+- **Tài liệu tham chiếu**: GoF Builder, GeeksforGeeks Builder Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Campaign params from UI forms.  
+- **Ràng buộc**: Build time <5ms.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: TypeScript classes.  
+- Risks: Incomplete builds → Mitigation: Required fields; Risks: Performance → Mitigation: Lightweight builder; Risks: Validation bugs → Mitigation: Zod integration.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Builder creates valid campaigns.  
+- **Performance**: Build <5ms.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: GDPR checks passed.  
+- **Verifiable**: Traceable to FR-008.  
+- **Testable**: Jest tests 100% coverage.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICampaignBuilder.  
+- **Sequence Diagram**: Builder Flow:  
+```mermaid
+sequenceDiagram
+    Client->>Builder: withName()
+    Builder->>Builder: withBudget()
+    Builder->>Client: build()
+```
+- **API Endpoint Stubs / Contracts**: POST /campaign/builder.  
+- **Reusable Design Pattern Implementation Notes**: Fluent Builder.  
+- **Mục đích của node này**: Define Builder Pattern for campaigns.
+
+##### 06B.1.1.3_Singleton_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 9 (NFR-001), System_Feature_Tree.md Section 2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Singleton for global cache manager in NFR-001.  
+**Ý nghĩa**: Single instance for consistency, reduce memory.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Singleton Pattern ensures one cache manager instance for all services, supporting FR-007 redemption caching.  
+  - **Key Features (8 items)**:  
+    - Global single instance.  
+    - Thread-safe in Node.js.  
+    - Lazy initialization.  
+    - Supports NFR-001 caching.  
+    - Testable with reset method.  
+    - Scalable with cluster mode.  
+    - GDPR-compliant cache eviction.  
+    - Monitoring integration.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Service1[Service 1] --> Singleton[Singleton Cache Manager]
+    Service2[Service 2] --> Singleton
+    Service3[Service 3] --> Singleton
+    Singleton --> Redis[Redis Cluster]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, NFR-001.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06B.1.1.4_Prototype_Pattern, 06.6.2_Caching_Strategy.  
+- **Tài liệu tham chiếu**: GoF Singleton, GeeksforGeeks Singleton Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Node.js single-threaded.  
+- **Ràng buộc**: Immutable instance.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Redis client.  
+- Risks: Memory leaks → Mitigation: GC monitoring; Risks: Cluster incompatibility → Mitigation: Sticky sessions; Risks: Test isolation → Mitigation: Reset method; Risks: Scalability → Mitigation: Distributed cache; Risks: Security → Mitigation: Encrypted keys.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Single instance verified.  
+- **Performance**: Cache ops <1ms.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Encrypted cache.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Jest singleton tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICacheManager.  
+- **Sequence Diagram**: Singleton Access:  
+```mermaid
+sequenceDiagram
+    Service->>Singleton: getInstance()
+    Singleton->>Service: Instance
+```
+- **API Endpoint Stubs / Contracts**: GET /cache/singleton.  
+- **Reusable Design Pattern Implementation Notes**: Thread-safe Singleton.  
+- **Mục đích của node này**: Define Singleton for cache.
+
+##### 06B.1.1.4_Prototype_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.12 (A/B Testing), System_Feature_Tree.md Section 1.12.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Prototype for cloning A/B test variants (FR-012).  
+**Ý nghĩa**: Fast variant creation, reduce memory for similar objects.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Prototype Pattern copies existing test variants for quick A/B experiments.  
+  - **Key Features (8 items)**:  
+    - Deep cloning of variants.  
+    - Supports FR-012 experiments.  
+    - Memory efficient for 100K variants.  
+    - Testable with clone equality.  
+    - Scalable for large datasets.  
+    - GDPR-compliant cloning (no PII copy).  
+    - Integration with ABTestingService.  
+    - Versioning in clones.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    VariantA[Variant A] --> Prototype[Prototype Clone]
+    Prototype --> VariantB[Variant B Copy]
+    VariantB --> Experiment[Run A/B Test]
+    Experiment --> Analytics[Analyze]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.12, System_Feature_Tree.md Section 1.12.  
+- **Thể hiện yêu cầu**: FR-012 A/B Testing.  
+- **Kết nối với**: 06B.1.2.1_Adapter_Pattern, 04.5.1_AB_Testing.  
+- **Tài liệu tham chiếu**: GoF Prototype, GeeksforGeeks Prototype Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Variants serializable.  
+- **Ràng buộc**: Deep copy without cycles.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Object.assign or structuredClone.  
+- Risks: Shallow copy bugs → Mitigation: Deep clone libs; Risks: Memory overhead → Mitigation: Lazy cloning; Risks: PII leaks → Mitigation: Exclude sensitive fields; Risks: Test failures → Mitigation: Equality checks; Risks: Scalability → Mitigation: Prototype pool.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Clones identical to originals.  
+- **Performance**: Clone <5ms.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: No PII in clones.  
+- **Verifiable**: Traceable to FR-012.  
+- **Testable**: Jest clone tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IPrototype.  
+- **Sequence Diagram**: Prototype Clone:  
+```mermaid
+sequenceDiagram
+    Client->>VariantA: clone()
+    VariantA->>VariantB: Copy
+    VariantB->>Client: New Instance
+```
+- **API Endpoint Stubs / Contracts**: POST /prototype/clone.  
+- **Reusable Design Pattern Implementation Notes**: Prototype Cloning.  
+- **Mục đích của node này**: Define Prototype for A/B variants.
+
+#### 06B.1.2_Structural_Patterns/
+
+##### 06B.1.2.1_Adapter_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.10, System_Feature_Tree.md Section 1.10.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Adapter for external notification providers (FR-010).  
+**Ý nghĩa**: Easy switch providers (Twilio→AWS SNS) without code changes.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Adapter Pattern adapts different provider APIs to unified interface.  
+  - **Key Features (8 items)**:  
+    - Unified send() method.  
+    - Supports FR-010 channels.  
+    - Provider-agnostic.  
+    - Testable with mocks.  
+    - Scalable for 100K msgs.  
+    - GDPR-compliant handling.  
+    - Error mapping.  
+    - Logging integration.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    NotificationService[NotificationService] --> IAdapter[IAdapter]
+    IAdapter --> TwilioAdapter[TwilioAdapter]
+    IAdapter --> AWSAdapter[AWS SNS Adapter]
+    TwilioAdapter --> Twilio[Twilio API]
+    AWSAdapter --> AWS[AWS SNS API]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.10, System_Feature_Tree.md Section 1.10.  
+- **Thể hiện yêu cầu**: FR-010 Notification.  
+- **Kết nối với**: 06B.1.2.2_Facade_Pattern, 04.3.4_Notification_System.  
+- **Tài liệu tham chiếu**: GoF Adapter, GeeksforGeeks Adapter Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Provider APIs similar.  
+- **Ràng buộc**: Unified error codes.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Provider SDKs.  
+- Risks: API changes → Mitigation: Adapter updates; Risks: Performance → Mitigation: Caching; Risks: Vendor lock-in → Mitigation: Multiple adapters; Risks: Security → Mitigation: mTLS wrappers; Risks: Testing → Mitigation: Mock adapters.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: All providers adapted.  
+- **Performance**: Send <5s.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS tested.  
+- **Verifiable**: Traceable to FR-010.  
+- **Testable**: Jest adapter tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IProviderAdapter.  
+- **Sequence Diagram**: Adapter Flow:  
+```mermaid
+sequenceDiagram
+    Service->>IAdapter: send()
+    IAdapter->>Twilio: adaptSend()
+    Twilio->>IAdapter: Response
+```
+- **API Endpoint Stubs / Contracts**: POST /adapter/test.  
+- **Reusable Design Pattern Implementation Notes**: Adapter for providers.  
+- **Mục đích của node này**: Define Adapter Pattern for notifications.
+
+##### 06B.1.2.4_Decorator_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.11, System_Feature_Tree.md Section 1.11.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Decorator for fraud detection chain (FR-011).  
+**Ý nghĩa**: Flexible layering of fraud checks (rules + ML).  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Decorator Pattern adds layers to fraud detection without altering core.  
+  - **Key Features (8 items)**:  
+    - Layered fraud checks.  
+    - Supports FR-011 scoring.  
+    - Runtime configurable.  
+    - Testable layers.  
+    - Scalable for 50K checks/day.  
+    - GDPR-compliant.  
+    - Logging per layer.  
+    - Extensible for new checks.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    BaseDetector[BaseDetector] --> RuleDecorator[RuleDecorator]
+    RuleDecorator --> MLDecorator[MLDecorator]
+    MLDecorator --> FingerprintDecorator[FingerprintDecorator]
+    FingerprintDecorator --> Client[Client]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.11, System_Feature_Tree.md Section 1.11.  
+- **Thể hiện yêu cầu**: FR-011 Fraud Detection.  
+- **Kết nối với**: 06B.1.3.4_Chain_Of_Responsibility_Pattern, 04.4.1_Fraud_Detection.  
+- **Tài liệu tham chiếu**: GoF Decorator, GeeksforGeeks Decorator Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Layers chainable.  
+- **Ràng buộc**: No performance overhead.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: TypeScript decorators.  
+- Risks: Chain too long → Mitigation: Limit layers; Risks: Debug difficulty → Mitigation: Logging; Risks: Security → Mitigation: Secure decorators; Risks: Testing → Mitigation: Mock layers; Risks: Scalability → Mitigation: Async decorators.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Layers added dynamically.  
+- **Performance**: <3s scoring.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure chains.  
+- **Verifiable**: Traceable to FR-011.  
+- **Testable**: Jest decorator tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IFraudDetector.  
+- **Sequence Diagram**: Decorator Flow:  
+```mermaid
+sequenceDiagram
+    Client->>Decorator1: score()
+    Decorator1->>Decorator2: score()
+    Decorator2->>Base: score()
+    Base-->>Decorator2
+    Decorator2-->>Decorator1
+    Decorator1-->>Client
+```
+- **API Endpoint Stubs / Contracts**: POST /decorator/test.  
+- **Reusable Design Pattern Implementation Notes**: Decorator Chain.  
+- **Mục đích của node này**: Define Decorator Pattern for fraud.
+
+#### 06B.1.3_Behavioral_Patterns/
+
+##### 06B.1.3.1_Strategy_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.13, System_Feature_Tree.md Section 1.13.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Strategy for recommendation algorithms (FR-013).  
+**Ý nghĩa**: Switch between collaborative/ML at runtime.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Strategy Pattern selects recommendation algorithms dynamically.  
+  - **Key Features (8 items)**:  
+    - Multiple strategies (collaborative, content-based).  
+    - Supports FR-013 recommendations.  
+    - Runtime switching.  
+    - Testable strategies.  
+    - Scalable for 10K req/s.  
+    - GDPR-compliant.  
+    - Logging per strategy.  
+    - Extensible for new algos.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Engine[RecommendationEngine] --> IStrategy[IStrategy]
+    IStrategy --> Collaborative[CollaborativeFilter]
+    IStrategy --> Content[ContentBasedFilter]
+    Collaborative --> Engine
+    Content --> Engine
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.13, System_Feature_Tree.md Section 1.13.  
+- **Thể hiện yêu cầu**: FR-013 Recommendation.  
+- **Kết nối với**: 06B.1.3.2_Observer_Pattern, 04.5.2_Recommendation_Engine.  
+- **Tài liệu tham chiếu**: GoF Strategy, GeeksforGeeks Strategy Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Strategies interchangeable.  
+- **Ràng buộc**: No state in strategies.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: ML libraries.  
+- Risks: Wrong strategy → Mitigation: Config validation; Risks: Performance → Mitigation: Profiling; Risks: Security → Mitigation: Secure algos; Risks: Testing → Mitigation: Mock strategies; Risks: Scalability → Mitigation: Stateless design.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Strategies switchable.  
+- **Performance**: <3s recommendation.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-013.  
+- **Testable**: Jest strategy tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRecommendationStrategy.  
+- **Sequence Diagram**: Strategy Flow:  
+```mermaid
+sequenceDiagram
+    Engine->>IStrategy: recommend()
+    IStrategy->>Collaborative: execute()
+    Collaborative->>Engine: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /strategy/test.  
+- **Reusable Design Pattern Implementation Notes**: Strategy for algos.  
+- **Mục đích của node này**: Define Strategy Pattern for recommendations.
+
+##### 06B.1.3.2_Observer_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.10, System_Feature_Tree.md Section 1.10.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Observer for event notifications (FR-010).  
+**Ý nghĩa**: Decoupled event handling, dễ extend subscribers.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Observer Pattern notifies subscribers (e.g., Analytics) khi events occur (e.g., RedemptionCompleted).  
+  - **Key Features (8 items)**:  
+    - Subject-Observer decoupling.  
+    - Supports FR-010 events.  
+    - Multiple subscribers.  
+    - Testable with mock observers.  
+    - Scalable for 100K events/day.  
+    - GDPR-compliant.  
+    - Logging per notification.  
+    - Extensible for new subscribers.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Subject[Subject] -->|notify()| Observer1[Observer1]
+    Subject -->|notify()| Observer2[Observer2]
+    Observer1 --> Update[update(event)]
+    Observer2 --> Update[update(event)]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.10, System_Feature_Tree.md Section 1.10.  
+- **Thể hiện yêu cầu**: FR-010 Notification.  
+- **Kết nối với**: 06B.1.3.3_Command_Pattern, 04.3.4_Notification_System.  
+- **Tài liệu tham chiếu**: GoF Observer, GeeksforGeeks Observer Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Events async.  
+- **Ràng buộc**: No blocking observers.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Event emitters.  
+- Risks: Observer leaks → Mitigation: Weak refs; Risks: Performance → Mitigation: Async notifies; Risks: Security → Mitigation: Auth observers; Risks: Testing → Mitigation: Mock observers; Risks: Scalability → Mitigation: Pub/Sub scaling.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: All events notified.  
+- **Performance**: Notify <5ms.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure notifies.  
+- **Verifiable**: Traceable to FR-010.  
+- **Testable**: Jest observer tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IObserver.  
+- **Sequence Diagram**: Observer Flow:  
+```mermaid
+sequenceDiagram
+    Subject->>Observer1: update()
+    Subject->>Observer2: update()
+```
+- **API Endpoint Stubs / Contracts**: POST /observer/test.  
+- **Reusable Design Pattern Implementation Notes**: Observer for events.  
+- **Mục đích của node này**: Define Observer Pattern for notifications.
+
+##### 06B.1.3.3_Command_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.11, System_Feature_Tree.md Section 1.11.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Command for fraud actions (FR-011).  
+**Ý nghĩa**: Undoable operations, audit trails.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Command Pattern encapsulates fraud actions as objects for queuing/undo.  
+  - **Key Features (8 items)**:  
+    - Encapsulated commands.  
+    - Supports FR-011 actions.  
+    - Undo functionality.  
+    - Testable commands.  
+    - Scalable for 50K/day.  
+    - GDPR-compliant.  
+    - Logging per command.  
+    - Extensible for new commands.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Client[Client] --> Invoker[Invoker]
+    Invoker --> Command1[Command1]
+    Invoker --> Command2[Command2]
+    Command1 --> Receiver[Receiver execute]
+    Command2 --> Receiver[Receiver execute]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.11, System_Feature_Tree.md Section 1.11.  
+- **Thể hiện yêu cầu**: FR-011 Fraud Detection.  
+- **Kết nối với**: 06B.1.3.4_Chain_Of_Responsibility_Pattern, 04.4.1_Fraud_Detection.  
+- **Tài liệu tham chiếu**: GoF Command, GeeksforGeeks Command Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Commands idempotent.  
+- **Ràng buộc**: Undo limited to 1 hour.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Command queues.  
+- Risks: Undo failures → Mitigation: Transactional; Risks: Performance → Mitigation: Async commands; Risks: Security → Mitigation: Auth commands; Risks: Testing → Mitigation: Mock receivers; Risks: Scalability → Mitigation: Queue scaling.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Commands executable/undoable.  
+- **Performance**: <5ms execute.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure commands.  
+- **Verifiable**: Traceable to FR-011.  
+- **Testable**: Jest command tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICommand.  
+- **Sequence Diagram**: Command Flow:  
+```mermaid
+sequenceDiagram
+    Client->>Invoker: executeCommand
+    Invoker->>Command: execute()
+    Command->>Receiver: action()
+```
+- **API Endpoint Stubs / Contracts**: POST /command/test.  
+- **Reusable Design Pattern Implementation Notes**: Command for actions.  
+- **Mục đích của node này**: Define Command Pattern for fraud.
+
+##### 06B.1.3.4_Chain_Of_Responsibility_Pattern.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.11, System_Feature_Tree.md Section 1.11.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Chain of Responsibility for fraud checks (FR-011).  
+**Ý nghĩa**: Flexible pipeline for rules/ML/fingerprinting.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Chain of Responsibility processes fraud checks sequentially.  
+  - **Key Features (8 items)**:  
+    - Chained handlers.  
+    - Supports FR-011 checks.  
+    - Runtime configurable chain.  
+    - Testable handlers.  
+    - Scalable for 50K checks/day.  
+    - GDPR-compliant.  
+    - Logging per handler.  
+    - Extensible for new handlers.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Handler1[Handler1] --> Handler2[Handler2]
+    Handler2 --> Handler3[Handler3]
+    Handler3 --> Client[Client]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.11, System_Feature_Tree.md Section 1.11.  
+- **Thể hiện yêu cầu**: FR-011 Fraud Detection.  
+- **Kết nối với**: 06B.1.2.4_Decorator_Pattern, 04.4.1_Fraud_Detection.  
+- **Tài liệu tham chiếu**: GoF Chain of Responsibility, GeeksforGeeks Chain Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Handlers chainable.  
+- **Ràng buộc**: No loop in chain.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Handler interfaces.  
+- Risks: Chain too long → Mitigation: Limit handlers; Risks: Debug difficulty → Mitigation: Logging; Risks: Security → Mitigation: Secure handlers; Risks: Testing → Mitigation: Mock chains; Risks: Scalability → Mitigation: Async chains.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Chain processes correctly.  
+- **Performance**: <3s chain execution.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure chains.  
+- **Verifiable**: Traceable to FR-011.  
+- **Testable**: Jest chain tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IHandler.  
+- **Sequence Diagram**: Chain Flow:  
+```mermaid
+sequenceDiagram
+    Client->>Handler1: handle()
+    Handler1->>Handler2: next()
+    Handler2->>Handler3: next()
+    Handler3->>Client: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /chain/test.  
+- **Reusable Design Pattern Implementation Notes**: Chain for fraud.  
+- **Mục đích của node này**: Define Chain of Responsibility for fraud checks.
+
+## Part06B_Design_Patterns/
+
+### 06B.2_Interface_Definitions/
+
+#### 06B.2.1_Service_Interfaces/
+
+##### 06B.2.1.1_ICampaignService.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.8 (Campaign Management), System_Feature_Tree.md Section 1.8 (Campaign Service), Part04 FR-008, IEEE 830-1998, GeeksforGeeks Interface Design.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for Campaign Service, hỗ trợ CRUD campaigns + A/B testing (FR-008, FR-012).  
+**Ý nghĩa**: Contract-first design, decoupling implementation, dễ mock for testing.  
+**Cách làm**: Markdown with TypeScript interface code, UML diagrams, method descriptions, chi tiết 250-400 từ, bullet lists 5-8 items, Mermaid for class relationships.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: ICampaignService defines methods for managing campaigns, including creation, A/B testing integration, and real-time metrics. For PSP, this interface ensures scalable campaign handling for 1K TPS, with GDPR-compliant PII.  
+  - **Key Methods (8 items)**:  
+    - createCampaign(campaign: CampaignDTO): Promise<Campaign> - Create new campaign.  
+    - getCampaign(id: string): Promise<Campaign> - Fetch by ID.  
+    - updateCampaign(id: string, updates: Partial<CampaignDTO>): Promise<Campaign> - Update details.  
+    - deleteCampaign(id: string): Promise<void> - Soft delete.  
+    - startABTest(experiment: ExperimentDTO): Promise<Experiment> - Integrate FR-012.  
+    - getMetrics(id: string): Promise<Metrics> - Real-time analytics.  
+    - addQRCode(campaignId: string, qr: QRDTO): Promise<QRCode> - QR integration.  
+    - listCampaigns(filter: FilterDTO): Promise<Campaign[]> - Paginated list.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class ICampaignService {
+        <<interface>>
+        +createCampaign(campaign: CampaignDTO): Promise~Campaign~
+        +getCampaign(id: string): Promise~Campaign~
+        +updateCampaign(id: string, updates: Partial~CampaignDTO~): Promise~Campaign~
+        +deleteCampaign(id: string): Promise~void~
+        +startABTest(experiment: ExperimentDTO): Promise~Experiment~
+        +getMetrics(id: string): Promise~Metrics~
+        +addQRCode(campaignId: string, qr: QRDTO): Promise~QRCode~
+        +listCampaigns(filter: FilterDTO): Promise~Campaign[]~
+    }
+    CampaignServiceImpl ..|> ICampaignService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.8, System_Feature_Tree.md Section 1.8, Part04 FR-008.  
+- **Thể hiện yêu cầu**: FR-008 Campaign Management.  
+- **Kết nối với**: 06B.2.1.2_IBarcodeService, 04.2.1_Campaign_Management.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: CampaignDTO validated at application layer.  
+- **Ràng buộc**: Methods return Promises for async.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: CampaignDTO, Metrics type.  
+- **Risks**: Interface changes → Mitigation: Versioning v1/v2; Risks: Performance → Mitigation: Async methods; Risks: Security → Mitigation: RBAC wrappers; Risks: Testing → Mitigation: Mock interfaces; Risks: Scalability → Mitigation: Stateless methods.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all campaign actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-008.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICampaignService.  
+- **Sequence Diagram**: Campaign Creation:  
+```mermaid
+sequenceDiagram
+    Client->>Service: createCampaign()
+    Service->>DB: save
+    DB->>Service: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /campaign/create.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define Campaign Service interface.
+
+##### 06B.2.1.2_IBarcodeService.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part04 FR-007.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for Barcode Service, hỗ trợ redemption (FR-007).  
+**Ý nghĩa**: Contract for barcode generation/validation.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IBarcodeService defines methods for generating, validating barcodes/QR.  
+  - **Key Methods (8 items)**:  
+    - generateBarcode(campaignId: string): Promise<Barcode> - Generate unique barcode.  
+    - validateBarcode(barcode: string): Promise<Result> - Validate and redeem.  
+    - getStatus(barcode: string): Promise<Status> - Check status.  
+    - expireBarcode(barcode: string): Promise<void> - Time-based expire.  
+    - listBarcodes(filter: FilterDTO): Promise<Barcode[]> - Paginated list.  
+    - integrateQR(barcode: string, qr: QRDTO): Promise<QRCode> - QR integration.  
+    - offlineValidate(barcode: string): Promise<Result> - Offline mode.  
+    - fraudCheck(barcode: string): Promise<FraudScore> - Integrate FR-011.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IBarcodeService {
+        <<interface>>
+        +generateBarcode(campaignId: string): Promise~Barcode~
+        +validateBarcode(barcode: string): Promise~Result~
+        +getStatus(barcode: string): Promise~Status~
+        +expireBarcode(barcode: string): Promise~void~
+        +listBarcodes(filter: FilterDTO): Promise~Barcode[]~
+        +integrateQR(barcode: string, qr: QRDTO): Promise~QRCode~
+        +offlineValidate(barcode: string): Promise~Result~
+        +fraudCheck(barcode: string): Promise~FraudScore~
+    }
+    BarcodeServiceImpl ..|> IBarcodeService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part04 FR-007.  
+- **Thể hiện yêu cầu**: FR-007 Barcode Redemption.  
+- **Kết nối với**: 06B.2.1.3_IAuthService, 04.3.1_Barcode_Redemption.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Barcode unique per campaign.  
+- **Ràng buộc**: Methods async.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: BarcodeDTO, Result type.  
+- Risks: Invalid barcode → Mitigation: Validation; Risks: Performance → Mitigation: Caching; Risks: Security → Mitigation: Encryption; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all barcode actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-007.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IBarcodeService.  
+- **Sequence Diagram**: Barcode Validation:  
+```mermaid
+sequenceDiagram
+    Client->>Service: validateBarcode()
+    Service->>DB: check
+    DB->>Service: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /barcode/validate.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define Barcode Service interface.
+
+##### 06B.2.1.3_IAuthService.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.3, System_Feature_Tree.md Section 1.3, Part04 FR-003.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for Auth Service, hỗ trợ JWT/RBAC (FR-003).  
+**Ý nghĩa**: Secure access control.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IAuthService defines auth methods for all personas.  
+  - **Key Methods (8 items)**:  
+    - login(credentials: CredentialsDTO): Promise<Token> - JWT token.  
+    - validateToken(token: string): Promise<User> - Validate JWT.  
+    - register(user: UserDTO): Promise<User> - New user.  
+    - refreshToken(refresh: string): Promise<Token> - Refresh.  
+    - logout(token: string): Promise<void> - Invalidate.  
+    - getUser(id: string): Promise<User> - Fetch user.  
+    - updatePassword(id: string, password: string): Promise<void> - Update.  
+    - checkPermission(user: User, permission: string): Promise<boolean> - RBAC check.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IAuthService {
+        <<interface>>
+        +login(credentials: CredentialsDTO): Promise~Token~
+        +validateToken(token: string): Promise~User~
+        +register(user: UserDTO): Promise~User~
+        +refreshToken(refresh: string): Promise~Token~
+        +logout(token: string): Promise~void~
+        +getUser(id: string): Promise~User~
+        +updatePassword(id: string, password: string): Promise~void~
+        +checkPermission(user: User, permission: string): Promise~boolean~
+    }
+    AuthServiceImpl ..|> IAuthService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.3, System_Feature_Tree.md Section 1.3, Part04 FR-003.  
+- **Thể hiện yêu cầu**: FR-003 User Authentication.  
+- **Kết nối với**: 06B.2.1.4_IUserService, 04.2.3_User_Authentication.  
+- **Tài liệu tham chiếu**: JWT RFC 7519, GeeksforGeeks Auth Interfaces.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: JWT keys secure.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: JWT library.  
+- Risks: Token leaks → Mitigation: Short TTL; Risks: Performance → Mitigation: Caching; Risks: Security → Mitigation: Encryption; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Stateless auth.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all auth actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-003.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAuthService.  
+- **Sequence Diagram**: Auth Login:  
+```mermaid
+sequenceDiagram
+    Client->>Service: login()
+    Service->>DB: validate
+    DB->>Service: User
+```
+- **API Endpoint Stubs / Contracts**: POST /auth/login.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define Auth Service interface.
+
+##### 06B.2.1.4_IUserService.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part04 FR-004.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for User Service, hỗ trợ user management (FR-004).  
+**Ý nghĩa**: Secure profile handling, GDPR compliance.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IUserService defines methods for user CRUD, RBAC assignment.  
+  - **Key Methods (8 items)**:  
+    - createUser(user: UserDTO): Promise<User> - Create.  
+    - getUser(id: string): Promise<User> - Fetch.  
+    - updateUser(id: string, updates: Partial<UserDTO>): Promise<User> - Update.  
+    - deleteUser(id: string): Promise<void> - Soft delete.  
+    - assignRole(id: string, role: RoleDTO): Promise<void> - RBAC.  
+    - getPreferences(id: string): Promise<Preferences> - For FR-013.  
+    - consentGDPR(id: string, consent: ConsentDTO): Promise<void> - GDPR.  
+    - listUsers(filter: FilterDTO): Promise<User[]> - Paginated.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IUserService {
+        <<interface>>
+        +createUser(user: UserDTO): Promise~User~
+        +getUser(id: string): Promise~User~
+        +updateUser(id: string, updates: Partial~UserDTO~): Promise~User~
+        +deleteUser(id: string): Promise~void~
+        +assignRole(id: string, role: RoleDTO): Promise~void~
+        +getPreferences(id: string): Promise~Preferences~
+        +consentGDPR(id: string, consent: ConsentDTO): Promise~void~
+        +listUsers(filter: FilterDTO): Promise~User[]~
+    }
+    UserServiceImpl ..|> IUserService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part04 FR-004.  
+- **Thể hiện yêu cầu**: FR-004 User Management.  
+- **Kết nối với**: 06B.2.1.5_IAnalyticsService, 04.2.4_User_Management.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: UserDTO validated.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: UserDTO, RoleDTO.  
+- Risks: Data breaches → Mitigation: Encryption; Risks: Performance → Mitigation: Caching; Risks: Security → Mitigation: RBAC; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all user actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-004.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IUserService.  
+- **Sequence Diagram**: User Creation:  
+```mermaid
+sequenceDiagram
+    Client->>Service: createUser()
+    Service->>DB: save
+    DB->>Service: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /user/create.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define User Service interface.
+
+##### 06B.2.1.5_IAnalyticsService.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part04 FR-009.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for Analytics Service, hỗ trợ metrics/reporting (FR-009).  
+**Ý nghĩa**: Real-time insights.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IAnalyticsService defines methods for metrics, A/B analysis.  
+  - **Key Methods (8 items)**:  
+    - getMetrics(campaignId: string): Promise<Metrics> - Campaign metrics.  
+    - runABTest(experiment: ExperimentDTO): Promise<Result> - FR-012.  
+    - generateReport(filter: FilterDTO): Promise<Report> - FR-014.  
+    - getFraudMetrics(id: string): Promise<FraudMetrics> - FR-011 integration.  
+    - aggregateData(query: QueryDTO): Promise<Data> - Custom queries.  
+    - subscribeToEvents(): Promise<void> - Event-driven updates.  
+    - exportData(format: Format): Promise<Blob> - CSV/JSON.  
+    - checkCompliance(): Promise<ComplianceReport> - GDPR.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IAnalyticsService {
+        <<interface>>
+        +getMetrics(campaignId: string): Promise~Metrics~
+        +runABTest(experiment: ExperimentDTO): Promise~Result~
+        +generateReport(filter: FilterDTO): Promise~Report~
+        +getFraudMetrics(id: string): Promise~FraudMetrics~
+        +aggregateData(query: QueryDTO): Promise~Data~
+        +subscribeToEvents(): Promise~void~
+        +exportData(format: Format): Promise~Blob~
+        +checkCompliance(): Promise~ComplianceReport~
+    }
+    AnalyticsServiceImpl ..|> IAnalyticsService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part04 FR-009.  
+- **Thể hiện yêu cầu**: FR-009 Analytics.  
+- **Kết nối với**: 06B.2.1.6_INotificationService, 04.3.2_Real_Time_Analytics.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Metrics data available.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: MetricsDTO, Result type.  
+- Risks: Data inaccuracy → Mitigation: Validation; Risks: Performance → Mitigation: Caching; Risks: Security → Mitigation: RBAC; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all analytics actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-009.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAnalyticsService.  
+- **Sequence Diagram**: Metrics Fetch:  
+```mermaid
+sequenceDiagram
+    Client->>Service: getMetrics()
+    Service->>DB: query
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: POST /analytics/metrics.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define Analytics Service interface.
+
+##### 06B.2.1.6_INotificationService.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.10, System_Feature_Tree.md Section 1.10, Part04 FR-010.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for Notification Service, hỗ trợ multi-channel delivery (FR-010).  
+**Ý nghĩa**: Unified contract for SMS/Email/Push.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: INotificationService defines methods for sending notifications.  
+  - **Key Methods (8 items)**:  
+    - sendSMS(phone: string, message: string): Promise<Result> - Send SMS.  
+    - sendEmail(email: string, subject: string, body: string): Promise<Result> - Send email.  
+    - sendPush(token: string, message: string): Promise<Result> - Send push.  
+    - sendBatch(notifications: NotificationDTO[]): Promise<Result[]> - Batch send.  
+    - getStatus(id: string): Promise<DeliveryStatus> - Check status.  
+    - subscribeToEvents(): Promise<void> - Event subscription.  
+    - unsubscribe(id: string): Promise<void> - Opt-out.  
+    - checkConsent(id: string): Promise<boolean> - GDPR consent.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class INotificationService {
+        <<interface>>
+        +sendSMS(phone: string, message: string): Promise~Result~
+        +sendEmail(email: string, subject: string, body: string): Promise~Result~
+        +sendPush(token: string, message: string): Promise~Result~
+        +sendBatch(notifications: NotificationDTO[]): Promise~Result[]~
+        +getStatus(id: string): Promise~DeliveryStatus~
+        +subscribeToEvents(): Promise~void~
+        +unsubscribe(id: string): Promise~void~
+        +checkConsent(id: string): Promise~boolean~
+    }
+    NotificationServiceImpl ..|> INotificationService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.10, System_Feature_Tree.md Section 1.10, Part04 FR-010.  
+- **Thể hiện yêu cầu**: FR-010 Notification System.  
+- **Kết nối với**: 06B.2.1.7_IFraudDetectionService, 04.3.4_Notification_System.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Provider APIs stable.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: NotificationDTO, Result type.  
+- Risks: Delivery failures → Mitigation: Retries; Risks: Performance → Mitigation: Queues; Risks: Security → Mitigation: Encryption; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded queues.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all notification actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-010.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: INotificationService.  
+- **Sequence Diagram**: Notification Send:  
+```mermaid
+sequenceDiagram
+    Client->>Service: sendSMS()
+    Service->>Provider: deliver
+    Provider->>Service: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /notification/send.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define Notification Service interface.
+
+##### 06B.2.1.7_IFraudDetectionService.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part04 FR-011.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for Fraud Detection Service, hỗ trợ ML scoring (FR-011).  
+**Ý nghĩa**: Contract for fraud checks, dễ integrate.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IFraudDetectionService defines methods for scoring and blocking fraudulent redemptions.  
+  - **Key Methods (8 items)**:  
+    - scoreTransaction(tx: TransactionDTO): Promise<FraudScore> - ML scoring.  
+    - checkFraud(id: string): Promise<Result> - Rule-based check.  
+    - blockUser(id: string): Promise<void> - Block suspicious user.  
+    - getFraudLogs(filter: FilterDTO): Promise<Log[]> - Audit logs.  
+    - trainModel(data: TrainingData): Promise<ModelStatus> - Retrain ML.  
+    - fingerprintDevice(device: DeviceDTO): Promise<Fingerprint> - Device ID.  
+    - addRule(rule: RuleDTO): Promise<void> - Add custom rule.  
+    - listRules(): Promise<Rule[]> - List rules.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IFraudDetectionService {
+        <<interface>>
+        +scoreTransaction(tx: TransactionDTO): Promise~FraudScore~
+        +checkFraud(id: string): Promise~Result~
+        +blockUser(id: string): Promise~void~
+        +getFraudLogs(filter: FilterDTO): Promise~Log[]~
+        +trainModel(data: TrainingData): Promise~ModelStatus~
+        +fingerprintDevice(device: DeviceDTO): Promise~Fingerprint~
+        +addRule(rule: RuleDTO): Promise~void~
+        +listRules(): Promise~Rule[]~
+    }
+    FraudDetectionServiceImpl ..|> IFraudDetectionService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part04 FR-011.  
+- **Thể hiện yêu cầu**: FR-011 Fraud Detection.  
+- **Kết nối với**: 06B.2.1.8_IABTestingService, 04.4.1_Fraud_Detection.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: TransactionDTO validated.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: FraudScore, Result type.  
+- Risks: Inaccurate scoring → Mitigation: Validation; Risks: Performance → Mitigation: Caching; Risks: Security → Mitigation: RBAC; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all fraud actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-011.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IFraudDetectionService.  
+- **Sequence Diagram**: Fraud Scoring:  
+```mermaid
+sequenceDiagram
+    Client->>Service: scoreTransaction()
+    Service->>ML: compute
+    ML->>Service: Score
+```
+- **API Endpoint Stubs / Contracts**: POST /fraud/score.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define Fraud Detection Service interface.
+
+##### 06B.2.1.8_IABTestingService.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part04 FR-012.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for A/B Testing Service, hỗ trợ experiments (FR-012).  
+**Ý nghĩa**: Contract for A/B testing, dễ integrate.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IABTestingService defines methods for A/B experiments and analysis.  
+  - **Key Methods (8 items)**:  
+    - createExperiment(experiment: ExperimentDTO): Promise<Experiment> - Create test.  
+    - startExperiment(id: string): Promise<void> - Start.  
+    - stopExperiment(id: string): Promise<void> - Stop.  
+    - getResults(id: string): Promise<Result> - Statistical analysis.  
+    - addVariant(id: string, variant: VariantDTO): Promise<Variant> - Add variant.  
+    - assignTraffic(id: string, allocation: AllocationDTO): Promise<void> - Traffic split.  
+    - getMetrics(id: string): Promise<Metrics> - Real-time metrics.  
+    - checkCompliance(id: string): Promise<ComplianceReport> - GDPR.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IABTestingService {
+        <<interface>>
+        +createExperiment(experiment: ExperimentDTO): Promise~Experiment~
+        +startExperiment(id: string): Promise~void~
+        +stopExperiment(id: string): Promise~void~
+        +getResults(id: string): Promise~Result~
+        +addVariant(id: string, variant: VariantDTO): Promise~Variant~
+        +assignTraffic(id: string, allocation: AllocationDTO): Promise~void~
+        +getMetrics(id: string): Promise~Metrics~
+        +checkCompliance(id: string): Promise~ComplianceReport~
+    }
+    ABTestingServiceImpl ..|> IABTestingService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part04 FR-012.  
+- **Thể hiện yêu cầu**: FR-012 A/B Testing.  
+- **Kết nối với**: 06B.2.1.9_IRecommendationService, 04.5.1_AB_Testing.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: ExperimentDTO validated.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: ExperimentDTO, Result type.  
+- Risks: Inaccurate results → Mitigation: Validation; Risks: Performance → Mitigation: Caching; Risks: Security → Mitigation: RBAC; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all A/B actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-012.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IABTestingService.  
+- **Sequence Diagram**: A/B Creation:  
+```mermaid
+sequenceDiagram
+    Client->>Service: createExperiment()
+    Service->>DB: save
+    DB->>Service: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /abtest/create.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define A/B Testing Service interface.
+
+##### 06B.2.1.9_IRecommendationService.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part04 FR-013.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for Recommendation Service, hỗ trợ personalized offers (FR-013).  
+**Ý nghĩa**: Contract for ML-based recommendations.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IRecommendationService defines methods for generating personalized gift offers.  
+  - **Key Methods (8 items)**:  
+    - recommend(id: string): Promise<Recommendation[]> - Generate offers.  
+    - trainModel(data: TrainingData): Promise<ModelStatus> - Retrain ML.  
+    - getPreferences(id: string): Promise<Preferences> - Fetch preferences.  
+    - updatePreferences(id: string, prefs: PreferencesDTO): Promise<void> - Update.  
+    - getMetrics(): Promise<Metrics> - Recommendation metrics.  
+    - integrateCampaign(campaignId: string): Promise<void> - Link campaigns.  
+    - checkCompliance(id: string): Promise<ComplianceReport> - GDPR.  
+    - listRecommendations(filter: FilterDTO): Promise<Recommendation[]> - Paginated.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IRecommendationService {
+        <<interface>>
+        +recommend(id: string): Promise~Recommendation[]~
+        +trainModel(data: TrainingData): Promise~ModelStatus~
+        +getPreferences(id: string): Promise~Preferences~
+        +updatePreferences(id: string, prefs: PreferencesDTO): Promise~void~
+        +getMetrics(): Promise~Metrics~
+        +integrateCampaign(campaignId: string): Promise~void~
+        +checkCompliance(id: string): Promise~ComplianceReport~
+        +listRecommendations(filter: FilterDTO): Promise~Recommendation[]~
+    }
+    RecommendationServiceImpl ..|> IRecommendationService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part04 FR-013.  
+- **Thể hiện yêu cầu**: FR-013 Recommendation Engine.  
+- **Kết nối với**: 06B.2.1.5_IAnalyticsService, 04.5.2_Recommendation_Engine.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: PreferencesDTO validated.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Recommendation[] type.  
+- Risks: Inaccurate recommendations → Mitigation: Validation; Risks: Performance → Mitigation: Caching; Risks: Security → Mitigation: RBAC; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all recommendation actions.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-013.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRecommendationService.  
+- **Sequence Diagram**: Recommendation Generation:  
+```mermaid
+sequenceDiagram
+    Client->>Service: recommend()
+    Service->>ML: compute
+    ML->>Service: Offers
+```
+- **API Endpoint Stubs / Contracts**: POST /recommend/recommend.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define Recommendation Service interface.
+
+## Part06B_Design_Patterns/
+
+### 06B.2_Interface_Definitions/
+
+#### 06B.2.2_Repository_Interfaces/
+
+##### 06B.2.2.1_IRepository_Base.md
+
+###### References / Tham chiếu
+- BRD.md Section 5 (Functional Requirements), System_Feature_Tree.md Section 2 (Services), Part06.2.1_Layered_Architecture, IEEE 830-1998, GeeksforGeeks Repository Pattern.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define base repository interface for all DB access, hỗ trợ polyglot persistence in microservices.  
+**Ý nghĩa**: Abstraction layer for DB ops, dễ switch Postgres/Redis/ClickHouse, testable mocks.  
+**Cách làm**: TypeScript interface code, UML diagrams, CRUD methods, chi tiết 250-400 từ, bullet lists 5-8 items, Mermaid for class relationships.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IRepository_Base defines generic CRUD ops for entities, applied to all services (e.g., CampaignRepository for FR-008). For PSP, this enables database-per-service, with transaction support and GDPR-compliant queries.  
+  - **Key Methods (8 items)**:  
+    - findById(id: string): Promise<T | null> - Fetch by ID.  
+    - findAll(filter: FilterDTO): Promise<T[]> - Filtered list.  
+    - create(entity: T): Promise<T> - Create entity.  
+    - update(id: string, updates: Partial<T>): Promise<T> - Update.  
+    - delete(id: string): Promise<void> - Soft delete.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction wrapper.  
+    - count(filter: FilterDTO): Promise<number> - Count entities.  
+    - bulkCreate(entities: T[]): Promise<T[]> - Bulk insert.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IRepository_Base~T~ {
+        <<interface>>
+        +findById(id: string): Promise~T | null~
+        +findAll(filter: FilterDTO): Promise~T[]~
+        +create(entity: T): Promise~T~
+        +update(id: string, updates: Partial~T~): Promise~T~
+        +delete(id: string): Promise~void~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +count(filter: FilterDTO): Promise~number~
+        +bulkCreate(entities: T[]): Promise~T[]~
+    }
+    ConcreteRepository ..|> IRepository_Base
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5, System_Feature_Tree.md Section 2, Part06.2.1_Layered_Architecture.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.2.2.2_ICampaignRepository, Part06B.3_Base_Classes.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Repository Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Generic T is entity type.  
+- **Ràng buộc**: Async methods, transaction support.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: TypeScript generics.  
+- Risks: DB lock-in → Mitigation: Abstract repos; Risks: Transaction failures → Mitigation: Rollbacks; Risks: Security → Mitigation: Parameterized queries; Risks: Testing → Mitigation: Mock repos; Risks: Scalability → Mitigation: Sharded repos.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers CRUD + transaction.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRepository_Base~T~.  
+- **Sequence Diagram**: Repo Operation:  
+```mermaid
+sequenceDiagram
+    Service->>Repo: findById()
+    Repo->>DB: query
+    DB->>Repo: Data
+```
+- **API Endpoint Stubs / Contracts**: POST /repo/test.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define base repository interface.
+
+##### 06B.2.2.2_ICampaignRepository.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.8, System_Feature_Tree.md Section 1.8, Part04 FR-008.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define repository for Campaign entities (FR-008).  
+**Ý nghĩa**: Abstract DB access for campaigns.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: ICampaignRepository extends base for campaign-specific ops.  
+  - **Key Methods (8 items)**:  
+    - findById(id: string): Promise<Campaign | null> - Fetch campaign.  
+    - create(campaign: Campaign): Promise<Campaign> - Create.  
+    - update(id: string, updates: Partial<Campaign>): Promise<Campaign> - Update.  
+    - delete(id: string): Promise<void> - Delete.  
+    - findByFilter(filter: FilterDTO): Promise<Campaign[]> - Filtered.  
+    - countByFilter(filter: FilterDTO): Promise<number> - Count.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction.  
+    - bulkCreate(campaigns: Campaign[]): Promise<Campaign[]> - Bulk.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class ICampaignRepository {
+        <<interface>>
+        +findById(id: string): Promise~Campaign | null~
+        +create(campaign: Campaign): Promise~Campaign~
+        +update(id: string, updates: Partial~Campaign~): Promise~Campaign~
+        +delete(id: string): Promise~void~
+        +findByFilter(filter: FilterDTO): Promise~Campaign[]~
+        +countByFilter(filter: FilterDTO): Promise~number~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +bulkCreate(campaigns: Campaign[]): Promise~Campaign[]~
+    }
+    CampaignRepositoryImpl ..|> ICampaignRepository
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.8, System_Feature_Tree.md Section 1.8, Part04 FR-008.  
+- **Thể hiện yêu cầu**: FR-008 Campaign Management.  
+- **Kết nối với**: 06B.2.2.1_IRepository_Base, 04.2.1_Campaign_Management.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Repository Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Campaign entity defined.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Campaign type.  
+- Risks: DB errors → Mitigation: Transactions; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Parameterized queries; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all campaign ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to FR-008.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICampaignRepository.  
+- **Sequence Diagram**: Repo Operation:  
+```mermaid
+sequenceDiagram
+    Service->>Repo: create()
+    Repo->>DB: insert
+    DB->>Repo: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /campaign/repo/test.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define Campaign Repository interface.
+
+##### 06B.2.2.3_IUserRepository.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part04 FR-004.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define repository for User entities (FR-004).  
+**Ý nghĩa**: Abstract DB access for users.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IUserRepository extends base for user-specific ops.  
+  - **Key Methods (8 items)**:  
+    - findById(id: string): Promise<User | null> - Fetch user.  
+    - create(user: User): Promise<User> - Create.  
+    - update(id: string, updates: Partial<User>): Promise<User> - Update.  
+    - delete(id: string): Promise<void> - Delete.  
+    - findByFilter(filter: FilterDTO): Promise<User[]> - Filtered.  
+    - countByFilter(filter: FilterDTO): Promise<number> - Count.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction.  
+    - bulkCreate(users: User[]): Promise<User[]> - Bulk.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IUserRepository {
+        <<interface>>
+        +findById(id: string): Promise~User | null~
+        +create(user: User): Promise~User~
+        +update(id: string, updates: Partial~User~): Promise~User~
+        +delete(id: string): Promise~void~
+        +findByFilter(filter: FilterDTO): Promise~User[]~
+        +countByFilter(filter: FilterDTO): Promise~number~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +bulkCreate(users: User[]): Promise~User[]~
+    }
+    UserRepositoryImpl ..|> IUserRepository
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part04 FR-004.  
+- **Thể hiện yêu cầu**: FR-004 User Management.  
+- **Kết nối với**: 06B.2.2.4_IBarcodeRepository, 04.2.4_User_Management.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Repository Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: User entity defined.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: User type.  
+- Risks: DB errors → Mitigation: Transactions; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Parameterized queries; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all user ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to FR-004.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IUserRepository.  
+- **Sequence Diagram**: Repo Operation:  
+```mermaid
+sequenceDiagram
+    Service->>Repo: create()
+    Repo->>DB: insert
+    DB->>Repo: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /user/repo/test.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define User Repository interface.
+
+##### 06B.2.2.4_IBarcodeRepository.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part04 FR-007.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define repository for Barcode entities (FR-007).  
+**Ý nghĩa**: Abstract DB access for barcodes.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IBarcodeRepository extends base for barcode-specific ops.  
+  - **Key Methods (8 items)**:  
+    - findById(id: string): Promise<Barcode | null> - Fetch barcode.  
+    - create(barcode: Barcode): Promise<Barcode> - Create.  
+    - update(id: string, updates: Partial<Barcode>): Promise<Barcode> - Update.  
+    - delete(id: string): Promise<void> - Delete.  
+    - findByFilter(filter: FilterDTO): Promise<Barcode[]> - Filtered.  
+    - countByFilter(filter: FilterDTO): Promise<number> - Count.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction.  
+    - bulkCreate(barcodes: Barcode[]): Promise<Barcode[]> - Bulk.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IBarcodeRepository {
+        <<interface>>
+        +findById(id: string): Promise~Barcode | null~
+        +create(barcode: Barcode): Promise~Barcode~
+        +update(id: string, updates: Partial~Barcode~): Promise~Barcode~
+        +delete(id: string): Promise~void~
+        +findByFilter(filter: FilterDTO): Promise~Barcode[]~
+        +countByFilter(filter: FilterDTO): Promise~number~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +bulkCreate(barcodes: Barcode[]): Promise~Barcode[]~
+    }
+    BarcodeRepositoryImpl ..|> IBarcodeRepository
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part04 FR-007.  
+- **Thể hiện yêu cầu**: FR-007 Barcode Redemption.  
+- **Kết nối với**: 06B.2.2.5_IFraudScoreRepository, 04.3.1_Barcode_Redemption.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Repository Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Barcode entity defined.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Barcode type.  
+- Risks: DB errors → Mitigation: Transactions; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Parameterized queries; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all barcode ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to FR-007.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IBarcodeRepository.  
+- **Sequence Diagram**: Repo Operation:  
+```mermaid
+sequenceDiagram
+    Service->>Repo: create()
+    Repo->>DB: insert
+    DB->>Repo: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /barcode/repo/test.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define Barcode Repository interface.
+
+##### 06B.2.2.5_IFraudScoreRepository.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part04 FR-011.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define repository for FraudScore entities (FR-011).  
+**Ý nghĩa**: Abstract DB access for fraud scores.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IFraudScoreRepository extends base for fraud-specific ops.  
+  - **Key Methods (8 items)**:  
+    - findById(id: string): Promise<FraudScore | null> - Fetch score.  
+    - create(score: FraudScore): Promise<FraudScore> - Create.  
+    - update(id: string, updates: Partial<FraudScore>): Promise<FraudScore> - Update.  
+    - delete(id: string): Promise<void> - Delete.  
+    - findByFilter(filter: FilterDTO): Promise<FraudScore[]> - Filtered.  
+    - countByFilter(filter: FilterDTO): Promise<number> - Count.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction.  
+    - bulkCreate(scores: FraudScore[]): Promise<FraudScore[]> - Bulk.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IFraudScoreRepository {
+        <<interface>>
+        +findById(id: string): Promise~FraudScore | null~
+        +create(score: FraudScore): Promise~FraudScore~
+        +update(id: string, updates: Partial~FraudScore~): Promise~FraudScore~
+        +delete(id: string): Promise~void~
+        +findByFilter(filter: FilterDTO): Promise~FraudScore[]~
+        +countByFilter(filter: FilterDTO): Promise~number~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +bulkCreate(scores: FraudScore[]): Promise~FraudScore[]~
+    }
+    FraudScoreRepositoryImpl ..|> IFraudScoreRepository
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part04 FR-011.  
+- **Thể hiện yêu cầu**: FR-011 Fraud Detection.  
+- **Kết nối với**: 06B.2.2.6_IUserPreferenceRepository, 04.4.1_Fraud_Detection.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Repository Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: FraudScore entity defined.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: FraudScore type.  
+- Risks: DB errors → Mitigation: Transactions; Risks: Performance → Mitigation: Indexing; Risks: Security → Parameterized queries; Risks: Testing → Mocks; Risks: Scalability → Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all fraud score ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to FR-011.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IFraudScoreRepository.  
+- **Sequence Diagram**: Repo Operation:  
+```mermaid
+sequenceDiagram
+    Service->>Repo: create()
+    Repo->>DB: insert
+    DB->>Repo: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /fraudscore/repo/test.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define FraudScore Repository interface.
+
+##### 06B.2.2.6_IUserPreferenceRepository.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part04 FR-013.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define repository for UserPreference entities (FR-013).  
+**Ý nghĩa**: Abstract DB access for preferences.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IUserPreferenceRepository extends base for preference-specific ops.  
+  - **Key Methods (8 items)**:  
+    - findById(id: string): Promise<UserPreference | null> - Fetch preference.  
+    - create(preference: UserPreference): Promise<UserPreference> - Create.  
+    - update(id: string, updates: Partial<UserPreference>): Promise<UserPreference> - Update.  
+    - delete(id: string): Promise<void> - Delete.  
+    - findByFilter(filter: FilterDTO): Promise<UserPreference[]> - Filtered.  
+    - countByFilter(filter: FilterDTO): Promise<number> - Count.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction.  
+    - bulkCreate(preferences: UserPreference[]): Promise<UserPreference[]> - Bulk.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IUserPreferenceRepository {
+        <<interface>>
+        +findById(id: string): Promise~UserPreference | null~
+        +create(preference: UserPreference): Promise~UserPreference~
+        +update(id: string, updates: Partial~UserPreference~): Promise~UserPreference~
+        +delete(id: string): Promise~void~
+        +findByFilter(filter: FilterDTO): Promise~UserPreference[]~
+        +countByFilter(filter: FilterDTO): Promise~number~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +bulkCreate(preferences: UserPreference[]): Promise~UserPreference[]~
+    }
+    UserPreferenceRepositoryImpl ..|> IUserPreferenceRepository
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part04 FR-013.  
+- **Thể hiện yêu cầu**: FR-013 Recommendation Engine.  
+- **Kết nối với**: 06B.2.2.7_IExperimentRepository, 04.5.2_Recommendation_Engine.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Repository Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: UserPreference entity defined.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: UserPreference type.  
+- Risks: DB errors → Mitigation: Transactions; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Parameterized queries; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all preference ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to FR-013.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IUserPreferenceRepository.  
+- **Sequence Diagram**: Repo Operation:  
+```mermaid
+sequenceDiagram
+    Service->>Repo: create()
+    Repo->>DB: insert
+    DB->>Repo: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /userpreference/repo/test.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define UserPreference Repository interface.
+
+##### 06B.2.2.7_IExperimentRepository.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part04 FR-012.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define repository for Experiment entities (FR-012).  
+**Ý nghĩa**: Abstract DB access for A/B tests.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IExperimentRepository extends base for experiment-specific ops.  
+  - **Key Methods (8 items)**:  
+    - findById(id: string): Promise<Experiment | null> - Fetch experiment.  
+    - create(experiment: Experiment): Promise<Experiment> - Create.  
+    - update(id: string, updates: Partial<Experiment>): Promise<Experiment> - Update.  
+    - delete(id: string): Promise<void> - Delete.  
+    - findByFilter(filter: FilterDTO): Promise<Experiment[]> - Filtered.  
+    - countByFilter(filter: FilterDTO): Promise<number> - Count.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction.  
+    - bulkCreate(experiments: Experiment[]): Promise<Experiment[]> - Bulk.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IExperimentRepository {
+        <<interface>>
+        +findById(id: string): Promise~Experiment | null~
+        +create(experiment: Experiment): Promise~Experiment~
+        +update(id: string, updates: Partial~Experiment~): Promise~Experiment~
+        +delete(id: string): Promise~void~
+        +findByFilter(filter: FilterDTO): Promise~Experiment[]~
+        +countByFilter(filter: FilterDTO): Promise~number~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +bulkCreate(experiments: Experiment[]): Promise~Experiment[]~
+    }
+    ExperimentRepositoryImpl ..|> IExperimentRepository
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part04 FR-012.  
+- **Thể hiện yêu cầu**: FR-012 A/B Testing.  
+- **Kết nối với**: 06B.2.2.8_IRecommendationRepository, 04.5.1_AB_Testing.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Repository Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Experiment entity defined.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Experiment type.  
+- Risks: DB errors → Mitigation: Transactions; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Parameterized queries; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all experiment ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to FR-012.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IExperimentRepository.  
+- **Sequence Diagram**: Repo Operation:  
+```mermaid
+sequenceDiagram
+    Service->>Repo: create()
+    Repo->>DB: insert
+    DB->>Repo: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /experiment/repo/test.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define Experiment Repository interface.
+
+##### 06B.2.2.8_IRecommendationRepository.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part04 FR-013.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define repository for Recommendation entities (FR-013).  
+**Ý nghĩa**: Abstract DB access for recommendations.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IRecommendationRepository extends base for recommendation-specific ops.  
+  - **Key Methods (8 items)**:  
+    - findById(id: string): Promise<Recommendation | null> - Fetch recommendation.  
+    - create(recommendation: Recommendation): Promise<Recommendation> - Create.  
+    - update(id: string, updates: Partial<Recommendation>): Promise<Recommendation> - Update.  
+    - delete(id: string): Promise<void> - Delete.  
+    - findByFilter(filter: FilterDTO): Promise<Recommendation[]> - Filtered.  
+    - countByFilter(filter: FilterDTO): Promise<number> - Count.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction.  
+    - bulkCreate(recommendations: Recommendation[]): Promise<Recommendation[]> - Bulk.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IRecommendationRepository {
+        <<interface>>
+        +findById(id: string): Promise~Recommendation | null~
+        +create(recommendation: Recommendation): Promise~Recommendation~
+        +update(id: string, updates: Partial~Recommendation~): Promise~Recommendation~
+        +delete(id: string): Promise~void~
+        +findByFilter(filter: FilterDTO): Promise~Recommendation[]~
+        +countByFilter(filter: FilterDTO): Promise~number~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +bulkCreate(recommendations: Recommendation[]): Promise~Recommendation[]~
+    }
+    RecommendationRepositoryImpl ..|> IRecommendationRepository
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part04 FR-013.  
+- **Thể hiện yêu cầu**: FR-013 Recommendation Engine.  
+- **Kết nối với**: 06B.2.3.1_ICRMConnector, 04.5.2_Recommendation_Engine.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Repository Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Recommendation entity defined.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Recommendation type.  
+- Risks: DB errors → Mitigation: Transactions; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Parameterized queries; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all recommendation ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to FR-013.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRecommendationRepository.  
+- **Sequence Diagram**: Repo Operation:  
+```mermaid
+sequenceDiagram
+    Service->>Repo: create()
+    Repo->>DB: insert
+    DB->>Repo: ID
+```
+- **API Endpoint Stubs / Contracts**: POST /recommendation/repo/test.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define Recommendation Repository interface.
+
+#### 06B.2.3_External_Integration_Interfaces/
+
+##### 06B.2.3.1_ICRMConnector.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part04 FR-009.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for CRM Connector, hỗ trợ HubSpot/Salesforce (FR-009).  
+**Ý nghĩa**: Unified CRM sync contract.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: ICR MConnector defines methods for CRM data sync.  
+  - **Key Methods (8 items)**:  
+    - syncContacts(contacts: ContactDTO[]): Promise<Result> - Sync contacts.  
+    - syncLeads(leads: LeadDTO[]): Promise<Result> - Sync leads.  
+    - getContact(id: string): Promise<Contact> - Fetch contact.  
+    - updateContact(id: string, updates: Partial<ContactDTO>): Promise<Contact> - Update.  
+    - deleteContact(id: string): Promise<void> - Delete.  
+    - checkCompliance(): Promise<ComplianceReport> - GDPR check.  
+    - bulkSync(data: DataDTO): Promise<Result> - Bulk sync.  
+    - getMetrics(): Promise<Metrics> - Sync metrics.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class ICRMConnector {
+        <<interface>>
+        +syncContacts(contacts: ContactDTO[]): Promise~Result~
+        +syncLeads(leads: LeadDTO[]): Promise~Result~
+        +getContact(id: string): Promise~Contact~
+        +updateContact(id: string, updates: Partial~ContactDTO~): Promise~Contact~
+        +deleteContact(id: string): Promise~void~
+        +checkCompliance(): Promise~ComplianceReport~
+        +bulkSync(data: DataDTO): Promise~Result~
+        +getMetrics(): Promise~Metrics~
+    }
+    CRMConnectorImpl ..|> ICRMConnector
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part04 FR-009.  
+- **Thể hiện yêu cầu**: FR-009 CRM Integration.  
+- **Kết nối với**: 06B.2.3.2_ISMSProvider, 04.3.3_CRM_Integration.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: CRM APIs stable.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: ContactDTO, Result type.  
+- Risks: API rate limits → Mitigation: Backoff; Risks: Performance → Mitigation: Batch sync; Risks: Security → Mitigation: OAuth; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Queue syncs.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all CRM ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-009.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICRMConnector.  
+- **Sequence Diagram**: CRM Sync:  
+```mermaid
+sequenceDiagram
+    Client->>Service: syncContacts()
+    Service->>CRM: push
+    CRM->>Service: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /crm/sync.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define CRM Connector interface.
+
+##### 06B.2.3.2_ISMSProvider.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.10, System_Feature_Tree.md Section 1.10, Part04 FR-010.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for SMS Provider, hỗ trợ delivery (FR-010).  
+**Ý nghĩa**: Abstraction for Twilio/AWS SNS.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: ISMSProvider defines methods for SMS sending.  
+  - **Key Methods (8 items)**:  
+    - send(phone: string, message: string): Promise<Result> - Send SMS.  
+    - getStatus(id: string): Promise<DeliveryStatus> - Check status.  
+    - sendBatch(messages: MessageDTO[]): Promise<Result[]> - Batch send.  
+    - optOut(phone: string): Promise<void> - Opt-out.  
+    - checkConsent(phone: string): Promise<boolean> - GDPR check.  
+    - getMetrics(): Promise<Metrics> - Delivery metrics.  
+    - configure(config: ConfigDTO): Promise<void> - Provider config.  
+    - testSend(): Promise<Result> - Test message.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class ISMSProvider {
+        <<interface>>
+        +send(phone: string, message: string): Promise~Result~
+        +getStatus(id: string): Promise~DeliveryStatus~
+        +sendBatch(messages: MessageDTO[]): Promise~Result[]~
+        +optOut(phone: string): Promise~void~
+        +checkConsent(phone: string): Promise~boolean~
+        +getMetrics(): Promise~Metrics~
+        +configure(config: ConfigDTO): Promise~void~
+        +testSend(): Promise~Result~
+    }
+    SMSProviderImpl ..|> ISMSProvider
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.10, System_Feature_Tree.md Section 1.10, Part04 FR-010.  
+- **Thể hiện yêu cầu**: FR-010 Notification System.  
+- **Kết nối với**: 06B.2.3.3_IEmailProvider, 04.3.4_Notification_System.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Phone numbers valid.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: MessageDTO, Result type.  
+- Risks: Delivery failures → Mitigation: Retries; Risks: Performance → Mitigation: Batch; Risks: Security → Mitigation: Encryption; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded queues.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all SMS ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-010.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ISMSProvider.  
+- **Sequence Diagram**: SMS Send:  
+```mermaid
+sequenceDiagram
+    Client->>Service: send()
+    Service->>Provider: deliver
+    Provider->>Service: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /sms/send.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define SMS Provider interface.
+
+##### 06B.2.3.3_IEmailProvider.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.10, System_Feature_Tree.md Section 1.10, Part04 FR-010.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for Email Provider, hỗ trợ delivery (FR-010).  
+**Ý nghĩa**: Abstraction for SendGrid/AWS SES.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IEmailProvider defines methods for email sending.  
+  - **Key Methods (8 items)**:  
+    - send(email: string, subject: string, body: string): Promise<Result> - Send email.  
+    - getStatus(id: string): Promise<DeliveryStatus> - Check status.  
+    - sendBatch(messages: MessageDTO[]): Promise<Result[]> - Batch send.  
+    - optOut(email: string): Promise<void> - Opt-out.  
+    - checkConsent(email: string): Promise<boolean> - GDPR check.  
+    - getMetrics(): Promise<Metrics> - Delivery metrics.  
+    - configure(config: ConfigDTO): Promise<void> - Provider config.  
+    - testSend(): Promise<Result> - Test message.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IEmailProvider {
+        <<interface>>
+        +send(email: string, subject: string, body: string): Promise~Result~
+        +getStatus(id: string): Promise~DeliveryStatus~
+        +sendBatch(messages: MessageDTO[]): Promise~Result[]~
+        +optOut(email: string): Promise~void~
+        +checkConsent(email: string): Promise~boolean~
+        +getMetrics(): Promise~Metrics~
+        +configure(config: ConfigDTO): Promise~void~
+        +testSend(): Promise~Result~
+    }
+    EmailProviderImpl ..|> IEmailProvider
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.10, System_Feature_Tree.md Section 1.10, Part04 FR-010.  
+- **Thể hiện yêu cầu**: FR-010 Notification System.  
+- **Kết nối với**: 06B.2.3.4_IPOSConnector, 04.3.4_Notification_System.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Emails valid.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: MessageDTO, Result type.  
+- Risks: Delivery failures → Mitigation: Retries; Risks: Performance → Mitigation: Batch; Risks: Security → Mitigation: Encryption; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded queues.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all email ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-010.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IEmailProvider.  
+- **Sequence Diagram**: Email Send:  
+```mermaid
+sequenceDiagram
+    Client->>Service: send()
+    Service->>Provider: deliver
+    Provider->>Service: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /email/send.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define Email Provider interface.
+
+##### 06B.2.3.4_IPOSConnector.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part04 FR-007.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define interface for POS Connector, hỗ trợ redemption (FR-007).  
+**Ý nghĩa**: Unified POS integration.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: IPOSConnector defines methods for POS redemption sync.  
+  - **Key Methods (8 items)**:  
+    - redeemBarcode(barcode: string, storeId: string): Promise<Result> - Redeem.  
+    - getStatus(barcode: string): Promise<DeliveryStatus> - Status.  
+    - syncBatch(redemptions: RedemptionDTO[]): Promise<Result[]> - Batch sync.  
+    - checkInventory(storeId: string): Promise<Inventory> - Inventory check.  
+    - updateInventory(storeId: string, updates: Partial<InventoryDTO>): Promise<Inventory> - Update.  
+    - getMetrics(): Promise<Metrics> - Redemption metrics.  
+    - configure(config: ConfigDTO): Promise<void> - POS config.  
+    - testRedeem(): Promise<Result> - Test redemption.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class IPOSConnector {
+        <<interface>>
+        +redeemBarcode(barcode: string, storeId: string): Promise~Result~
+        +getStatus(barcode: string): Promise~DeliveryStatus~
+        +syncBatch(redemptions: RedemptionDTO[]): Promise~Result[]~
+        +checkInventory(storeId: string): Promise~Inventory~
+        +updateInventory(storeId: string, updates: Partial~InventoryDTO~): Promise~Inventory~
+        +getMetrics(): Promise~Metrics~
+        +configure(config: ConfigDTO): Promise~void~
+        +testRedeem(): Promise~Result~
+    }
+    POSConnectorImpl ..|> IPOSConnector
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part04 FR-007.  
+- **Thể hiện yêu cầu**: FR-007 Barcode Redemption.  
+- **Kết nối với**: 06B.2.3.1_ICRMConnector, 04.3.1_Barcode_Redemption.  
+- **Tài liệu tham chiếu**: TypeScript Interfaces, GeeksforGeeks Interface Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: POS APIs stable.  
+- **Ràng buộc**: Async methods.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: RedemptionDTO, Result type.  
+- Risks: Sync failures → Mitigation: Retries; Risks: Performance → Mitigation: Batch; Risks: Security → Mitigation: Encryption; Risks: Testing → Mitigation: Mocks; Risks: Scalability → Mitigation: Sharded queues.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Interface covers all POS ops.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Methods secure.  
+- **Verifiable**: Traceable to FR-007.  
+- **Testable**: Jest mock tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IPOSConnector.  
+- **Sequence Diagram**: POS Redemption:  
+```mermaid
+sequenceDiagram
+    Client->>Service: redeemBarcode()
+    Service->>POS: sync
+    POS->>Service: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /pos/redeem.  
+- **Reusable Design Pattern Implementation Notes**: Interface for decoupling.  
+- **Mục đích của node này**: Define POS Connector interface.
+
+## Part06B_Design_Patterns/
+
+### 06B.3_Abstract_Base_Classes/
+
+#### 06B.3.1_BaseService.md
+
+###### References / Tham chiếu
+- BRD.md Section 9 (Technical Requirements), System_Feature_Tree.md Section 2 (Services), Part06.2.1_Layered_Architecture, IEEE 830-1998, GeeksforGeeks Abstract Classes, TypeScript Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define BaseService abstract class cho tất cả microservices, hỗ trợ common logic như logging, error handling.  
+**Ý nghĩa**: DRY principle, consistent service behavior (e.g., transaction mgmt), dễ extend cho FR-007→FR-014.  
+**Cách làm**: TypeScript abstract code, UML diagrams, method descriptions, chi tiết 250-400 từ, bullet lists 5-8 items, Mermaid for class hierarchy.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: BaseService abstract class cung cấp common methods cho all services (e.g., RedemptionService for FR-007), bao gồm logging, error handling, transaction wrapper. For PSP, this ensures GDPR-compliant logging, consistent API responses, and scalable service implementation.  
+  - **Key Methods (8 items)**:  
+    - protected log(message: string): void - Log messages.  
+    - protected handleError(error: Error): Promise<ErrorDTO> - Standard error handling.  
+    - protected transaction(callback: () => Promise<any>): Promise<any> - Transaction wrapper.  
+    - protected validateDTO(dto: any, schema: ZodSchema): any - Zod validation.  
+    - protected cacheGet(key: string): Promise<any> - Redis get.  
+    - protected cacheSet(key: string, value: any, ttl: number): Promise<void> - Redis set.  
+    - protected publishEvent(event: DomainEvent): Promise<void> - Publish to RabbitMQ.  
+    - protected checkPermission(user: User, permission: string): boolean - RBAC check.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class BaseService {
+        <<abstract>>
+        +log(message: string): void
+        +handleError(error: Error): Promise~ErrorDTO~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +validateDTO(dto: any, schema: ZodSchema): any
+        +cacheGet(key: string): Promise~any~
+        +cacheSet(key: string, value: any, ttl: number): Promise~void~
+        +publishEvent(event: DomainEvent): Promise~void~
+        +checkPermission(user: User, permission: string): boolean
+    }
+    CampaignServiceImpl --|> BaseService
+    RedemptionServiceImpl --|> BaseService
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, System_Feature_Tree.md Section 2, Part06.2.1_Layered_Architecture.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.3.2_BaseRepository, 06.2.2_Microservices_Design.  
+- **Tài liệu tham chiếu**: Abstract Classes TypeScript, GeeksforGeeks Abstract Classes.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Logger, cache injected.  
+- **Ràng buộc**: Abstract methods must be implemented.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Zod, Redis client.  
+- Risks: Error handling inconsistent → Mitigation: Standard DTOs; Risks: Transaction failures → Mitigation: Rollbacks; Risks: Security → Mitigation: RBAC; Risks: Testing → Mitigation: Abstract mocks; Risks: Scalability → Mitigation: Async methods.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: BaseService extended in all services.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Logging secure.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Jest abstract tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: BaseService.  
+- **Sequence Diagram**: Service Flow:  
+```mermaid
+sequenceDiagram
+    ChildService->>BaseService: log()
+    BaseService->>Logger: write
+```
+- **API Endpoint Stubs / Contracts**: POST /baseservice/test.  
+- **Reusable Design Pattern Implementation Notes**: Template Method.  
+- **Mục đích của node này**: Define base service class.
+
+#### 06B.3.2_BaseRepository.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, Part06.2.1_Layered_Architecture, Repository Pattern (Fowler).
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define BaseRepository abstract class cho all repos, hỗ trợ polyglot DB.  
+**Ý nghĩa**: Common CRUD + transaction logic.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: BaseRepository abstract class cung cấp common repo methods.  
+  - **Key Methods (8 items)**:  
+    - protected abstract getConnection(): Promise<DBConnection> - Get DB conn.  
+    - logQuery(query: string): void - Log queries.  
+    - handleError(error: Error): Promise<ErrorDTO> - Error handling.  
+    - transaction(callback: () => Promise<any>): Promise<any> - Transaction.  
+    - cacheGet(key: string): Promise<any> - Redis get.  
+    - cacheSet(key: string, value: any, ttl: number): Promise<void> - Redis set.  
+    - validateSchema(data: any, schema: ZodSchema): any - Zod validation.  
+    - publishEvent(event: DomainEvent): Promise<void> - Publish event.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class BaseRepository {
+        <<abstract>>
+        +getConnection(): Promise~DBConnection~
+        +logQuery(query: string): void
+        +handleError(error: Error): Promise~ErrorDTO~
+        +transaction(callback: () => Promise~any~): Promise~any~
+        +cacheGet(key: string): Promise~any~
+        +cacheSet(key: string, value: any, ttl: number): Promise~void~
+        +validateSchema(data: any, schema: ZodSchema): any
+        +publishEvent(event: DomainEvent): Promise~void~
+    }
+    CampaignRepositoryImpl --|> BaseRepository
+    UserRepositoryImpl --|> BaseRepository
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06.2.1_Layered_Architecture.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.3.1_BaseService, 06B.2.2_Repository_Interfaces.  
+- **Tài liệu tham chiếu**: Repository Pattern (Fowler), GeeksforGeeks Abstract Classes.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: DB connection pooled.  
+- **Ràng buộc**: Abstract for extension.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Zod, Redis.  
+- Risks: Transaction failures → Mitigation: Rollbacks; Risks: Cache inconsistency → Mitigation: Invalidation; Risks: Security → Mitigation: Parameterized; Risks: Testing → Mitigation: Mock bases; Risks: Scalability → Mitigation: Distributed DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: BaseRepository extended in all repos.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Queries secure.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Jest abstract tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: BaseRepository.  
+- **Sequence Diagram**: Repo Flow:  
+```mermaid
+sequenceDiagram
+    ChildRepo->>BaseRepository: transaction()
+    BaseRepository->>DB: beginTx
+    DB->>BaseRepository: commit
+```
+- **API Endpoint Stubs / Contracts**: POST /baserepo/test.  
+- **Reusable Design Pattern Implementation Notes**: Template Method.  
+- **Mục đích của node này**: Define base repository class.
+
+#### 06B.3.3_BaseController.md
+
+###### References / Tham sát
+- BRD.md Section 9, Part06.2.1_Layered_Architecture.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define BaseController abstract class cho all API controllers.  
+**Ý nghĩa**: Consistent error handling, logging.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: BaseController abstract class cung cấp common controller logic.  
+  - **Key Methods (8 items)**:  
+    - protected handleRequest(req: Request): Promise<Response> - Handle requests.  
+    - protected logRequest(req: Request): void - Log requests.  
+    - protected validateBody(body: any, schema: ZodSchema): any - Zod validation.  
+    - protected sendResponse(data: any): Response - Standard response.  
+    - protected handleError(error: Error): Response - Error response.  
+    - protected authenticate(req: Request): Promise<User> - Auth check.  
+    - protected authorize(user: User, permission: string): boolean - RBAC.  
+    - protected cacheResponse(key: string, data: any): Promise<void> - Cache.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class BaseController {
+        <<abstract>>
+        +handleRequest(req: Request): Promise~Response~
+        +logRequest(req: Request): void
+        +validateBody(body: any, schema: ZodSchema): any
+        +sendResponse(data: any): Response
+        +handleError(error: Error): Response
+        +authenticate(req: Request): Promise~User~
+        +authorize(user: User, permission: string): boolean
+        +cacheResponse(key: string, data: any): Promise~void~
+    }
+    CampaignControllerImpl --|> BaseController
+    RedemptionControllerImpl --|> BaseController
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06.2.1_Layered_Architecture.  
+- **Thể hiện yêu cầu**: NFR-003 Security.  
+- **Kết nối với**: 06B.3.4_BaseValidator, 06B.2.1_Service_Interfaces.  
+- **Tài liệu tham chiếu**: Abstract Classes TypeScript, GeeksforGeeks Abstract Classes.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Request/Response from Fastify.  
+- **Ràng buộc**: Abstract for extension.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Zod, Passport.  
+- Risks: Auth failures → Mitigation: Error handling; Risks: Validation bugs → Mitigation: Schemas; Risks: Security → Mitigation: RBAC; Risks: Testing → Mitigation: Mock bases; Risks: Scalability → Mitigation: Async controllers.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: BaseController extended in all controllers.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: RBAC enforced.  
+- **Verifiable**: Traceable to NFR-003.  
+- **Testable**: Jest abstract tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: BaseController.  
+- **Sequence Diagram**: Controller Flow:  
+```mermaid
+sequenceDiagram
+    Client->>BaseController: request
+    BaseController->>Auth: authenticate
+    BaseController->>Validate: body
+    BaseController->>Service: execute
+    Service->>BaseController: data
+```
+- **API Endpoint Stubs / Contracts**: POST /basecontroller/test.  
+- **Reusable Design Pattern Implementation Notes**: Template Method.  
+- **Mục đích của node này**: Define base controller class.
+
+#### 06B.3.4_BaseValidator.md
+
+###### References / Tham sát
+- BRD.md Section 9, Part06.2.1_Layered_Architecture.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define BaseValidator abstract class cho data validation.  
+**Ý nghĩa**: Consistent validation, Zod integration.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: BaseValidator abstract class cung cấp common validation logic.  
+  - **Key Methods (8 items)**:  
+    - protected validate(data: any, schema: ZodSchema): any - Zod parse.  
+    - protected logValidation(error: ZodError): void - Log errors.  
+    - protected handleValidationError(error: ZodError): Promise<ErrorDTO> - Error DTO.  
+    - protected validateAsync(data: any, schema: ZodSchema): Promise<any> - Async validation.  
+    - protected addRule(rule: ValidationRule): void - Add custom rule.  
+    - protected checkGDPR(data: any): boolean - GDPR check.  
+    - protected sanitizePII(data: any): any - Sanitize PII.  
+    - protected testSchema(schema: ZodSchema): Promise<void> - Test schema.  
+  - **Architecture Diagram**:  
+
+```mermaid
+classDiagram
+    class BaseValidator {
+        <<abstract>>
+        +validate(data: any, schema: ZodSchema): any
+        +logValidation(error: ZodError): void
+        +handleValidationError(error: ZodError): Promise~ErrorDTO~
+        +validateAsync(data: any, schema: ZodSchema): Promise~any~
+        +addRule(rule: ValidationRule): void
+        +checkGDPR(data: any): boolean
+        +sanitizePII(data: any): any
+        +testSchema(schema: ZodSchema): Promise~void~
+    }
+    CampaignValidatorImpl --|> BaseValidator
+    UserValidatorImpl --|> BaseValidator
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06.2.1_Layered_Architecture.  
+- **Thể hiện yêu cầu**: NFR-008 Compliance.  
+- **Kết nối với**: 06B.3.3_BaseController, 06B.2.2_Repository_Interfaces.  
+- **Tài liệu tham chiếu**: Zod Docs, GeeksforGeeks Validation Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Zod schemas defined.  
+- **Ràng buộc**: Abstract for extension.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Zod.  
+- Risks: Validation failures → Mitigation: Error handling; Risks: Performance → Mitigation: Async; Risks: Security → Mitigation: Sanitization; Risks: Testing → Mitigation: Schema tests; Risks: Scalability → Mitigation: Lightweight schemas.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: BaseValidator extended in all validators.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Validation secure.  
+- **Verifiable**: Traceable to NFR-008.  
+- **Testable**: Jest abstract tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: BaseValidator.  
+- **Sequence Diagram**: Validation Flow:  
+```mermaid
+sequenceDiagram
+    ChildValidator->>BaseValidator: validate()
+    BaseValidator->>Zod: parse
+    Zod->>BaseValidator: Result
+```
+- **API Endpoint Stubs / Contracts**: POST /basevalidator/test.  
+- **Reusable Design Pattern Implementation Notes**: Template Method.  
+- **Mục đích của node này**: Define base validator class.
+
+#### 06B.4_Dependency_Injection/
+
+##### 06B.4.1_DI_Container_Setup.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, NestJS DI Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define DI container setup cho NestJS.  
+**Ý nghĩa**: Inversion of Control, dễ test.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: DI container setup sử dụng NestJS module system.  
+  - **Key Steps (8 items)**:  
+    - Import NestModule.  
+    - Provide providers.  
+    - Export services.  
+    - Use @Inject().  
+    - Scoped lifetimes.  
+    - Custom providers.  
+    - Module dynamic.  
+    - Testing overrides.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Module[Module] --> Providers[Providers]
+    Providers --> Services[Services]
+    Controllers[Controllers] --> @Inject[@Inject()]
+    @Inject --> Services
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.3.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.4.2_Service_Registration.  
+- **Tài liệu tham chiếu**: NestJS DI, GeeksforGeeks DI.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: NestJS app.  
+- **Ràng buộc**: Scoped correctly.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: NestJS.  
+- Risks: Circular DI → Mitigation: Lazy inject; Risks: Test leaks → Mitigation: Overrides; Risks: Security → Mitigation: Private inject; Risks: Performance → Mitigation: Singleton; Risks: Scalability → Mitigation: Request scoped.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: DI setup in all modules.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Jest DI tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IDIContainer.  
+- **Sequence Diagram**: DI Setup:  
+```mermaid
+sequenceDiagram
+    App->>Module: import
+    Module->>Provider: provide
+    Controller->>Service: @Inject
+```
+- **API Endpoint Stubs / Contracts**: POST /di/test.  
+- **Reusable Design Pattern Implementation Notes**: Inversion of Control.  
+- **Mục đích của node này**: Define DI container setup.
+
+##### 06B.4.2_Service_Registration.md
+
+###### References / Tham sát
+- BRD.md Section 9, NestJS Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define service registration in DI container.  
+**Ý nghĩa**: Central registration, dễ manage.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Service registration sử dụng @Module in NestJS.  
+  - **Key Steps (8 items)**:  
+    - Define @Module.  
+    - Add providers array.  
+    - Use value/factory.  
+    - Export for other modules.  
+    - Import in AppModule.  
+    - Scoped: Singleton/Request.  
+    - Dynamic modules.  
+    - Testing mocks.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    AppModule[AppModule] --> ServiceModule[ServiceModule]
+    ServiceModule --> Providers[providers: [MyService]]
+    ServiceModule --> Exports[exports: [MyService]]
+    Controller[Controller] -->|inject| MyService[MyService]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.4.1.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.4.3_Lifetime_Management.  
+- **Tài liệu tham chiếu**: NestJS Modules, GeeksforGeeks DI Registration.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: NestJS setup.  
+- **Ràng buộc**: Singleton default.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: NestJS modules.  
+- Risks: Missing registration → Mitigation: DI errors; Risks: Lifetime mismatch → Mitigation: Scoped; Risks: Security → Mitigation: Private services; Risks: Testing → Mitigation: Overrides; Risks: Scalability → Mitigation: Request scoped.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: All services registered.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Jest DI tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRegistration.  
+- **Sequence Diagram**: Registration Flow:  
+```mermaid
+sequenceDiagram
+    App->>Module: import
+    Module->>Provider: register
+```
+- **API Endpoint Stubs / Contracts**: POST /registration/test.  
+- **Reusable Design Pattern Implementation Notes**: Module Pattern.  
+- **Mục đích của node này**: Define service registration.
+
+##### 06B.4.3_Lifetime_Management.md
+
+###### References / Tham sát
+- BRD.md Section 9, NestJS DI Scopes.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define DI lifetime management (Singleton, Request, Transient).  
+**Ý nghĩa**: Optimize memory, performance (NFR-001).  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Lifetime management defines scopes for services.  
+  - **Key Scopes (8 items)**:  
+    - Singleton: Global services (e.g., CacheManager).  
+    - Request: Per-request (e.g., AuthContext).  
+    - Transient: New instance every time (e.g., Validators).  
+    - Custom scopes: Tenant-specific.  
+    - Memory optimization: Singleton for shared.  
+    - Testing: Scope overrides.  
+    - Scalability: Request scoped for stateless.  
+    - Security: Transient for sensitive.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Singleton[Singleton Scope] --> Global[Global Instance]
+    Request[Request Scope] --> PerReq[Per Request Instance]
+    Transient[Transient Scope] --> New[New Instance Each Time]
+    App[App] --> Singleton
+    App --> Request
+    App --> Transient
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.4.2.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06B.4.4_Configuration_Pattern.  
+- **Tài liệu tham chiếu**: NestJS Scopes, GeeksforGeeks DI Lifetimes.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: NestJS DI.  
+- **Ràng buộc**: Singleton for shared resources.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: NestJS scopes.  
+- Risks: Memory leaks in singleton → Mitigation: GC; Risks: State in request → Mitigation: Cleanup; Risks: Security → Mitigation: Scoped RBAC; Risks: Testing → Mitigation: Scope overrides; Risks: Scalability → Mitigation: Transient for heavy.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: All services scoped correctly.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure scopes.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Jest scope tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ILifetimeManager.  
+- **Sequence Diagram**: Scope Flow:  
+```mermaid
+sequenceDiagram
+    App->>DI: Resolve Service
+    DI->>Scope: Singleton/Request
+    Scope->>App: Instance
+```
+- **API Endpoint Stubs / Contracts**: POST /lifetime/test.  
+- **Reusable Design Pattern Implementation Notes**: Scope Pattern.  
+- **Mục đích của node này**: Define DI lifetime management.
+
+##### 06B.4.4_Configuration_Pattern.md
+
+###### References / Tham sát
+- BRD.md Section 9, NestJS Config.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define configuration pattern cho DI.  
+**Ý nghĩa**: Environment-based config, no hardcoding.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Configuration pattern sử dụng @nestjs/config cho env vars.  
+  - **Key Features (8 items)**:  
+    - Env vars loading.  
+    - Validation with Zod.  
+    - Nested configs.  
+    - Secrets from Vault.  
+    - Hot reload.  
+    - Testing overrides.  
+    - Scalable for cloud.  
+    - Security for sensitive keys.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    App[App] --> ConfigModule[ConfigModule]
+    ConfigModule --> EnvVars[.env]
+    ConfigModule --> Zod[Zod Validation]
+    ConfigModule --> Vault[Vault Secrets]
+    Service[Service] -->|inject| Config[ConfigService]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.4.3.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.3_Abstract_Base_Classes, 06B.4.1_DI_Container_Setup.  
+- **Tài liệu tham chiếu**: NestJS Config, GeeksforGeeks Config Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: .env files secure.  
+- **Ràng buộc**: Validation mandatory.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: @nestjs/config.  
+- Risks: Config leaks → Mitigation: Vault; Risks: Invalid config → Mitigation: Zod; Risks: Security → Mitigation: Encrypted vars; Risks: Testing → Mitigation: Overrides; Risks: Scalability → Mitigation: Dynamic configs.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: All configs validated.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secrets secure.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Jest config tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IConfigProvider.  
+- **Sequence Diagram**: Config Load:  
+```mermaid
+sequenceDiagram
+    App->>Config: load
+    Config->>Env: read
+    Config->>Zod: validate
+```
+- **API Endpoint Stubs / Contracts**: GET /config/test.  
+- **Reusable Design Pattern Implementation Notes**: Configuration Pattern.  
+- **Mục đích của node này**: Define configuration pattern.
+
+## Part06B_Design_Patterns/
+
+### 06B.5_Module_Independence/
+
+#### 06B.5.1_Module_Boundaries.md
+
+###### References / Tham chiếu
+- BRD.md Section 9 (Technical Requirements), System_Feature_Tree.md Section 2 (Services), Part06.2.3_Service_Boundaries, IEEE 830-1998, GeeksforGeeks Module Design, DDD Bounded Contexts.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Định nghĩa module boundaries cho 14 microservices, đảm bảo independence.  
+**Ý nghĩa**: Giảm coupling, dễ deploy independent, hỗ trợ NFR-005.  
+**Cách làm**: Table boundaries, Mermaid graphs, code examples, chi tiết 300 từ, bullet lists 5-8 items, Mermaid cho flows.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Module boundaries theo DDD, mỗi module = bounded context (e.g., Redemption module for FR-007).  
+  - **Key Boundaries (8 items)**:  
+    - Redemption: Barcode ops only.  
+    - Fraud: Scoring only.  
+    - Notification: Delivery only.  
+    - ACL for inter-module.  
+    - Event-only for async.  
+    - No shared DB.  
+    - OpenAPI contracts.  
+    - Versioned modules.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Module1[Module 1] -->|Event| EventBus[Event Bus]
+    EventBus --> Module2[Module 2]
+    Module1 -->|gRPC| ACL[Anti-Corruption Layer]
+    ACL --> Module3[Module 3]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, System_Feature_Tree.md Section 2, Part06.2.3.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.5.2_Inter_Module_Communication.  
+- **Tài liệu tham chiếu**: DDD (Evans), GeeksforGeeks Module Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Modules self-contained.  
+- **Ràng buộc**: No direct calls.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Event Bus.  
+- Risks: Coupling → Mitigation: ACL; Risks: Async failures → Mitigation: DLQ; Risks: Security → Mitigation: mTLS; Risks: Testing → Mitigation: Contract tests; Risks: Scalability → Mitigation: Independent deploys.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% modules independent.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: ACL tested.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Integration tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IModuleBoundary.  
+- **Sequence Diagram**: Module Interaction:  
+```mermaid
+sequenceDiagram
+    Module1->>EventBus: Publish
+    EventBus->>Module2: Deliver
+```
+- **API Endpoint Stubs / Contracts**: POST /module/test.  
+- **Reusable Design Pattern Implementation Notes**: Bounded Context Pattern.  
+- **Mục đích của node này**: Define module boundaries.
+
+#### 06B.5.2_Inter_Module_Communication.md 🔄
+
+###### References / Tham chiếu
+- 06B.5.1_Module_Boundaries, Part06.5_Communication_Patterns.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define inter-module communication patterns.  
+**Ý nghĩa**: Loose coupling, event-driven preferred.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Inter-module comm sử dụng events cho async, gRPC cho sync critical.  
+  - **Key Patterns (8 items)**:  
+    - Event-Driven primary.  
+    - gRPC for sync <50ms.  
+    - ACL for sync calls.  
+    - No direct DB access.  
+    - Schema validation.  
+    - Retry for failures.  
+    - Monitoring comm metrics.  
+    - Versioned events.  
+  - **Architecture Diagram**:  
+
+```mermaid
+sequenceDiagram
+    Module1->>ACL: gRPC Sync
+    ACL->>Module2: Call
+    Module2-->>ACL: Response
+    ACL-->>Module1: Response
+    Module1->>EventBus: Publish Async
+    EventBus->>Module3: Deliver
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06B.5.1_Module_Boundaries, Part06.5.  
+- **Thể hiện yêu cầu**: NFR-001 Latency.  
+- **Kết nối với**: 06B.5.3_Event_Bus_Pattern.  
+- **Tài liệu tham chiếu**: Microservices Communication, GeeksforGeeks Inter-Module.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Event bus reliable.  
+- **Ràng buộc**: Async preferred.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: gRPC, Event Bus.  
+- Risks: Sync latency → Mitigation: Circuit breakers; Risks: Event loss → Mitigation: Durable queues; Risks: Security → Mitigation: mTLS; Risks: Testing → Mitigation: Contract tests; Risks: Scalability → Mitigation: Sharded bus.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% inter-module defined.  
+- **Performance**: <50ms sync.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS enforced.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Load tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IInterModuleComm.  
+- **Sequence Diagram**: Inter-Module Flow:  
+```mermaid
+sequenceDiagram
+    Module1->>Module2: Sync gRPC
+    Module1->>EventBus: Async Publish
+```
+- **API Endpoint Stubs / Contracts**: POST /intermodule/test.  
+- **Reusable Design Pattern Implementation Notes**: ACL Pattern.  
+- **Mục đích của node này**: Define inter-module communication.
+
+#### 06B.5.3_Event_Bus_Pattern.md
+
+###### References / Tham chiếu
+- 06B.5.2_Inter_Module_Communication, RabbitMQ Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Event Bus Pattern cho async inter-module.  
+**Ý nghĩa**: Decoupled communication, eventual consistency.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Event Bus Pattern sử dụng RabbitMQ cho domain events.  
+  - **Key Features (8 items)**:  
+    - Pub/Sub model.  
+    - Durable events.  
+    - Schema validation.  
+    - Retry mechanisms.  
+    - Dead letter handling.  
+    - Monitoring.  
+    - Security TLS.  
+    - Scalable cluster.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Publisher[Publisher] --> EventBus[RabbitMQ Event Bus]
+    EventBus --> Subscriber1[Subscriber1]
+    EventBus --> Subscriber2[Subscriber2]
+    EventBus --> DLQ[Dead Letter Queue]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06B.5.2_Inter_Module_Communication, Part06.5.2_Asynchronous.  
+- **Thể hiện yêu cầu**: NFR-002 Scalability.  
+- **Kết nối với**: 06B.5.4_API_Contracts.  
+- **Tài liệu tham chiếu**: RabbitMQ Patterns, GeeksforGeeks Event Bus.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Events immutable.  
+- **Ràng buộc**: No direct pub/sub.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: RabbitMQ.  
+- Risks: Event storms → Mitigation: Throttling; Risks: Loss → Mitigation: Durable; Risks: Security → Mitigation: TLS; Risks: Testing → Mitigation: Mock bus; Risks: Scalability → Mitigation: Cluster.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% events bus routed.  
+- **Performance**: 100K msg/s.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: TLS enforced.  
+- **Verifiable**: Traceable to NFR-002.  
+- **Testable**: Event tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IEventBus.  
+- **Sequence Diagram**: Event Bus Flow:  
+```mermaid
+sequenceDiagram
+    Publisher->>EventBus: publish
+    EventBus->>Subscriber1: deliver
+    EventBus->>Subscriber2: deliver
+```
+- **API Endpoint Stubs / Contracts**: POST /eventbus/test.  
+- **Reusable Design Pattern Implementation Notes**: Pub/Sub Pattern.  
+- **Mục đích của node này**: Define event bus pattern.
+
+#### 06B.5.4_API_Contracts.md
+
+###### References / Tham chiếu
+- 06B.5.3_Event_Bus_Pattern, OpenAPI 3.0.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define API contracts cho inter-module sync calls.  
+**Ý nghĩa**: Contract-first, reduce integration errors.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: API contracts sử dụng OpenAPI 3.0 cho REST/gRPC.  
+  - **Key Features (8 items)**:  
+    - OpenAPI YAML files.  
+    - gRPC proto files.  
+    - Versioning v1/v2.  
+    - Schema validation.  
+    - Security schemes (JWT).  
+    - Error responses.  
+    - Rate limits in spec.  
+    - Code gen clients.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Service1[Service1] --> OpenAPI[OpenAPI Contract]
+    OpenAPI --> CodeGen[Code Gen Clients]
+    CodeGen --> Service2[Service2]
+    Service2 --> OpenAPI
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06B.5.3_Event_Bus_Pattern, Part08_API_Design.  
+- **Thể hiện yêu cầu**: NFR-003 Security.  
+- **Kết nối với**: 06B.5.5_Versioning_Strategy.  
+- **Tài liệu tham chiếu**: OpenAPI 3.0, GeeksforGeeks API Contracts.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Swagger tools.  
+- **Ràng buộc**: Versioned APIs.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: OpenAPI generator.  
+- Risks: Breaking changes → Mitigation: Versioning; Risks: Security → Mitigation: JWT; Risks: Testing → Mitigation: Contract tests; Risks: Scalability → Mitigation: Rate limits; Risks: Docs outdated → Mitigation: Auto-gen.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% APIs documented.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: JWT enforced.  
+- **Verifiable**: Traceable to NFR-003.  
+- **Testable**: Swagger validated.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAPIContract.  
+- **Sequence Diagram**: API Contract Flow:  
+```mermaid
+sequenceDiagram
+    Dev->>OpenAPI: Gen Code
+    OpenAPI->>Client: Client SDK
+    Client->>Service: Call
+```
+- **API Endpoint Stubs / Contracts**: GET /api/contracts.  
+- **Reusable Design Pattern Implementation Notes**: Contract-First Pattern.  
+- **Mục đích của node này**: Define API contracts.
+
+#### 06B.5.5_Versioning_Strategy.md
+
+###### References / Tham chiếu
+- 06B.5.4_API_Contracts, Semantic Versioning 2.0.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define versioning strategy cho APIs/modules.  
+**Ý nghĩa**: Backward compatibility, no breaking changes.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Versioning strategy sử dụng SemVer cho APIs.  
+  - **Key Strategies (8 items)**:  
+    - SemVer 2.0 (major.minor.patch).  
+    - API Paths: /v1 /v2.  
+    - Deprecate old versions.  
+    - Migration guides.  
+    - Automated tests for versions.  
+    - Istio subsets for traffic.  
+    - Event schemas versioned.  
+    - Docs per version.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Client --> V1[ /v1 API]
+    Client --> V2[ /v2 API]
+    V1 --> ServiceV1[Service v1.0.0]
+    V2 --> ServiceV2[Service v2.0.0]
+    ServiceV1 --> Deprecate[Deprecate Notice]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06B.5.4_API_Contracts, Part08_API_Design.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.6_Code_Organization.  
+- **Tài liệu tham chiếu**: SemVer.org, GeeksforGeeks Versioning.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Clients handle versions.  
+- **Ràng buộc**: Major versions break compatibility.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Istio subsets.  
+- Risks: Breaking changes → Mitigation: Deprecation period; Risks: Client migration → Mitigation: Guides; Risks: Security → Mitigation: Versioned auth; Risks: Testing → Mitigation: Multi-version tests; Risks: Scalability → Mitigation: Traffic shift.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% APIs versioned.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Versions secure.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Multi-version tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IVersionStrategy.  
+- **Sequence Diagram**: Version Switch:  
+```mermaid
+sequenceDiagram
+    Client->>Gateway: /v1 request
+    Gateway->>V1: Route
+    Client->>Gateway: /v2 request
+    Gateway->>V2: Route
+```
+- **API Endpoint Stubs / Contracts**: GET /version/test.  
+- **Reusable Design Pattern Implementation Notes**: Versioned API Pattern.  
+- **Mục đích của node này**: Define versioning strategy.
+
+### 06B.6_Code_Organization/
+
+#### 06B.6.1_Folder_Structure.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, NestJS Project Structure.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define folder structure cho microservices.  
+**Ý nghĩa**: Consistent code organization, dễ navigate.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Folder structure theo Clean Arch.  
+  - **Key Folders (8 items)**:  
+    - src/  
+    - src/application/  
+    - src/domain/  
+    - src/infrastructure/  
+    - src/presentation/  
+    - test/  
+    - config/  
+    - docs/  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    src[src] --> application[application/use-cases]
+    src --> domain[domain/entities]
+    src --> infrastructure[infrastructure/repos]
+    src --> presentation[presentation/controllers]
+    test[test] --> e2e[e2e]
+    config[config] --> env[.env]
+    docs[docs] --> openapi[openapi.yaml]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06.2.1.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.6.2_Naming_Conventions.  
+- **Tài liệu tham chiếu**: NestJS Structure, GeeksforGeeks Code Org.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Monorepo setup.  
+- **Ràng buộc**: Clean Arch folders.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Lerna for monorepo.  
+- Risks: Disorganized code → Mitigation: ESLint; Risks: Security → Mitigation: Folder permissions; Risks: Testing → Mitigation: Folder mocks; Risks: Scalability → Mitigation: Module exports; Risks: Onboarding → Mitigation: README.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% code in correct folders.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Folders secure.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: ESLint checks.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IFolderValidator.  
+- **Sequence Diagram**: Code Org Flow:  
+```mermaid
+sequenceDiagram
+    Dev->>src: Navigate
+    src->>application: Use Cases
+```
+- **API Endpoint Stubs / Contracts**: POST /structure/test.  
+- **Reusable Design Pattern Implementation Notes**: Layered Pattern.  
+- **Mục đích của node này**: Define folder structure.
+
+#### 06B.6.2_Naming_Conventions.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, TypeScript Style Guide.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define naming conventions cho code consistency.  
+**Ý nghĩa**: Đọc dễ, reduce errors.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Naming conventions theo camelCase, PascalCase.  
+  - **Key Conventions (8 items)**:  
+    - Classes: PascalCase.  
+    - Variables: camelCase.  
+    - Constants: UPPER_CASE.  
+    - Interfaces: IPascalCase.  
+    - Files: kebab-case.  
+    - Folders: kebab-case.  
+    - APIs: camelCase paths.  
+    - Events: PascalCase.  
+  - **Architecture Diagram**: N/A.  
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.6.1.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.6.3_File_Organization.  
+- **Tài liệu tham chiếu**: Google TypeScript Style, GeeksforGeeks Naming.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: ESLint enforce.  
+- **Ràng buộc**: Consistent across repo.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: ESLint.  
+- Risks: Inconsistent naming → Mitigation: Linting; Risks: Security → Mitigation: No sensitive names; Risks: Testing → Mitigation: Name mocks; Risks: Scalability → Mitigation: N/A; Risks: Onboarding → Mitigation: Style guide.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% code compliant.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure names.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: ESLint runs clean.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: INamingValidator.  
+- **Sequence Diagram**: N/A.  
+- **API Endpoint Stubs / Contracts**: POST /naming/test.  
+- **Reusable Design Pattern Implementation Notes**: Convention Pattern.  
+- **Mục đích của node này**: Define naming conventions.
+
+#### 06B.6.3_File_Organization.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, Part06B.6.1_Folder_Structure.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define file organization trong folders.  
+**Ý nghĩa**: Dễ find code, consistent structure.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: File organization theo feature/module.  
+  - **Key Rules (8 items)**:  
+    - Index.ts for exports.  
+    - *.spec.ts for tests.  
+    - *.dto.ts for DTOs.  
+    - *.entity.ts for entities.  
+    - *.service.ts for services.  
+    - *.controller.ts for controllers.  
+    - *.module.ts for modules.  
+    - *.config.ts for configs.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    module[module] --> index[index.ts]
+    module --> dto[dto.ts]
+    module --> entity[entity.ts]
+    module --> service[service.ts]
+    module --> controller[controller.ts]
+    module --> module[module.ts]
+    module --> spec[test.spec.ts]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.6.1.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.6.4_Package_Structure.  
+- **Tài liệu tham chiếu**: NestJS File Org, GeeksforGeeks Code Org.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: NestJS structure.  
+- **Ràng buộc**: Consistent naming.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: NestJS.  
+- Risks: File clutter → Mitigation: Subfolders; Risks: Security → Mitigation: Private files; Risks: Testing → Mitigation: Colocated specs; Risks: Scalability → Mitigation: N/A; Risks: Onboarding → Mitigation: README.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% files organized.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure files.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: ESLint checks.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IFileValidator.  
+- **Sequence Diagram**: File Access:  
+```mermaid
+sequenceDiagram
+    Dev->>Folder: findFile
+    Folder->>Dev: file.ts
+```
+- **API Endpoint Stubs / Contracts**: POST /file/test.  
+- **Reusable Design Pattern Implementation Notes**: Feature-Based Org.  
+- **Mục đích của node này**: Define file organization.
+
+#### 06B.6.4_Package_Structure.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, Part06B.6.3_File_Organization.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define package structure cho monorepo.  
+**Ý nghĩa**: Manage dependencies, lerna/yarn workspaces.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Package structure theo monorepo với lerna.  
+  - **Key Packages (8 items)**:  
+    - packages/core.  
+    - packages/auth.  
+    - packages/campaign.  
+    - packages/redemption.  
+    - packages/fraud.  
+    - packages/notification.  
+    - packages/analytics.  
+    - packages/shared (DTOs, utils).  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    monorepo[monorepo] --> core[packages/core]
+    monorepo --> auth[packages/auth]
+    monorepo --> campaign[packages/campaign]
+    monorepo --> redemption[packages/redemption]
+    monorepo --> fraud[packages/fraud]
+    monorepo --> notification[packages/notification]
+    monorepo --> analytics[packages/analytics]
+    monorepo --> shared[packages/shared]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.6.3.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.7_Documentation_Standards.  
+- **Tài liệu tham chiếu**: Lerna Monorepo, GeeksforGeeks Package Structure.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Yarn workspaces.  
+- **Ràng buộc**: No circular packages.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Lerna.  
+- Risks: Package conflicts → Mitigation: Yarn resolutions; Risks: Security → Mitigation: Snyk; Risks: Testing → Mitigation: Monorepo tests; Risks: Scalability → Mitigation: Independent builds; Risks: Onboarding → Mitigation: Workspace docs.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% packages structured.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure packages.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Lerna build clean.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IPackageValidator.  
+- **Sequence Diagram**: Package Build:  
+```mermaid
+sequenceDiagram
+    Lerna->>Package: build
+    Package->>Dep: resolve
+    Dep->>Package: ok
+```
+- **API Endpoint Stubs / Contracts**: POST /package/test.  
+- **Reusable Design Pattern Implementation Notes**: Monorepo Pattern.  
+- **Mục đích của node này**: Define package structure.
+
+### 06B.7_Documentation_Standards/
+
+#### 06B.7.1_Code_Comments.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, JSDoc Standards.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define code comment standards.  
+**Ý nghĩa**: Readable code, JSDoc for API.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Code comments sử dụng JSDoc cho functions/classes.  
+  - **Key Standards (8 items)**:  
+    - JSDoc @param/@return.  
+    - Inline comments for complex logic.  
+    - File headers with license.  
+    - TODO for future work.  
+    - No redundant comments.  
+    - 80% code commented.  
+    - Security notes.  
+    - Performance notes.  
+  - **Architecture Diagram**: N/A.  
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.6.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.7.2_API_Documentation.  
+- **Tài liệu tham chiếu**: JSDoc, GeeksforGeeks Comments.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: JSDoc tool.  
+- **Ràng buộc**: 80% coverage.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: JSDoc.  
+- Risks: Outdated comments → Mitigation: Review; Risks: Security → Mitigation: Notes; Risks: Testing → Mitigation: Comment tests; Risks: Scalability → Mitigation: N/A; Risks: Onboarding → Mitigation: Comments.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% functions commented.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure comments.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: JSDoc gen clean.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICommentValidator.  
+- **Sequence Diagram**: N/A.  
+- **API Endpoint Stubs / Contracts**: POST /comments/test.  
+- **Reusable Design Pattern Implementation Notes**: Documentation Pattern.  
+- **Mục đích của node này**: Define code comments standards.
+
+#### 06B.7.2_API_Documentation.md
+
+###### References / Tham chiếu
+- 06B.5.4_API_Contracts, OpenAPI 3.0.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define API documentation standards.  
+**Ý nghĩa**: OpenAPI for contract-first dev.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: API docs sử dụng OpenAPI 3.0.  
+  - **Key Standards (8 items)**:  
+    - OpenAPI YAML per service.  
+    - Swagger UI for testing.  
+    - Security schemes (JWT).  
+    - Error responses.  
+    - Rate limits documented.  
+    - Code gen SDKs.  
+    - Versioned docs.  
+    - Hosted on SwaggerHub.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Service[Service] --> OpenAPI[OpenAPI YAML]
+    OpenAPI --> Swagger[Swagger UI]
+    Swagger --> SDK[Code Gen SDKs]
+    SDK --> Client[Client]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06B.5.4_API_Contracts, Part08_API_Design.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.7.3_Architecture_Decision_Records.  
+- **Tài liệu tham chiếu**: OpenAPI 3.0, GeeksforGeeks API Docs.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Swagger tools.  
+- **Ràng buộc**: 100% APIs documented.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: OpenAPI generator.  
+- Risks: Outdated docs → Mitigation: Auto-gen CI; Risks: Security → Mitigation: Docs auth; Risks: Testing → Mitigation: Contract tests; Risks: Scalability → Mitigation: N/A; Risks: Onboarding → Mitigation: Docs.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% APIs documented.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure docs.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Swagger validated.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAPIDocGenerator.  
+- **Sequence Diagram**: Docs Gen:  
+```mermaid
+sequenceDiagram
+    CI->>OpenAPI: Generate
+    OpenAPI->>Swagger: Render
+```
+- **API Endpoint Stubs / Contracts**: GET /api/docs.  
+- **Reusable Design Pattern Implementation Notes**: Contract-First.  
+- **Mục đích của node này**: Define API documentation standards.
+
+#### 06B.7.3_Architecture_Decision_Records.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, ADR Template (Nygard).
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define ADR standards cho architecture decisions.  
+**Ý nghĩa**: Track rationale, dễ review.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: ADR documents decisions like "Choose RabbitMQ".  
+  - **Key Template (8 items)**:  
+    - Title: Decision name.  
+    - Status: Proposed/Accepted.  
+    - Context: Problem.  
+    - Decision: Chosen option.  
+    - Consequences: Pros/cons.  
+    - Alternatives: Considered options.  
+    - Links: References.  
+    - Date: Decision date.  
+  - **Architecture Diagram**: N/A.  
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06.1.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 06B.7.4_README_Templates.  
+- **Tài liệu tham chiếu**: ADR (Nygard), GeeksforGeeks ADR.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Markdown format.  
+- **Ràng buộc**: All decisions ADR'ed.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Markdown.  
+- Risks: Missing ADRs → Mitigation: CI checks; Risks: Security → Mitigation: ADR reviews; Risks: Testing → Mitigation: N/A; Risks: Scalability → Mitigation: N/A; Risks: Onboarding → Mitigation: ADR index.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% decisions documented.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure ADRs.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: ADR count testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IADRValidator.  
+- **Sequence Diagram**: ADR Process:  
+```mermaid
+sequenceDiagram
+    Architect->>ADR: Write
+    Team->>ADR: Review
+```
+- **API Endpoint Stubs / Contracts**: POST /adr/test.  
+- **Reusable Design Pattern Implementation Notes**: Documentation Pattern.  
+- **Mục đích của node này**: Define ADR standards.
+
+#### 06B.7.4_README_Templates.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, GitHub README Standards.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define README templates cho each module.  
+**Ý nghĩa**: Onboarding guide, project overview.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: README template với sections like setup, usage.  
+  - **Key Sections (8 items)**:  
+    - Project Overview.  
+    - Installation.  
+    - Usage.  
+    - Configuration.  
+    - Testing.  
+    - Deployment.  
+    - Contributing.  
+    - License.  
+  - **Architecture Diagram**: N/A.  
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part06B.7.3.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: End of Part06B.  
+- **Tài liệu tham chiếu**: GitHub README, GeeksforGeeks README.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Markdown format.  
+- **Ràng buộc**: Include all sections.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Markdown.  
+- Risks: Outdated README → Mitigation: CI gen; Risks: Security → Mitigation: No secrets; Risks: Testing → Mitigation: N/A; Risks: Scalability → Mitigation: N/A; Risks: Onboarding → Mitigation: README.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% modules have README.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure README.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: README complete check.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IREADMEValidator.  
+- **Sequence Diagram**: N/A.  
+- **API Endpoint Stubs / Contracts**: POST /readme/test.  
+- **Reusable Design Pattern Implementation Notes**: Documentation Pattern.  
+- **Mục đích của node này**: Define README templates.
+
+## Part07_Database_Design/
+
+### 07.1_Data_Model_Overview.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 5 (Functional Requirements), System_Feature_Tree.md Section 2 (Services), Part04 Features (FR-007→FR-014), IEEE 830-1998, GeeksforGeeks Data Modeling, PostgreSQL Docs 16.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Cung cấp tổng quan data model cho PSP, hỗ trợ polyglot persistence cho FR-007→FR-014.  
+**Ý nghĩa**: Đảm bảo data consistency, scalability (NFR-002), GDPR compliance (NFR-008).  
+**Cách làm**: Markdown with ER overview, table entities, Mermaid ER diagram, chi tiết 300 từ, bullet lists 5-8 items, Mermaid cho data flows.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Data model theo relational + NoSQL polyglot, PostgreSQL cho OLTP (Campaigns, Barcodes), ClickHouse cho OLAP (Analytics). Entities: Brands, Campaigns, Barcodes, Users, FraudScores, Preferences, Experiments, Recommendations. Hỗ trợ 100K redemptions/day, <10ms queries via indexing/sharding. GDPR-compliant with consent fields, audit logs.  
+  - **Key Entities (8 items)**:  
+    - Brands: Tenant isolation.  
+    - Campaigns: FR-008 CRUD.  
+    - Barcodes: FR-007 unique codes.  
+    - Users: FR-004 profiles.  
+    - FraudScores: FR-011 scores.  
+    - Preferences: FR-013 user prefs.  
+    - Experiments: FR-012 A/B tests.  
+    - Recommendations: FR-013 offers.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    BRANDS ||--o{ CAMPAIGNS : owns
+    CAMPAIGNS ||--o{ BARCODE_POOLS : has
+    BARCODE_POOLS ||--o{ BARCODES : contains
+    USERS ||--o{ PREFERENCES : has
+    USERS ||--o{ FRAUD_SCORES : has
+    CAMPAIGNS ||--o{ EXPERIMENTS : has
+    EXPERIMENTS ||--o{ RECOMMENDATIONS : generates
+    BARCODES ||--o{ REDEMPTIONS : redeemed_in
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5, System_Feature_Tree.md Section 2, Part04 Features.  
+- **Thể hiện yêu cầu**: NFR-002 Scalability, FR-007 Redemption.  
+- **Kết nối với**: 07.2_Entity_Relationship_Diagram, 07.3_Table_Schemas.  
+- **Tài liệu tham chiếu**: ER Modeling, PostgreSQL Polyglot.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Relational for core, NoSQL for logs.  
+- **Ràng buộc**: GDPR queries, <10ms reads.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: PostgreSQL, ClickHouse.  
+- Risks: Data inconsistency → Mitigation: Transactions; Risks: Scalability → Mitigation: Sharding; Risks: Security → Mitigation: Row-level security; Risks: Compliance → Mitigation: Audits; Risks: Modeling errors → Mitigation: ER reviews.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% entities mapped to FRs.  
+- **Performance**: <10ms queries.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: GDPR compliant.  
+- **Verifiable**: Traceable to FRs.  
+- **Testable**: ER diagram verifiable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML ER Diagram**: IDataModelValidator.  
+- **Sequence Diagram**: Data Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: Query
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /data/model.  
+- **Reusable Design Pattern Implementation Notes**: Polyglot Persistence.  
+- **Mục đích của node này**: Provide data model overview.
+
+### 07.2_Entity_Relationship_Diagram.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 5, System_Feature_Tree.md Section 2, Part07.1_Data_Model_Overview, IEEE 830-1998, GeeksforGeeks ER Diagrams.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define ER diagram cho PSP data model.  
+**Ý nghĩa**: Visual representation of entities/relationships.  
+**Cách làm**: Mermaid ER diagram, descriptions, chi tiết 300 từ.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: ER diagram shows relationships between Brands, Campaigns, Barcodes, etc.  
+  - **Key Relationships (8 items)**:  
+    - Brands 1:N Campaigns.  
+    - Campaigns 1:N BarcodePools.  
+    - BarcodePools 1:N Barcodes.  
+    - Users 1:N Preferences.  
+    - Users 1:N FraudScores.  
+    - Campaigns 1:N Experiments.  
+    - Experiments 1:N Recommendations.  
+    - Barcodes 1:N Redemptions.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    BRANDS {
+        string id PK
+        string name
+        string tenant_id
+    }
+    CAMPAIGNS {
+        string id PK
+        string brand_id FK
+        string name
+        number budget
+    }
+    BARCODE_POOLS {
+        string id PK
+        string campaign_id FK
+        number size
+    }
+    BARCODES {
+        string id PK
+        string pool_id FK
+        string code
+        boolean redeemed
+    }
+    USERS {
+        string id PK
+        string email
+    }
+    PREFERENCES {
+        string id PK
+        string user_id FK
+        json prefs
+    }
+    FRAUD_SCORES {
+        string id PK
+        string user_id FK
+        number score
+    }
+    EXPERIMENTS {
+        string id PK
+        string campaign_id FK
+        enum status
+    }
+    RECOMMENDATIONS {
+        string id PK
+        string experiment_id FK
+        string user_id FK
+        json offers
+    }
+    BRANDS ||--o{ CAMPAIGNS : owns
+    CAMPAIGNS ||--o{ BARCODE_POOLS : has
+    BARCODE_POOLS ||--o{ BARCODES : contains
+    USERS ||--o{ PREFERENCES : has
+    USERS ||--o{ FRAUD_SCORES : has
+    CAMPAIGNS ||--o{ EXPERIMENTS : has
+    EXPERIMENTS ||--o{ RECOMMENDATIONS : generates
+    BARCODES ||--o{ REDEMPTIONS : redeemed_in
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5, System_Feature_Tree.md Section 2, Part07.1_Data_Model_Overview.  
+- **Thể hiện yêu cầu**: FR-007→FR-014.  
+- **Kết nối với**: 07.3_Table_Schemas, 06.4.3_Database_Technologies.  
+- **Tài liệu tham chiếu**: ER Modeling, PostgreSQL ER.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Relational for core.  
+- **Ràng buộc**: GDPR fields.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: ER tools.  
+- Risks: Modeling errors → Mitigation: Reviews; Risks: Scalability → Mitigation: Sharding; Risks: Security → Mitigation: Row security; Risks: Compliance → Mitigation: Audits; Risks: Data migration → Mitigation: Scripts.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: ER covers 100% entities.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: GDPR compliant.  
+- **Verifiable**: Traceable to FRs.  
+- **Testable**: ER verifiable via DB schema.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML ER Diagram / Abstract Interfaces**: IERValidator.  
+- **Sequence Diagram**: ER Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query ER
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /er/status.  
+- **Reusable Design Pattern Implementation Notes**: ER Pattern.  
+- **Mục đích của node này**: Define ER diagram.
+
+### 07.3_Table_Schemas/
+
+#### 07.3.1_Campaign_Management_Service_Tables/
+
+##### 07.3.1.1_Brands_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.8, System_Feature_Tree.md Section 1.8, Part07.2_ER_Diagram, PostgreSQL Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Brands table cho tenant isolation.  
+**Ý nghĩa**: Multi-tenant support, GDPR compliant.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Brands table stores tenant data for brands.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - name: string.  
+    - tenant_id: string UK.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+    - deleted_at: timestamp (soft delete).  
+    - consent_gdpr: boolean.  
+    - api_key: string (encrypted).  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    BRANDS {
+        string id PK
+        string name
+        string tenant_id UK
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+        boolean consent_gdpr
+        string api_key
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.8, System_Feature_Tree.md Section 1.8, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-008 Campaign Management.  
+- **Kết nối với**: 07.3.1.2_Campaigns_Table, 04.2.1_Campaign_Management.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Tenant ID unique.  
+- **Ràng buộc**: Encrypted fields.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: PostgreSQL.  
+- Risks: Data leaks → Mitigation: Encryption; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all brand fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Encrypted.  
+- **Verifiable**: Traceable to FR-008.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IBrandsTable.  
+- **Sequence Diagram**: Brands Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Brands
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /brands/status.  
+- **Reusable Design Pattern Implementation Notes**: Tenant Isolation Pattern.  
+- **Mục đích của node này**: Define Brands table schema.
+
+##### 07.3.1.2_Campaigns_Table.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.8, System_Feature_Tree.md Section 1.8, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Campaigns table cho FR-008.  
+**Ý nghĩa**: Store campaign data.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Campaigns table stores campaign details.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - brand_id: string FK.  
+    - name: string.  
+    - budget: number.  
+    - start_date: timestamp.  
+    - end_date: timestamp.  
+    - status: enum.  
+    - created_at: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    CAMPAIGNS {
+        string id PK
+        string brand_id FK
+        string name
+        number budget
+        timestamp start_date
+        timestamp end_date
+        enum status
+        timestamp created_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.8, System_Feature_Tree.md Section 1.8, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-008 Campaign Management.  
+- **Kết nối với**: 07.3.1.3_Barcode_Pools_Table, 04.2.1_Campaign_Management.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Status enum defined.  
+- **Ràng buộc**: Indexed fields.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Brands FK.  
+- Risks: Data leaks → Mitigation: Encryption; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all campaign fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-008.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICampaignsTable.  
+- **Sequence Diagram**: Campaigns Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Campaigns
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /campaigns/status.  
+- **Reusable Design Pattern Implementation Notes**: Entity Table Pattern.  
+- **Mục đích của node này**: Define Campaigns table schema.
+
+##### 07.3.1.3_Barcode_Pools_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Barcode Pools table cho FR-007.  
+**Ý nghĩa**: Store barcode pools for campaigns.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Barcode Pools table stores pools for campaigns.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - campaign_id: string FK.  
+    - size: number.  
+    - generated_at: timestamp.  
+    - used_count: number.  
+    - status: enum.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    BARCODE_POOLS {
+        string id PK
+        string campaign_id FK
+        number size
+        timestamp generated_at
+        number used_count
+        enum status
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-007 Barcode Redemption.  
+- **Kết nối với**: 07.3.1.4_Barcodes_Table, 04.3.1_Barcode_Redemption.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Size fixed per pool.  
+- **Ràng buộc**: Indexed fields.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Campaigns FK.  
+- Risks: Pool exhaustion → Mitigation: Monitoring; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all pool fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-007.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IBarcodePoolsTable.  
+- **Sequence Diagram**: Pools Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Pools
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /barcodepools/status.  
+- **Reusable Design Pattern Implementation Notes**: Entity Table Pattern.  
+- **Mục đích của node này**: Define Barcode Pools table schema.
+
+##### 07.3.1.4_Barcodes_Table.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Barcodes table cho FR-007.  
+**Ý nghĩa**: Store individual barcodes.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Barcodes table stores unique barcodes for pools.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - pool_id: string FK.  
+    - code: string UK.  
+    - redeemed: boolean.  
+    - redeemed_at: timestamp.  
+    - user_id: string FK.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    BARCODES {
+        string id PK
+        string pool_id FK
+        string code UK
+        boolean redeemed
+        timestamp redeemed_at
+        string user_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-007 Barcode Redemption.  
+- **Kết nối với**: 07.3.1.5_Ads_Formats_Table, 04.3.1_Barcode_Redemption.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Code unique.  
+- **Ràng buộc**: Indexed fields.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Pools FK.  
+- Risks: Duplicates → Mitigation: UK constraint; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all barcode fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-007.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IBarcodesTable.  
+- **Sequence Diagram**: Barcodes Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Barcodes
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /barcodes/status.  
+- **Reusable Design Pattern Implementation Notes**: Entity Table Pattern.  
+- **Mục đích của node này**: Define Barcodes table schema.
+
+##### 07.3.1.5_Ads_Formats_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.6, System_Feature_Tree.md Section 1.6, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Ads Formats table cho FR-006.  
+**Ý nghĩa**: Store ad templates.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Ads Formats table stores ad templates for campaigns.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - campaign_id: string FK.  
+    - template: json.  
+    - assets: array.  
+    - utm: json.  
+    - status: enum.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    ADS_FORMATS {
+        string id PK
+        string campaign_id FK
+        json template
+        array assets
+        json utm
+        enum status
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.6, System_Feature_Tree.md Section 1.6, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-006 Ads Format Management.  
+- **Kết nối với**: 07.3.1.2_Campaigns_Table, 04.2.6_Ads_Format_Management.  
+- **Tài liệu tham chiếu**: PostgreSQL JSON, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: JSON validated.  
+- **Ràng buộc**: Indexed fields.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Campaigns FK.  
+- Risks: JSON size large → Mitigation: Compression; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all ad format fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-006.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAdsFormatsTable.  
+- **Sequence Diagram**: Ads Formats Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Ads Formats
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /adsformats/status.  
+- **Reusable Design Pattern Implementation Notes**: JSON Table Pattern.  
+- **Mục đích của node này**: Define Ads Formats table schema.
+
+## Part07_Database_Design/
+
+### 07.3_Table_Schemas/
+
+#### 07.3.2_Identity_Service_Tables/
+
+##### 07.3.2.1_Users_Table.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.4 (User Management), System_Feature_Tree.md Section 1.4 (User Service), Part07.2_ER_Diagram, IEEE 830-1998, GeeksforGeeks User Schema Design.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Users table cho Identity Service, hỗ trợ user authentication và profile storage (FR-003).  
+**Ý nghĩa**: Central user data for RBAC, GDPR compliance, hỗ trợ 100K users/day.  
+**Cách làm**: Markdown tables + Mermaid ER, chi tiết 300 từ, bullet lists 5-8 items, Mermaid for table relationships.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Users table stores core user info, hashed passwords, RBAC roles. For PSP, this table supports FR-003 authentication, with GDPR consent flags and sharding by tenant_id.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - email: string UK.  
+    - password_hash: string.  
+    - tenant_id: string FK.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+    - last_login: timestamp.  
+    - consent_gdpr: boolean.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    USERS {
+        string id PK
+        string email UK
+        string password_hash
+        string tenant_id FK
+        timestamp created_at
+        timestamp updated_at
+        timestamp last_login
+        boolean consent_gdpr
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-003 User Authentication.  
+- **Kết nối với**: 07.3.2.2_User_Profiles_Table, 04.2.3_User_Authentication.  
+- **Tài liệu tham chiếu**: PostgreSQL Table Design, GeeksforGeeks Schema Examples.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Password hashed with bcrypt.  
+- **Ràng buộc**: Email unique, GDPR consent required.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: Tenant table FK.  
+- **Risks**: Data breaches → Mitigation: Hashing + encryption; Risks: Duplicates → Mitigation: UK constraints; Risks: Performance → Mitigation: Indexing on email; Risks: Compliance → Mitigation: Consent audits; Risks: Scalability → Mitigation: Sharding on tenant_id; Risks: Migration → Mitigation: pg_dump scripts.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all user fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Password hashed.  
+- **Verifiable**: Traceable to FR-003.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IUsersTable.  
+- **Sequence Diagram**: Users Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Users
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /users/status.  
+- **Reusable Design Pattern Implementation Notes**: Entity Table Pattern.  
+- **Mục đích của node này**: Define Users table schema.
+
+##### 07.3.2.2_User_Profiles_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define User Profiles table cho extended user data (FR-004).  
+**Ý nghĩa**: Store PII with GDPR consent.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: User Profiles table stores extended info like name, address.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - user_id: string FK.  
+    - name: string.  
+    - address: json.  
+    - phone: string.  
+    - consent_marketing: boolean.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    USER_PROFILES {
+        string id PK
+        string user_id FK
+        string name
+        json address
+        string phone
+        boolean consent_marketing
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-004 User Management.  
+- **Kết nối với**: 07.3.2.3_User_Preferences_Table, 04.2.4_User_Management.  
+- **Tài liệu tham chiếu**: PostgreSQL JSON, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: JSON address validated.  
+- **Ràng buộc**: Consent required.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Users FK.  
+- Risks: PII leaks → Mitigation: Encryption; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all profile fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Encrypted.  
+- **Verifiable**: Traceable to FR-004.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IUserProfilesTable.  
+- **Sequence Diagram**: Profiles Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Profiles
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /profiles/status.  
+- **Reusable Design Pattern Implementation Notes**: JSON Table Pattern.  
+- **Mục đích của node này**: Define User Profiles table schema.
+
+##### 07.3.2.3_User_Preferences_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define User Preferences table cho personalized recommendations (FR-013).  
+**Ý nghĩa**: Store user prefs for ML.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: User Preferences table stores preferences for recommendations.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - user_id: string FK.  
+    - preferences: json.  
+    - updated_at: timestamp.  
+    - consent_recommendations: boolean.  
+    - opt_out_date: timestamp.  
+    - created_at: timestamp.  
+    - last_access: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    USER_PREFERENCES {
+        string id PK
+        string user_id FK
+        json preferences
+        timestamp updated_at
+        boolean consent_recommendations
+        timestamp opt_out_date
+        timestamp created_at
+        timestamp last_access
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-013 Recommendation Engine.  
+- **Kết nối với**: 07.3.2.4_Consent_History_Table, 04.5.2_Recommendation_Engine.  
+- **Tài liệu tham chiếu**: PostgreSQL JSON, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: JSON preferences validated.  
+- **Ràng buộc**: Consent required.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Users FK.  
+- Risks: PII leaks → Mitigation: Encryption; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all preference fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-013.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IUserPreferencesTable.  
+- **Sequence Diagram**: Preferences Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Preferences
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /preferences/status.  
+- **Reusable Design Pattern Implementation Notes**: JSON Table Pattern.  
+- **Mục đích của node này**: Define User Preferences table schema.
+
+##### 07.3.2.4_Consent_History_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Consent History table cho GDPR compliance (NFR-008).  
+**Ý nghĩa**: Track consent changes.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Consent History table stores consent history for users.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - user_id: string FK.  
+    - consent_type: enum.  
+    - consented: boolean.  
+    - timestamp: timestamp.  
+    - ip_address: string.  
+    - device_id: string.  
+    - notes: text.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    CONSENT_HISTORY {
+        string id PK
+        string user_id FK
+        enum consent_type
+        boolean consented
+        timestamp timestamp
+        string ip_address
+        string device_id
+        text notes
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: NFR-008 Compliance.  
+- **Kết nối với**: 07.3.2.5_Sessions_Table, 04.2.4_User_Management.  
+- **Tài liệu tham chiếu**: GDPR Compliance, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Consent immutable.  
+- **Ràng buộc**: Indexed timestamp.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Users FK.  
+- Risks: Data tampering → Mitigation: Immutable; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all consent fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to NFR-008.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IConsentHistoryTable.  
+- **Sequence Diagram**: Consent Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Consent History
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /consent/status.  
+- **Reusable Design Pattern Implementation Notes**: Audit Log Pattern.  
+- **Mục đích của node này**: Define Consent History table schema.
+
+##### 07.3.2.5_Sessions_Table.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.3, System_Feature_Tree.md Section 1.3, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Sessions table cho session management (FR-003).  
+**Ý nghĩa**: Track user sessions.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Sessions table stores user sessions for auth.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - user_id: string FK.  
+    - token: string.  
+    - ip_address: string.  
+    - device_id: string.  
+    - created_at: timestamp.  
+    - expires_at: timestamp.  
+    - last_activity: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    SESSIONS {
+        string id PK
+        string user_id FK
+        string token
+        string ip_address
+        string device_id
+        timestamp created_at
+        timestamp expires_at
+        timestamp last_activity
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.3, System_Feature_Tree.md Section 1.3, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-003 User Authentication.  
+- **Kết nối với**: 07.3.2.6_Roles_Table, 04.2.3_User_Authentication.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Token unique.  
+- **Ràng buộc**: Indexed user_id.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Users FK.  
+- Risks: Session hijacking → Mitigation: IP check; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all session fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-003.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ISessionsTable.  
+- **Sequence Diagram**: Sessions Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Sessions
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /sessions/status.  
+- **Reusable Design Pattern Implementation Notes**: Session Table Pattern.  
+- **Mục đích của node này**: Define Sessions table schema.
+
+##### 07.3.2.6_Roles_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Roles table cho RBAC (FR-004).  
+**Ý nghĩa**: Store roles for access control.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Roles table stores RBAC roles.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - name: string UK.  
+    - description: text.  
+    - permissions: json.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+    - is_default: boolean.  
+    - level: int.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    ROLES {
+        string id PK
+        string name UK
+        text description
+        json permissions
+        timestamp created_at
+        timestamp updated_at
+        boolean is_default
+        int level
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-004 User Management.  
+- **Kết nối với**: 07.3.2.7_User_Roles_Table, 04.2.4_User_Management.  
+- **Tài liệu tham chiếu**: PostgreSQL JSON, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Permissions JSON validated.  
+- **Ràng buộc**: Name unique.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: None.  
+- Risks: Permission leaks → Mitigation: Encryption; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all role fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-004.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRolesTable.  
+- **Sequence Diagram**: Roles Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Roles
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /roles/status.  
+- **Reusable Design Pattern Implementation Notes**: RBAC Table Pattern.  
+- **Mục đích của node này**: Define Roles table schema.
+
+##### 07.3.2.7_User_Roles_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define User Roles table cho RBAC (FR-004).  
+**Ý nghĩa**: Many-to-many user-role mapping.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: User Roles table maps users to roles.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - user_id: string FK.  
+    - role_id: string FK.  
+    - assigned_at: timestamp.  
+    - expires_at: timestamp.  
+    - assigned_by: string.  
+    - active: boolean.  
+    - notes: text.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    USER_ROLES {
+        string id PK
+        string user_id FK
+        string role_id FK
+        timestamp assigned_at
+        timestamp expires_at
+        string assigned_by
+        boolean active
+        text notes
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.4, System_Feature_Tree.md Section 1.4, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-004 User Management.  
+- **Kết nối với**: 07.3.3.1_Redemptions_Table, 04.2.4_User_Management.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: FK constraints enforced.  
+- **Ràng buộc**: Unique user-role pairs.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Users, Roles FK.  
+- Risks: Role conflicts → Mitigation: Constraints; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all mapping fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-004.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IUserRolesTable.  
+- **Sequence Diagram**: Roles Mapping Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query User Roles
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /userroles/status.  
+- **Reusable Design Pattern Implementation Notes**: M:N Table Pattern.  
+- **Mục đích của node này**: Define User Roles table schema.
+
+#### 07.3.3_Redemption_Service_Tables/
+
+##### 07.3.3.1_Redemptions_Table.md
+
+###### References / Tham chiếu
+- BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Redemptions table cho FR-007.  
+**Ý nghĩa**: Track redemption events.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Redemptions table stores redemption records.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - barcode_id: string FK.  
+    - user_id: string FK.  
+    - store_id: string FK.  
+    - redeemed_at: timestamp.  
+    - fraud_score: number.  
+    - status: enum.  
+    - notes: text.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    REDEMPTIONS {
+        string id PK
+        string barcode_id FK
+        string user_id FK
+        string store_id FK
+        timestamp redeemed_at
+        number fraud_score
+        enum status
+        text notes
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-007 Barcode Redemption.  
+- **Kết nối với**: 07.3.3.2_Locations_Table, 04.3.1_Barcode_Redemption.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Status enum defined.  
+- **Ràng buộc**: Indexed redeemed_at.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Barcodes, Users, Locations FK.  
+- Risks: Data tampering → Mitigation: Immutable; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all redemption fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-007.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRedemptionsTable.  
+- **Sequence Diagram**: Redemptions Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Redemptions
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /redemptions/status.  
+- **Reusable Design Pattern Implementation Notes**: Entity Table Pattern.  
+- **Mục đích của node này**: Define Redemptions table schema.
+
+##### 07.3.3.2_Locations_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Locations table cho POS locations (FR-007).  
+**Ý nghĩa**: Store store locations for redemption.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Locations table stores POS store locations.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - name: string.  
+    - address: json.  
+    - geolocation: point.  
+    - tenant_id: string FK.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+    - active: boolean.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    LOCATIONS {
+        string id PK
+        string name
+        json address
+        point geolocation
+        string tenant_id FK
+        timestamp created_at
+        timestamp updated_at
+        boolean active
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.7, System_Feature_Tree.md Section 1.7, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-007 Barcode Redemption.  
+- **Kết nối với**: 07.3.4.1_Fraud_Scores_Table, 04.3.1_Barcode_Redemption.  
+- **Tài liệu tham chiếu**: PostgreSQL Point, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Geolocation indexed.  
+- **Ràng buộc**: Active default true.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Tenant FK.  
+- Risks: Geolocation inaccuracy → Mitigation: Validation; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all location fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-007.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ILocationsTable.  
+- **Sequence Diagram**: Locations Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Locations
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /locations/status.  
+- **Reusable Design Pattern Implementation Notes**: Geo Table Pattern.  
+- **Mục đích của node này**: Define Locations table schema.
+
+#### 07.3.4_Fraud_Service_Tables/
+
+##### 07.3.4.1_Fraud_Scores_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Fraud Scores table cho FR-011.  
+**Ý nghĩa**: Store ML scores for fraud detection.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Fraud Scores table stores fraud scores for transactions.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - transaction_id: string FK.  
+    - score: number.  
+    - model_version: string.  
+    - calculated_at: timestamp.  
+    - device_id: string.  
+    - ip_address: string.  
+    - notes: text.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    FRAUD_SCORES {
+        string id PK
+        string transaction_id FK
+        number score
+        string model_version
+        timestamp calculated_at
+        string device_id
+        string ip_address
+        text notes
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-011 Fraud Detection.  
+- **Kết nối với**: 07.3.4.2_Device_Fingerprints_Table, 04.4.1_Fraud_Detection.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Score 0-1 normalized.  
+- **Ràng buộc**: Indexed calculated_at.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Transactions FK.  
+- Risks: Score inaccuracy → Mitigation: Validation; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all score fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-011.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IFraudScoresTable.  
+- **Sequence Diagram**: Scores Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Fraud Scores
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /fraudscores/status.  
+- **Reusable Design Pattern Implementation Notes**: Score Table Pattern.  
+- **Mục đích của node này**: Define Fraud Scores table schema.
+
+##### 07.3.4.2_Device_Fingerprints_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Device Fingerprints table cho FR-011.  
+**Ý nghĩa**: Store device IDs for fraud.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Device Fingerprints table stores unique device IDs.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - user_id: string FK.  
+    - fingerprint: string UK.  
+    - generated_at: timestamp.  
+    - device_type: enum.  
+    - os_version: string.  
+    - ip_address: string.  
+    - notes: text.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    DEVICE_FINGERPRINTS {
+        string id PK
+        string user_id FK
+        string fingerprint UK
+        timestamp generated_at
+        enum device_type
+        string os_version
+        string ip_address
+        text notes
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-011 Fraud Detection.  
+- **Kết nối với**: 07.3.4.3_Fraud_Rules_Table, 04.4.1_Fraud_Detection.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Fingerprint unique.  
+- **Ràng buộc**: Indexed generated_at.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Users FK.  
+- Risks: Fingerprint collisions → Mitigation: Hashing; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all fingerprint fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-011.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IDeviceFingerprintsTable.  
+- **Sequence Diagram**: Fingerprints Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Device Fingerprints
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /fingerprints/status.  
+- **Reusable Design Pattern Implementation Notes**: Fingerprint Table Pattern.  
+- **Mục đích của node này**: Define Device Fingerprints table schema.
+
+##### 07.3.4.3_Fraud_Rules_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Fraud Rules table cho FR-011.  
+**Ý nghĩa**: Store configurable fraud rules.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Fraud Rules table stores rules for fraud engine.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - name: string.  
+    - description: text.  
+    - rule_logic: json.  
+    - priority: int.  
+    - active: boolean.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    FRAUD_RULES {
+        string id PK
+        string name
+        text description
+        json rule_logic
+        int priority
+        boolean active
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.11, System_Feature_Tree.md Section 1.11, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-011 Fraud Detection.  
+- **Kết nối với**: 07.3.2.1_Users_Table, 04.4.1_Fraud_Detection.  
+- **Tài liệu tham chiếu**: PostgreSQL JSON, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Rule logic JSON validated.  
+- **Ràng buộc**: Priority unique.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: None.  
+- Risks: Rule conflicts → Mitigation: Validation; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all rule fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-011.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IFraudRulesTable.  
+- **Sequence Diagram**: Rules Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Fraud Rules
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /fraudrules/status.  
+- **Reusable Design Pattern Implementation Notes**: Rule Table Pattern.  
+- **Mục đích của node này**: Define Fraud Rules table schema.
+
+## Part07_Database_Design/
+
+### 07.3_Table_Schemas/
+
+#### 07.3.5_Intelligence_Service_Tables/
+
+##### 07.3.5.1_Experiments_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.12 (A/B Testing), System_Feature_Tree.md Section 1.12 (A/B Testing Service), Part07.2_ER_Diagram, IEEE 830-1998, GeeksforGeeks Table Design, PostgreSQL Docs 16.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Experiments table cho Intelligence Service, hỗ trợ A/B testing experiments (FR-012).  
+**Ý nghĩa**: Store experiment data for statistical analysis, hỗ trợ >95% confidence (FR-012), scalable for 5K experiments/day.  
+**Cách làm**: Markdown tables + Mermaid ER, chi tiết 300 từ, bullet lists 5-8 items, Mermaid for table relationships.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Experiments table stores A/B test setups, variants allocation, status, with links to campaigns and users. For PSP, this table supports FR-012 by tracking experiment lifecycle, GDPR-compliant data handling.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - campaign_id: string FK.  
+    - name: string.  
+    - status: enum (active, completed).  
+    - start_date: timestamp.  
+    - end_date: timestamp.  
+    - allocation: json (variant percentages).  
+    - created_at: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    EXPERIMENTS {
+        string id PK
+        string campaign_id FK
+        string name
+        enum status
+        timestamp start_date
+        timestamp end_date
+        json allocation
+        timestamp created_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-012 A/B Testing.  
+- **Kết nối với**: 07.3.5.2_Experiment_Variants_Table, 04.5.1_AB_Testing.  
+- **Tài liệu tham chiếu**: PostgreSQL JSON, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Allocation JSON validated.  
+- **Ràng buộc**: Status enum defined.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: Campaigns FK.  
+- Risks: Data inconsistencies → Mitigation: Constraints; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all experiment fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-012.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IExperimentsTable.  
+- **Sequence Diagram**: Experiments Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Experiments
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /experiments/status.  
+- **Reusable Design Pattern Implementation Notes**: Entity Table Pattern.  
+- **Mục đích của node này**: Define Experiments table schema.
+
+##### 07.3.5.2_Experiment_Variants_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Experiment Variants table cho FR-012.  
+**Ý nghĩa**: Store A/B variants.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Experiment Variants table stores variant details for experiments.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - experiment_id: string FK.  
+    - name: string.  
+    - description: text.  
+    - allocation_percent: number.  
+    - config: json.  
+    - created_at: timestamp.  
+    - updated_at: timestamp.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    EXPERIMENT_VARIANTS {
+        string id PK
+        string experiment_id FK
+        string name
+        text description
+        number allocation_percent
+        json config
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-012 A/B Testing.  
+- **Kết nối với**: 07.3.5.3_Experiment_Assignments_Table, 04.5.1_AB_Testing.  
+- **Tài liệu tham chiếu**: PostgreSQL JSON, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Config JSON validated.  
+- **Ràng buộc**: Allocation sum 100%.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Experiments FK.  
+- Risks: Data inconsistencies → Mitigation: Constraints; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all variant fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-012.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IExperimentVariantsTable.  
+- **Sequence Diagram**: Variants Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Variants
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /variants/status.  
+- **Reusable Design Pattern Implementation Notes**: Entity Table Pattern.  
+- **Mục đích của node này**: Define Experiment Variants table schema.
+
+##### 07.3.5.3_Experiment_Assignments_Table.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Experiment Assignments table cho FR-012.  
+**Ý nghĩa**: Track user assignments to variants.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Experiment Assignments table stores user-variant assignments.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - experiment_id: string FK.  
+    - variant_id: string FK.  
+    - user_id: string FK.  
+    - assigned_at: timestamp.  
+    - metrics: json.  
+    - active: boolean.  
+    - notes: text.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    EXPERIMENT_ASSIGNMENTS {
+        string id PK
+        string experiment_id FK
+        string variant_id FK
+        string user_id FK
+        timestamp assigned_at
+        json metrics
+        boolean active
+        text notes
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.12, System_Feature_Tree.md Section 1.12, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-012 A/B Testing.  
+- **Kết nối với**: 07.3.6.1_Events_Collection, 04.5.1_AB_Testing.  
+- **Tài liệu tham chiếu**: PostgreSQL JSON, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Assignments unique per user/experiment.  
+- **Ràng buộc**: Indexed assigned_at.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Experiments, Variants, Users FK.  
+- Risks: Data inconsistencies → Mitigation: Constraints; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all assignment fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-012.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IExperimentAssignmentsTable.  
+- **Sequence Diagram**: Assignments Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Assignments
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /assignments/status.  
+- **Reusable Design Pattern Implementation Notes**: Assignment Table Pattern.  
+- **Mục đích của node này**: Define Experiment Assignments table schema.
+
+#### 07.3.6_Analytics_Service_Collections/ 
+
+##### 07.3.6.1_Events_Collection.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part07.2_ER_Diagram, MongoDB Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Events collection cho Analytics Service (FR-009).  
+**Ý nghĩa**: Store events for metrics (ClickHouse OLAP fallback).  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Events collection stores user events for analytics.  
+  - **Key Fields (8 items)**:  
+    - _id: ObjectId PK.  
+    - type: string.  
+    - user_id: string.  
+    - timestamp: date.  
+    - data: object.  
+    - tenant_id: string.  
+    - session_id: string.  
+    - ip_address: string.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    EVENTS {
+        ObjectId _id PK
+        string type
+        string user_id
+        date timestamp
+        object data
+        string tenant_id
+        string session_id
+        string ip_address
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-009 Real Time Analytics.  
+- **Kết nối với**: 07.3.6.2_User_Journey_Collection, 04.3.2_Real_Time_Analytics.  
+- **Tài liệu tham chiếu**: MongoDB Collections, GeeksforGeeks NoSQL Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Data object flexible.  
+- **Ràng buộc**: Indexed timestamp.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: None.  
+- Risks: Data explosion → Mitigation: TTL indexes; Risks: Performance → Mitigation: Sharding; Risks: Security → Mitigation: Collection security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Replica sets.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Collection covers all event fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-009.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IEventsCollection.  
+- **Sequence Diagram**: Events Query:  
+```mermaid
+sequenceDiagram
+    Service->>Mongo: query Events
+    Mongo->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /events/status.  
+- **Reusable Design Pattern Implementation Notes**: Event Collection Pattern.  
+- **Mục đích của node này**: Define Events collection schema.
+
+##### 07.3.6.2_User_Journey_Collection.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define User Journey collection cho FR-009.  
+**Ý nghĩa**: Track user journeys for analytics.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: User Journey collection stores user interaction journeys.  
+  - **Key Fields (8 items)**:  
+    - _id: ObjectId PK.  
+    - user_id: string.  
+    - session_id: string.  
+    - events: array.  
+    - start_time: date.  
+    - end_time: date.  
+    - tenant_id: string.  
+    - metrics: object.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    USER_JOURNEY {
+        ObjectId _id PK
+        string user_id
+        string session_id
+        array events
+        date start_time
+        date end_time
+        string tenant_id
+        object metrics
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-009 Real Time Analytics.  
+- **Kết nối với**: 07.3.6.3_Cohorts_Collection, 04.3.2_Real_Time_Analytics.  
+- **Tài liệu tham chiếu**: MongoDB Collections, GeeksforGeeks NoSQL Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Events array limited size.  
+- **Ràng buộc**: Indexed user_id.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: None.  
+- Risks: Array growth → Mitigation: Capping; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Collection security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Replica sets.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Collection covers all journey fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-009.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IUserJourneyCollection.  
+- **Sequence Diagram**: Journey Query:  
+```mermaid
+sequenceDiagram
+    Service->>Mongo: query Journey
+    Mongo->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /journey/status.  
+- **Reusable Design Pattern Implementation Notes**: Journey Collection Pattern.  
+- **Mục đích của node này**: Define User Journey collection schema.
+
+##### 07.3.6.3_Cohorts_Collection.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Cohorts collection cho FR-009.  
+**Ý nghĩa**: Store user cohorts for analytics.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Cohorts collection stores user cohort groups.  
+  - **Key Fields (8 items)**:  
+    - _id: ObjectId PK.  
+    - name: string.  
+    - description: text.  
+    - users: array.  
+    - created_at: date.  
+    - updated_at: date.  
+    - tenant_id: string.  
+    - metrics: object.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    COHORTS {
+        ObjectId _id PK
+        string name
+        text description
+        array users
+        date created_at
+        date updated_at
+        string tenant_id
+        object metrics
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-009 Real Time Analytics.  
+- **Kết nối với**: 07.3.6.4_Aggregations_Collection, 04.3.2_Real_Time_Analytics.  
+- **Tài liệu tham chiếu**: MongoDB Collections, GeeksforGeeks NoSQL Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Users array limited.  
+- **Ràng buộc**: Indexed created_at.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: None.  
+- Risks: Array growth → Mitigation: Capping; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Collection security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Replica sets.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Collection covers all cohort fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-009.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICohortsCollection.  
+- **Sequence Diagram**: Cohorts Query:  
+```mermaid
+sequenceDiagram
+    Service->>Mongo: query Cohorts
+    Mongo->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /cohorts/status.  
+- **Reusable Design Pattern Implementation Notes**: Cohort Collection Pattern.  
+- **Mục đích của node này**: Define Cohorts collection schema.
+
+##### 07.3.6.4_Aggregations_Collection.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Aggregations collection cho FR-009.  
+**Ý nghĩa**: Store aggregated metrics for fast queries.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Aggregations collection stores pre-computed metrics.  
+  - **Key Fields (8 items)**:  
+    - _id: ObjectId PK.  
+    - type: string.  
+    - time_bucket: date.  
+    - value: number.  
+    - tenant_id: string.  
+    - campaign_id: string.  
+    - user_segment: string.  
+    - calculated_at: date.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    AGGREGATIONS {
+        ObjectId _id PK
+        string type
+        date time_bucket
+        number value
+        string tenant_id
+        string campaign_id
+        string user_segment
+        date calculated_at
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.9, System_Feature_Tree.md Section 1.9, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-009 Real Time Analytics.  
+- **Kết nối với**: 07.3.6.5_Recommendations_Collection, 04.3.2_Real_Time_Analytics.  
+- **Tài liệu tham chiếu**: MongoDB Collections, GeeksforGeeks NoSQL Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Aggregations pre-computed.  
+- **Ràng buộc**: Indexed time_bucket.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: None.  
+- Risks: Data staleness → Mitigation: Real-time jobs; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Collection security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Replica sets.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Collection covers all aggregation fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-009.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAggregationsCollection.  
+- **Sequence Diagram**: Aggregations Query:  
+```mermaid
+sequenceDiagram
+    Service->>Mongo: query Aggregations
+    Mongo->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /aggregations/status.  
+- **Reusable Design Pattern Implementation Notes**: Aggregation Collection Pattern.  
+- **Mục đích của node này**: Define Aggregations collection schema.
+
+##### 07.3.6.5_Recommendations_Collection.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part07.2_ER_Diagram.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Recommendations collection cho FR-013.  
+**Ý nghĩa**: Store generated recommendations.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Recommendations collection stores personalized offers.  
+  - **Key Fields (8 items)**:  
+    - _id: ObjectId PK.  
+    - user_id: string.  
+    - offers: array.  
+    - generated_at: date.  
+    - model_version: string.  
+    - score: number.  
+    - tenant_id: string.  
+    - feedback: string.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    RECOMMENDATIONS {
+        ObjectId _id PK
+        string user_id
+        array offers
+        date generated_at
+        string model_version
+        number score
+        string tenant_id
+        string feedback
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5.13, System_Feature_Tree.md Section 1.13, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-013 Recommendation Engine.  
+- **Kết nối với**: 07.3.7.1_Audit_Logs_Table, 04.5.2_Recommendation_Engine.  
+- **Tài liệu tham chiếu**: MongoDB Collections, GeeksforGeeks NoSQL Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Offers array limited.  
+- **Ràng buộc**: Indexed generated_at.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: None.  
+- Risks: Array growth → Mitigation: Capping; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Collection security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Replica sets.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Collection covers all recommendation fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FR-013.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRecommendationsCollection.  
+- **Sequence Diagram**: Recommendations Query:  
+```mermaid
+sequenceDiagram
+    Service->>Mongo: query Recommendations
+    Mongo->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /recommendations/status.  
+- **Reusable Design Pattern Implementation Notes**: Recommendation Collection Pattern.  
+- **Mục đích của node này**: Define Recommendations collection schema.
+
+#### 07.3.7_Shared_Tables/
+
+##### 07.3.7.1_Audit_Logs_Table.md
+
+###### References / Tham chiếu
+- BRD.md Section 5 (All Features), System_Feature_Tree.md Section 2, Part07.2_ER_Diagram, NFR-006.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define Audit Logs table cho shared auditing (NFR-006).  
+**Ý nghĩa**: Immutable logs for compliance.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Audit Logs table stores all system events.  
+  - **Key Fields (8 items)**:  
+    - id: string PK.  
+    - event_type: enum.  
+    - user_id: string.  
+    - timestamp: timestamp.  
+    - data: json.  
+    - tenant_id: string.  
+    - ip_address: string.  
+    - status: enum.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    AUDIT_LOGS {
+        string id PK
+        enum event_type
+        string user_id
+        timestamp timestamp
+        json data
+        string tenant_id
+        string ip_address
+        enum status
+    }
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5, System_Feature_Tree.md Section 2, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: NFR-006 Auditability.  
+- **Kết nối với**: 07.3.6.5_Recommendations_Collection, 04.3.2_Real_Time_Analytics.  
+- **Tài liệu tham chiếu**: PostgreSQL Tables, GeeksforGeeks DB Schemas.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Logs immutable.  
+- **Ràng buộc**: Indexed timestamp.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: None.  
+- Risks: Log tampering → Mitigation: Immutable; Risks: Performance → Mitigation: Indexing; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Sharding.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: Table covers all log fields.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to NFR-006.  
+- **Testable**: Schema tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAuditLogsTable.  
+- **Sequence Diagram**: Logs Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query Audit Logs
+    DB->>Service: Data
+```
+- **API Endpoint Stubs / Contracts**: GET /auditlogs/status.  
+- **Reusable Design Pattern Implementation Notes**: Audit Log Table Pattern.  
+- **Mục đích của node này**: Define Audit Logs table schema.
+
+## Part07_Database_Design/
+
+### 07.4_Indexes_And_Constraints.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 5 (Functional Requirements), System_Feature_Tree.md Section 2 (Services), Part07.3_Table_Schemas, IEEE 830-1998, GeeksforGeeks Indexes & Constraints, PostgreSQL Docs 16.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define indexes and constraints cho all tables, hỗ trợ query performance <10ms (NFR-001).  
+**Ý nghĩa**: Optimize DB access, enforce data integrity, GDPR compliance (NFR-008).  
+**Cách làm**: Markdown tables + Mermaid ER with constraints, chi tiết 300 từ, bullet lists 5-8 items, Mermaid for index flows.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Indexes & constraints for all tables in PostgreSQL, ensuring <10ms queries for 100K users/day, unique constraints for barcodes (FR-007), foreign keys for relationships.  
+  - **Key Indexes/Constraints (8 items)**:  
+    - Users: INDEX on email (BTREE).  
+    - Campaigns: UNIQUE on name per brand_id.  
+    - Barcodes: UNIQUE on code, INDEX on redeemed_at.  
+    - FraudScores: INDEX on calculated_at (BTREE).  
+    - Experiments: FOREIGN KEY on campaign_id.  
+    - Recommendations: INDEX on generated_at.  
+    - AuditLogs: INDEX on timestamp (BTREE).  
+    - CHECK constraints for consent_gdpr = true.  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    USERS {
+        string id PK
+        string email UK INDEX
+    }
+    CAMPAIGNS {
+        string id PK
+        string brand_id FK INDEX
+        string name UNIQUE
+    }
+    BARCODES {
+        string id PK
+        string code UK INDEX
+        timestamp redeemed_at INDEX
+    }
+    USERS ||--o{ CAMPAIGNS : owns
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5, System_Feature_Tree.md Section 2, Part07.3_Table_Schemas.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 07.5_Data_Relationships, 06.4.3_Database_Technologies.  
+- **Tài liệu tham chiếu**: PostgreSQL Indexes, GeeksforGeeks Constraints.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: BTREE default index.  
+- **Ràng buộc**: No full table scans.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: PostgreSQL.  
+- Risks: Over-indexing → Mitigation: Analyze; Risks: Performance → Mitigation: Query plans; Risks: Security → Mitigation: Row indexes; Risks: Testing → Mitigation: Index tests; Risks: Scalability → Mitigation: Composite indexes.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% key fields indexed.  
+- **Performance**: <10ms queries.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Constraints enforced.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: EXPLAIN ANALYZE tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IIndexValidator.  
+- **Sequence Diagram**: Index Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: query with INDEX
+    DB->>Service: Fast Data
+```
+- **API Endpoint Stubs / Contracts**: GET /indexes/status.  
+- **Reusable Design Pattern Implementation Notes**: Indexing Pattern.  
+- **Mục đích của node này**: Define indexes and constraints.
+
+### 07.5_Data_Relationships.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 5, Part07.2_ER_Diagram, IEEE 830-1998.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define data relationships cho ER model.  
+**Ý nghĩa**: Ensure referential integrity.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Data relationships with FKs, 1:N, N:M.  
+  - **Key Relationships (8 items)**:  
+    - Brands 1:N Campaigns.  
+    - Campaigns 1:N BarcodePools.  
+    - BarcodePools 1:N Barcodes.  
+    - Users 1:N Preferences.  
+    - Users 1:N FraudScores.  
+    - Campaigns 1:N Experiments.  
+    - Experiments 1:N Variants.  
+    - Experiments N:M Users (Assignments).  
+  - **Architecture Diagram**:  
+
+```mermaid
+erDiagram
+    BRANDS ||--o{ CAMPAIGNS : owns
+    CAMPAIGNS ||--o{ BARCODE_POOLS : has
+    BARCODE_POOLS ||--o{ BARCODES : contains
+    USERS ||--o{ PREFERENCES : has
+    USERS ||--o{ FRAUD_SCORES : has
+    CAMPAIGNS ||--o{ EXPERIMENTS : has
+    EXPERIMENTS ||--o{ VARIANTS : has
+    EXPERIMENTS }o--o{ USERS : assigns
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 5, Part07.2_ER_Diagram.  
+- **Thể hiện yêu cầu**: FR-007→FR-014.  
+- **Kết nối với**: 07.6_Migration_Strategy.  
+- **Tài liệu tham chiếu**: ER Relationships, GeeksforGeeks FKs.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Cascade deletes off.  
+- **Ràng buộc**: FK constraints enforced.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: FK tables.  
+- Risks: Orphan records → Mitigation: FK checks; Risks: Performance → Mitigation: Indexed FKs; Risks: Security → Mitigation: Row security; Risks: Testing → Mitigation: Fixtures; Risks: Scalability → Mitigation: Distributed DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% relationships defined.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to FRs.  
+- **Testable**: FK tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IRelationshipValidator.  
+- **Sequence Diagram**: Relationship Query:  
+```mermaid
+sequenceDiagram
+    Service->>DB: join query
+    DB->>Service: Joined Data
+```
+- **API Endpoint Stubs / Contracts**: GET /relationships/status.  
+- **Reusable Design Pattern Implementation Notes**: FK Pattern.  
+- **Mục đích của node này**: Define data relationships.
+
+### 07.6_Migration_Strategy.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, Liquibase Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define migration strategy cho DB schemas.  
+**Ý nghĩa**: Zero-downtime schema updates.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Migration strategy sử dụng Liquibase cho versioned changes.  
+  - **Key Steps (8 items)**:  
+    - Liquibase changelogs.  
+    - CI/CD integration.  
+    - Rollback support.  
+    - Data migration scripts.  
+    - Testing in staging.  
+    - Monitoring post-migration.  
+    - Version tagging.  
+    - Multi-DB support.  
+  - **Architecture Diagram**:  
+
+```mermaid
+sequenceDiagram
+    Dev->>Liquibase: changelog.xml
+    CI->>Liquibase: migrate
+    Liquibase->>DB: apply changes
+    DB->>CI: success
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part07.3_Table_Schemas.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- **Kết nối với**: 07.7_Data_Archival_Policy.  
+- **Tài liệu tham chiếu**: Liquibase, GeeksforGeeks Migration.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Backward compatible changes.  
+- **Ràng buộc**: Zero-downtime.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Liquibase.  
+- Risks: Migration failures → Mitigation: Rollbacks; Risks: Data loss → Mitigation: Backups; Risks: Security → Mitigation: Audited migrations; Risks: Testing → Mitigation: Staging; Risks: Scalability → Mitigation: Batched migrations.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% schemas migrated.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure migrations.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: Migration tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IMigrationValidator.  
+- **Sequence Diagram**: Migration Flow:  
+```mermaid
+sequenceDiagram
+    CI->>Liquibase: migrate
+    Liquibase->>DB: change
+```
+- **API Endpoint Stubs / Contracts**: POST /migration/test.  
+- **Reusable Design Pattern Implementation Notes**: Migration Pattern.  
+- **Mục đích của node này**: Define migration strategy.
+
+### 07.7_Data_Archival_Policy.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, NFR-008.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define data archival policy cho GDPR (NFR-008).  
+**Ý nghĩa**: Retain logs 1 year, purge old data.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Data archival policy with TTL, S3 glacier for cold storage.  
+  - **Key Policies (8 items)**:  
+    - Retention: 1 year for logs.  
+    - Purge: Auto after retention.  
+    - Archival: S3 Glacier for old redemptions.  
+    - GDPR delete on request.  
+    - Monitoring: Archival alerts.  
+    - Testing: Archival tests.  
+    - Security: Encrypted archives.  
+    - Scalability: Batch archival.  
+  - **Architecture Diagram**:  
+
+```mermaid
+sequenceDiagram
+    DB->>Cron: TTL Expire
+    Cron->>S3: Archive
+    S3->>Glacier: Cold Storage
+    User->>Service: Delete Request
+    Service->>DB: Purge
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, NFR-008.  
+- **Thể hiện yêu cầu**: NFR-008 Compliance.  
+- **Kết nối với**: 07.8_Database_Per_Service_Strategy.  
+- **Tài liệu tham chiếu**: GDPR Retention, GeeksforGeeks Archival.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Cron jobs.  
+- **Ràng buộc**: GDPR compliant.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: S3 Glacier.  
+- Risks: Data loss → Mitigation: Backups; Risks: Cost → Mitigation: Lifecycle rules; Risks: Security → Mitigation: Encryption; Risks: Testing → Mitigation: Mock archival; Risks: Scalability → Mitigation: Batch processing.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% data archived.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Encrypted.  
+- **Verifiable**: Traceable to NFR-008.  
+- **Testable**: Archival tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IArchivalValidator.  
+- **Sequence Diagram**: Archival Flow:  
+```mermaid
+sequenceDiagram
+    Cron->>DB: Purge
+    DB->>S3: Archive
+```
+- **API Endpoint Stubs / Contracts**: POST /archival/test.  
+- **Reusable Design Pattern Implementation Notes**: Archival Pattern.  
+- **Mục đích của node này**: Define data archival policy.
+
+### 07.8_Database_Per_Service_Strategy.md 🆕
+
+###### References / Tham chiếu
+- BRD.md Section 9, System_Feature_Tree.md Section 2, Part07.1_Data_Model_Overview, Microservices.io.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define database-per-service strategy cho microservices.  
+**Ý nghĩa**: Independence, scalability.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Database-per-service strategy với polyglot, mỗi service DB riêng.  
+  - **Key Strategies (8 items)**:  
+    - Database-per-service.  
+    - Polyglot persistence.  
+    - Eventual consistency.  
+    - CDC for sync.  
+    - Sharding per tenant.  
+    - Backup per DB.  
+    - Monitoring per DB.  
+    - Migration independent.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Service1[Service1] --> DB1[DB1]
+    Service2[Service2] --> DB2[DB2]
+    Service1 --> EventBus[Event Bus]
+    EventBus --> Service2
+    DB1 --> CDC[CDC Sync]
+    CDC --> DB2
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, System_Feature_Tree.md Section 2, Part07.1_Data_Model_Overview.  
+- **Thể hiện yêu cầu**: NFR-002 Scalability.  
+- **Kết nối với**: 07.6_Migration_Strategy, 06.2.2_Microservices_Design.  
+- **Tài liệu tham chiếu**: Microservices.io DB Patterns, GeeksforGeeks Database-per-Service.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Eventual consistency OK.  
+- **Ràng buộc**: No shared DB.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: CDC tools.  
+- Risks: Data inconsistency → Mitigation: Saga; Risks: Complexity → Mitigation: Polyglot choice; Risks: Security → Mitigation: Per-DB auth; Risks: Testing → Mitigation: Mock DBs; Risks: Scalability → Mitigation: Sharded DB.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services have DB.  
+- **Performance**: N/A.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: Secure.  
+- **Verifiable**: Traceable to NFR-002.  
+- **Testable**: DB isolation tests.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IDBPerServiceValidator.  
+- **Sequence Diagram**: Per-Service Flow:  
+```mermaid
+sequenceDiagram
+    Service1->>DB1: query
+    Service2->>DB2: query
+```
+- **API Endpoint Stubs / Contracts**: GET /dbper service/status.  
+- **Reusable Design Pattern Implementation Notes**: Database-per-Service Pattern.  
+- **Mục đích của node này**: Define database-per-service strategy.
+
+
+
 
 
 
