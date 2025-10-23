@@ -10669,6 +10669,1476 @@ sequenceDiagram
 - **Reusable Design Pattern Implementation Notes**: Service Mesh Pattern.  
 - **Mục đích của node này**: Design Istio service mesh.
 
+## Part06_System_Architecture/
+
+### 06.4_Technology_Stack/
+
+#### 06.4.1_Frontend_Technologies.md
+
+###### References / Tham chiếu
+- BRD.md Section 9 (UI Requirements), System_Feature_Tree.md Section 2 (UI Services), Part04 Features (FR-007 UI for Redemption), IEEE 830-1998, GeeksforGeeks Frontend Best Practices.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Định nghĩa technology stack cho frontend PSP, hỗ trợ responsive UI cho Customers/Brand Admins.  
+**Ý nghĩa**: Đảm bảo WCAG 2.1 accessibility (NFR-007), <2s load time (NFR-001), mobile-first cho barcode scan (FR-007).  
+**Cách làm**: Markdown tables + Mermaid component diagrams + benchmark metrics, chi tiết 300 từ, bullet lists 5-8 items, Mermaid cho architecture flows.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Frontend stack sử dụng React 18 cho web dashboard (Brand Admins) và React Native 0.74 cho mobile app (Customers), hỗ trợ barcode scan (Scandit SDK), real-time updates (WebSocket), và WCAG 2.1 accessibility. Vite build tool cho <2s HMR, Zustand state management cho lightweight Redux-like. Hỗ trợ FR-007 (mobile scan), FR-014 (dashboard reporting).  
+  - **Key Technologies (8 items)**:  
+    - React 18: Core library for web UI, concurrent mode cho <2s renders.  
+    - React Native 0.74: Mobile UI, Expo build cho fast iOS/Android deploys.  
+    - Vite 5.2: Build tool, 85% faster than Create React App.  
+    - Zustand 4.5: State mgmt, <1ms re-renders.  
+    - Tailwind CSS 3.4: Styling, utility-first cho consistent design.  
+    - shadcn/ui latest: Components, accessible + customizable.  
+    - React Hook Form 7.50: Forms, validation for PII collection.  
+    - react-i18next 14.1: i18n, 5+ languages.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Web[Web Dashboard<br/>React 18 + Vite] --> Tailwind[Tailwind CSS]
+    Web --> Zustand[Zustand State]
+    Web --> shadcn[shadcn/ui Components]
+    Web --> i18n[react-i18next]
+    Mobile[Mobile App<br/>React Native + Expo] --> Scandit[Scandit Barcode SDK]
+    Mobile --> Push[FCM/APNs Push]
+    Mobile --> Offline[IndexedDB Offline]
+    Web --> gRPC[Backend gRPC/REST]
+    Mobile --> gRPC
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, System_Feature_Tree.md Section 2, Part04 FR-007.  
+- **Thể hiện yêu cầu**: NFR-007 Usability, FR-007 Redemption UI.  
+- **Kết nối với**: 06.4.2_Backend_Technologies, 06.1_Architecture_Overview.  
+- **Tài liệu tham chiếu**: React Docs, WCAG 2.1.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Browsers Chrome 120+ / Safari 17+, Android/iOS 14+.  
+- **Ràng buộc**: <2s load time, WCAG 2.1 AA, mobile-first design.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: React ecosystem, Scandit SDK, FCM/APNs.  
+- **Risks**: Bundle size large → Mitigation: Vite code splitting; Risks: Offline sync failure → Mitigation: IndexedDB fallback; Risks: Accessibility issues → Mitigation: Lighthouse audits; Risks: State bugs → Mitigation: Zustand snapshots; Risks: Build time slow → Mitigation: CI caching.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% UI components accessible.  
+- **Performance**: <2s LCP, <100ms FID (Lighthouse).  
+- **UI Consistency**: WCAG 2.1 AA compliant (axe-core tests).  
+- **Integration / Security**: 100% test coverage, no PII in frontend cache.  
+- **Verifiable**: Traceable to NFR-007.  
+- **Testable**: E2E Cypress tests 95% coverage.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| UI/UX Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IFrontendValidator (validateAccessibility(): Result).  
+- **Sequence Diagram**: Frontend Flow:  
+```mermaid
+sequenceDiagram
+    User->>WebApp: Load Dashboard
+    WebApp->>API: gRPC Request
+    API->>Backend: Fetch Data
+    Backend->>WebApp: Response
+    WebApp->>Zustand: Update State
+    WebApp->>User: Render
+```
+- **API Endpoint Stubs / Contracts**: GET /frontend/status.  
+- **Reusable Design Pattern Implementation Notes**: Component Pattern (shadcn/ui).  
+- **Mục đích của node này**: Define frontend stack.
+
+#### 06.4.2_Backend_Technologies.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, System_Feature_Tree.md Section 2, Part04 Features, GeeksforGeeks Backend Practices.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Định nghĩa backend stack cho 14 microservices.  
+**Ý nghĩa**: High TPS (50K for Redemption), <50ms latency (NFR-001).  
+**Cách làm**: Table benchmarks, code snippets, diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Backend stack sử dụng Node.js 20 LTS cho 14 microservices, NestJS cho structure, Fastify cho high TPS, Prisma cho ORM. Hỗ trợ FR-011 fraud scoring, FR-012 A/B testing.  
+  - **Key Technologies (8 items)**:  
+    - Node.js 20 LTS: Runtime, 85K req/s benchmark.  
+    - NestJS 10: Framework, dependency injection.  
+    - Fastify 4.28: HTTP/gRPC server, 120K msg/s.  
+    - Prisma 5.14: ORM, type-safe queries.  
+    - Zod 3.23: Validation, schema parsing.  
+    - Passport: Auth middleware, JWT/OAuth.  
+    - @grpc/grpc-js: gRPC, 50K TPS for FR-007.  
+    - ESLint + Prettier: Code quality, 100% linting.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Fastify[Fastify HTTP/gRPC] --> NestJS[NestJS Framework]
+    NestJS --> Prisma[Prisma ORM]
+    NestJS --> Zod[Zod Validation]
+    NestJS --> Passport[Passport Auth]
+    NestJS --> ESLint[ESLint Quality]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part04 FR-011.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- Kết nối với: 06.4.3_Database_Technologies.  
+- **Tài liệu tham chiếu**: Node.js Docs, NestJS Best Practices.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Node.js LTS stable, team TypeScript experts.  
+- **Ràng buộc**: <50ms p99 latency, 50K TPS.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: Node.js ecosystem, Prisma.  
+- **Risks**: Memory leaks → Mitigation: PM2 cluster; Risks: ORM overhead → Mitigation: Raw queries; Risks: Auth vulnerabilities → Mitigation: Passport updates; Risks: Code quality → Mitigation: ESLint CI; Risks: Scalability → Mitigation: Load tests.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services Node.js compliant.  
+- **Performance**: 50K TPS benchmarked.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: 100% test coverage.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Load tests with K6.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| Backend Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IBackendValidator.  
+- **Sequence Diagram**: Backend Request:  
+```mermaid
+sequenceDiagram
+    Client->>Fastify: gRPC Request
+    Fastify->>NestJS: Route
+    NestJS->>Prisma: Query DB
+    Prisma->>NestJS: Data
+    NestJS->>Client: Response
+```
+- **API Endpoint Stubs / Contracts**: POST /backend/validate.  
+- **Reusable Design Pattern Implementation Notes**: Dependency Injection (NestJS).  
+- **Mục đích của node này**: Define backend stack.
+
+#### 06.4.3_Database_Technologies.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, System_Feature_Tree.md Section 2, NFR-002.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define polyglot DB stack cho scalability (NFR-002).  
+**Ý nghĩa**: 100K writes/day, <10ms reads.  
+**Cách làm**: Table specs + sharding math + diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Polyglot persistence: PostgreSQL Citus cho OLTP (FR-007), ClickHouse cho OLAP (FR-014), Redis cho caching.  
+  - **Key Databases (5 items)**:  
+    - PostgreSQL 16: OLTP, Citus sharding.  
+    - Redis 7.2: Cache, 100K ops/s.  
+    - ClickHouse: OLAP, 1B rows/day.  
+    - Elasticsearch 8.12: Logs, full-text search.  
+    - Cassandra (optional): High-write fraud logs (FR-011).  
+  - **Sharding Math**: 100K users/day → 16 shards (6.25K/shard).  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Services --> Postgres[PostgreSQL Citus 16 shards]
+    Services --> Redis[Redis Cluster 3 nodes]
+    Analytics --> ClickHouse[ClickHouse OLAP]
+    Audit --> ES[Elasticsearch Logs]
+    Fraud --> Cassandra[Cassandra High-Write]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part04 FR-014.  
+- **Thể hiện yêu cầu**: NFR-002 Scalability.  
+- Kết nối với: 06.4.4_Integration_Technologies.  
+- **Tài liệu tham chiếu**: Citus Docs, Redis Cluster.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: AWS RDS managed.  
+- **Ràng buộc**: No shared DB, GDPR compliant.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: Citus extension, Redis cluster.  
+- **Risks**: Shard imbalance → Mitigation: Rebalancing; Risks: Data loss → Mitigation: Replication; Risks: Query complexity → Mitigation: ORM Prisma; Risks: Cost → Mitigation: Reserved Instances; Risks: Latency → Mitigation: Colocation.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services connect to DBs.  
+- **Performance**: <10ms read p99.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: TLS enforced.  
+- **Verifiable**: Traceable to NFR-002.  
+- **Testable**: Load tests 100K writes/day.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IDBValidator.  
+- **Sequence Diagram**: DB Query:  
+```mermaid
+sequenceDiagram
+    Service->>Prisma: query
+    Prisma->>Postgres: SQL
+    Postgres->>Prisma: Data
+    Prisma->>Service: DTO
+```
+- **API Endpoint Stubs / Contracts**: GET /db/status.  
+- **Reusable Design Pattern Implementation Notes**: Repository Pattern.  
+- **Mục đích của node này**: Define polyglot DB stack.
+
+#### 06.4.5_DevOps_Tools.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, NFR-005 Maintainability.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define DevOps tools cho zero-downtime deploys.  
+**Ý nghĩa**: GitOps workflow, <5min rollouts.  
+**Cách làm**: Table tools, YAML configs, diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: DevOps stack sử dụng GitHub Actions CI, ArgoCD GitOps, Terraform IaC, Helm cho K8s, K6 load testing. Hỗ trợ NFR-005 (>90% coverage).  
+  - **Key Tools (8 items)**:  
+    - GitHub Actions: CI pipelines.  
+    - ArgoCD: GitOps deploys.  
+    - Terraform: IaC VPC/EKS.  
+    - Helm: K8s packaging.  
+    - K6: Load testing 500 req/s.  
+    - SonarQube: Code quality.  
+    - Snyk: Vulnerability scans.  
+    - Datadog: Runtime monitoring.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Dev[Dev Git Push] --> GitHub[GitHub Repo]
+    GitHub --> Actions[GitHub Actions CI]
+    Actions --> Test[Test/Lint/Build]
+    Test --> ArgoCD[ArgoCD Sync]
+    ArgoCD --> K8s[EKS Deploy]
+    K8s --> Helm[Helm Charts]
+    K8s --> Terraform[Terraform IaC]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, NFR-005.  
+- **Thể hiện yêu cầu**: NFR-005 Maintainability.  
+- Kết nối với: 06.3_Physical_Architecture.  
+- **Tài liệu tham chiếu**: GitOps Flux/Argo, Terraform Best Practices.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: GitHub Enterprise, team GitOps trained.  
+- **Ràng buộc**: Zero-downtime, <5min deploy.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: GitHub, ArgoCD, Terraform.  
+- **Risks**: CI failures → Mitigation: Parallel workflows; Risks: Rollback errors → Mitigation: Argo Rollouts; Risks: IaC drift → Mitigation: Terraform state locks.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% deploys zero-downtime.  
+- **Performance**: <5min rollout.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: GitHub secrets encrypted.  
+- **Verifiable**: Traceable to NFR-005.  
+- **Testable**: ArgoCD sync testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IDevOpsValidator.  
+- **Sequence Diagram**: DevOps Pipeline:  
+```mermaid
+sequenceDiagram
+    Dev->>GitHub: Push Code
+    GitHub->>Actions: Trigger CI
+    Actions->>Test: Run Tests
+    Test->>ArgoCD: Sync Manifest
+    ArgoCD->>K8s: Apply
+```
+- **API Endpoint Stubs / Contracts**: POST /devops/deploy.  
+- **Reusable Design Pattern Implementation Notes**: GitOps Pattern.  
+- **Mục đích của node này**: Define DevOps tools.
+
+#### 06.4.6_Observability_Stack.md 🆕
+
+###### References / Tham chiếu
+- NFR-006 Auditability, CNCF Observability.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define observability stack cho 100% coverage.  
+**Ý nghĩa**: Detect issues <5min, trace 100% requests.  
+**Cách làm**: 3 pillars (metrics/traces/logs), diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: OpenTelemetry cho instrumentation, Prometheus metrics, Jaeger traces, Loki logs, Grafana dashboards.  
+  - **Key Components (8 items)**:  
+    - OpenTelemetry: Auto-instrument Node.js.  
+    - Prometheus: Metrics scraping.  
+    - Jaeger: Distributed tracing.  
+    - Loki: Log aggregation.  
+    - Grafana: Dashboards + alerts.  
+    - Kiali: Istio traffic view.  
+    - AlertManager: PagerDuty integration.  
+    - Elasticsearch: Log search.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Services[Microservices] --> OTEL[OpenTelemetry Collector]
+    OTEL --> Prometheus[Prometheus Metrics]
+    OTEL --> Jaeger[Jaeger Traces]
+    OTEL --> Loki[Loki Logs]
+    Grafana[Grafana Dashboards] --> Prometheus
+    Grafana --> Jaeger
+    Grafana --> Loki
+    Grafana --> AlertManager[AlertManager]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: NFR-006, Part06.1.  
+- **Thể hiện yêu cầu**: NFR-006 Auditability.  
+- Kết nối với: 06.3.5_Service_Mesh_Design.  
+- **Tài liệu tham chiếu**: CNCF Observability, OpenTelemetry Docs.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: OpenTelemetry SDK stable.  
+- **Ràng buộc**: 100% coverage, <1s query latency.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: OpenTelemetry, Prometheus, Jaeger, Loki.  
+- Risks: Overhead → Mitigation: Sampling; Risks: Data explosion → Mitigation: Retention policies; Risks: Alert fatigue → Mitigation: PagerDuty routing.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% events logged.  
+- **Performance**: <1s dashboard load.  
+- **UI Consistency**: Grafana WCAG compliant.  
+- **Integration / Security**: mTLS for OTEL.  
+- **Verifiable**: Traceable to NFR-006.  
+- **Testable**: Jaeger query testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IObservabilityExporter.  
+- **Sequence Diagram**: Observability Flow:  
+```mermaid
+sequenceDiagram
+    Service->>OTEL: Export Metric
+    OTEL->>Prometheus: Scrape
+    Prometheus->>Grafana: Query
+```
+- **API Endpoint Stubs / Contracts**: GET /observability/status.  
+- **Reusable Design Pattern Implementation Notes**: Observer Pattern for metrics.  
+- **Mục đích của node này**: Define observability stack.
+
+### 06.5_Communication_Patterns/
+
+#### 06.5.1_Synchronous_Communication.md 🔄
+
+###### References / Tham chiếu
+- Part06.1, gRPC Docs, RESTful Principles.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define sync comm (gRPC/REST) cho low-latency calls (NFR-001).  
+**Ý nghĩa**: <50ms for FR-007 validation.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Sync comm sử dụng gRPC cho high-throughput (120K msg/s) calls như fraud scoring (FR-011), REST fallback cho simple queries.  
+  - **Key Specs (8 items)**:  
+    - gRPC: Binary, HTTP/2, 120K msg/s.  
+    - REST: JSON, Fastify, 85K req/s.  
+    - mTLS: Istio enforced.  
+    - Timeout: 200ms default.  
+    - Retry: Exponential backoff.  
+    - Circuit Breaker: Istio.  
+    - Rate Limiting: Kong.  
+    - Headers: Tenant-ID, Trace-ID.  
+  - **Architecture Diagram**:  
+
+```mermaid
+sequenceDiagram
+    Client->>+Gateway: gRPC/REST Request
+    Gateway->>+ServiceA: mTLS gRPC
+    ServiceA->>+ServiceB: gRPC with Retry
+    ServiceB-->>-ServiceA: Response
+    ServiceA-->>-Gateway: Response
+    Gateway-->>-Client: Response <50ms p99
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, NFR-001.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06.5.2_Asynchronous_Communication.  
+- **Tài liệu tham chiếu**: gRPC.io.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: HTTP/2 support.  
+- **Ràng buộc**: <50ms p99.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Fastify, gRPC-js.  
+- Risks: Blocking calls → Mitigation: Async fallback; Risks: High latency → Mitigation: Circuit breakers; Risks: Overload → Mitigation: Rate limiting; Risks: Security holes → Mitigation: mTLS; Risks: Compatibility → Mitigation: Proto buffers.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% sync calls documented.  
+- **Performance**: <50ms p99.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS tested.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Load tests K6.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ISyncCommunicator.  
+- **Sequence Diagram**: Sync Call:  
+```mermaid
+sequenceDiagram
+    A->>B: gRPC Call
+    B->>A: Response
+```
+- **API Endpoint Stubs / Contracts**: POST /sync/validate.  
+- **Reusable Design Pattern Implementation Notes**: Circuit Breaker.  
+- **Mục đích của node này**: Define synchronous patterns.
+
+#### 06.5.2_Asynchronous_Communication.md 🔄
+
+###### References / Tham chiếu
+- Part06.1, RabbitMQ Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define async comm cho non-blocking operations (NFR-002).  
+**Ý nghĩa**: Scale to 100K events/day (FR-010).  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Async comm sử dụng RabbitMQ cho events như notification delivery (FR-010), fraud alerts (FR-011).  
+  - **Key Specs (8 items)**:  
+    - RabbitMQ: 100K msg/s.  
+    - Durable Queues: 99.9% delivery.  
+    - Dead Letter: Retry failures.  
+    - TTL: 30s for time-sensitive.  
+    - ACK Mode: Manual.  
+    - Clustering: 3 nodes HA.  
+    - Monitoring: Prometheus exporter.  
+    - Schema: AVRO for events.  
+  - **Architecture Diagram**:  
+
+```mermaid
+sequenceDiagram
+    ServiceA->>RabbitMQ: Publish Event
+    RabbitMQ->>Queue: Store
+    ServiceB->>RabbitMQ: Consume
+    ServiceB->>RabbitMQ: ACK
+    alt Failure
+    RabbitMQ->>DLQ: Dead Letter
+    end
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, FR-010.  
+- **Thể hiện yêu cầu**: NFR-002 Scalability.  
+- **Kết nối với**: 06.5.3_Event_Driven_Architecture.  
+- **Tài liệu tham chiếu**: RabbitMQ.com.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: At-least-once delivery.  
+- Ràng buộc: No message loss.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: RabbitMQ 3.13.  
+- Risks: Queue overflow → Mitigation: Quotas; Risks: Duplicates → Mitigation: Idempotent consumers; Risks: Downtime → Mitigation: HA cluster; Risks: Schema evolution → Mitigation: AVRO.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% events handled async.  
+- **Performance**: 100K msg/s.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: TLS encrypted.  
+- **Verifiable**: Traceable to FR-010.  
+- **Testable**: Load tests RabbitMQ.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAsyncCommunicator.  
+- **Sequence Diagram**: Async Flow:  
+```mermaid
+sequenceDiagram
+    A->>RabbitMQ: Publish
+    B->>RabbitMQ: Consume
+```
+- **API Endpoint Stubs / Contracts**: POST /async/validate.  
+- **Reusable Design Pattern Implementation Notes**: Publisher/Subscriber.  
+- **Mục đích của node này**: Define async patterns.
+
+#### 06.5.3_Event_Driven_Architecture.md 🔄
+
+###### References / Tham chiếu
+- Part06.1, Event Storming Method.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define event-driven architecture cho async flows.  
+**Ý nghĩa**: Eventual consistency, loose coupling.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Event-driven với 28 domain events (e.g., RedemptionCompleted → Notify + Analyze).  
+  - **Key Events (8 items)**:  
+    - RedemptionCompleted: Trigger FR-010.  
+    - FraudDetected: Block user.  
+    - CampaignCreated: Update analytics.  
+    - UserRegistered: Send welcome.  
+    - A/BTestCompleted: Notify winner.  
+    - RecommendationGenerated: Push offer.  
+    - ReportScheduled: Generate report.  
+    - ErrorEvent: Alert DevOps.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Redemption[RedemptionService] -->|Event| EventBus[RabbitMQ]
+    EventBus --> Notification[NotificationService]
+    EventBus --> Analytics[AnalyticsService]
+    EventBus --> Fraud[FraudService]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, FR-010.  
+- **Thể hiện yêu cầu**: NFR-002.  
+- **Kết nối với**: 06.5.4_Message_Queue_Design.  
+- **Tài liệu tham chiếu**: Event Storming.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- Giả định: At-most-once semantics.  
+- Ràng buộc: Event schema versioning.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: RabbitMQ.  
+- Risks: Event loss → Mitigation: Durable queues; Risks: Ordering → Mitigation: Sequence numbers; Risks: Duplicates → Mitigation: Idempotency; Risks: Schema changes → Mitigation: AVRO.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% events defined.  
+- **Performance**: 100K events/day.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: TLS encrypted.  
+- **Verifiable**: Traceable to FRs.  
+- **Testable**: Event replay testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IEventPublisher.  
+- **Sequence Diagram**: Event Flow:  
+```mermaid
+sequenceDiagram
+    A->>EventBus: Publish
+    B->>EventBus: Subscribe
+```
+- **API Endpoint Stubs / Contracts**: POST /events/validate.  
+- **Reusable Design Pattern Implementation Notes**: Publisher/Subscriber.  
+- **Mục đích của node này**: Define event-driven architecture.
+
+#### 06.5.5_Service_Discovery.md 🆕
+
+###### References / Tham chiếu
+- 06.1, Istio Docs, Consul.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define service discovery cho microservices.  
+**Ý nghĩa**: Dynamic routing, <10ms discovery.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Service discovery sử dụng Istio + Consul cho dynamic registry, supporting 14 services with auto-registration.  
+  - **Key Specs (8 items)**:  
+    - Istio ServiceEntry: Static + dynamic.  
+    - Consul Catalog: Health checks.  
+    - Discovery Time: <10ms.  
+    - Load Balancing: Least conn.  
+    - Failover: Automatic.  
+    - RBAC: Discovery access control.  
+    - Monitoring: Prometheus metrics.  
+    - Versioning: Subsets v1/v2.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    ServiceA[Service A] --> Istio[Istio Discovery]
+    Istio --> Consul[Consul Catalog]
+    Consul --> Health[Health Checks]
+    Istio --> LB[Load Balancing]
+    LB --> ServiceB[Service B]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, NFR-001.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06.5.1_Synchronous_Communication.  
+- **Tài liệu tham chiếu**: Istio.io, Consul.io.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Services self-register.  
+- **Ràng buộc**: <10ms discovery.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Istio 1.20, Consul 1.18.  
+- Risks: Discovery failures → Mitigation: Fallback static; Risks: Overload → Mitigation: Rate limits; Risks: Security → Mitigation: mTLS; Risks: Config drift → Mitigation: GitOps gen; Risks: Latency → Mitigation: Local cache.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services discoverable.  
+- **Performance**: <10ms discovery.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS enforced.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Consul query testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IServiceDiscovery.  
+- **Sequence Diagram**: Discovery Flow:  
+```mermaid
+sequenceDiagram
+    ServiceA->>Istio: Register
+    ServiceB->>Istio: Discover ServiceA
+    Istio->>ServiceB: Endpoint List
+```
+- **API Endpoint Stubs / Contracts**: GET /discovery/status.  
+- **Reusable Design Pattern Implementation Notes**: Service Registry Pattern.  
+- **Mục đích của node này**: Define service discovery.
+
+#### 06.5.5_Service_Discovery.md 🆕
+
+###### References / Tham chiếu
+- 06.1, Istio Docs, Consul.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define service discovery cho microservices.  
+**Ý nghĩa**: Dynamic routing, <10ms discovery.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Service discovery sử dụng Istio + Consul cho dynamic registry, supporting 14 services with auto-registration.  
+  - **Key Specs (8 items)**:  
+    - Istio ServiceEntry: Static + dynamic.  
+    - Consul Catalog: Health checks.  
+    - Discovery Time: <10ms.  
+    - Load Balancing: Least conn.  
+    - Failover: Automatic.  
+    - RBAC: Discovery access control.  
+    - Monitoring: Prometheus metrics.  
+    - Versioning: Subsets v1/v2.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    ServiceA[Service A] --> Istio[Istio Discovery]
+    Istio --> Consul[Consul Catalog]
+    Consul --> Health[Health Checks]
+    Istio --> LB[Load Balancing]
+    LB --> ServiceB[Service B]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, NFR-001.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06.5.1_Synchronous_Communication.  
+- **Tài liệu tham chiếu**: Istio.io, Consul.io.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Services self-register.  
+- **Ràng buộc**: <10ms discovery.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Istio 1.20, Consul 1.18.  
+- Risks: Discovery failures → Mitigation: Fallback static; Risks: Overload → Mitigation: Rate limits; Risks: Security → Mitigation: mTLS; Risks: Config errors → Mitigation: GitOps gen; Risks: Latency → Mitigation: Local cache.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services discoverable.  
+- **Performance**: <10ms discovery.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS enforced.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Consul query testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IServiceDiscovery.  
+- **Sequence Diagram**: Discovery Flow:  
+```mermaid
+sequenceDiagram
+    ServiceA->>Istio: Register
+    ServiceB->>Istio: Discover ServiceA
+    Istio->>ServiceB: Endpoint List
+```
+- **API Endpoint Stubs / Contracts**: GET /discovery/status.  
+- **Reusable Design Pattern Implementation Notes**: Service Registry Pattern.  
+- **Mục đích của node này**: Define service discovery.
+
+#### 06.5.5_Service_Discovery.md 🆕
+
+###### References / Tham chiếu
+- 06.1, Istio Docs, Consul.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define service discovery cho microservices.  
+**Ý nghĩa**: Dynamic routing, <10ms discovery.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Service discovery sử dụng Istio + Consul cho dynamic registry, supporting 14 services with auto-registration.  
+  - **Key Specs (8 items)**:  
+    - Istio ServiceEntry: Static + dynamic.  
+    - Consul Catalog: Health checks.  
+    - Discovery Time: <10ms.  
+    - Load Balancing: Least conn.  
+    - Failover: Automatic.  
+    - RBAC: Discovery access control.  
+    - Monitoring: Prometheus metrics.  
+    - Versioning: Subsets v1/v2.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    ServiceA[Service A] --> Istio[Istio Discovery]
+    Istio --> Consul[Consul Catalog]
+    Consul --> Health[Health Checks]
+    Istio --> LB[Load Balancing]
+    LB --> ServiceB[Service B]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, NFR-001.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06.5.1_Synchronous_Communication.  
+- **Tài liệu tham chiếu**: Istio.io, Consul.io.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Services self-register.  
+- **Ràng buộc**: <10ms discovery.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Istio 1.20, Consul 1.18.  
+- Risks: Discovery failures → Mitigation: Fallback static; Risks: Overload → Mitigation: Rate limits; Risks: Security → Mitigation: mTLS; Risks: Config errors → Mitigation: GitOps gen; Risks: Latency → Mitigation: Local cache.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services discoverable.  
+- **Performance**: <10ms discovery.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS enforced.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Consul query testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IServiceDiscovery.  
+- **Sequence Diagram**: Discovery Flow:  
+```mermaid
+sequenceDiagram
+    ServiceA->>Istio: Register
+    ServiceB->>Istio: Discover ServiceA
+    Istio->>ServiceB: Endpoint List
+```
+- **API Endpoint Stubs / Contracts**: GET /discovery/status.  
+- **Reusable Design Pattern Implementation Notes**: Service Registry Pattern.  
+- **Mục đích của node này**: Define service discovery.
+
+### 06.5_Communication_Patterns/
+
+#### 06.5.1_Synchronous_Communication.md 🔄
+
+###### References / Tham chiếu
+- 06.1, gRPC Docs, Fastify Docs, Part04 FR-011 (Fraud Scoring).
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define sync comm for low-latency interactions (<50ms, NFR-001).  
+**Ý nghĩa**: Essential for real-time fraud checks (FR-011), barcode validation (FR-007).  
+**Cách làm**: Benchmark tables, proto snippets, diagrams.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Sync comm sử dụng gRPC cho high-throughput calls (120K msg/s), REST fallback cho simple queries, mTLS enforced. Hỗ trợ FR-011 fraud scoring.  
+  - **Key Specs (8 items)**:  
+    - gRPC: Binary, HTTP/2, 120K msg/s benchmark.  
+    - Fastify REST: JSON, 85K req/s.  
+    - mTLS: Istio strict mode.  
+    - Timeout: 200ms default.  
+    - Retry: Exponential backoff 3x.  
+    - Circuit Breaker: Istio 5s open.  
+    - Rate Limiting: 1000 req/min/IP.  
+    - Headers: Tenant-ID, Trace-ID.  
+  - **Architecture Diagram**:  
+
+```mermaid
+sequenceDiagram
+    Client->>+Gateway: gRPC/REST Request
+    Gateway->>+ServiceA: mTLS gRPC
+    ServiceA->>+ServiceB: gRPC with Retry
+    ServiceB-->>-ServiceA: Response
+    ServiceA-->>-Gateway: Response
+    Gateway-->>-Client: Response <50ms p99
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, Part04 FR-011.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06.5.2_Asynchronous_Communication.  
+- **Tài liệu tham chiếu**: gRPC.io, Fastify.io.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: HTTP/2 client support.  
+- **Ràng buộc**: <50ms p99 latency, mTLS mandatory.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Fastify 4.28, gRPC-js 1.9.  
+- Risks: Blocking calls → Mitigation: Async fallback; Risks: High latency → Mitigation: Circuit breakers; Risks: Overload → Mitigation: Rate limiting; Risks: Security holes → Mitigation: mTLS; Risks: Compatibility → Mitigation: Proto buffers; Risks: Retry storms → Mitigation: Backoff jitter.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% sync calls documented.  
+- **Performance**: <50ms p99.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS tested.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Load tests K6 500 req/s.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ISyncCommunicator.  
+- **Sequence Diagram**: Sync Call with Retry:  
+```mermaid
+sequenceDiagram
+    A->>B: gRPC Call
+    alt Failure
+    A->>B: Retry 1
+    end
+    B->>A: Response
+```
+- **API Endpoint Stubs / Contracts**: POST /sync/test.  
+- **Reusable Design Pattern Implementation Notes**: Circuit Breaker (Istio).  
+- **Mục đích của node này**: Define synchronous communication.
+
+#### 06.5.2_Asynchronous_Communication.md 🔄
+
+###### References / Tham chiếu
+- 06.1, RabbitMQ Docs, Part04 FR-010.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define async comm cho non-blocking operations.  
+**Ý nghĩa**: Scale to 100K events/day (NFR-002).  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Async comm sử dụng RabbitMQ cho events như notification delivery (FR-010), fraud alerts (FR-011).  
+  - **Key Specs (8 items)**:  
+    - RabbitMQ: 100K msg/s.  
+    - Durable Queues: 99.9% delivery.  
+    - Dead Letter: Retry failures.  
+    - TTL: 30s for time-sensitive.  
+    - ACK Mode: Manual.  
+    - Clustering: 3 nodes HA.  
+    - Monitoring: Prometheus exporter.  
+    - Schema: AVRO for events.  
+  - **Architecture Diagram**:  
+
+```mermaid
+sequenceDiagram
+    ServiceA->>RabbitMQ: Publish Event
+    RabbitMQ->>Queue: Store
+    ServiceB->>RabbitMQ: Consume
+    ServiceB->>RabbitMQ: ACK
+    alt Failure
+    RabbitMQ->>DLQ: Dead Letter
+    end
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, Part04 FR-010.  
+- **Thể hiện yêu cầu**: NFR-002 Scalability.  
+- **Kết nối với**: 06.5.3_Event_Driven_Architecture.  
+- **Tài liệu tham chiếu**: RabbitMQ.com, GeeksforGeeks Async Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: At-least-once delivery.  
+- **Ràng buộc**: No message loss, TTL enforced.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: RabbitMQ 3.13.  
+- Risks: Queue overflow → Mitigation: Quotas; Risks: Duplicates → Mitigation: Idempotent consumers; Risks: Downtime → Mitigation: HA cluster; Risks: Schema evolution → Mitigation: AVRO; Risks: Security → Mitigation: TLS; Risks: Monitoring gaps → Mitigation: Prometheus exporter.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% events handled async.  
+- **Performance**: 100K msg/s.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: TLS encrypted.  
+- **Verifiable**: Traceable to FR-010.  
+- **Testable**: Load tests RabbitMQ.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IAsyncCommunicator.  
+- **Sequence Diagram**: Async Flow:  
+```mermaid
+sequenceDiagram
+    A->>RabbitMQ: Publish
+    B->>RabbitMQ: Consume
+```
+- **API Endpoint Stubs / Contracts**: POST /async/validate.  
+- **Reusable Design Pattern Implementation Notes**: Publisher/Subscriber.  
+- **Mục đích của node này**: Define asynchronous communication.
+
+#### 06.5.3_Event_Driven_Architecture.md 🔄
+
+###### References / Tham chiếu
+- 06.1, Event Storming Method, RabbitMQ Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define event-driven architecture cho async flows.  
+**Ý nghĩa**: Eventual consistency, loose coupling cho FR-010→FR-014.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Event-driven với 28 domain events (e.g., RedemptionCompleted → Notify + Analyze).  
+  - **Key Events (8 items)**:  
+    - RedemptionCompleted: Trigger FR-010.  
+    - FraudDetected: Block user.  
+    - CampaignCreated: Update analytics.  
+    - UserRegistered: Send welcome.  
+    - A/BTestCompleted: Notify winner.  
+    - RecommendationGenerated: Push offer.  
+    - ReportScheduled: Generate report.  
+    - ErrorEvent: Alert DevOps.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Redemption[RedemptionService] -->|Event| EventBus[RabbitMQ]
+    EventBus --> Notification[NotificationService]
+    EventBus --> Analytics[AnalyticsService]
+    EventBus --> Fraud[FraudService]
+    EventBus --> Recommendation[RecommendationService]
+    EventBus --> ABTesting[ABTestingService]
+    EventBus --> Reporting[ReportingService]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, Part04 FR-010.  
+- **Thể hiện yêu cầu**: NFR-002.  
+- **Kết nối với**: 06.5.4_Message_Queue_Design.  
+- **Tài liệu tham chiếu**: Event Storming, RabbitMQ Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: At-most-once semantics.  
+- **Ràng buộc**: Event schema versioning.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: RabbitMQ.  
+- Risks: Event loss → Mitigation: Durable queues; Risks: Ordering → Mitigation: Sequence numbers; Risks: Duplicates → Mitigation: Idempotency; Risks: Schema changes → Mitigation: AVRO; Risks: Security → Mitigation: TLS; Risks: Monitoring gaps → Mitigation: Prometheus exporter.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% events defined.  
+- **Performance**: 100K events/day.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: TLS encrypted.  
+- **Verifiable**: Traceable to FRs.  
+- **Testable**: Event replay testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IEventPublisher.  
+- **Sequence Diagram**: Event Flow:  
+```mermaid
+sequenceDiagram
+    A->>EventBus: Publish
+    B->>EventBus: Subscribe
+    EventBus->>B: Deliver
+```
+- **API Endpoint Stubs / Contracts**: POST /events/validate.  
+- **Reusable Design Pattern Implementation Notes**: Publisher/Subscriber.  
+- **Mục đích của node này**: Define event-driven architecture.
+
+#### 06.5.5_Service_Discovery.md 🆕
+
+###### References / Tham chiếu
+- 06.1, Istio Docs 1.20, Consul Docs 1.18, GeeksforGeeks Service Discovery.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define service discovery cho 14 microservices với dynamic registry.  
+**Ý nghĩa**: Reduce latency <10ms (NFR-001), support auto-scaling.  
+**Cách làm**: Specs table, diagrams, code snippets.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Service discovery sử dụng Istio Envoy + Consul catalog cho auto-registration, health checks, load balancing. Hỗ trợ FR-007→FR-014 với <10ms discovery time.  
+  - **Key Specs (8 items)**:  
+    - Istio ServiceEntry: Dynamic registry.  
+    - Consul Catalog: Health checks every 10s.  
+    - Discovery Time: <10ms p99.  
+    - Load Balancing: Least conn algorithm.  
+    - Failover: Automatic to healthy instances.  
+    - RBAC: Discovery access control.  
+    - Monitoring: Prometheus metrics (discovery_hits).  
+    - Versioning: Istio subsets (v1/v2).  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    ServiceA[Service A] --> Istio[Istio Discovery]
+    Istio --> Consul[Consul Catalog]
+    Consul --> Health[Health Checks 10s]
+    Istio --> LB[Load Balancing Least Conn]
+    LB --> ServiceB[Service B]
+    ServiceB --> Monitoring[Prometheus Exporter]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: 06.1, NFR-001.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06.5.1_Synchronous_Communication.  
+- **Tài liệu tham chiếu**: Istio.io, Consul.io.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Services self-register via annotations.  
+- **Ràng buộc**: <10ms discovery, mTLS integrated.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Istio 1.20, Consul 1.18.  
+- Risks: Discovery failures → Mitigation: Fallback static entries; Risks: Overload → Mitigation: Rate limits; Risks: Security → Mitigation: mTLS; Risks: Config errors → Mitigation: GitOps gen; Risks: Latency → Mitigation: Local cache.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services discoverable.  
+- **Performance**: <10ms discovery.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS enforced.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Consul query testable.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IServiceDiscovery.  
+- **Sequence Diagram**: Discovery Flow:  
+```mermaid
+sequenceDiagram
+    ServiceA->>Istio: Register
+    ServiceB->>Istio: Discover ServiceA
+    Istio->>Consul: Query
+    Consul->>Istio: Endpoints
+    Istio->>ServiceB: Balanced List
+```
+- **API Endpoint Stubs / Contracts**: GET /discovery/status {status: "healthy"}.  
+- **Reusable Design Pattern Implementation Notes**: Service Registry Pattern.  
+- **Mục đích của node này**: Define service discovery.
+
+## Part06_System_Architecture/
+
+### 06.6_Scalability_Patterns/
+
+#### 06.6.1_Horizontal_Scaling.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9 (Scalability Requirements), System_Feature_Tree.md Section 2 (Services), Part05_NFR-002 (Scalability), Kubernetes Docs 1.29, AWS EKS Best Practices, GeeksforGeeks Horizontal Scaling.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define horizontal scaling patterns cho 14 microservices, hỗ trợ 100K users/day (NFR-002).  
+**Ý nghĩa**: Auto-scale pods based on load, giảm cost 30% so vertical scaling, đảm bảo availability 99.9% (NFR-004).  
+**Cách làm**: Markdown tables + Mermaid flow + HPA YAML snippets, chi tiết 350 từ, bullet lists 5-8 items, Mermaid cho scaling process.
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Horizontal scaling sử dụng Kubernetes HPA cho auto-add/remove pods, hỗ trợ peak 500 req/s (NFR-001). Áp dụng cho Redemption Service (FR-007: 50K TPS), Fraud Service (FR-011: ML scoring). Capacity math: 100K users/day = 1.16 req/s avg, scale to 140 pods (10/service avg). HPA trigger on CPU 70% + custom metrics (redemptions/s >1000). Hỗ trợ zero-downtime với rolling updates.  
+  - **Key Patterns (8 items)**:  
+    - HPA: CPU-based auto-scaling.  
+    - Custom Metrics: Prometheus adapter cho req/s.  
+    - Min/Max Replicas: 2 min, 20 max/service.  
+    - Graceful Shutdown: Pod lifecycle hooks.  
+    - Resource Requests: 500m CPU, 1Gi memory/pod.  
+    - Affinity: AZ spread cho HA.  
+    - Taints: Dedicated nodes cho ML services.  
+    - Cost Optimization: Spot instances cho non-critical.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Load[Incoming Load 500 req/s] --> HPA[Kubernetes HPA]
+    HPA --> Metrics[Prometheus Custom Metrics]
+    HPA --> Pod1[Pod 1]
+    HPA --> Pod2[Pod 2]
+    HPA --> PodN[Pod N (auto-added)]
+    PodN --> Service[Load Balanced Service]
+    Metrics --> Alert[AlertManager if >1000 req/s]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, Part05_NFR-002, System_Feature_Tree.md Section 2.  
+- **Thể hiện yêu cầu**: NFR-002 Scalability, FR-007 Redemption.  
+- **Kết nối với**: 06.3.4_Kubernetes_Architecture, 06.6.3_Load_Balancing.  
+- **Tài liệu tham chiếu**: Kubernetes HPA Docs, AWS EKS Scaling Patterns.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Fargate auto-scaling enabled, Prometheus deployed.  
+- **Ràng buộc**: Scale time <1min, max pods/service 20.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- **Dependencies**: EKS HPA v2, Prometheus Adapter.  
+- **Risks**: Overscaling cost → Mitigation: Max replicas cap; Risks: Underscaling latency → Mitigation: Custom metrics; Risks: Pod evictions → Mitigation: PDB 80%; Risks: Metrics inaccuracy → Mitigation: Prometheus federation; Risks: Cold starts → Mitigation: Warm-up jobs.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services HPA configured.  
+- **Performance**: Scale <1min for 500 req/s spike.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: HPA RBAC restricted.  
+- **Verifiable**: Traceable to NFR-002.  
+- **Testable**: K6 load tests verify scaling.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IScalingValidator.  
+- **Sequence Diagram**: Scaling Process:  
+```mermaid
+sequenceDiagram
+    MetricsAPI->>HPA: Load >1000 req/s
+    HPA->>K8s: Add Pods
+    K8s->>Pod: Deploy
+    Pod->>Service: Ready
+```
+- **API Endpoint Stubs / Contracts**: GET /scaling/status.  
+- **Reusable Design Pattern Implementation Notes**: Auto-Scaling Pattern.  
+- **Mục đích của node này**: Define horizontal scaling.
+
+#### 06.6.2_Caching_Strategy.md
+
+###### References / Tham chiếu
+- BRD.md Section 9, NFR-001, Redis Docs 7.2.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define caching strategy cho <1s data retrieval (NFR-001).  
+**Ý nghĩa**: Hit rate 95%, giảm DB load 80%.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Caching strategy sử dụng Redis Cluster cho sessions, barcodes, metrics (FR-009), hỗ trợ 100K ops/s.  
+  - **Key Strategies (8 items)**:  
+    - Cache-Aside: Lazy load barcodes (FR-007).  
+    - Write-Through: Sync user profiles (FR-004).  
+    - TTL: 5min for hot barcodes.  
+    - Eviction: LRU 1GB memory.  
+    - Hit Rate Target: 95% (Prometheus monitored).  
+    - Clustering: 3 nodes HA.  
+    - Sentinel: Failover <10s.  
+    - Persistence: AOF/RDB backups.  
+  - **Architecture Diagram**:  
+
+```mermaid
+sequenceDiagram
+    Service->>Redis: Get Key
+    alt Hit
+    Redis->>Service: Data <1ms
+    else Miss
+    Service->>DB: Fetch
+    DB->>Service: Data
+    Service->>Redis: Set Key (TTL 5min)
+    end
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, NFR-001.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06.6.1_Horizontal_Scaling.  
+- **Tài liệu tham chiếu**: Redis Patterns, GeeksforGeeks Caching.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Redis 7.2 cluster stable.  
+- **Ràng buộc**: 95% hit rate.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Redis 7.2, ElastiCache.  
+- Risks: Cache invalidation → Mitigation: Event-based eviction; Risks: Stale data → Mitigation: TTL; Risks: Outage → Mitigation: Sentinel; Risks: Memory overflow → Mitigation: LRU; Risks: Security → Mitigation: AUTH + TLS.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% cacheable endpoints defined.  
+- **Performance**: 100K ops/s.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: TLS enforced.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Hit rate testable Prometheus.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ICachingStrategy.  
+- **Sequence Diagram**: Cache Miss:  
+```mermaid
+sequenceDiagram
+    Service->>Redis: Get
+    Redis->>Service: Miss
+    Service->>DB: Fetch
+    Service->>Redis: Set
+```
+- **API Endpoint Stubs / Contracts**: GET /cache/status.  
+- **Reusable Design Pattern Implementation Notes**: Cache-Aside Pattern.  
+- **Mục đích của node này**: Define caching strategy.
+
+#### 06.6.3_Load_Balancing.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, NFR-001, Istio Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define load balancing cho <50ms latency.  
+**Ý nghĩa**: Even traffic distribution, support 500 peak req/s.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Load balancing sử dụng Istio VirtualService cho weighted routing, canary deploys.  
+  - **Key Specs (8 items)**:  
+    - Algorithm: Least Conn.  
+    - Canary: 10% traffic new versions.  
+    - Timeout: 200ms.  
+    - Retry: 3x exponential.  
+    - Circuit Breaker: Open after 5 failures.  
+    - Rate Limiting: 1000 req/min/IP.  
+    - mTLS: Integrated.  
+    - Monitoring: Istio metrics.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    ALB[AWS ALB] --> Istio[Istio VirtualService]
+    Istio --> Pod1[Pod 1 - 90%]
+    Istio --> Pod2[Pod 2 - 10% Canary]
+    Pod1 --> Service[Service Endpoint]
+    Pod2 --> Service
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, NFR-001.  
+- **Thể hiện yêu cầu**: NFR-001 Performance.  
+- **Kết nối với**: 06.6.1_Horizontal_Scaling.  
+- **Tài liệu tham chiếu**: Istio Load Balancing.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Istio on all pods.  
+- **Ràng buộc**: <50ms p99.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Istio 1.20.  
+- Risks: Imbalanced load → Mitigation: Least Conn; Risks: Failures → Mitigation: Circuit breaker; Risks: Overload → Mitigation: Rate limiting; Risks: Canary bugs → Mitigation: Rollback; Risks: Monitoring → Mitigation: Prometheus.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% services load balanced.  
+- **Performance**: <50ms p99.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: mTLS enforced.  
+- **Verifiable**: Traceable to NFR-001.  
+- **Testable**: Load tests K6.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DevOps Lead | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: ILoadBalancer.  
+- **Sequence Diagram**: Load Flow:  
+```mermaid
+sequenceDiagram
+    Client->>Istio: Request
+    Istio->>Pod1: 90%
+    Istio->>Pod2: 10%
+    Pod1->>Client: Response
+```
+- **API Endpoint Stubs / Contracts**: GET /load/status.  
+- **Reusable Design Pattern Implementation Notes**: Weighted Routing Pattern.  
+- **Mục đích của node này**: Define load balancing.
+
+#### 06.6.4_Database_Partitioning.md 🔄
+
+###### References / Tham chiếu
+- BRD.md Section 9, NFR-002, Citus Docs.
+
+###### Purpose / Ý nghĩa / Cách làm
+**Mục đích**: Define DB partitioning cho scalability (NFR-002).  
+**Ý nghĩa**: 100K writes/day, <10ms reads.  
+
+###### Specifications / Main Content / Nội dung chính
+- **Nội dung cần có**:  
+  - **Mô tả sản phẩm / Product Description**: Database partitioning sử dụng Citus cho PostgreSQL 16, tenant-based sharding.  
+  - **Key Specs (8 items)**:  
+    - Sharding Key: tenant_id % 16.  
+    - Shards: 16 (6.25K users/shard).  
+    - Replicas: 5/shard (80 total).  
+    - IOPS: 10K/shard (160K total).  
+    - Query Router: Citus coordinator.  
+    - Cross-Shard Queries: <5% traffic.  
+    - Backup: pg_dump daily.  
+    - Monitoring: pg_stat_statements.  
+  - **Architecture Diagram**:  
+
+```mermaid
+graph TD
+    Coordinator[Citus Coordinator] --> Shard1[Shard 1 tenant_id % 16 = 0]
+    Coordinator --> Shard2[Shard 2 ...]
+    Coordinator --> Shard16[Shard 16]
+    Shard1 --> Replica1[Replica 1]
+    Shard1 --> Replica5[Replica 5]
+```
+
+###### Traceability Links / Liên kết truy xuất
+- **Đầu vào từ**: BRD.md Section 9, NFR-002.  
+- **Thể hiện yêu cầu**: NFR-002 Scalability.  
+- **Kết nối với**: 06.6.2_Caching_Strategy.  
+- **Tài liệu tham chiếu**: Citus Docs, PostgreSQL Partitioning.
+
+###### Assumptions / Constraints / Giả định & Ràng buộc
+- **Giả định**: Tenant ID even distribution.  
+- **Ràng buộc**: <10ms cross-shard queries.
+
+###### Dependencies / Risks / Mitigation / Phụ thuộc & Rủi ro
+- Dependencies: Citus extension.  
+- Risks: Shard imbalance → Mitigation: Rebalancing; Risks: Data loss → Mitigation: Replicas; Risks: Query complexity → Mitigation: Denormalization; Risks: Cost → Mitigation: Reserved DBs; Risks: Migration → Mitigation: pglogical.
+
+###### Acceptance Criteria / Testable Items / Tiêu chí chấp nhận
+- **Functional**: 100% tables sharded.  
+- **Performance**: <10ms reads.  
+- **UI Consistency**: N/A.  
+- **Integration / Security**: TLS encrypted.  
+- **Verifiable**: Traceable to NFR-002.  
+- **Testable**: Load tests 100K writes/day.
+
+###### Approval Sign-Off / Phê duyệt
+| Role / Vai trò | Name / Tên | Signature / Chữ ký | Date / Ngày |  
+|----------------|------------|---------------------|-------------|  
+| Product Manager | [TBD] | - | - |  
+| Technical Lead | [TBD] | - | - |  
+| DB Admin | [TBD] | - | - |  
+| QA Lead | [TBD] | - | - |  
+
+###### Design Extension Section / Phần mở rộng thiết kế
+- **UML Class Diagram / Abstract Interfaces**: IShardingValidator.  
+- **Sequence Diagram**: Shard Query:  
+```mermaid
+sequenceDiagram
+    Coordinator->>ShardN: Route Query
+    ShardN->>Replica: Read Replica
+    Replica->>Coordinator: Result
+```
+- **API Endpoint Stubs / Contracts**: GET /db/partition/status.  
+- **Reusable Design Pattern Implementation Notes**: Database Sharding Pattern.  
+- **Mục đích của node này**: Define database partitioning.
+
 
 
 
