@@ -322,3 +322,16 @@ flowchart TD
 ---
 
 **Đây là quy trình hoàn chỉnh từ SRS đến production! Mỗi phase có deliverables cụ thể và success criteria rõ ràng. Bạn muốn tôi detail hóa phase nào? 🚀**
+
+
+## Format mỗi function
+```
+/**
+ * @description Xác thực người dùng bằng JWT
+ * @reference SRS-Grok-V2.md - Part04.1.3 User Authentication (FR-003)
+ * @purpose Implement login flow với OTP verification
+ */
+async authenticateUser(credentials: LoginDTO): Promise<AuthResult> {
+    // Implementation với detailed comments
+}
+```
