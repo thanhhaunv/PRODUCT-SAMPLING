@@ -1,1206 +1,746 @@
-# 🚀 Sub-Project 2: Campaign & QR Management Service - Roadmap Chi Tiết
+# 🚀 Sub-Project 2: Campaign & QR Management Service - Complete Implementation Guide
 
-## 📁 Cấu Trúc Thư Mục Hoàn Chỉnh
+## 📋 **BẢNG TỔNG HỢP TẤT CẢ FILES VÀ REFERENCES**
+
+| **Category** | **File Path** | **Mô tả** | **SRS Reference** | **Business Purpose** |
+|-------------|---------------|-----------|-------------------|-------------------|
+| **🏗️ BACKEND DOMAIN** | | | | |
+| Entities | `backend/src/domain/entities/Campaign.ts` | Core Campaign entity với business rules | Part04.2.1 Campaign Management (FR-001) | Encapsulate campaign lifecycle logic |
+| Entities | `backend/src/domain/entities/Barcode.ts` | Barcode entity với QR generation logic | Part04.2.2 Barcode Management (FR-002) | QR code lifecycle management |
+| Entities | `backend/src/domain/entities/AdsFormat.ts` | Ads Format entity với template management | Part04.2.6 Ads Format Management (FR-006) | Digital ads template system |
+| Entities | `backend/src/domain/entities/BarcodePool.ts` | Barcode pool management entity | Part04.2.2 Barcode Management | Batch barcode operations |
+| Entities | `backend/src/domain/entities/CampaignMetric.ts` | Campaign analytics entity | Part04.2.8 Real Time Analytics | Performance tracking |
+| Value Objects | `backend/src/domain/value-objects/QRCode.ts` | QR code value object với validation | Part04.2.2 Barcode Management | QR code generation và validation |
+| Value Objects | `backend/src/domain/value-objects/UTMParameters.ts` | UTM tracking parameters | Part04.2.1 Campaign Management | Marketing attribution tracking |
+| Value Objects | `backend/src/domain/value-objects/CampaignStatus.ts` | Campaign status management | Part04.2.1 Campaign Management | Campaign state transitions |
+| Value Objects | `backend/src/domain/value-objects/AdTemplate.ts` | Ads template value object | Part04.2.6 Ads Format Management | Template structure validation |
+| Repositories | `backend/src/domain/repositories/ICampaignRepository.ts` | Campaign repository interface | Part06.2.1 Layered Architecture | Domain layer interface |
+| Repositories | `backend/src/domain/repositories/IBarcodeRepository.ts` | Barcode repository interface | Part06.2.1 Layered Architecture | QR data access contract |
+| Repositories | `backend/src/domain/repositories/IAdsFormatRepository.ts` | Ads format repository interface | Part06.2.1 Layered Architecture | Ads template data access |
+| Repositories | `backend/src/domain/repositories/IBarcodePoolRepository.ts` | Barcode pool repository interface | Part06.2.1 Layered Architecture | Pool management interface |
+| Domain Services | `backend/src/domain/services/CampaignDomainService.ts` | Campaign business logic service | Part04.2.1 Campaign Management | Complex campaign operations |
+| Domain Services | `backend/src/domain/services/QRGenerationService.ts` | QR code generation business logic | Part04.2.2 Barcode Management | QR creation algorithms |
+| Domain Services | `backend/src/domain/services/UTMTrackingService.ts` | UTM parameter management | Part04.2.1 Campaign Management | Marketing attribution logic |
+| Domain Services | `backend/src/domain/services/AdTemplateService.ts` | Ads template validation service | Part04.2.6 Ads Format Management | Template business rules |
+| **🔄 BACKEND APPLICATION** | | | | |
+| Use Cases | `backend/src/application/use-cases/campaign/CreateCampaignUseCase.ts` | Campaign creation workflow | Part04.2.1 Campaign Management (FR-001) | Campaign setup process |
+| Use Cases | `backend/src/application/use-cases/campaign/UpdateCampaignUseCase.ts` | Campaign modification logic | Part04.2.1 Campaign Management | Campaign editing workflow |
+| Use Cases | `backend/src/application/use-cases/campaign/PublishCampaignUseCase.ts` | Campaign publishing workflow | Part04.2.1 Campaign Management | Campaign activation process |
+| Use Cases | `backend/src/application/use-cases/campaign/DeleteCampaignUseCase.ts` | Campaign deletion logic | Part04.2.1 Campaign Management | Safe campaign removal |
+| Use Cases | `backend/src/application/use-cases/campaign/ListCampaignsUseCase.ts` | Campaign listing với pagination | Part04.2.1 Campaign Management | Campaign browsing |
+| Use Cases | `backend/src/application/use-cases/campaign/GetCampaignUseCase.ts` | Campaign retrieval logic | Part04.2.1 Campaign Management | Campaign details view |
+| Use Cases | `backend/src/application/use-cases/barcode/GenerateBarcodesUseCase.ts` | QR code generation workflow | Part04.2.2 Barcode Management (FR-002) | Bulk QR generation |
+| Use Cases | `backend/src/application/use-cases/barcode/ImportBarcodesUseCase.ts` | Barcode import from CSV/Excel | Part04.2.2 Barcode Management | External barcode integration |
+| Use Cases | `backend/src/application/use-cases/barcode/ValidateBarcodeUseCase.ts` | Barcode validation logic | Part04.2.2 Barcode Management | QR code verification |
+| Use Cases | `backend/src/application/use-cases/barcode/AssignBarcodePoolUseCase.ts` | Pool assignment to campaigns | Part04.2.2 Barcode Management | Pool management workflow |
+| Use Cases | `backend/src/application/use-cases/barcode/GetBarcodeStatusUseCase.ts` | Barcode status tracking | Part04.2.2 Barcode Management | QR lifecycle monitoring |
+| Use Cases | `backend/src/application/use-cases/ads-format/CreateAdsFormatUseCase.ts` | Ads format creation | Part04.2.6 Ads Format Management (FR-006) | Digital ads template creation |
+| Use Cases | `backend/src/application/use-cases/ads-format/UpdateAdsFormatUseCase.ts` | Ads format modification | Part04.2.6 Ads Format Management | Template editing workflow |
+| Use Cases | `backend/src/application/use-cases/ads-format/PreviewAdsFormatUseCase.ts` | Ads format preview generation | Part04.2.6 Ads Format Management | Template preview functionality |
+| Use Cases | `backend/src/application/use-cases/analytics/GetCampaignMetricsUseCase.ts` | Campaign analytics retrieval | Part04.2.8 Real Time Analytics | Performance metrics |
+| DTOs | `backend/src/application/dto/CampaignDTO.ts` | Campaign data transfer objects | Part08.2.1 Campaign APIs | API contract definitions |
+| DTOs | `backend/src/application/dto/BarcodeDTO.ts` | Barcode management DTOs | Part08.2.2 Barcode APIs | QR API contracts |
+| DTOs | `backend/src/application/dto/AdsFormatDTO.ts` | Ads format DTOs | Part08.2.1.3 Ads Format APIs | Ads template API contracts |
+| DTOs | `backend/src/application/dto/CampaignMetricsDTO.ts` | Analytics DTOs | Part08.4.1 Analytics APIs | Metrics API contracts |
+| Ports | `backend/src/application/ports/IQRGeneratorService.ts` | QR generation service interface | Part04.2.2 Barcode Management | QR generation contract |
+| Ports | `backend/src/application/ports/IImageProcessingService.ts` | Image processing interface | Part04.2.6 Ads Format Management | Asset processing contract |
+| Ports | `backend/src/application/ports/IUTMTrackingService.ts` | UTM tracking service interface | Part04.2.1 Campaign Management | Marketing attribution contract |
+| Ports | `backend/src/application/ports/IAnalyticsService.ts` | Analytics service interface | Part04.2.8 Real Time Analytics | Metrics collection contract |
+| **🏗️ BACKEND INFRASTRUCTURE** | | | | |
+| Repositories | `backend/src/infrastructure/persistence/repositories/CampaignRepository.ts` | PostgreSQL campaign repository | Part07.3.1 Campaign Table | Campaign data persistence |
+| Repositories | `backend/src/infrastructure/persistence/repositories/BarcodeRepository.ts` | Barcode data access implementation | Part07.3.1.4 Barcodes Table | QR code data persistence |
+| Repositories | `backend/src/infrastructure/persistence/repositories/AdsFormatRepository.ts` | Ads format data access | Part07.3.1.5 Ads Formats Table | Template data persistence |
+| Repositories | `backend/src/infrastructure/persistence/repositories/BarcodePoolRepository.ts` | Barcode pool management | Part07.3.1.4 Barcodes Table | Pool data operations |
+| Repositories | `backend/src/infrastructure/persistence/repositories/CampaignMetricsRepository.ts` | Campaign analytics storage | Part07.5.1 Analytics Event Table | Metrics data persistence |
+| Models | `backend/src/infrastructure/persistence/models/CampaignModel.ts` | Prisma campaign model | Part07.3.1 Campaign Table | Database schema mapping |
+| Models | `backend/src/infrastructure/persistence/models/BarcodeModel.ts` | Barcode database model | Part07.3.1.4 Barcodes Table | QR schema mapping |
+| Models | `backend/src/infrastructure/persistence/models/AdsFormatModel.ts` | Ads format model definition | Part07.3.1.5 Ads Formats Table | Template schema |
+| Models | `backend/src/infrastructure/persistence/models/BarcodePoolModel.ts` | Barcode pool model | Part07.3.1.4 Barcodes Table | Pool schema mapping |
+| Migrations | `backend/src/infrastructure/persistence/migrations/001_create_campaigns.sql` | Campaign table creation | Part07.3.1 Campaign Table | Database schema setup |
+| Migrations | `backend/src/infrastructure/persistence/migrations/002_create_barcodes.sql` | Barcode tables creation | Part07.3.1.4 Barcodes Table | QR schema setup |
+| Migrations | `backend/src/infrastructure/persistence/migrations/003_create_ads_formats.sql` | Ads format table creation | Part07.3.1.5 Ads Formats Table | Template schema setup |
+| Migrations | `backend/src/infrastructure/persistence/migrations/004_create_barcode_pools.sql` | Barcode pool tables | Part07.3.1.4 Barcodes Table | Pool management schema |
+| External Services | `backend/src/infrastructure/external-services/QRGeneratorService.ts` | QR code generation implementation | Part04.2.2 Barcode Management | External QR library integration |
+| External Services | `backend/src/infrastructure/external-services/ImageProcessingService.ts` | Image processing service | Part04.2.6 Ads Format Management | Asset manipulation service |
+| External Services | `backend/src/infrastructure/external-services/UTMTrackingService.ts` | UTM parameter service | Part04.2.1 Campaign Management | Marketing attribution implementation |
+| External Services | `backend/src/infrastructure/external-services/AnalyticsService.ts` | Analytics data collection | Part04.2.8 Real Time Analytics | Metrics collection implementation |
+| External Services | `backend/src/infrastructure/external-services/S3StorageService.ts` | File storage service | Part04.2.6 Ads Format Management | Asset storage implementation |
+| Config | `backend/src/infrastructure/config/campaign.config.ts` | Campaign service configuration | Part02.8 Technical Requirements | Service configuration |
+| Config | `backend/src/infrastructure/config/qr.config.ts` | QR generation configuration | Part04.2.2 Barcode Management | QR service configuration |
+| Config | `backend/src/infrastructure/config/storage.config.ts` | File storage configuration | Part04.2.6 Ads Format Management | Asset storage configuration |
+| Config | `backend/src/infrastructure/config/analytics.config.ts` | Analytics configuration | Part04.2.8 Real Time Analytics | Metrics configuration |
+| **🌐 BACKEND PRESENTATION** | | | | |
+| Controllers | `backend/src/presentation/controllers/CampaignController.ts` | Campaign management endpoints | Part08.2.1 Campaign APIs | Campaign API endpoints |
+| Controllers | `backend/src/presentation/controllers/BarcodeController.ts` | Barcode management APIs | Part08.2.2 Barcode APIs | QR management API endpoints |
+| Controllers | `backend/src/presentation/controllers/AdsFormatController.ts` | Ads format management APIs | Part08.2.1.3 Ads Format APIs | Template API endpoints |
+| Controllers | `backend/src/presentation/controllers/CampaignMetricsController.ts` | Analytics endpoints | Part08.4.1 Analytics APIs | Metrics API endpoints |
+| Controllers | `backend/src/presentation/controllers/HealthController.ts` | Health check endpoint | Part15.3.1 Health Monitoring | Service health monitoring |
+| Middleware | `backend/src/presentation/middleware/CampaignAuthMiddleware.ts` | Campaign authorization | Part05.3 Security Requirements | Campaign access control |
+| Middleware | `backend/src/presentation/middleware/BarcodeValidationMiddleware.ts` | QR validation middleware | Part04.2.2 Barcode Management | QR format validation |
+| Middleware | `backend/src/presentation/middleware/FileUploadMiddleware.ts` | File upload handling | Part04.2.6 Ads Format Management | Asset upload middleware |
+| Middleware | `backend/src/presentation/middleware/RateLimitMiddleware.ts` | API rate limiting | Part05.3 Security Requirements | API abuse prevention |
+| Routes | `backend/src/presentation/routes/campaigns.routes.ts` | Campaign management routes | Part08.2.1 Campaign APIs | Campaign endpoint routing |
+| Routes | `backend/src/presentation/routes/barcodes.routes.ts` | Barcode management routes | Part08.2.2 Barcode APIs | QR endpoint routing |
+| Routes | `backend/src/presentation/routes/ads-formats.routes.ts` | Ads format routes | Part08.2.1.3 Ads Format APIs | Template endpoint routing |
+| Routes | `backend/src/presentation/routes/metrics.routes.ts` | Analytics routes | Part08.4.1 Analytics APIs | Metrics endpoint routing |
+| Validators | `backend/src/presentation/validators/CampaignValidators.ts` | Campaign data validation | Part05.7 Input Validation | Campaign input validation |
+| Validators | `backend/src/presentation/validators/BarcodeValidators.ts` | QR validation rules | Part05.7 Input Validation | QR input validation |
+| Validators | `backend/src/presentation/validators/AdsFormatValidators.ts` | Ads format validation | Part05.7 Input Validation | Template input validation |
+| Validators | `backend/src/presentation/validators/FileValidators.ts` | File upload validation | Part05.7 Input Validation | Asset validation rules |
+| **🧰 BACKEND SHARED** | | | | |
+| Constants | `backend/src/shared/constants/campaign.constants.ts` | Campaign-related constants | Part04.2.1 Campaign Management | Campaign configuration constants |
+| Constants | `backend/src/shared/constants/barcode.constants.ts` | QR code constants | Part04.2.2 Barcode Management | QR configuration constants |
+| Constants | `backend/src/shared/constants/ads-format.constants.ts` | Ads format constants | Part04.2.6 Ads Format Management | Template configuration |
+| Constants | `backend/src/shared/constants/file-types.constants.ts` | Supported file types | Part04.2.6 Ads Format Management | Asset type definitions |
+| Exceptions | `backend/src/shared/exceptions/CampaignException.ts` | Campaign-specific errors | Part05.8 Error Handling | Campaign error handling |
+| Exceptions | `backend/src/shared/exceptions/BarcodeException.ts` | QR-related errors | Part05.8 Error Handling | QR error handling |
+| Exceptions | `backend/src/shared/exceptions/AdsFormatException.ts` | Ads format errors | Part05.8 Error Handling | Template error handling |
+| Exceptions | `backend/src/shared/exceptions/FileProcessingException.ts` | File processing errors | Part05.8 Error Handling | Asset processing errors |
+| Types | `backend/src/shared/types/campaign.types.ts` | Campaign type definitions | Part08.2.1 Campaign APIs | Campaign TypeScript types |
+| Types | `backend/src/shared/types/barcode.types.ts` | QR-related types | Part08.2.2 Barcode APIs | QR TypeScript types |
+| Types | `backend/src/shared/types/ads-format.types.ts` | Ads format types | Part08.2.1.3 Ads Format APIs | Template TypeScript types |
+| Types | `backend/src/shared/types/analytics.types.ts` | Analytics type definitions | Part08.4.1 Analytics APIs | Metrics TypeScript types |
+| Utils | `backend/src/shared/utils/qr.utils.ts` | QR generation utilities | Part04.2.2 Barcode Management | QR utility functions |
+| Utils | `backend/src/shared/utils/file.utils.ts` | File processing utilities | Part04.2.6 Ads Format Management | Asset utility functions |
+| Utils | `backend/src/shared/utils/utm.utils.ts` | UTM parameter utilities | Part04.2.1 Campaign Management | Marketing attribution utilities |
+| Utils | `backend/src/shared/utils/validation.utils.ts` | Campaign validation helpers | Part05.7 Input Validation | Campaign validation utilities |
+| **🧪 TESTING FILES** | | | | |
+| Backend Tests | `backend/tests/unit/domain/entities/Campaign.test.ts` | Campaign entity unit tests | Part13.2.1 Unit Testing Framework | Domain logic testing |
+| Backend Tests | `backend/tests/unit/domain/entities/Barcode.test.ts` | Barcode entity tests | Part13.2.1 Unit Testing Framework | QR entity testing |
+| Backend Tests | `backend/tests/unit/application/use-cases/CreateCampaignUseCase.test.ts` | Campaign creation tests | Part13.2.1 Unit Testing Framework | Application logic testing |
+| Backend Tests | `backend/tests/unit/application/use-cases/GenerateBarcodesUseCase.test.ts` | QR generation tests | Part13.2.1 Unit Testing Framework | QR use case testing |
+| Backend Tests | `backend/tests/integration/controllers/CampaignController.test.ts` | Campaign API integration tests | Part13.3.1 API Testing | API endpoint testing |
+| Backend Tests | `backend/tests/integration/controllers/BarcodeController.test.ts` | QR API integration tests | Part13.3.1 API Testing | QR API testing |
+| Backend Tests | `backend/tests/integration/repositories/CampaignRepository.test.ts` | Campaign repository tests | Part13.3.2 Database Testing | Database integration testing |
+| Backend Tests | `backend/tests/integration/repositories/BarcodeRepository.test.ts` | QR repository tests | Part13.3.2 Database Testing | QR database testing |
+| Backend Tests | `backend/tests/e2e/campaign-lifecycle.test.ts` | End-to-end campaign tests | Part13.4.1 End-to-End Testing | Complete workflow testing |
+| Backend Tests | `backend/tests/e2e/qr-generation-flow.test.ts` | QR generation E2E tests | Part13.4.1 End-to-End Testing | QR workflow testing |
+| **🐳 DEPLOYMENT FILES** | | | | |
+| Docker | `deployment/docker/Dockerfile.campaign-service` | Campaign service container | Part14.2 Container Architecture | Service containerization |
+| Kubernetes | `deployment/kubernetes/campaign-service/deployment.yaml` | Campaign service K8s deployment | Part14.3 Kubernetes Configuration | Service orchestration |
+| Kubernetes | `deployment/kubernetes/campaign-service/service.yaml` | Campaign service K8s service | Part14.3 Kubernetes Configuration | Service networking |
+| Kubernetes | `deployment/kubernetes/campaign-service/configmap.yaml` | Campaign service configuration | Part14.3 Kubernetes Configuration | Configuration management |
+| Kubernetes | `deployment/kubernetes/campaign-service/secrets.yaml` | Campaign service secrets | Part14.3 Kubernetes Configuration | Secret management |
+| Helm | `deployment/helm/campaign-service/Chart.yaml` | Campaign service Helm chart | Part14.3 Kubernetes Configuration | Helm package definition |
+| Helm | `deployment/helm/campaign-service/values.yaml` | Campaign service values | Part14.3 Kubernetes Configuration | Helm configuration |
+| Helm | `deployment/helm/campaign-service/templates/deployment.yaml` | Deployment template | Part14.3 Kubernetes Configuration | Campaign deployment template |
+| **📚 DOCUMENTATION FILES** | | | | |
+| Documentation | `docs/campaign-service/API.md` | Campaign service API documentation | Part08.2 Campaign APIs | API reference |
+| Documentation | `docs/campaign-service/ARCHITECTURE.md` | Service architecture overview | Part06.2.2 Campaign Service | Architecture documentation |
+| Documentation | `docs/campaign-service/QR-GENERATION.md` | QR generation documentation | Part04.2.2 Barcode Management | QR implementation guide |
+| Documentation | `docs/campaign-service/ADS-FORMAT.md` | Ads format documentation | Part04.2.6 Ads Format Management | Template system guide |
+| Documentation | `docs/campaign-service/SETUP.md` | Service setup guide | Part02.8 Technical Requirements | Developer setup |
+| Documentation | `docs/diagrams/campaign-service-architecture.png` | Service architecture diagram | Part06.2.2 Campaign Service | Architecture visualization |
+| Documentation | `docs/diagrams/qr-generation-flow.png` | QR generation flow | Part04.2.2 Barcode Management | QR workflow documentation |
+| Documentation | `docs/diagrams/campaign-lifecycle.png` | Campaign lifecycle diagram | Part04.2.1 Campaign Management | Campaign process documentation |
+| **⚙️ SCRIPTS FILES** | | | | |
+| Scripts | `scripts/setup-campaign-service.sh` | Campaign service setup | Part02.8 Technical Requirements | Service setup automation |
+| Scripts | `scripts/generate-test-data.sh` | Test data generation | Part13 Testing Strategy | Testing data automation |
+| Scripts | `scripts/migrate-campaigns.sh` | Database migration | Part07.3.1 Campaign Table | Data migration automation |
+| Scripts | `scripts/backup-campaign-data.sh` | Campaign data backup | Part07.3.1 Campaign Table | Data protection |
+| Scripts | `scripts/deploy-campaign-service.sh` | Service deployment | Part14.1 Deployment Overview | Deployment automation |
+| **🔧 CONFIGURATION FILES** | | | | |
+| Config | `backend/package.json` | Backend dependencies | Part02.8 Technical Requirements | Service project definition |
+| Config | `backend/tsconfig.json` | TypeScript configuration | Part02.8 Technical Requirements | Compilation configuration |
+| Config | `backend/jest.config.js` | Testing configuration | Part13.2.1 Unit Testing Framework | Testing setup |
+| Config | `backend/eslint.config.js` | Code quality configuration | Part06B.7.1 Code Comments | Code quality setup |
+| Config | `backend/prisma/schema.prisma` | Database schema | Part07.3.1 Campaign Table | Database definition |
+| Config | `.env.campaign.example` | Environment variables template | Part02.8 Technical Requirements | Service configuration template |
+| Config | `docker-compose.campaign.yml` | Campaign service development stack | Part14.2 Container Architecture | Local development environment |
+
+---
+
+## 📁 **CẤU TRÚC THƯ MỤC HOÀN CHỈNH**
 
 ```bash
 campaign-qr-management-service/
-├── 📂 src/
-│   ├── 📂 domain/                          # Domain Layer - Clean Architecture
-│   │   ├── 📂 entities/                    
-│   │   │   ├── Campaign.ts                 # Campaign Entity
-│   │   │   ├── Barcode.ts                  # Barcode Entity  
-│   │   │   ├── QRCode.ts                   # QR Code Entity
-│   │   │   ├── AdsFormat.ts                # Ads Format Entity
-│   │   │   ├── Template.ts                 # Template Entity
-│   │   │   ├── UTMTracking.ts              # UTM Tracking Entity
-│   │   │   ├── Asset.ts                    # Asset Entity
-│   │   │   └── CampaignAnalytics.ts        # Campaign Analytics Entity
-│   │   ├── 📂 value-objects/               
-│   │   │   ├── CampaignStatus.ts           # Campaign Status Value Object
-│   │   │   ├── BarcodeType.ts              # Barcode Type Value Object
-│   │   │   ├── QRCodeFormat.ts             # QR Code Format Value Object
-│   │   │   ├── UTMParameters.ts            # UTM Parameters Value Object
-│   │   │   ├── AssetURL.ts                 # Asset URL Value Object
-│   │   │   ├── Color.ts                    # Color Value Object
-│   │   │   └── Dimensions.ts               # Dimensions Value Object
-│   │   ├── 📂 repositories/                # Repository Interfaces
-│   │   │   ├── ICampaignRepository.ts      
-│   │   │   ├── IBarcodeRepository.ts       
-│   │   │   ├── IQRCodeRepository.ts        
-│   │   │   ├── IAdsFormatRepository.ts     
-│   │   │   ├── ITemplateRepository.ts      
-│   │   │   ├── IAssetRepository.ts         
-│   │   │   └── IAnalyticsRepository.ts     
-│   │   ├── 📂 services/                    # Domain Services
-│   │   │   ├── CampaignDomainService.ts    
-│   │   │   ├── QRGenerationService.ts      
-│   │   │   ├── BarcodeValidationService.ts 
-│   │   │   ├── UTMTrackingService.ts       
-│   │   │   ├── TemplateInheritanceService.ts
-│   │   │   └── AssetValidationService.ts   
-│   │   └── 📂 aggregates/                  # Domain Aggregates
-│   │       ├── CampaignAggregate.ts        # Campaign với related entities
-│   │       └── TemplateAggregate.ts        # Template với customizations
+├── 📂 backend/                                 # Campaign & QR Management Service
+│   ├── 📂 src/
+│   │   ├── 📂 domain/                          # Domain Layer
+│   │   │   ├── 📂 entities/                    # Business Entities
+│   │   │   │   ├── Campaign.ts                 # Campaign entity với business rules
+│   │   │   │   ├── Barcode.ts                  # Barcode entity với QR logic
+│   │   │   │   ├── AdsFormat.ts                # Ads Format entity
+│   │   │   │   ├── BarcodePool.ts              # Barcode pool management
+│   │   │   │   └── CampaignMetric.ts           # Campaign analytics entity
+│   │   │   ├── 📂 value-objects/               # Value Objects
+│   │   │   │   ├── QRCode.ts                   # QR code value object
+│   │   │   │   ├── UTMParameters.ts            # UTM tracking parameters
+│   │   │   │   ├── CampaignStatus.ts           # Campaign status management
+│   │   │   │   └── AdTemplate.ts               # Ads template value object
+│   │   │   ├── 📂 repositories/                # Repository Interfaces
+│   │   │   │   ├── ICampaignRepository.ts      # Campaign repository interface
+│   │   │   │   ├── IBarcodeRepository.ts       # Barcode repository interface
+│   │   │   │   ├── IAdsFormatRepository.ts     # Ads format repository interface
+│   │   │   │   └── IBarcodePoolRepository.ts   # Barcode pool repository interface
+│   │   │   └── 📂 services/                    # Domain Services
+│   │   │       ├── CampaignDomainService.ts    # Campaign business logic
+│   │   │       ├── QRGenerationService.ts      # QR generation service
+│   │   │       ├── UTMTrackingService.ts       # UTM parameter management
+│   │   │       └── AdTemplateService.ts        # Ads template validation
+│   │   │
+│   │   ├── 📂 application/                     # Application Layer
+│   │   │   ├── 📂 use-cases/                   # Use Cases
+│   │   │   │   ├── 📂 campaign/                # Campaign Use Cases
+│   │   │   │   │   ├── CreateCampaignUseCase.ts # Campaign creation workflow
+│   │   │   │   │   ├── UpdateCampaignUseCase.ts # Campaign modification
+│   │   │   │   │   ├── PublishCampaignUseCase.ts # Campaign publishing
+│   │   │   │   │   ├── DeleteCampaignUseCase.ts # Campaign deletion
+│   │   │   │   │   ├── ListCampaignsUseCase.ts  # Campaign listing
+│   │   │   │   │   └── GetCampaignUseCase.ts    # Campaign retrieval
+│   │   │   │   ├── 📂 barcode/                 # Barcode Use Cases
+│   │   │   │   │   ├── GenerateBarcodesUseCase.ts # QR generation workflow
+│   │   │   │   │   ├── ImportBarcodesUseCase.ts   # Barcode import
+│   │   │   │   │   ├── ValidateBarcodeUseCase.ts  # QR validation
+│   │   │   │   │   ├── AssignBarcodePoolUseCase.ts # Pool assignment
+│   │   │   │   │   └── GetBarcodeStatusUseCase.ts  # Status tracking
+│   │   │   │   ├── 📂 ads-format/              # Ads Format Use Cases
+│   │   │   │   │   ├── CreateAdsFormatUseCase.ts   # Ads creation
+│   │   │   │   │   ├── UpdateAdsFormatUseCase.ts   # Ads modification
+│   │   │   │   │   └── PreviewAdsFormatUseCase.ts  # Ads preview
+│   │   │   │   └── 📂 analytics/               # Analytics Use Cases
+│   │   │   │       └── GetCampaignMetricsUseCase.ts # Metrics retrieval
+│   │   │   ├── 📂 dto/                         # Data Transfer Objects
+│   │   │   │   ├── CampaignDTO.ts              # Campaign DTOs
+│   │   │   │   ├── BarcodeDTO.ts               # Barcode DTOs
+│   │   │   │   ├── AdsFormatDTO.ts             # Ads format DTOs
+│   │   │   │   └── CampaignMetricsDTO.ts       # Analytics DTOs
+│   │   │   └── 📂 ports/                       # Application Ports
+│   │   │       ├── IQRGeneratorService.ts      # QR generation interface
+│   │   │       ├── IImageProcessingService.ts  # Image processing interface
+│   │   │       ├── IUTMTrackingService.ts      # UTM tracking interface
+│   │   │       └── IAnalyticsService.ts        # Analytics interface
+│   │   │
+│   │   ├── 📂 infrastructure/                  # Infrastructure Layer
+│   │   │   ├── 📂 persistence/                 # Data Persistence
+│   │   │   │   ├── 📂 repositories/            # Repository Implementations
+│   │   │   │   │   ├── CampaignRepository.ts   # PostgreSQL campaign repository
+│   │   │   │   │   ├── BarcodeRepository.ts    # Barcode data access
+│   │   │   │   │   ├── AdsFormatRepository.ts  # Ads format data access
+│   │   │   │   │   ├── BarcodePoolRepository.ts # Pool management
+│   │   │   │   │   └── CampaignMetricsRepository.ts # Analytics storage
+│   │   │   │   ├── 📂 models/                  # Database Models
+│   │   │   │   │   ├── CampaignModel.ts        # Prisma campaign model
+│   │   │   │   │   ├── BarcodeModel.ts         # Barcode model
+│   │   │   │   │   ├── AdsFormatModel.ts       # Ads format model
+│   │   │   │   │   └── BarcodePoolModel.ts     # Barcode pool model
+│   │   │   │   └── 📂 migrations/              # Database Migrations
+│   │   │   │       ├── 001_create_campaigns.sql # Campaign table creation
+│   │   │   │       ├── 002_create_barcodes.sql  # Barcode tables
+│   │   │   │       ├── 003_create_ads_formats.sql # Ads format table
+│   │   │   │       └── 004_create_barcode_pools.sql # Pool tables
+│   │   │   ├── 📂 external-services/           # External Services
+│   │   │   │   ├── QRGeneratorService.ts       # QR generation implementation
+│   │   │   │   ├── ImageProcessingService.ts   # Image processing service
+│   │   │   │   ├── UTMTrackingService.ts       # UTM service implementation
+│   │   │   │   ├── AnalyticsService.ts         # Analytics collection
+│   │   │   │   └── S3StorageService.ts         # File storage service
+│   │   │   └── 📂 config/                      # Configuration
+│   │   │       ├── campaign.config.ts          # Campaign service config
+│   │   │       ├── qr.config.ts                # QR generation config
+│   │   │       ├── storage.config.ts           # File storage config
+│   │   │       └── analytics.config.ts         # Analytics config
+│   │   │
+│   │   ├── 📂 presentation/                    # Presentation Layer
+│   │   │   ├── 📂 controllers/                 # API Controllers
+│   │   │   │   ├── CampaignController.ts       # Campaign endpoints
+│   │   │   │   ├── BarcodeController.ts        # Barcode endpoints
+│   │   │   │   ├── AdsFormatController.ts      # Ads format endpoints
+│   │   │   │   ├── CampaignMetricsController.ts # Analytics endpoints
+│   │   │   │   └── HealthController.ts         # Health check
+│   │   │   ├── 📂 middleware/                  # API Middleware
+│   │   │   │   ├── CampaignAuthMiddleware.ts   # Campaign authorization
+│   │   │   │   ├── BarcodeValidationMiddleware.ts # QR validation
+│   │   │   │   ├── FileUploadMiddleware.ts     # File upload handling
+│   │   │   │   └── RateLimitMiddleware.ts      # Rate limiting
+│   │   │   ├── 📂 routes/                      # API Routes
+│   │   │   │   ├── campaigns.routes.ts         # Campaign routes
+│   │   │   │   ├── barcodes.routes.ts          # Barcode routes
+│   │   │   │   ├── ads-formats.routes.ts       # Ads format routes
+│   │   │   │   └── metrics.routes.ts           # Analytics routes
+│   │   │   └── 📂 validators/                  # Request Validators
+│   │   │       ├── CampaignValidators.ts       # Campaign validation
+│   │   │       ├── BarcodeValidators.ts        # QR validation
+│   │   │       ├── AdsFormatValidators.ts      # Ads format validation
+│   │   │       └── FileValidators.ts           # File validation
+│   │   │
+│   │   └── 📂 shared/                          # Shared Code
+│   │       ├── 📂 constants/                   # Constants
+│   │       │   ├── campaign.constants.ts       # Campaign constants
+│   │       │   ├── barcode.constants.ts        # QR constants
+│   │       │   ├── ads-format.constants.ts     # Ads format constants
+│   │       │   └── file-types.constants.ts     # File type definitions
+│   │       ├── 📂 exceptions/                  # Custom Exceptions
+│   │       │   ├── CampaignException.ts        # Campaign errors
+│   │       │   ├── BarcodeException.ts         # QR errors
+│   │       │   ├── AdsFormatException.ts       # Ads format errors
+│   │       │   └── FileProcessingException.ts  # File processing errors
+│   │       ├── 📂 types/                       # Type Definitions
+│   │       │   ├── campaign.types.ts           # Campaign types
+│   │       │   ├── barcode.types.ts            # QR types
+│   │       │   ├── ads-format.types.ts         # Ads format types
+│   │       │   └── analytics.types.ts          # Analytics types
+│   │       └── 📂 utils/                       # Utility Functions
+│   │           ├── qr.utils.ts                 # QR utilities
+│   │           ├── file.utils.ts               # File processing utilities
+│   │           ├── utm.utils.ts                # UTM utilities
+│   │           └── validation.utils.ts         # Validation utilities
 │   │
-│   ├── 📂 application/                     # Application Layer - Use Cases
-│   │   ├── 📂 use-cases/                   
-│   │   │   ├── 📂 campaign-management/     
-│   │   │   │   ├── CreateCampaignUseCase.ts
-│   │   │   │   ├── UpdateCampaignUseCase.ts
-│   │   │   │   ├── DeleteCampaignUseCase.ts
-│   │   │   │   ├── GetCampaignUseCase.ts   
-│   │   │   │   ├── GetCampaignListUseCase.ts
-│   │   │   │   ├── PublishCampaignUseCase.ts
-│   │   │   │   ├── ArchiveCampaignUseCase.ts
-│   │   │   │   ├── DuplicateCampaignUseCase.ts
-│   │   │   │   └── SearchCampaignUseCase.ts
-│   │   │   ├── 📂 barcode-management/      
-│   │   │   │   ├── GenerateBarcodeUseCase.ts
-│   │   │   │   ├── ValidateBarcodeUseCase.ts
-│   │   │   │   ├── BatchGenerateBarcodeUseCase.ts
-│   │   │   │   ├── GetBarcodeStatusUseCase.ts
-│   │   │   │   ├── UpdateBarcodeUseCase.ts
-│   │   │   │   ├── ExportBarcodeUseCase.ts
-│   │   │   │   └── ImportBarcodeUseCase.ts
-│   │   │   ├── 📂 qr-management/           
-│   │   │   │   ├── GenerateQRCodeUseCase.ts
-│   │   │   │   ├── TrackQRScanUseCase.ts   
-│   │   │   │   ├── GetQRAnalyticsUseCase.ts
-│   │   │   │   ├── BulkQRGenerationUseCase.ts
-│   │   │   │   ├── CustomizeQRStyleUseCase.ts
-│   │   │   │   ├── ExportQRCodeUseCase.ts
-│   │   │   │   └── PreviewQRCodeUseCase.ts
-│   │   │   ├── 📂 ads-format-management/   
-│   │   │   │   ├── CreateAdsFormatUseCase.ts
-│   │   │   │   ├── UpdateAdsFormatUseCase.ts
-│   │   │   │   ├── DeleteAdsFormatUseCase.ts
-│   │   │   │   ├── GetAdsFormatUseCase.ts  
-│   │   │   │   ├── GetAdsFormatListUseCase.ts
-│   │   │   │   ├── PreviewAdsFormatUseCase.ts
-│   │   │   │   └── PublishAdsFormatUseCase.ts
-│   │   │   ├── 📂 template-management/     
-│   │   │   │   ├── CreateTemplateUseCase.ts
-│   │   │   │   ├── UpdateTemplateUseCase.ts
-│   │   │   │   ├── DeleteTemplateUseCase.ts
-│   │   │   │   ├── GetTemplateUseCase.ts   
-│   │   │   │   ├── GetTemplateListUseCase.ts
-│   │   │   │   ├── CustomizeTemplateUseCase.ts
-│   │   │   │   ├── ImportTemplateUseCase.ts
-│   │   │   │   └── ExportTemplateUseCase.ts
-│   │   │   ├── 📂 asset-management/        
-│   │   │   │   ├── UploadAssetUseCase.ts   
-│   │   │   │   ├── DeleteAssetUseCase.ts   
-│   │   │   │   ├── GetAssetUseCase.ts      
-│   │   │   │   ├── GetAssetListUseCase.ts  
-│   │   │   │   ├── OptimizeAssetUseCase.ts 
-│   │   │   │   ├── OrganizeAssetUseCase.ts 
-│   │   │   │   └── ValidateAssetUseCase.ts 
-│   │   │   └── 📂 analytics/               
-│   │   │       ├── GetCampaignAnalyticsUseCase.ts
-│   │   │       ├── GetQRPerformanceUseCase.ts
-│   │   │       ├── GetTemplateUsageUseCase.ts
-│   │   │       ├── GenerateReportUseCase.ts
-│   │   │       └── ExportAnalyticsUseCase.ts
-│   │   ├── 📂 dtos/                        # Data Transfer Objects
-│   │   │   ├── 📂 request/                 # Request DTOs
-│   │   │   │   ├── CreateCampaignDTO.ts    
-│   │   │   │   ├── UpdateCampaignDTO.ts    
-│   │   │   │   ├── GenerateQRCodeDTO.ts    
-│   │   │   │   ├── BarcodeGenerationDTO.ts 
-│   │   │   │   ├── AssetUploadDTO.ts       
-│   │   │   │   ├── TemplateCustomizationDTO.ts
-│   │   │   │   └── UTMParametersDTO.ts     
-│   │   │   ├── 📂 response/                # Response DTOs
-│   │   │   │   ├── CampaignResponseDTO.ts  
-│   │   │   │   ├── CampaignListResponseDTO.ts
-│   │   │   │   ├── QRCodeResponseDTO.ts    
-│   │   │   │   ├── BarcodeResponseDTO.ts   
-│   │   │   │   ├── TemplateResponseDTO.ts  
-│   │   │   │   ├── AssetResponseDTO.ts     
-│   │   │   │   └── AnalyticsResponseDTO.ts 
-│   │   │   └── 📂 common/                  # Common DTOs
-│   │   │       ├── PaginationDTO.ts        
-│   │   │       ├── FilterDTO.ts            
-│   │   │       ├── SortDTO.ts              
-│   │   │       └── SearchDTO.ts            
-│   │   ├── 📂 interfaces/                  # Application Interfaces
-│   │   │   ├── ICampaignService.ts         
-│   │   │   ├── IBarcodeService.ts          
-│   │   │   ├── IQRCodeService.ts           
-│   │   │   ├── IAdsFormatService.ts        
-│   │   │   ├── ITemplateService.ts         
-│   │   │   ├── IAssetService.ts            
-│   │   │   └── IAnalyticsService.ts        
-│   │   └── 📂 events/                      # Domain Events
-│   │       ├── CampaignCreatedEvent.ts     
-│   │       ├── CampaignPublishedEvent.ts   
-│   │       ├── QRCodeGeneratedEvent.ts     
-│   │       ├── BarcodeGeneratedEvent.ts    
-│   │       ├── AssetUploadedEvent.ts       
-│   │       └── TemplateUsedEvent.ts        
+│   ├── 📂 tests/                               # Backend Testing
+│   │   ├── 📂 unit/                            # Unit Tests
+│   │   │   ├── 📂 domain/                      # Domain Tests
+│   │   │   │   └── 📂 entities/                
+│   │   │   │       ├── Campaign.test.ts        # Campaign entity tests
+│   │   │   │       ├── Barcode.test.ts         # Barcode entity tests
+│   │   │   │       └── AdsFormat.test.ts       # Ads format tests
+│   │   │   └── 📂 application/                 # Application Tests
+│   │   │       └── 📂 use-cases/               
+│   │   │           ├── CreateCampaignUseCase.test.ts # Campaign creation tests
+│   │   │           └── GenerateBarcodesUseCase.test.ts # QR generation tests
+│   │   ├── 📂 integration/                     # Integration Tests
+│   │   │   ├── 📂 controllers/                 
+│   │   │   │   ├── CampaignController.test.ts  # Campaign API tests
+│   │   │   │   └── BarcodeController.test.ts   # QR API tests
+│   │   │   └── 📂 repositories/                
+│   │   │       ├── CampaignRepository.test.ts  # Campaign DB tests
+│   │   │       └── BarcodeRepository.test.ts   # QR DB tests
+│   │   └── 📂 e2e/                             # E2E Tests
+│   │       ├── campaign-lifecycle.test.ts      # Campaign workflow tests
+│   │       └── qr-generation-flow.test.ts      # QR workflow tests
 │   │
-│   ├── 📂 infrastructure/                  # Infrastructure Layer
-│   │   ├── 📂 database/                    
-│   │   │   ├── 📂 repositories/            
-│   │   │   │   ├── CampaignRepository.ts   
-│   │   │   │   ├── BarcodeRepository.ts    
-│   │   │   │   ├── QRCodeRepository.ts     
-│   │   │   │   ├── AdsFormatRepository.ts  
-│   │   │   │   ├── TemplateRepository.ts   
-│   │   │   │   ├── AssetRepository.ts      
-│   │   │   │   └── AnalyticsRepository.ts  
-│   │   │   ├── 📂 migrations/              
-│   │   │   │   ├── 001_create_campaigns_table.sql
-│   │   │   │   ├── 002_create_barcodes_table.sql
-│   │   │   │   ├── 003_create_qr_codes_table.sql
-│   │   │   │   ├── 004_create_ads_formats_table.sql
-│   │   │   │   ├── 005_create_templates_table.sql
-│   │   │   │   ├── 006_create_assets_table.sql
-│   │   │   │   ├── 007_create_utm_tracking_table.sql
-│   │   │   │   ├── 008_create_campaign_analytics_table.sql
-│   │   │   │   ├── 009_create_indexes.sql
-│   │   │   │   └── 010_create_views.sql
-│   │   │   ├── 📂 seeds/                   
-│   │   │   │   ├── default-templates.sql   
-│   │   │   │   ├── sample-campaigns.sql    
-│   │   │   │   └── barcode-types.sql       
-│   │   │   └── 📂 views/                   # Database Views
-│   │   │       ├── campaign_performance_view.sql
-│   │   │       ├── qr_analytics_view.sql   
-│   │   │       └── template_usage_view.sql 
-│   │   ├── 📂 external-services/           
-│   │   │   ├── S3StorageService.ts        # Asset Storage Service
-│   │   │   ├── QRLibraryService.ts        # QR Generation Library
-│   │   │   ├── BarcodeLibraryService.ts   # Barcode Generation Library
-│   │   │   ├── ImageProcessingService.ts  # Image Processing
-│   │   │   ├── CDNService.ts              # Content Delivery Network
-│   │   │   ├── EmailService.ts            # Email notification service
-│   │   │   └── WebhookService.ts          # Webhook notifications
-│   │   ├── 📂 tracking/                    
-│   │   │   ├── UTMTrackingService.ts      # UTM Parameter Tracking
-│   │   │   ├── AnalyticsService.ts        # Campaign Analytics
-│   │   │   ├── EventTrackingService.ts    # Event Bus Integration
-│   │   │   └── PerformanceMonitoringService.ts # Performance tracking
-│   │   ├── 📂 cache/                       
-│   │   │   ├── RedisService.ts            # Redis cache implementation
-│   │   │   ├── CampaignCacheService.ts    # Campaign-specific caching
-│   │   │   └── AssetCacheService.ts       # Asset caching
-│   │   ├── 📂 queue/                       
-│   │   │   ├── QueueService.ts            # Queue management
-│   │   │   ├── BarcodeGenerationQueue.ts  # Async barcode generation
-│   │   │   ├── QRGenerationQueue.ts       # Async QR generation
-│   │   │   └── AssetProcessingQueue.ts    # Asset processing queue
-│   │   └── 📂 config/                      
-│   │       ├── database.config.ts         
-│   │       ├── storage.config.ts          
-│   │       ├── qr-generation.config.ts    
-│   │       ├── analytics.config.ts        
-│   │       ├── cache.config.ts            
-│   │       └── queue.config.ts            
+│   ├── 📂 docs/                                # Service Documentation
+│   │   ├── API.md                              # API documentation
+│   │   ├── ARCHITECTURE.md                     # Architecture overview
+│   │   ├── QR-GENERATION.md                    # QR implementation guide
+│   │   ├── ADS-FORMAT.md                       # Ads format guide
+│   │   └── SETUP.md                            # Service setup guide
 │   │
-│   ├── 📂 presentation/                    # Presentation Layer
-│   │   ├── 📂 controllers/                 
-│   │   │   ├── CampaignController.ts      # Campaign Management APIs
-│   │   │   ├── BarcodeController.ts       # Barcode Management APIs
-│   │   │   ├── QRCodeController.ts        # QR Code Management APIs
-│   │   │   ├── AdsFormatController.ts     # Ads Format Management APIs
-│   │   │   ├── TemplateController.ts      # Template Management APIs
-│   │   │   ├── AssetController.ts         # Asset Management APIs
-│   │   │   ├── AnalyticsController.ts     # Analytics APIs
-│   │   │   └── HealthController.ts        # Health check endpoints
-│   │   ├── 📂 middleware/                  
-│   │   │   ├── AuthMiddleware.ts          # Authentication Verification
-│   │   │   ├── BrandAuthMiddleware.ts     # Brand Authorization
-│   │   │   ├── ValidationMiddleware.ts    # Input Validation
-│   │   │   ├── FileUploadMiddleware.ts    # File Upload Handling
-│   │   │   ├── RateLimitMiddleware.ts     # Rate Limiting
-│   │   │   ├── CacheMiddleware.ts         # Response caching
-│   │   │   ├── LoggingMiddleware.ts       # Request logging
-│   │   │   └── ErrorMiddleware.ts         # Error handling
-│   │   ├── 📂 routes/                      
-│   │   │   ├── campaign.routes.ts         
-│   │   │   ├── barcode.routes.ts          
-│   │   │   ├── qr-code.routes.ts          
-│   │   │   ├── ads-format.routes.ts       
-│   │   │   ├── template.routes.ts         
-│   │   │   ├── asset.routes.ts            
-│   │   │   ├── analytics.routes.ts        
-│   │   │   └── health.routes.ts           
-│   │   ├── 📂 validators/                  
-│   │   │   ├── CampaignValidators.ts      
-│   │   │   ├── BarcodeValidators.ts       
-│   │   │   ├── QRCodeValidators.ts        
-│   │   │   ├── AdsFormatValidators.ts     
-│   │   │   ├── TemplateValidators.ts      
-│   │   │   ├── AssetValidators.ts         
-│   │   │   └── CommonValidators.ts        
-│   │   └── 📂 serializers/                # Response serializers
-│   │       ├── CampaignSerializer.ts      
-│   │       ├── QRCodeSerializer.ts        
-│   │       ├── BarcodeSerializer.ts       
-│   │       └── AnalyticsSerializer.ts     
-│   │
-│   └── 📂 shared/                          # Shared Utilities
-│       ├── 📂 constants/                   
-│       │   ├── campaign-status.constants.ts
-│       │   ├── barcode-types.constants.ts 
-│       │   ├── qr-formats.constants.ts    
-│       │   ├── template-types.constants.ts
-│       │   ├── asset-types.constants.ts   
-│       │   ├── utm-parameters.constants.ts
-│       │   └── error-codes.constants.ts   
-│       ├── 📂 exceptions/                  
-│       │   ├── CampaignException.ts       
-│       │   ├── BarcodeException.ts        
-│       │   ├── QRCodeException.ts         
-│       │   ├── TemplateException.ts       
-│       │   ├── AssetException.ts          
-│       │   ├── ValidationException.ts     
-│       │   └── BusinessRuleException.ts   
-│       ├── 📂 types/                       
-│       │   ├── campaign.types.ts          
-│       │   ├── barcode.types.ts           
-│       │   ├── qr-code.types.ts           
-│       │   ├── ads-format.types.ts        
-│       │   ├── template.types.ts          
-│       │   ├── asset.types.ts             
-│       │   ├── analytics.types.ts         
-│       │   └── common.types.ts            
-│       ├── 📂 utils/                       
-│       │   ├── qr-generator.utils.ts      
-│       │   ├── barcode-generator.utils.ts 
-│       │   ├── utm-builder.utils.ts       
-│       │   ├── file-upload.utils.ts       
-│       │   ├── image-processing.utils.ts  
-│       │   ├── validation.utils.ts        
-│       │   ├── pagination.utils.ts        
-│       │   ├── date.utils.ts              
-│       │   └── crypto.utils.ts            
-│       └── 📂 decorators/                  # Custom decorators
-│           ├── Cache.decorator.ts          
-│           ├── RateLimit.decorator.ts     
-│           └── Validate.decorator.ts      
+│   ├── package.json                            # Service dependencies
+│   ├── tsconfig.json                           # TypeScript config
+│   ├── jest.config.js                          # Testing config
+│   ├── eslint.config.js                        # Code quality config
+│   └── prisma/                                 # Database Configuration
+│       └── schema.prisma                       # Database schema
 │
-├── 📂 tests/                               # Testing
-│   ├── 📂 unit/                            
-│   │   ├── 📂 domain/                      
-│   │   │   ├── entities/                   
-│   │   │   │   ├── campaign.entity.test.ts    
-│   │   │   │   ├── barcode.entity.test.ts     
-│   │   │   │   ├── qr-code.entity.test.ts     
-│   │   │   │   ├── ads-format.entity.test.ts  
-│   │   │   │   └── template.entity.test.ts    
-│   │   │   ├── value-objects/              
-│   │   │   │   ├── campaign-status.vo.test.ts 
-│   │   │   │   ├── utm-parameters.vo.test.ts  
-│   │   │   │   └── barcode-type.vo.test.ts    
-│   │   │   └── services/                   
-│   │   │       ├── qr-generation.service.test.ts
-│   │   │       ├── utm-tracking.service.test.ts
-│   │   │       └── template-inheritance.service.test.ts
-│   │   ├── 📂 application/                 
-│   │   │   ├── use-cases/                  
-│   │   │   │   ├── campaign.usecase.test.ts   
-│   │   │   │   ├── barcode.usecase.test.ts    
-│   │   │   │   ├── qr-code.usecase.test.ts    
-│   │   │   │   ├── ads-format.usecase.test.ts 
-│   │   │   │   └── template.usecase.test.ts   
-│   │   │   └── services/                   
-│   │   │       ├── campaign.service.test.ts   
-│   │   │       └── analytics.service.test.ts  
-│   │   ├── 📂 infrastructure/              
-│   │   │   ├── repositories/               
-│   │   │   │   ├── campaign.repository.test.ts
-│   │   │   │   ├── qr-code.repository.test.ts 
-│   │   │   │   └── template.repository.test.ts
-│   │   │   ├── services/                   
-│   │   │   │   ├── qr-generation.service.test.ts
-│   │   │   │   ├── storage.service.test.ts    
-│   │   │   │   └── utm-tracking.service.test.ts
-│   │   │   └── queue/                      
-│   │   │       ├── barcode-generation.queue.test.ts
-│   │   │       └── asset-processing.queue.test.ts
-│   │   └── 📂 presentation/                
-│   │       ├── controllers/                
-│   │       │   ├── campaign.controller.test.ts
-│   │       │   ├── barcode.controller.test.ts 
-│   │       │   ├── qr-code.controller.test.ts 
-│   │       │   └── template.controller.test.ts
-│   │       ├── validators/                 
-│   │       │   ├── campaign.validator.test.ts 
-│   │       │   └── qr-code.validator.test.ts  
-│   │       └── middleware/                 
-│   │           ├── auth.middleware.test.ts    
-│   │           └── validation.middleware.test.ts
-│   ├── 📂 integration/                     
-│   │   ├── api/                            
-│   │   │   ├── campaign.integration.test.ts   
-│   │   │   ├── barcode.integration.test.ts    
-│   │   │   ├── qr-code.integration.test.ts    
-│   │   │   └── template.integration.test.ts   
-│   │   ├── database/                       
-│   │   │   ├── campaign.database.test.ts      
-│   │   │   ├── qr-code.database.test.ts       
-│   │   │   └── analytics.database.test.ts     
-│   │   ├── storage/                        
-│   │   │   ├── asset.storage.test.ts          
-│   │   │   └── s3.integration.test.ts         
-│   │   └── external-services/              
-│   │       ├── qr-library.integration.test.ts 
-│   │       ├── barcode-library.integration.test.ts
-│   │       └── cdn.integration.test.ts        
-│   ├── 📂 e2e/                            
-│   │   ├── campaign-workflow/              
-│   │   │   ├── campaign-creation.e2e.test.ts  
-│   │   │   ├── campaign-publishing.e2e.test.ts
-│   │   │   └── campaign-analytics.e2e.test.ts 
-│   │   ├── qr-workflow/                    
-│   │   │   ├── qr-generation.e2e.test.ts      
-│   │   │   ├── qr-tracking.e2e.test.ts        
-│   │   │   └── qr-analytics.e2e.test.ts       
-│   │   ├── template-workflow/              
-│   │   │   ├── template-creation.e2e.test.ts  
-│   │   │   ├── template-customization.e2e.test.ts
-│   │   │   └── template-usage.e2e.test.ts     
-│   │   └── complete-workflow/              
-│   │       ├── brand-campaign-flow.e2e.test.ts
-│   │       └── multi-service.e2e.test.ts      
-│   ├── 📂 performance/                     
-│   │   ├── campaign.performance.test.ts       
-│   │   ├── qr-generation.performance.test.ts  
-│   │   ├── asset-upload.performance.test.ts   
-│   │   └── analytics.performance.test.ts      
-│   └── 📂 fixtures/                        
-│       ├── campaigns.fixture.ts               
-│       ├── barcodes.fixture.ts                
-│       ├── qr-codes.fixture.ts                
-│       ├── templates.fixture.ts               
-│       ├── assets.fixture.ts                  
-│       └── utm-data.fixture.ts                
+├── 📂 deployment/                              # Deployment Configuration
+│   ├── 📂 docker/                              # Docker files
+│   │   └── Dockerfile.campaign-service         # Service container
+│   ├── 📂 kubernetes/                          # Kubernetes manifests
+│   │   └── 📂 campaign-service/                # Service K8s resources
+│   │       ├── deployment.yaml                 # Service deployment
+│   │       ├── service.yaml                    # Service networking
+│   │       ├── configmap.yaml                  # Configuration
+│   │       └── secrets.yaml                    # Secrets management
+│   └── 📂 helm/                                # Helm charts
+│       └── 📂 campaign-service/                # Service Helm chart
+│           ├── Chart.yaml                      # Chart definition
+│           ├── values.yaml                     # Default values
+│           └── 📂 templates/                   # Helm templates
+│               └── deployment.yaml             # Deployment template
 │
-├── 📂 database/                            # Database Scripts
-│   ├── 📂 migrations/                      
-│   │   ├── 📂 postgresql/                  # PostgreSQL migrations
-│   │   └── 📂 mongodb/                     # MongoDB migrations
-│   ├── 📂 seeds/                           
-│   │   ├── 📂 development/                 # Development seed data
-│   │   ├── 📂 testing/                     # Test seed data
-│   │   └── 📂 production/                  # Production seed data
-│   ├── 📂 views/                           # Database views
-│   ├── 📂 indexes/                         # Index definitions
-│   └── 📂 analytics-queries/               # Predefined analytics queries
+├── 📂 docs/                                    # Project Documentation
+│   ├── campaign-service/                       # Service-specific docs
+│   │   ├── API.md                              # API documentation
+│   │   ├── ARCHITECTURE.md                     # Service architecture
+│   │   ├── QR-GENERATION.md                    # QR documentation
+│   │   ├── ADS-FORMAT.md                       # Ads format docs
+│   │   └── SETUP.md                            # Setup guide
+│   └── 📂 diagrams/                            # Architecture diagrams
+│       ├── campaign-service-architecture.png   # Service architecture
+│       ├── qr-generation-flow.png              # QR generation flow
+│       └── campaign-lifecycle.png              # Campaign lifecycle
 │
-├── 📂 storage/                             # Asset Storage
-│   ├── 📂 templates/                       # Template Assets
-│   │   ├── 📂 email-templates/             
-│   │   ├── 📂 landing-page-templates/      
-│   │   └── 📂 banner-templates/            
-│   ├── 📂 generated/                       # Generated Assets
-│   │   ├── 📂 qr-codes/                    # Generated QR Codes
-│   │   ├── 📂 barcodes/                    # Generated Barcodes
-│   │   └── 📂 processed-images/            # Processed Images
-│   ├── 📂 uploads/                         # User Uploads
-│   │   ├── 📂 campaign-assets/             # Campaign Assets
-│   │   ├── 📂 brand-assets/                # Brand Assets
-│   │   └── 📂 temp/                        # Temporary uploads
-│   └── 📂 cache/                           # Asset Cache
+├── 📂 scripts/                                 # Automation Scripts
+│   ├── setup-campaign-service.sh               # Service setup
+│   ├── generate-test-data.sh                   # Test data generation
+│   ├── migrate-campaigns.sh                    # Database migration
+│   ├── backup-campaign-data.sh                 # Data backup
+│   └── deploy-campaign-service.sh              # Service deployment
 │
-├── 📂 deployment/                          # Deployment Configuration
-│   ├── 📂 docker/                          
-│   │   ├── Dockerfile                      # Production Dockerfile
-│   │   ├── Dockerfile.dev                  # Development Dockerfile
-│   │   ├── docker-compose.yml              # Production compose
-│   │   ├── docker-compose.dev.yml          # Development compose
-│   │   └── docker-compose.test.yml         # Testing compose
-│   ├── 📂 kubernetes/                      
-│   │   ├── 📂 base/                        # Base K8s resources
-│   │   │   ├── deployment.yaml             
-│   │   │   ├── service.yaml                
-│   │   │   ├── configmap.yaml              
-│   │   │   ├── secret.yaml                 
-│   │   │   └── pvc.yaml                    # Persistent Volume Claims
-│   │   ├── 📂 environments/                # Environment-specific configs
-│   │   │   ├── 📂 development/             
-│   │   │   ├── 📂 staging/                 
-│   │   │   └── 📂 production/              
-│   │   └── 📂 monitoring/                  # Monitoring resources
-│   │       ├── servicemonitor.yaml         
-│   │       └── prometheusrule.yaml         
-│   ├── 📂 helm/                            
-│   │   ├── Chart.yaml                      
-│   │   ├── values.yaml                     # Default values
-│   │   ├── values-dev.yaml                 # Development values
-│   │   ├── values-staging.yaml             # Staging values
-│   │   ├── values-prod.yaml                # Production values
-│   │   └── 📂 templates/                   
-│   │       ├── deployment.yaml             
-│   │       ├── service.yaml                
-│   │       ├── ingress.yaml                
-│   │       ├── configmap.yaml              
-│   │       ├── secret.yaml                 
-│   │       └── cronjob.yaml                # Cleanup jobs
-│   └── 📂 terraform/                       # Infrastructure as Code
-│       ├── main.tf                         
-│       ├── variables.tf                    
-│       ├── outputs.tf                      
-│       ├── 📂 modules/                     
-│       │   ├── 📂 database/                
-│       │   ├── 📂 storage/                 
-│       │   └── 📂 monitoring/              
-│       └── 📂 environments/                
-│           ├── dev.tfvars                  
-│           ├── staging.tfvars              
-│           └── prod.tfvars                 
-│
-├── 📂 monitoring/                          # Monitoring & Observability
-│   ├── 📂 prometheus/                      
-│   │   ├── alerts.yml                      # Alert rules
-│   │   └── recording-rules.yml             # Recording rules
-│   ├── 📂 grafana/                         
-│   │   ├── 📂 dashboards/                  # Dashboard configs
-│   │   │   ├── campaign-metrics.json       
-│   │   │   ├── qr-performance.json         
-│   │   │   ├── asset-usage.json            
-│   │   │   └── api-performance.json        
-│   │   └── 📂 datasources/                 # Data source configs
-│   ├── 📂 jaeger/                          # Distributed tracing
-│   │   └── jaeger-config.yml               
-│   └── 📂 logging/                         
-│       ├── fluent-bit.conf                 # Log forwarding config
-│       └── log-parsing-rules.conf          
-│
-├── 📂 docs/                                # Documentation
-│   ├── README.md                           # Project overview
-│   ├── SETUP.md                            # Setup guide
-│   ├── API.md                              # API documentation
-│   ├── ARCHITECTURE.md                     # Architecture overview
-│   ├── QR-GENERATION.md                    # QR Generation guide
-│   ├── BARCODE-TYPES.md                    # Supported barcode types
-│   ├── UTM-TRACKING.md                     # UTM Tracking guide
-│   ├── TEMPLATE-SYSTEM.md                  # Template system guide
-│   ├── ASSET-MANAGEMENT.md                 # Asset management guide
-│   ├── ANALYTICS.md                        # Analytics guide
-│   ├── DEPLOYMENT.md                       # Deployment guide
-│   ├── TROUBLESHOOTING.md                  # Troubleshooting guide
-│   ├── PERFORMANCE.md                      # Performance optimization
-│   ├── SECURITY.md                         # Security guidelines
-│   └── 📂 diagrams/                        
-│       ├── system-architecture.png         
-│       ├── campaign-workflow.png           
-│       ├── qr-generation-flow.png          
-│       ├── template-inheritance.png        
-│       ├── asset-pipeline.png              
-│       ├── database-erd.png                
-│       └── api-flow-diagram.png            
-│
-├── 📂 scripts/                             # Automation Scripts
-│   ├── setup/                              
-│   │   ├── setup-dev.sh                    # Development setup
-│   │   ├── setup-database.sh               # Database setup
-│   │   └── setup-storage.sh                # Storage setup
-│   ├── build/                              
-│   │   ├── build-docker.sh                 # Docker build script
-│   │   ├── build-assets.sh                 # Asset build script
-│   │   └── optimize-images.sh              # Image optimization
-│   ├── deployment/                         
-│   │   ├── deploy-staging.sh               # Staging deployment
-│   │   ├── deploy-production.sh            # Production deployment
-│   │   └── rollback.sh                     # Rollback script
-│   ├── maintenance/                        
-│   │   ├── cleanup-expired.sh              # Cleanup expired campaigns
-│   │   ├── optimize-database.sh            # Database optimization
-│   │   ├── backup-assets.sh                # Asset backup
-│   │   ├── generate-reports.sh             # Report generation
-│   │   └── health-check.sh                 # Health monitoring
-│   └── utilities/                          
-│       ├── migrate-data.sh                 # Data migration
-│       ├── seed-database.sh                # Database seeding
-│       ├── validate-qr.sh                  # QR validation
-│       └── benchmark.sh                    # Performance benchmarking
-│
-├── 📂 config/                              # Configuration Files
-│   ├── environments/                       
-│   │   ├── .env.development                # Development environment
-│   │   ├── .env.staging                    # Staging environment
-│   │   ├── .env.production                 # Production environment
-│   │   └── .env.test                       # Testing environment
-│   ├── logging/                            
-│   │   ├── winston.config.js               # Winston logging config
-│   │   └── log-levels.json                 # Log level definitions
-│   ├── security/                           
-│   │   ├── cors.config.js                  # CORS configuration
-│   │   ├── rate-limit.config.js            # Rate limiting config
-│   │   └── validation.schemas.json         # Validation schemas
-│   └── integrations/                       
-│       ├── s3.config.js                    # S3 configuration
-│       ├── redis.config.js                 # Redis configuration
-│       └── webhook.config.js               # Webhook configuration
-│
-├── .env.example                            # Environment variables template
-├── .gitignore                              # Git ignore rules
-├── .dockerignore                           # Docker ignore rules
-├── .eslintrc.js                            # ESLint configuration
-├── .prettierrc                             # Prettier configuration
-├── package.json                            # Node.js dependencies
-├── package-lock.json                       # Locked dependencies
-├── tsconfig.json                           # TypeScript configuration
-├── tsconfig.build.json                     # Build TypeScript config
-├── jest.config.js                          # Jest testing configuration
-├── docker-compose.yml                      # Main docker compose
-├── Makefile                                # Build automation
-├── CHANGELOG.md                            # Change log
-├── LICENSE                                 # License file
-└── README.md                               # Main README
+├── .env.campaign.example                       # Environment template
+├── docker-compose.campaign.yml                 # Development stack
+└── README.md                                   # Project overview
 ```
 
 ---
 
-## 📋 Roadmap Chi Tiết - Checklist Implementation
+## 📋 **ROADMAP CHI TIẾT - CHECKLIST IMPLEMENTATION HOÀN CHỈNH**
 
 ### **1. SETUP & CHUẨN BỊ DỰ ÁN** ⚙️
 
-#### **1.1 Khởi tạo dự án backend service**
-- [ ] **Tạo repository và cấu trúc backend**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06.2.1 Layered Architecture  
-  - *Mô tả*: Thiết lập Clean Architecture với 4 layers cho Campaign & QR Management domain
-  - *Ý nghĩa*: Backend-only service architecture đảm bảo separation of concerns cho complex campaign logic
+#### **1.1 Khởi tạo Campaign Service**
+- [ ] **Tạo service structure và configuration**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part06.2.2 Campaign Service + Part02.8 Technical Requirements
+  - *Mô tả*: Thiết lập backend service với Clean Architecture cho campaign management
+  - *File tạo*: `backend/package.json`, `backend/tsconfig.json`, complete folder structure
+  - *Ý nghĩa*: Independent microservice cho campaign và QR management
 
-- [ ] **Cấu hình TypeScript và dependencies**
+- [ ] **Setup database schema cho campaigns**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part07.3.1 Campaign Table + Part07.3.1.4 Barcodes Table
+  - *Mô tả*: PostgreSQL schema cho campaigns, barcodes, ads formats
+  - *File tạo*: `backend/prisma/schema.prisma`, migration files
+  - *Ý nghĩa*: Data persistence foundation cho campaign operations
+
+- [ ] **Setup service configuration**
   - *Tham chiếu*: SRS-Grok-V2.md - Part02.8 Technical Requirements
-  - *Mô tả*: Setup Node.js 18+, TypeScript 5+, QR generation libraries, image processing, validation
-  - *Ý nghĩa*: Robust foundation cho campaign management với type safety và modern tooling
+  - *Mô tả*: Environment configuration, external service configs
+  - *File tạo*: `.env.campaign.example`, config files in infrastructure layer
+  - *Ý nghĩa*: Flexible configuration cho different environments
 
-- [ ] **Setup Docker multi-service architecture**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part14 Deployment Architecture  
-  - *Mô tả*: Docker setup với PostgreSQL, MongoDB, Redis, MinIO cho complete service stack
-  - *Ý nghĩa*: Container-based development environment cho consistent deployment
+#### **1.2 Database Schema Implementation**
+- [ ] **Create campaign tables**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part07.3.1 Campaign Table
+  - *Mô tả*: Campaigns table với status, dates, metadata fields
+  - *File tạo*: `backend/src/infrastructure/persistence/migrations/001_create_campaigns.sql`
+  - *Ý nghĩa*: Core campaign data storage
 
-#### **1.2 Database & Storage Setup**
-- [ ] **Thiết lập PostgreSQL cho campaign data**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.3 Campaign Data Model
-  - *Mô tả*: Campaign, barcode, QR tracking data với complex relationships và business rules
-  - *Ý nghĩa*: ACID compliance cho critical campaign management data
+- [ ] **Create barcode và QR tables**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part07.3.1.4 Barcodes Table
+  - *Mô tả*: Barcode tables với QR codes, pools, tracking
+  - *File tạo*: `backend/src/infrastructure/persistence/migrations/002_create_barcodes.sql`
+  - *Ý nghĩa*: QR code lifecycle management storage
 
-- [ ] **Thiết lập MongoDB cho analytics tracking**  
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.5 Analytics Data Model
-  - *Mô tả*: QR scan events, UTM tracking, campaign analytics với time-series data
-  - *Ý nghĩa*: Flexible schema cho high-volume analytics data và real-time tracking
+- [ ] **Create ads format tables**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part07.3.1.5 Ads Formats Table
+  - *Mô tả*: Ads format templates, assets, UTM parameters
+  - *File tạo*: `backend/src/infrastructure/persistence/migrations/003_create_ads_formats.sql`
+  - *Ý nghĩa*: Digital ads template system storage
 
-- [ ] **Thiết lập MinIO/S3 cho asset storage**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2 Asset Management
-  - *Mô tả*: Object storage cho generated QR codes, barcodes, templates, campaign assets
-  - *Ý nghĩa*: Scalable file storage với versioning và CDN integration
+#### **1.3 External Service Integration Setup**
+- [ ] **Setup QR generation service**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management (FR-002)
+  - *Mô tả*: QR code generation library integration
+  - *File tạo*: QR generation configuration, external service setup
+  - *Ý nghĩa*: Core QR functionality cho barcode system
 
-- [ ] **Thiết lập Redis cho caching & queues**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.2.5 Session Management + Performance
-  - *Mô tả*: Cache layer cho campaign data, async job queues cho QR/barcode generation
-  - *Ý nghĩa*: High-performance caching và background job processing
+- [ ] **Setup file storage service**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management (FR-006)
+  - *Mô tả*: S3-compatible storage cho ads assets
+  - *File tạo*: Storage service configuration, file upload handling
+  - *Ý nghĩa*: Asset management cho ads format system
 
 ### **2. DOMAIN LAYER IMPLEMENTATION** 🏗️
 
-#### **2.1 Core Domain Entities**
-- [ ] **Implement Campaign Entity với complex business rules**
+#### **2.1 Core Entities Implementation**
+- [ ] **Implement Campaign Entity**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management (FR-001)
-  - *Mô tả*: Campaign entity với lifecycle management, validation rules, status transitions
-  - *Ý nghĩa*: Core business entity encapsulating campaign logic với rich domain model
+  - *Mô tả*: Campaign entity với business rules, status transitions, validation
+  - *File tạo*: `backend/src/domain/entities/Campaign.ts`
+  - *Ý nghĩa*: Core campaign business logic encapsulation
 
-- [ ] **Implement Barcode Entity với generation logic**
+- [ ] **Implement Barcode Entity**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management (FR-002)
-  - *Mô tả*: Barcode entity với format validation, uniqueness checking, expiration management
-  - *Ý nghĩa*: Specialized barcode handling với business rule enforcement
+  - *Mô tả*: Barcode entity với QR generation, validation, lifecycle management
+  - *File tạo*: `backend/src/domain/entities/Barcode.ts`
+  - *Ý nghĩa*: QR code business logic và state management
 
-- [ ] **Implement QRCode Entity với marketing features**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management (FR-006) - QR Integration
-  - *Mô tả*: QR Code entity với UTM integration, style customization, tracking capabilities
-  - *Ý nghĩa*: Marketing-focused QR management với attribution support
-
-- [ ] **Implement AdsFormat Entity với template system**
+- [ ] **Implement AdsFormat Entity**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management (FR-006)
-  - *Mô tả*: Ads format với template inheritance, responsive design, asset management
-  - *Ý nghĩa*: Flexible creative asset system với reusable components
+  - *Mô tả*: Ads format entity với template validation, asset management
+  - *File tạo*: `backend/src/domain/entities/AdsFormat.ts`
+  - *Ý nghĩa*: Digital ads template business logic
 
-- [ ] **Implement Template Entity với inheritance**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Template System
-  - *Mô tả*: Template system với customization parameters, version control, inheritance hierarchy
-  - *Ý nghĩa*: Sophisticated template management với design system capabilities
-
-- [ ] **Implement Asset Entity với metadata**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2 Asset Management
-  - *Mô tả*: Asset entity với file metadata, optimization status, usage tracking
-  - *Ý nghĩa*: Comprehensive asset lifecycle management
-
-- [ ] **Implement UTMTracking Entity**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - UTM Integration
-  - *Mô tả*: UTM parameter management, tracking analytics, attribution data
-  - *Ý nghĩa*: Marketing attribution infrastructure với campaign effectiveness measurement
+- [ ] **Implement BarcodePool Entity**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management
+  - *Mô tả*: Barcode pool entity cho batch operations, assignment logic
+  - *File tạo*: `backend/src/domain/entities/BarcodePool.ts`
+  - *Ý nghĩa*: Efficient barcode management và allocation
 
 #### **2.2 Value Objects Implementation**
-- [ ] **Implement CampaignStatus Value Object**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management
-  - *Mô tả*: Campaign status với state machine (Draft → Review → Active → Paused → Archived)
-  - *Ý nghĩa*: Type-safe status management với business rule enforcement
-
-- [ ] **Implement BarcodeType Value Object**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management  
-  - *Mô tả*: Barcode type definitions (QR, Code128, DataMatrix, UPC) với format validation
-  - *Ý nghĩa*: Standardized barcode format handling với validation rules
-
-- [ ] **Implement QRCodeFormat Value Object**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - QR Integration
-  - *Mô tả*: QR format options (PNG, SVG, PDF) với quality settings, size specifications
-  - *Ý nghĩa*: QR output format management với quality control
+- [ ] **Implement QRCode Value Object**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management
+  - *Mô tả*: QR code value object với format validation, generation logic
+  - *File tạo*: `backend/src/domain/value-objects/QRCode.ts`
+  - *Ý nghĩa*: Type-safe QR code handling với validation
 
 - [ ] **Implement UTMParameters Value Object**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - UTM Integration
-  - *Mô tả*: UTM parameter structure (source, medium, campaign, term, content) với validation
-  - *Ý nghĩa*: Consistent UTM handling cho marketing analytics
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management
+  - *Mô tả*: UTM tracking parameters với validation, URL generation
+  - *File tạo*: `backend/src/domain/value-objects/UTMParameters.ts`
+  - *Ý nghĩa*: Marketing attribution tracking consistency
 
-- [ ] **Implement Color và Dimensions Value Objects**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Design System
-  - *Mô tả*: Color (hex, rgb, named colors) và Dimensions (width, height, DPI) với validation
-  - *Ý nghĩa*: Design system foundation cho consistent visual elements
+- [ ] **Implement CampaignStatus Value Object**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management
+  - *Mô tả*: Campaign status management với state transition rules
+  - *File tạo*: `backend/src/domain/value-objects/CampaignStatus.ts`
+  - *Ý nghĩa*: Controlled campaign state transitions
 
-#### **2.3 Repository Interfaces Definition** 
-- [ ] **Define ICampaignRepository với complex queries**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06B.2.1.2 ICampaignService
-  - *Mô tả*: Campaign CRUD, search, filtering, analytics queries, performance optimization
-  - *Ý nghĩa*: Abstraction cho sophisticated campaign data access patterns
-
-- [ ] **Define IBarcodeRepository với batch operations**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06B.2.1.2 ICampaignService - Barcode Operations
-  - *Mô tả*: Barcode generation tracking, batch operations, uniqueness validation
-  - *Ý nghĩa*: High-performance barcode data management
-
-- [ ] **Define IQRCodeRepository với analytics support**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - QR Integration
-  - *Mô tả*: QR code storage, scan tracking, analytics aggregation, UTM data
-  - *Ý nghĩa*: QR-specific data management với marketing analytics integration
-
-- [ ] **Define ITemplateRepository với versioning**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Template System
-  - *Mô tả*: Template storage, version control, inheritance management, usage tracking
-  - *Ý nghĩa*: Sophisticated template data management với version control
-
-- [ ] **Define IAssetRepository với metadata search**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2 Asset Management
-  - *Mô tả*: Asset storage, metadata indexing, search, optimization tracking
-  - *Ý nghĩa*: Rich asset discovery và management capabilities
-
-#### **2.4 Domain Services Implementation**
+#### **2.3 Domain Services Implementation**
 - [ ] **Implement CampaignDomainService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management (FR-001)
-  - *Mô tả*: Campaign business rules, validation, lifecycle management, publishing logic
-  - *Ý nghĩa*: Centralized campaign business logic với complex validation rules
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management
+  - *Mô tả*: Complex campaign business logic, validation rules
+  - *File tạo*: `backend/src/domain/services/CampaignDomainService.ts`
+  - *Ý nghĩa*: Cross-entity campaign business operations
 
-- [ ] **Implement QRGenerationService với advanced features**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - QR Integration
-  - *Mô tả*: QR generation với UTM integration, style customization, batch processing
-  - *Ý nghĩa*: Sophisticated QR generation với marketing attribution features
-
-- [ ] **Implement BarcodeValidationService**
+- [ ] **Implement QRGenerationService**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management
-  - *Mô tả*: Multi-format barcode validation, checksum verification, business rule checking
-  - *Ý nghĩa*: Comprehensive barcode quality assurance
+  - *Mô tả*: QR code generation algorithms, format handling
+  - *File tạo*: `backend/src/domain/services/QRGenerationService.ts`
+  - *Ý nghĩa*: Core QR generation business logic
 
 - [ ] **Implement UTMTrackingService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - UTM Integration
-  - *Mô tả*: UTM parameter generation, tracking, analytics integration, attribution logic
-  - *Ý nghĩa*: Marketing attribution engine với campaign effectiveness tracking
-
-- [ ] **Implement TemplateInheritanceService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Template System
-  - *Mô tả*: Template inheritance logic, customization management, version control
-  - *Ý nghĩa*: Advanced template system với inheritance và customization capabilities
-
-- [ ] **Implement AssetValidationService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2 Asset Management
-  - *Mô tả*: File format validation, size checking, security scanning, optimization rules
-  - *Ý nghĩa*: Asset quality và security assurance
-
-### **3. APPLICATION LAYER IMPLEMENTATION** 💼
-
-#### **3.1 Campaign Management Use Cases**
-- [ ] **Implement CreateCampaignUseCase với validation**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management (FR-001)
-  - *Mô tả*: Campaign creation với comprehensive validation, default setup, initial configuration
-  - *Ý nghĩa*: Complete campaign creation workflow với business rule enforcement
-
-- [ ] **Implement UpdateCampaignUseCase với change tracking**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management
-  - *Mô tả*: Campaign updates với change tracking, validation, impact analysis
-  - *Ý nghĩa*: Safe campaign modification với audit trail và rollback capabilities
+  - *Mô tả*: UTM parameter generation, validation, tracking logic
+  - *File tạo*: `backend/src/domain/services/UTMTrackingService.ts`
+  - *Ý nghĩa*: Marketing attribution business rules
 
-- [ ] **Implement PublishCampaignUseCase với validation**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management
-  - *Mô tả*: Campaign publishing với pre-flight checks, asset validation, notification
-  - *Ý nghĩa*: Reliable campaign go-live process với quality assurance
-
-- [ ] **Implement Campaign search và filtering**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management
-  - *Mô tả*: Advanced search, filtering, sorting với performance optimization
-  - *Ý nghĩa*: Efficient campaign discovery cho large datasets
-
-- [ ] **Implement DuplicateCampaignUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management
-  - *Mô tả*: Campaign duplication với asset copying, configuration adjustment
-  - *Ý nghĩa*: Rapid campaign creation từ existing templates
-
-#### **3.2 Barcode Management Use Cases**
-- [ ] **Implement GenerateBarcodeUseCase với quality control**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management (FR-002)
-  - *Mô tả*: Individual barcode generation với format selection, validation, quality checking
-  - *Ý nghĩa*: High-quality barcode generation với error prevention
-
-- [ ] **Implement BatchGenerateBarcodeUseCase với progress tracking**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management
-  - *Mô tả*: Bulk barcode generation với progress tracking, error handling, resumable jobs
-  - *Ý nghĩa*: Scalable barcode generation cho large campaigns
-
-- [ ] **Implement Barcode export/import functionality**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management
-  - *Mô tả*: Export barcodes (CSV, Excel, PDF), import validation, batch processing
-  - *Ý nghĩa*: Flexible barcode data management workflow
-
-- [ ] **Implement BarcodeValidationUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management
-  - *Mô tả*: Real-time barcode validation, format checking, duplicate detection
-  - *Ý nghĩa*: Prevent barcode errors và ensure uniqueness
-
-#### **3.3 QR Management Use Cases**
-- [ ] **Implement GenerateQRCodeUseCase với customization**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - QR Integration
-  - *Mô tả*: QR generation với UTM integration, style customization, format options
-  - *Ý nghĩa*: Marketing-focused QR generation với brand customization
-
-- [ ] **Implement TrackQRScanUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - UTM Tracking
-  - *Mô tả*: QR scan event tracking, analytics data collection, real-time processing
-  - *Ý nghĩa*: Campaign effectiveness measurement através QR analytics
-
-- [ ] **Implement BulkQRGenerationUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Bulk Operations
-  - *Mô tả*: Bulk QR generation với unique UTM parameters, batch processing
-  - *Ý nghĩa*: Scalable QR generation cho large-scale campaigns
-
-- [ ] **Implement CustomizeQRStyleUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - QR Customization
-  - *Mô tả*: QR style customization (colors, logo, design patterns)
-  - *Ý nghĩa*: Brand-consistent QR codes với visual appeal
-
-- [ ] **Implement QR analytics và performance tracking**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics (FR-008) - QR Analytics
-  - *Mô tả*: QR performance analytics, scan patterns, conversion tracking
-  - *Ý nghĩa*: Data-driven QR optimization insights
-
-#### **3.4 Template Management Use Cases**
-- [ ] **Implement CreateTemplateUseCase với validation**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Template System
-  - *Mô tả*: Template creation với validation, preview generation, asset management
-  - *Ý nghĩa*: Professional template creation workflow
-
-- [ ] **Implement CustomizeTemplateUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Template Customization
-  - *Mô tả*: Template customization với parameter overrides, preview updates
-  - *Ý nghĩa*: Flexible template adaptation cho specific campaigns
-
-- [ ] **Implement Template inheritance system**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Template Inheritance
-  - *Mô tả*: Template inheritance logic, parent-child relationships, override management
-  - *Ý nghĩa*: Sophisticated template hierarchy với code reuse
-
-- [ ] **Implement Template import/export**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Template Portability
-  - *Mô tả*: Template package export/import với dependencies, validation
-  - *Ý nghĩa*: Template sharing và backup capabilities
-
-#### **3.5 Asset Management Use Cases**
-- [ ] **Implement UploadAssetUseCase với processing**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.1 Asset Storage
-  - *Mô tả*: Asset upload với validation, processing, optimization, metadata extraction
-  - *Ý nghĩa*: Comprehensive asset ingestion pipeline
-
-- [ ] **Implement OptimizeAssetUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.4 Image Processing
-  - *Mô tả*: Asset optimization (compression, resizing, format conversion)
-  - *Ý nghĩa*: Performance optimization cho web delivery
-
-- [ ] **Implement Asset organization system**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.1 Asset Storage
-  - *Mô tả*: Asset tagging, categorization, search, folder organization
-  - *Ý nghĩa*: Efficient asset discovery và management
-
-- [ ] **Implement Asset validation và security**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: File format validation, virus scanning, content moderation
-  - *Ý nghĩa*: Security assurance cho uploaded assets
-
-#### **3.6 Analytics Use Cases**
-- [ ] **Implement GetCampaignAnalyticsUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics (FR-008)
-  - *Mô tả*: Campaign performance metrics, trend analysis, comparative analytics
-  - *Ý nghĩa*: Campaign optimization insights
-
-- [ ] **Implement GenerateReportUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.14 Advanced Reporting (FR-014)
-  - *Mô tả*: Custom report generation với flexible parameters, export options
-  - *Ý nghĩa*: Business intelligence capabilities
-
-- [ ] **Implement Real-time analytics tracking**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics
-  - *Mô tả*: Real-time data processing, live dashboards, alert system
-  - *Ý nghĩa*: Live campaign monitoring capabilities
-
-### **4. INFRASTRUCTURE LAYER IMPLEMENTATION** 🔧
-
-#### **4.1 Database Implementation**
-- [ ] **Create comprehensive database migrations**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.3 Campaign Data Model
-  - *Mô tả*: Complete schema cho campaigns, barcodes, QR codes, templates, assets
-  - *Ý nghĩa*: Robust data foundation với proper relationships và constraints
-
-- [ ] **Implement optimized Repository classes**
+#### **2.4 Repository Interfaces Implementation**
+- [ ] **Implement Repository Interfaces**
   - *Tham chiếu*: SRS-Grok-V2.md - Part06.2.1 Layered Architecture
-  - *Mô tả*: High-performance repositories với caching, pagination, complex queries
-  - *Ý nghĩa*: Efficient data access với scalability considerations
+  - *Mô tả*: Domain layer interfaces cho data access
+  - *File tạo*: `backend/src/domain/repositories/ICampaignRepository.ts`, `IBarcodeRepository.ts`, `IAdsFormatRepository.ts`, `IBarcodePoolRepository.ts`
+  - *Ý nghĩa*: Clean separation với dependency inversion
 
-- [ ] **Create database views cho analytics**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.5.1 Analytics_Event Table
-  - *Mô tả*: Materialized views cho campaign performance, QR analytics, trend analysis
-  - *Ý nghĩa*: Optimized analytics queries với pre-computed aggregations
+### **3. APPLICATION LAYER IMPLEMENTATION** 🔄
 
-- [ ] **Setup database indexing strategy**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.1 Performance Requirements (NFR-001)
-  - *Mô tả*: Strategic indexing cho search, filtering, analytics queries
-  - *Ý nghĩa*: Query performance optimization cho large datasets
+#### **3.1 Campaign Use Cases Implementation**
+- [ ] **Implement Campaign CRUD Use Cases**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management (FR-001)
+  - *Mô tả*: Complete campaign lifecycle operations
+  - *File tạo*: `backend/src/application/use-cases/campaign/CreateCampaignUseCase.ts`, `UpdateCampaignUseCase.ts`, `PublishCampaignUseCase.ts`, `DeleteCampaignUseCase.ts`, `ListCampaignsUseCase.ts`, `GetCampaignUseCase.ts`
+  - *Ý nghĩa*: Campaign management workflow orchestration
 
-#### **4.2 External Services Integration**
-- [ ] **Implement S3StorageService với CDN**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.1 Asset Storage
-  - *Mô tả*: S3/MinIO integration với CDN, lifecycle management, backup
-  - *Ý nghĩa*: Scalable asset storage với global delivery optimization
+#### **3.2 Barcode Use Cases Implementation**
+- [ ] **Implement Barcode Management Use Cases**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management (FR-002)
+  - *Mô tả*: QR generation, validation, pool management workflows
+  - *File tạo*: `backend/src/application/use-cases/barcode/GenerateBarcodesUseCase.ts`, `ImportBarcodesUseCase.ts`, `ValidateBarcodeUseCase.ts`, `AssignBarcodePoolUseCase.ts`, `GetBarcodeStatusUseCase.ts`
+  - *Ý nghĩa*: Complete QR code lifecycle management
 
-- [ ] **Implement QRLibraryService với advanced features**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.2 QR Generation Libraries
-  - *Mô tả*: QR generation với customization, error correction, batch processing
-  - *Ý nghĩa*: Professional-grade QR generation capabilities
+#### **3.3 Ads Format Use Cases Implementation**
+- [ ] **Implement Ads Format Use Cases**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management (FR-006)
+  - *Mô tả*: Digital ads template creation, modification, preview
+  - *File tạo*: `backend/src/application/use-cases/ads-format/CreateAdsFormatUseCase.ts`, `UpdateAdsFormatUseCase.ts`, `PreviewAdsFormatUseCase.ts`
+  - *Ý nghĩa*: Ads template workflow orchestration
 
-- [ ] **Implement BarcodeLibraryService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.3 Barcode Generation Libraries
-  - *Mô tả*: Multi-format barcode generation (Code128, DataMatrix, UPC, etc.)
-  - *Ý nghĩa*: Comprehensive barcode format support
+#### **3.4 Analytics Use Cases Implementation**
+- [ ] **Implement Analytics Use Cases**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics
+  - *Mô tả*: Campaign metrics retrieval, performance analytics
+  - *File tạo*: `backend/src/application/use-cases/analytics/GetCampaignMetricsUseCase.ts`
+  - *Ý nghĩa*: Campaign performance monitoring
 
-- [ ] **Implement ImageProcessingService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.4 Image Processing
-  - *Mô tả*: Image optimization, resizing, format conversion, quality adjustment
-  - *Ý nghĩa*: Asset optimization pipeline cho performance
+#### **3.5 DTOs và Application Ports**
+- [ ] **Implement Data Transfer Objects**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2.1 Campaign APIs + Part08.2.2 Barcode APIs
+  - *Mô tả*: API contract definitions cho all endpoints
+  - *File tạo*: `backend/src/application/dto/CampaignDTO.ts`, `BarcodeDTO.ts`, `AdsFormatDTO.ts`, `CampaignMetricsDTO.ts`
+  - *Ý nghĩa*: Type-safe API contracts
 
-- [ ] **Implement CDNService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.5 CDN Integration
-  - *Mô tả*: CDN management, cache invalidation, geographic distribution
-  - *Ý nghĩa*: Global asset delivery performance optimization
+- [ ] **Implement Application Ports**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management + Part04.2.6 Ads Format Management
+  - *Mô tả*: External service interfaces cho dependency inversion
+  - *File tạo*: `backend/src/application/ports/IQRGeneratorService.ts`, `IImageProcessingService.ts`, `IUTMTrackingService.ts`, `IAnalyticsService.ts`
+  - *Ý nghĩa*: Clean external service integration
 
-#### **4.3 Caching & Queue Implementation**
-- [ ] **Implement Redis caching strategy**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.1 Performance Requirements (NFR-001)
-  - *Mô tả*: Multi-layer caching cho campaigns, templates, analytics
-  - *Ý nghĩa*: Response time optimization cho frequently accessed data
+### **4. INFRASTRUCTURE LAYER IMPLEMENTATION** 🏗️
 
-- [ ] **Implement async job queues**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management - Batch Operations
-  - *Mô tả*: Background job processing cho QR/barcode generation, asset processing
-  - *Ý nghĩa*: Non-blocking operations cho resource-intensive tasks
+#### **4.1 Repository Implementations**
+- [ ] **Implement PostgreSQL Repositories**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part07.3.1 Campaign Table + Part07.3.1.4 Barcodes Table
+  - *Mô tả*: Concrete repository implementations với Prisma ORM
+  - *File tạo*: `backend/src/infrastructure/persistence/repositories/CampaignRepository.ts`, `BarcodeRepository.ts`, `AdsFormatRepository.ts`, `BarcodePoolRepository.ts`, `CampaignMetricsRepository.ts`
+  - *Ý nghĩa*: Data access layer cho campaign operations
 
-- [ ] **Implement cache invalidation strategy**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.1 Performance Requirements
-  - *Mô tả*: Smart cache invalidation cho data consistency
-  - *Ý nghĩa*: Data freshness với performance balance
+#### **4.2 Database Models Implementation**
+- [ ] **Implement Prisma Models**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part07.3.1 Campaign Table
+  - *Mô tả*: ORM models mapping domain entities to database
+  - *File tạo*: `backend/src/infrastructure/persistence/models/CampaignModel.ts`, `BarcodeModel.ts`, `AdsFormatModel.ts`, `BarcodePoolModel.ts`
+  - *Ý nghĩa*: Type-safe database access với ORM
 
-#### **4.4 Analytics & Tracking Implementation**
-- [ ] **Implement UTMTrackingService với analytics**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - UTM Integration
-  - *Mô tả*: UTM tracking với real-time analytics, attribution reporting
-  - *Ý nghĩa*: Marketing attribution infrastructure
+#### **4.3 External Services Implementation**
+- [ ] **Implement QR Generation Service**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management
+  - *Mô tả*: QR code generation using external libraries
+  - *File tạo*: `backend/src/infrastructure/external-services/QRGeneratorService.ts`
+  - *Ý nghĩa*: QR generation capability implementation
 
-- [ ] **Implement EventTrackingService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06.1.2 Event Bus Integration
-  - *Mô tả*: Event publishing cho cross-service analytics, audit trail
-  - *Ý nghĩa*: Distributed analytics data collection
+- [ ] **Implement Image Processing Service**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management
+  - *Mô tả*: Image manipulation, optimization, format conversion
+  - *File tạo*: `backend/src/infrastructure/external-services/ImageProcessingService.ts`
+  - *Ý nghĩa*: Asset processing cho ads system
 
-- [ ] **Implement PerformanceMonitoringService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part15.3.3 Metrics Collection
-  - *Mô tả*: Service performance monitoring, metrics collection, alerting
-  - *Ý nghĩa*: Operational visibility với proactive monitoring
+- [ ] **Implement File Storage Service**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management
+  - *Mô tả*: S3-compatible file storage implementation
+  - *File tạo*: `backend/src/infrastructure/external-services/S3StorageService.ts`
+  - *Ý nghĩa*: Asset storage và retrieval
 
-### **5. PRESENTATION LAYER (API) IMPLEMENTATION** 🎯
+#### **4.4 Configuration Implementation**
+- [ ] **Implement Service Configurations**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part02.8 Technical Requirements
+  - *Mô tả*: Service-specific configuration management
+  - *File tạo*: `backend/src/infrastructure/config/campaign.config.ts`, `qr.config.ts`, `storage.config.ts`, `analytics.config.ts`
+  - *Ý nghĩa*: Centralized configuration cho service components
 
-#### **5.1 Controllers Implementation**
-- [ ] **Implement CampaignController với comprehensive endpoints**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2.1 Campaign APIs  
-  - *Mô tả*: Complete campaign CRUD, search, analytics, publishing endpoints
-  - *Ý nghĩa*: Full campaign management API với rich functionality
+### **5. PRESENTATION LAYER IMPLEMENTATION** 🌐
 
-- [ ] **Implement QRCodeController với customization**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2.3 QR Code APIs
-  - *Mô tả*: QR generation, customization, tracking, analytics endpoints
-  - *Ý nghĩa*: Marketing-focused QR API với attribution features
+#### **5.1 API Controllers Implementation**
+- [ ] **Implement Campaign Controllers**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2.1 Campaign APIs
+  - *Mô tả*: REST endpoints cho campaign management
+  - *File tạo*: `backend/src/presentation/controllers/CampaignController.ts`
+  - *Ý nghĩa*: Campaign API interface
 
-- [ ] **Implement BarcodeController với batch operations**
+- [ ] **Implement Barcode Controllers**
   - *Tham chiếu*: SRS-Grok-V2.md - Part08.2.2 Barcode APIs
-  - *Mô tả*: Barcode generation, validation, batch operations, export endpoints
-  - *Ý nghĩa*: Enterprise barcode management API
+  - *Mô tả*: QR management endpoints
+  - *File tạo*: `backend/src/presentation/controllers/BarcodeController.ts`
+  - *Ý nghĩa*: QR management API interface
 
-- [ ] **Implement TemplateController với inheritance**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2.5 Template APIs
-  - *Mô tả*: Template CRUD, customization, inheritance, import/export endpoints
-  - *Ý nghĩa*: Sophisticated template management API
+- [ ] **Implement Ads Format Controllers**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2.1.3 Ads Format APIs
+  - *Mô tả*: Ads template management endpoints
+  - *File tạo*: `backend/src/presentation/controllers/AdsFormatController.ts`
+  - *Ý nghĩa*: Ads format API interface
 
-- [ ] **Implement AssetController với processing**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.1 Asset Storage
-  - *Mô tả*: Asset upload, processing, optimization, organization endpoints
-  - *Ý nghĩa*: Complete asset management API
+- [ ] **Implement Analytics Controllers**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08.4.1 Analytics APIs
+  - *Mô tả*: Campaign metrics endpoints
+  - *File tạo*: `backend/src/presentation/controllers/CampaignMetricsController.ts`
+  - *Ý nghĩa*: Analytics API interface
 
-- [ ] **Implement AnalyticsController**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2.4 Analytics APIs
-  - *Mô tả*: Campaign analytics, QR tracking, performance reports endpoints
-  - *Ý nghĩa*: Business intelligence API
+#### **5.2 Middleware Implementation**
+- [ ] **Implement Security Middleware**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
+  - *Mô tả*: Authentication, authorization, validation middleware
+  - *File tạo*: `backend/src/presentation/middleware/CampaignAuthMiddleware.ts`, `BarcodeValidationMiddleware.ts`, `FileUploadMiddleware.ts`, `RateLimitMiddleware.ts`
+  - *Ý nghĩa*: API security và validation
 
-#### **5.2 Advanced Middleware Implementation**
-- [ ] **Implement comprehensive validation middleware**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements  
-  - *Mô tả*: Multi-layer validation (schema, business rules, security)
-  - *Ý nghĩa*: Data quality và security assurance
+#### **5.3 Routing Implementation**
+- [ ] **Implement API Routes**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2 Campaign APIs
+  - *Mô tả*: Route definitions với middleware integration
+  - *File tạo*: `backend/src/presentation/routes/campaigns.routes.ts`, `barcodes.routes.ts`, `ads-formats.routes.ts`, `metrics.routes.ts`
+  - *Ý nghĩa*: Structured API organization
 
-- [ ] **Implement file upload middleware**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part09.2.1 Asset Storage
-  - *Mô tả*: Secure file upload với validation, virus scanning, optimization
-  - *Ý nghĩa*: Secure asset ingestion pipeline
+#### **5.4 Input Validation Implementation**
+- [ ] **Implement Request Validators**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part05.7 Input Validation
+  - *Mô tả*: Input validation rules, schema validation
+  - *File tạo*: `backend/src/presentation/validators/CampaignValidators.ts`, `BarcodeValidators.ts`, `AdsFormatValidators.ts`, `FileValidators.ts`
+  - *Ý nghĩa*: Input validation và security
 
-- [ ] **Implement caching middleware**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.1 Performance Requirements
-  - *Mô tả*: Intelligent response caching với cache key generation
-  - *Ý nghĩa*: API performance optimization
+### **6. SHARED CODE IMPLEMENTATION** 🧰
 
-- [ ] **Implement rate limiting middleware**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.1 Performance Requirements
-  - *Mô tả*: Adaptive rate limiting, burst handling, fair usage
-  - *Ý nghĩa*: API protection và fair usage enforcement
+#### **6.1 Constants và Configuration**
+- [ ] **Implement Service Constants**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management + Part04.2.2 Barcode Management
+  - *Mô tả*: Campaign và QR-related constants
+  - *File tạo*: `backend/src/shared/constants/campaign.constants.ts`, `barcode.constants.ts`, `ads-format.constants.ts`, `file-types.constants.ts`
+  - *Ý nghĩa*: Centralized configuration constants
 
-#### **5.3 API Documentation & Contracts**
-- [ ] **Create comprehensive OpenAPI specifications**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08 API Design
-  - *Mô tả*: Complete API docs với examples, error codes, authentication
-  - *Ý nghĩa*: Developer-friendly API documentation
+#### **6.2 Exception Handling**
+- [ ] **Implement Custom Exceptions**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part05.8 Error Handling
+  - *Mô tả*: Domain-specific exception classes
+  - *File tạo*: `backend/src/shared/exceptions/CampaignException.ts`, `BarcodeException.ts`, `AdsFormatException.ts`, `FileProcessingException.ts`
+  - *Ý nghĩa*: Structured error handling
 
-- [ ] **Implement API versioning strategy**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08 API Design
-  - *Mô tả*: Version management, backward compatibility, migration paths
-  - *Ý nghĩa*: API evolution với client compatibility
+#### **6.3 Utility Functions**
+- [ ] **Implement Service Utilities**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.2 Barcode Management + Part04.2.6 Ads Format Management
+  - *Mô tả*: QR utilities, file processing, validation helpers
+  - *File tạo*: `backend/src/shared/utils/qr.utils.ts`, `file.utils.ts`, `utm.utils.ts`, `validation.utils.ts`
+  - *Ý nghĩa*: Reusable utility functions
 
-### **6. TESTING IMPLEMENTATION** 🧪
+#### **6.4 Type Definitions**
+- [ ] **Implement TypeScript Types**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2 Campaign APIs + Part02.8 Technical Requirements
+  - *Mô tả*: Service-specific type definitions
+  - *File tạo*: `backend/src/shared/types/campaign.types.ts`, `barcode.types.ts`, `ads-format.types.ts`, `analytics.types.ts`
+  - *Ý nghĩa*: Type safety across service modules
 
-#### **6.1 Comprehensive Unit Testing**
-- [ ] **Write domain entity tests với business rules**
+### **7. TESTING IMPLEMENTATION** 🧪
+
+#### **7.1 Unit Testing**
+- [ ] **Implement Domain Unit Tests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.2.1 Unit Testing Framework
-  - *Mô tả*: Test complex business logic, validation rules, state transitions
-  - *Ý nghĩa*: Ensure domain logic correctness và business rule compliance
+  - *Mô tả*: Entity, value object, domain service tests
+  - *File tạo*: `backend/tests/unit/domain/entities/Campaign.test.ts`, `Barcode.test.ts`, `AdsFormat.test.ts`
+  - *Ý nghĩa*: Domain logic verification
 
-- [ ] **Write use case tests với mocking**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.2.1 Unit Testing Framework  
-  - *Mô tả*: Test application workflows với comprehensive mocking
-  - *Ý nghĩa*: Verify use case behavior isolation và error handling
-
-- [ ] **Write service tests cho QR/barcode generation**
+- [ ] **Implement Application Unit Tests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.2.1 Unit Testing Framework
-  - *Mô tả*: Test generation algorithms, quality validation, format compliance
-  - *Ý nghĩa*: Ensure generation quality và reliability
+  - *Mô tả*: Use case testing với mocking
+  - *File tạo*: `backend/tests/unit/application/use-cases/CreateCampaignUseCase.test.ts`, `GenerateBarcodesUseCase.test.ts`
+  - *Ý nghĩa*: Application workflow verification
 
-#### **6.2 Integration Testing**
-- [ ] **Write API integration tests**
+#### **7.2 Integration Testing**
+- [ ] **Implement API Integration Tests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.3.1 API Testing
-  - *Mô tả*: Test complete API workflows với real database, file system
-  - *Ý nghĩa*: Verify end-to-end API functionality
+  - *Mô tả*: Controller endpoint testing
+  - *File tạo*: `backend/tests/integration/controllers/CampaignController.test.ts`, `BarcodeController.test.ts`
+  - *Ý nghĩa*: API contract verification
 
-- [ ] **Write storage integration tests**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.3.3 External Integration Testing
-  - *Mô tả*: Test S3/MinIO integration, CDN, file processing
-  - *Ý nghĩa*: Verify asset management reliability
+- [ ] **Implement Database Integration Tests**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part13.3.2 Database Testing
+  - *Mô tả*: Repository implementation testing
+  - *File tạo*: `backend/tests/integration/repositories/CampaignRepository.test.ts`, `BarcodeRepository.test.ts`
+  - *Ý nghĩa*: Data access verification
 
-- [ ] **Write analytics integration tests**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.3.3 External Integration Testing
-  - *Mô tả*: Test analytics data flow, MongoDB integration, real-time tracking
-  - *Ý nghĩa*: Verify analytics pipeline accuracy
-
-#### **6.3 Performance Testing**
-- [ ] **Write load tests cho QR generation**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part12.2.1 Load Testing Scenarios
-  - *Mô tả*: Test bulk QR/barcode generation performance, concurrent requests
-  - *Ý nghĩa*: Verify scalability cho large campaigns
-
-- [ ] **Write API performance tests**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part12.2.1 Load Testing Scenarios
-  - *Mô tả*: API response times, throughput, resource utilization
-  - *Ý nghĩa*: Ensure performance requirements compliance
-
-#### **6.4 End-to-End Testing**
-- [ ] **Write complete campaign workflow tests**
+#### **7.3 End-to-End Testing**
+- [ ] **Implement Workflow E2E Tests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.4.1 End-to-End Testing
-  - *Mô tả*: Campaign creation → QR generation → analytics → reporting
-  - *Ý nghĩa*: Verify complete business workflow
+  - *Mô tả*: Complete service workflow testing
+  - *File tạo*: `backend/tests/e2e/campaign-lifecycle.test.ts`, `qr-generation-flow.test.ts`
+  - *Ý nghĩa*: Complete service functionality verification
 
-- [ ] **Write cross-service integration tests**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.4.1 End-to-End Testing
-  - *Mô tả*: Campaign → Identity → Analytics → Redemption workflows
-  - *Ý nghĩa*: Verify inter-service integration
+### **8. DEPLOYMENT & DEVOPS** 🚀
 
-### **7. DEPLOYMENT & DEVOPS** 🚀
-
-#### **7.1 Containerization**
-- [ ] **Create optimized Dockerfile**
+#### **8.1 Containerization**
+- [ ] **Create Service Container**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14.2 Container Architecture
-  - *Mô tả*: Multi-stage build cho production optimization với asset handling
-  - *Ý nghĩa*: Efficient container image cho production deployment
+  - *Mô tả*: Docker container cho campaign service
+  - *File tạo*: `deployment/docker/Dockerfile.campaign-service`
+  - *Ý nghĩa*: Portable service deployment
 
-- [ ] **Create comprehensive Docker Compose**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part14.2 Container Architecture
-  - *Mô tả*: Complete development stack với all dependencies
-  - *Ý nghĩa*: Easy local development environment
-
-#### **7.2 Kubernetes Deployment**
-- [ ] **Create production K8s manifests**
+#### **8.2 Kubernetes Deployment**
+- [ ] **Create K8s Manifests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14.3 Kubernetes Configuration
-  - *Mô tả*: Deployment với persistent volumes, resource limits, health checks
+  - *Mô tả*: Service deployment, networking, configuration
+  - *File tạo*: `deployment/kubernetes/campaign-service/deployment.yaml`, `service.yaml`, `configmap.yaml`, `secrets.yaml`
   - *Ý nghĩa*: Production-ready orchestration
 
-- [ ] **Setup Helm charts với environments**
+#### **8.3 Helm Chart**
+- [ ] **Create Helm Chart**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14.3 Kubernetes Configuration
-  - *Mô tả*: Environment-specific configurations, secret management
-  - *Ý nghĩa*: Flexible deployment management
+  - *Mô tả*: Parameterized deployment templates
+  - *File tạo*: `deployment/helm/campaign-service/Chart.yaml`, `values.yaml`, template files
+  - *Ý nghĩa*: Flexible deployment configuration
 
-#### **7.3 CI/CD Pipeline**
-- [ ] **Setup GitHub Actions với parallel builds**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part15.1 CI/CD Pipeline
-  - *Mô tả*: Parallel testing, building, deployment với quality gates
-  - *Ý nghĩa*: Fast, reliable automated delivery
+### **9. DOCUMENTATION & MONITORING** 📚
 
-- [ ] **Configure automated testing pipeline**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.5.1 Test Automation Framework
-  - *Mô tả*: Unit, integration, E2E testing trong CI pipeline
-  - *Ý nghĩa*: Quality assurance automation
+#### **9.1 Service Documentation**
+- [ ] **Create Service Documentation**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08.2 Campaign APIs + Part06.2.2 Campaign Service
+  - *Mô tả*: API docs, architecture guide, setup instructions
+  - *File tạo*: `docs/campaign-service/API.md`, `ARCHITECTURE.md`, `QR-GENERATION.md`, `ADS-FORMAT.md`, `SETUP.md`
+  - *Ý nghĩa*: Developer onboarding và service maintenance
 
-### **8. MONITORING & OBSERVABILITY** 📊
-
-#### **8.1 Application Monitoring**
-- [ ] **Setup comprehensive metrics collection**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part15.3.3 Metrics Collection
-  - *Mô tả*: Business metrics, performance metrics, error tracking
-  - *Ý nghĩa*: Complete operational visibility
-
-- [ ] **Implement distributed tracing**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part15.3.3 Metrics Collection
-  - *Mô tả*: Request tracing across services, performance bottleneck identification
-  - *Ý nghĩa*: Performance optimization insights
-
-#### **8.2 Business Monitoring**
-- [ ] **Setup campaign performance monitoring**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics
-  - *Mô tả*: Campaign metrics, QR scan tracking, conversion rates
-  - *Ý nghĩa*: Business KPI monitoring
-
-- [ ] **Implement alert system**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part15.3.4 Alerting
-  - *Mô tả*: Proactive alerting cho system issues, business anomalies
-  - *Ý nghĩa*: Proactive issue detection và response
-
-### **9. DOCUMENTATION & DELIVERY** 📚
-
-#### **9.1 Technical Documentation**
-- [ ] **Create comprehensive API documentation**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08 API Design
-  - *Mô tả*: Complete API reference với examples, authentication, error handling
-  - *Ý nghĩa*: Developer adoption support
-
-- [ ] **Write detailed architecture documentation**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06 System Architecture
-  - *Mô tả*: System design, component interactions, data flows
-  - *Ý nghĩa*: System understanding và maintenance support
-
-- [ ] **Create specialized guides**
-  - *Tham chiếu*: SRS-Grok-V2.md - Multiple sections
-  - *Mô tả*: QR generation guide, barcode types guide, UTM tracking guide
-  - *Ý nghĩa*: Feature-specific technical references
-
-#### **9.2 Project Delivery**
-- [ ] **Performance validation với load testing**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part12.2.1 Load Testing Scenarios
-  - *Mô tả*: Complete performance testing với realistic workloads
-  - *Ý nghĩa*: Performance requirements verification
-
-- [ ] **Security audit và penetration testing**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.5.3 Security Testing
-  - *Mô tả*: Security assessment, vulnerability testing, compliance verification
-  - *Ý nghĩa*: Security assurance
-
-- [ ] **Production deployment và monitoring setup**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part14.1 Deployment Overview
-  - *Mô tả*: Production environment với full monitoring, backup, disaster recovery
-  - *Ý nghĩa*: Complete production readiness
+#### **9.2 Automation Scripts**
+- [ ] **Create Automation Scripts**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part02.8 Technical Requirements
+  - *Mô tả*: Service setup, deployment, data management scripts
+  - *File tạo*: `scripts/setup-campaign-service.sh`, `generate-test-data.sh`, `migrate-campaigns.sh`, `backup-campaign-data.sh`, `deploy-campaign-service.sh`
+  - *Ý nghĩa*: Operational efficiency và consistency
 
 ---
 
-## 🎯 Kết Luận
+## 🎯 **KẾT LUẬN**
 
-**Tổng số checkpoints**: 145 tasks  
-**Estimated timeline**: 8-10 tuần cho 1 team (4-5 developers)  
-**SRS coverage**: 100% cho Campaign & QR Management domain (Backend only)
+**Tổng số files được map**: 150+ files với đầy đủ SRS references  
+**Backend Clean Architecture**: 80+ files với proper layering  
+**API Coverage**: Complete REST endpoints cho Campaign, Barcode, Ads Format, Analytics  
+**Testing Strategy**: 25+ test files coverage  
+**Deployment & DevOps**: 15+ infrastructure files  
+**Documentation**: 10+ comprehensive docs  
 
-**Deliverables chính**:
-- ✅ **Complete Campaign & QR Management Service** với Clean Architecture
-- ✅ **RESTful APIs** cho tất cả campaign và QR management operations
-- ✅ **Advanced QR Generation** với UTM tracking integration
-- ✅ **Sophisticated Template System** với inheritance và customization
-- ✅ **Comprehensive Asset Management** với processing pipeline
-- ✅ **Real-time Analytics** cho campaign performance tracking
-- ✅ **Bulk Operations** cho enterprise-scale barcode/QR generation
-- ✅ **Production-ready Infrastructure** với monitoring và scaling
-- ✅ **Comprehensive Testing Suite** với >90% coverage
-- ✅ **Complete Documentation** package
+**Estimated timeline**: 8-10 tuần cho 1 team (3-4 developers)  
+**SRS coverage**: 100% cho Campaign domain (FR-001, FR-002, FR-006)  
+**Integration points**: Ready for Identity Service integration và Frontend Portal consumption  
 
-**Key Technical Features**:
-- 🎯 **Campaign Lifecycle Management**: Draft → Review → Active → Archived
-- 📊 **Real-time Analytics**: UTM tracking, scan analytics, performance metrics
-- 🎨 **Template System**: Inheritance, customization, version control
-- 📁 **Asset Pipeline**: Upload → Processing → Optimization → CDN delivery
-- 🔧 **Batch Operations**: Bulk QR/barcode generation với progress tracking
-- 📱 **QR Customization**: Colors, logos, styles với brand consistency
-- 🔍 **Advanced Search**: Filtering, sorting, full-text search
-- 📈 **Performance Optimization**: Caching, queues, CDN integration
-
-**API Endpoints Overview**:
-```bash
-📍 Campaign APIs:
-├── POST /api/campaigns                    # Create campaign
-├── GET /api/campaigns                     # List campaigns với pagination
-├── GET /api/campaigns/:id                 # Get campaign details
-├── PUT /api/campaigns/:id                 # Update campaign
-├── POST /api/campaigns/:id/publish        # Publish campaign
-└── GET /api/campaigns/:id/analytics       # Campaign analytics
-
-📍 QR Code APIs:
-├── POST /api/qr-codes/generate            # Generate QR code
-├── POST /api/qr-codes/bulk-generate       # Bulk QR generation
-├── GET /api/qr-codes/:id/analytics        # QR analytics
-└── POST /api/qr-codes/:id/customize       # Customize QR style
-
-📍 Template APIs:
-├── GET /api/templates                     # Template gallery
-├── POST /api/templates                    # Create template
-├── POST /api/templates/:id/customize      # Customize template
-└── GET /api/templates/:id/preview         # Preview template
-
-📍 Asset APIs:
-├── POST /api/assets/upload                # Upload asset
-├── GET /api/assets                        # List assets
-└── POST /api/assets/:id/optimize          # Optimize asset
-```
-
-**Ready for backend-focused development! API-first approach với comprehensive functionality! 🚀**
+**Sub-Project 2 hoàn chỉnh! Campaign & QR Management Service với complete backend implementation theo SRS specifications! 🚀**
