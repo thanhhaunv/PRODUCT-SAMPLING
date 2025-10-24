@@ -1,240 +1,349 @@
-# 🚀 Sub-Project 1: Identity & Authentication Service - Roadmap Chi Tiết
+# 🚀 Sub-Project 1: Identity & Authentication + Unified Admin Portal - Roadmap Chi Tiết
 
 ## 📁 Cấu Trúc Thư Mục Hoàn Chỉnh
 
 ```bash
-identity-authentication-service/
-├── 📂 src/
-│   ├── 📂 domain/                          # Domain Layer - Clean Architecture
-│   │   ├── 📂 entities/                    
-│   │   │   ├── User.ts                     # User Entity
-│   │   │   ├── Role.ts                     # Role Entity  
-│   │   │   ├── Permission.ts               # Permission Entity
-│   │   │   ├── Session.ts                  # Session Entity
-│   │   │   └── OTPCode.ts                  # OTP Entity
-│   │   ├── 📂 value-objects/               
-│   │   │   ├── Email.ts                    # Email Value Object
-│   │   │   ├── Phone.ts                    # Phone Value Object
-│   │   │   └── Password.ts                 # Password Value Object
-│   │   ├── 📂 repositories/                # Repository Interfaces
-│   │   │   ├── IUserRepository.ts          
-│   │   │   ├── IRoleRepository.ts          
-│   │   │   ├── ISessionRepository.ts       
-│   │   │   └── IOTPRepository.ts           
-│   │   └── 📂 services/                    # Domain Services
-│   │       ├── AuthenticationDomainService.ts
-│   │       ├── PasswordHashingService.ts   
-│   │       └── OTPGenerationService.ts     
+identity-auth-unified-portal/
+├── 📂 backend/                         # Backend Service
+│   ├── 📂 src/
+│   │   ├── 📂 domain/                  # Domain Layer - Clean Architecture
+│   │   │   ├── 📂 entities/                    
+│   │   │   │   ├── User.ts             # User Entity
+│   │   │   │   ├── Role.ts             # Role Entity  
+│   │   │   │   ├── Permission.ts       # Permission Entity
+│   │   │   │   ├── Session.ts          # Session Entity
+│   │   │   │   └── OTPCode.ts          # OTP Entity
+│   │   │   ├── 📂 value-objects/               
+│   │   │   │   ├── Email.ts            # Email Value Object
+│   │   │   │   ├── Phone.ts            # Phone Value Object
+│   │   │   │   └── Password.ts         # Password Value Object
+│   │   │   ├── 📂 repositories/        # Repository Interfaces
+│   │   │   │   ├── IUserRepository.ts          
+│   │   │   │   ├── IRoleRepository.ts          
+│   │   │   │   ├── ISessionRepository.ts       
+│   │   │   │   └── IOTPRepository.ts           
+│   │   │   └── 📂 services/            # Domain Services
+│   │   │       ├── AuthenticationDomainService.ts
+│   │   │       ├── PasswordHashingService.ts   
+│   │   │       └── OTPGenerationService.ts     
+│   │   │
+│   │   ├── 📂 application/             # Application Layer - Use Cases
+│   │   │   ├── 📂 use-cases/                   
+│   │   │   │   ├── 📂 authentication/          
+│   │   │   │   │   ├── LoginUseCase.ts         
+│   │   │   │   │   ├── LogoutUseCase.ts        
+│   │   │   │   │   ├── RefreshTokenUseCase.ts  
+│   │   │   │   │   └── VerifyOTPUseCase.ts     
+│   │   │   │   ├── 📂 user-management/         
+│   │   │   │   │   ├── CreateUserUseCase.ts    
+│   │   │   │   │   ├── UpdateUserUseCase.ts    
+│   │   │   │   │   ├── DeleteUserUseCase.ts    
+│   │   │   │   │   └── GetUserUseCase.ts       
+│   │   │   │   ├── 📂 role-management/         
+│   │   │   │   │   ├── AssignRoleUseCase.ts    
+│   │   │   │   │   ├── RevokeRoleUseCase.ts    
+│   │   │   │   │   └── GetUserRolesUseCase.ts  
+│   │   │   │   └── 📂 gdpr-compliance/         
+│   │   │   │       ├── ExportUserDataUseCase.ts
+│   │   │   │       └── DeleteUserDataUseCase.ts
+│   │   │   ├── 📂 dtos/                # Data Transfer Objects
+│   │   │   │   ├── LoginDTO.ts                 
+│   │   │   │   ├── RegisterDTO.ts              
+│   │   │   │   ├── UserDTO.ts                  
+│   │   │   │   ├── RoleDTO.ts                  
+│   │   │   │   └── OTPDTO.ts                   
+│   │   │   └── 📂 interfaces/          # Application Interfaces
+│   │   │       ├── IAuthenticationService.ts   
+│   │   │       ├── IUserManagementService.ts   
+│   │   │       └── IOTPService.ts              
+│   │   │
+│   │   ├── 📂 infrastructure/          # Infrastructure Layer
+│   │   │   ├── 📂 database/                    
+│   │   │   │   ├── 📂 repositories/            
+│   │   │   │   │   ├── UserRepository.ts       
+│   │   │   │   │   ├── RoleRepository.ts       
+│   │   │   │   │   ├── SessionRepository.ts    
+│   │   │   │   │   └── OTPRepository.ts        
+│   │   │   │   ├── 📂 migrations/              
+│   │   │   │   │   ├── 001_create_users_table.sql
+│   │   │   │   │   ├── 002_create_roles_table.sql
+│   │   │   │   │   ├── 003_create_permissions_table.sql
+│   │   │   │   │   ├── 004_create_user_roles_table.sql
+│   │   │   │   │   ├── 005_create_sessions_table.sql
+│   │   │   │   │   └── 006_create_otp_codes_table.sql
+│   │   │   │   └── 📂 seeds/                   
+│   │   │   │       ├── default-roles.sql       
+│   │   │   │       └── default-permissions.sql 
+│   │   │   ├── 📂 external-services/           
+│   │   │   │   ├── TwilioService.ts           # SMS OTP Service
+│   │   │   │   ├── EmailService.ts            # Email Service
+│   │   │   │   └── RedisService.ts            # Cache Service
+│   │   │   ├── 📂 security/                    
+│   │   │   │   ├── JWTService.ts              # JWT Implementation
+│   │   │   │   ├── PasswordHashService.ts      # Bcrypt Implementation
+│   │   │   │   └── RateLimitingService.ts     # Rate Limiting
+│   │   │   └── 📂 config/                      
+│   │   │       ├── database.config.ts         
+│   │   │       ├── jwt.config.ts              
+│   │   │       ├── twilio.config.ts           
+│   │   │       └── redis.config.ts            
+│   │   │
+│   │   ├── 📂 presentation/            # Presentation Layer
+│   │   │   ├── 📂 controllers/                 
+│   │   │   │   ├── AuthController.ts          # Authentication APIs
+│   │   │   │   ├── UserController.ts          # User Management APIs
+│   │   │   │   ├── RoleController.ts          # Role Management APIs
+│   │   │   │   └── GDPRController.ts          # GDPR Compliance APIs
+│   │   │   ├── 📂 middleware/                  
+│   │   │   │   ├── AuthMiddleware.ts          # JWT Verification
+│   │   │   │   ├── RoleMiddleware.ts          # RBAC Authorization
+│   │   │   │   ├── ValidationMiddleware.ts    # Input Validation
+│   │   │   │   └── RateLimitMiddleware.ts     # Rate Limiting
+│   │   │   ├── 📂 routes/                      
+│   │   │   │   ├── auth.routes.ts             
+│   │   │   │   ├── user.routes.ts             
+│   │   │   │   ├── role.routes.ts             
+│   │   │   │   └── gdpr.routes.ts             
+│   │   │   └── 📂 validators/                  
+│   │   │       ├── AuthValidators.ts          
+│   │   │       ├── UserValidators.ts          
+│   │   │       └── RoleValidators.ts          
+│   │   │
+│   │   └── 📂 shared/                  # Shared Utilities
+│   │       ├── 📂 constants/                   
+│   │       │   ├── roles.constants.ts         
+│   │       │   ├── permissions.constants.ts   
+│   │       │   └── error-codes.constants.ts   
+│   │       ├── 📂 exceptions/                  
+│   │       │   ├── AuthenticationException.ts 
+│   │       │   ├── AuthorizationException.ts  
+│   │       │   └── ValidationException.ts     
+│   │       ├── 📂 types/                       
+│   │       │   ├── auth.types.ts              
+│   │       │   ├── user.types.ts              
+│   │       │   └── common.types.ts            
+│   │       └── 📂 utils/                       
+│   │           ├── logger.utils.ts            
+│   │           ├── validation.utils.ts        
+│   │           └── crypto.utils.ts            
 │   │
-│   ├── 📂 application/                     # Application Layer - Use Cases
-│   │   ├── 📂 use-cases/                   
-│   │   │   ├── 📂 authentication/          
-│   │   │   │   ├── LoginUseCase.ts         
-│   │   │   │   ├── LogoutUseCase.ts        
-│   │   │   │   ├── RefreshTokenUseCase.ts  
-│   │   │   │   └── VerifyOTPUseCase.ts     
-│   │   │   ├── 📂 user-management/         
-│   │   │   │   ├── CreateUserUseCase.ts    
-│   │   │   │   ├── UpdateUserUseCase.ts    
-│   │   │   │   ├── DeleteUserUseCase.ts    
-│   │   │   │   └── GetUserUseCase.ts       
-│   │   │   ├── 📂 role-management/         
-│   │   │   │   ├── AssignRoleUseCase.ts    
-│   │   │   │   ├── RevokeRoleUseCase.ts    
-│   │   │   │   └── GetUserRolesUseCase.ts  
-│   │   │   └── 📂 gdpr-compliance/         
-│   │   │       ├── ExportUserDataUseCase.ts
-│   │   │       └── DeleteUserDataUseCase.ts
-│   │   ├── 📂 dtos/                        # Data Transfer Objects
-│   │   │   ├── LoginDTO.ts                 
-│   │   │   ├── RegisterDTO.ts              
-│   │   │   ├── UserDTO.ts                  
-│   │   │   ├── RoleDTO.ts                  
-│   │   │   └── OTPDTO.ts                   
-│   │   └── 📂 interfaces/                  # Application Interfaces
-│   │       ├── IAuthenticationService.ts   
-│   │       ├── IUserManagementService.ts   
-│   │       └── IOTPService.ts              
-│   │
-│   ├── 📂 infrastructure/                  # Infrastructure Layer
-│   │   ├── 📂 database/                    
-│   │   │   ├── 📂 repositories/            
-│   │   │   │   ├── UserRepository.ts       
-│   │   │   │   ├── RoleRepository.ts       
-│   │   │   │   ├── SessionRepository.ts    
-│   │   │   │   └── OTPRepository.ts        
-│   │   │   ├── 📂 migrations/              
-│   │   │   │   ├── 001_create_users_table.sql
-│   │   │   │   ├── 002_create_roles_table.sql
-│   │   │   │   ├── 003_create_permissions_table.sql
-│   │   │   │   ├── 004_create_user_roles_table.sql
-│   │   │   │   ├── 005_create_sessions_table.sql
-│   │   │   │   └── 006_create_otp_codes_table.sql
-│   │   │   └── 📂 seeds/                   
-│   │   │       ├── default-roles.sql       
-│   │   │       └── default-permissions.sql 
-│   │   ├── 📂 external-services/           
-│   │   │   ├── TwilioService.ts           # SMS OTP Service
-│   │   │   ├── EmailService.ts            # Email Service
-│   │   │   └── RedisService.ts            # Cache Service
-│   │   ├── 📂 security/                    
-│   │   │   ├── JWTService.ts              # JWT Implementation
-│   │   │   ├── PasswordHashService.ts      # Bcrypt Implementation
-│   │   │   └── RateLimitingService.ts     # Rate Limiting
-│   │   └── 📂 config/                      
-│   │       ├── database.config.ts         
-│   │       ├── jwt.config.ts              
-│   │       ├── twilio.config.ts           
-│   │       └── redis.config.ts            
-│   │
-│   ├── 📂 presentation/                    # Presentation Layer
-│   │   ├── 📂 controllers/                 
-│   │   │   ├── AuthController.ts          # Authentication APIs
-│   │   │   ├── UserController.ts          # User Management APIs
-│   │   │   ├── RoleController.ts          # Role Management APIs
-│   │   │   └── GDPRController.ts          # GDPR Compliance APIs
-│   │   ├── 📂 middleware/                  
-│   │   │   ├── AuthMiddleware.ts          # JWT Verification
-│   │   │   ├── RoleMiddleware.ts          # RBAC Authorization
-│   │   │   ├── ValidationMiddleware.ts    # Input Validation
-│   │   │   └── RateLimitMiddleware.ts     # Rate Limiting
-│   │   ├── 📂 routes/                      
-│   │   │   ├── auth.routes.ts             
-│   │   │   ├── user.routes.ts             
-│   │   │   ├── role.routes.ts             
-│   │   │   └── gdpr.routes.ts             
-│   │   └── 📂 validators/                  
-│   │       ├── AuthValidators.ts          
-│   │       ├── UserValidators.ts          
-│   │       └── RoleValidators.ts          
-│   │
-│   └── 📂 shared/                          # Shared Utilities
-│       ├── 📂 constants/                   
-│       │   ├── roles.constants.ts         
-│       │   ├── permissions.constants.ts   
-│       │   └── error-codes.constants.ts   
-│       ├── 📂 exceptions/                  
-│       │   ├── AuthenticationException.ts 
-│       │   ├── AuthorizationException.ts  
-│       │   └── ValidationException.ts     
-│       ├── 📂 types/                       
-│       │   ├── auth.types.ts              
-│       │   ├── user.types.ts              
-│       │   └── common.types.ts            
-│       └── 📂 utils/                       
-│           ├── logger.utils.ts            
-│           ├── validation.utils.ts        
-│           └── crypto.utils.ts            
+│   ├── 📂 tests/                       # Backend Testing
+│   └── 📂 docs/                        # Backend Documentation
 │
-├── 📂 admin-portal/                        # Admin Portal UI
+├── 📂 frontend/                        # Unified Admin Portal
 │   ├── 📂 src/                             
 │   │   ├── 📂 components/                  
-│   │   │   ├── 📂 users/                   
-│   │   │   │   ├── UserList.tsx           
-│   │   │   │   ├── UserForm.tsx           
-│   │   │   │   ├── UserDetails.tsx        
-│   │   │   │   └── UserSearch.tsx         
-│   │   │   ├── 📂 roles/                   
-│   │   │   │   ├── RoleList.tsx           
-│   │   │   │   ├── RoleForm.tsx           
-│   │   │   │   └── PermissionMatrix.tsx   
-│   │   │   ├── 📂 auth/                    
-│   │   │   │   ├── LoginForm.tsx          
-│   │   │   │   ├── OTPVerification.tsx    
-│   │   │   │   └── LogoutButton.tsx       
-│   │   │   └── 📂 shared/                  
-│   │   │       ├── Layout.tsx             
-│   │   │       ├── Navigation.tsx         
-│   │   │       ├── LoadingSpinner.tsx     
-│   │   │       └── ErrorBoundary.tsx      
-│   │   ├── 📂 pages/                       
-│   │   │   ├── LoginPage.tsx              
-│   │   │   ├── DashboardPage.tsx          
-│   │   │   ├── UsersPage.tsx              
-│   │   │   ├── RolesPage.tsx              
-│   │   │   └── SettingsPage.tsx           
-│   │   ├── 📂 hooks/                       
-│   │   │   ├── useAuth.ts                 
-│   │   │   ├── useUsers.ts                
-│   │   │   └── useRoles.ts                
-│   │   ├── 📂 services/                    
-│   │   │   ├── api.service.ts             
-│   │   │   ├── auth.service.ts            
-│   │   │   └── user.service.ts            
-│   │   ├── 📂 store/                       
-│   │   │   ├── authSlice.ts               
-│   │   │   ├── userSlice.ts               
-│   │   │   └── store.ts                   
-│   │   └── 📂 utils/                       
-│   │       ├── constants.ts               
-│   │       ├── validators.ts              
-│   │       └── helpers.ts                 
-│   ├── public/                             
-│   ├── package.json                        
-│   └── tsconfig.json                       
+│   │   │   ├── 📂 layout/                   # Layout Components
+│   │   │   │   ├── MainLayout.tsx           # Overall Layout Structure
+│   │   │   │   ├── Sidebar.tsx              # Main Navigation Sidebar
+│   │   │   │   ├── TopBar.tsx               # Header với user info + notifications
+│   │   │   │   ├── Breadcrumbs.tsx          # Navigation breadcrumbs
+│   │   │   │   ├── MobileNavigation.tsx     # Mobile hamburger menu
+│   │   │   │   └── Footer.tsx               # Footer component
+│   │   │   ├── 📂 auth/                     # Authentication Components
+│   │   │   │   ├── LoginForm.tsx            # Login form
+│   │   │   │   ├── OTPVerification.tsx      # OTP verification form
+│   │   │   │   ├── LogoutButton.tsx         # Logout functionality
+│   │   │   │   ├── ForgotPassword.tsx       # Forgot password form
+│   │   │   │   └── ChangePassword.tsx       # Password change form
+│   │   │   ├── 📂 user-management/          # User Management Module
+│   │   │   │   ├── UserList.tsx             # Danh sách users với pagination
+│   │   │   │   ├── UserForm.tsx             # Form tạo/sửa user
+│   │   │   │   ├── UserDetails.tsx          # Chi tiết user profile
+│   │   │   │   ├── UserSearch.tsx           # Tìm kiếm và filter users
+│   │   │   │   ├── UserBulkActions.tsx      # Bulk operations cho users
+│   │   │   │   └── UserImportExport.tsx     # Import/Export user data
+│   │   │   ├── 📂 role-management/          # Role & Permission Management
+│   │   │   │   ├── RoleList.tsx             # Danh sách roles
+│   │   │   │   ├── RoleForm.tsx             # Form tạo/sửa role
+│   │   │   │   ├── PermissionMatrix.tsx     # Ma trận permissions
+│   │   │   │   ├── RoleAssignment.tsx       # Gán role cho users
+│   │   │   │   └── PermissionTree.tsx       # Cây phân quyền hierarchical
+│   │   │   ├── 📂 campaign-management/      # Campaign Management Module
+│   │   │   │   ├── CampaignOverview.tsx     # Tổng quan campaigns
+│   │   │   │   ├── CampaignList.tsx         # Danh sách campaigns
+│   │   │   │   ├── CampaignForm.tsx         # Form tạo/sửa campaign
+│   │   │   │   ├── CampaignWizard.tsx       # Wizard tạo campaign step-by-step
+│   │   │   │   ├── CampaignAnalytics.tsx    # Analytics cho campaigns
+│   │   │   │   ├── QRCodeGenerator.tsx      # QR code generation tool
+│   │   │   │   ├── BarcodeGenerator.tsx     # Barcode generation tool
+│   │   │   │   ├── TemplateGallery.tsx      # Template gallery
+│   │   │   │   └── AssetManager.tsx         # Asset management interface
+│   │   │   ├── 📂 analytics/                # Analytics & Reporting Module
+│   │   │   │   ├── DashboardOverview.tsx    # Main analytics dashboard
+│   │   │   │   ├── RealTimeMetrics.tsx      # Real-time metrics display
+│   │   │   │   ├── CampaignPerformance.tsx  # Campaign performance charts
+│   │   │   │   ├── UserBehaviorAnalytics.tsx # User behavior analysis
+│   │   │   │   ├── ABTestingResults.tsx     # A/B testing results
+│   │   │   │   ├── CustomReportBuilder.tsx  # Custom report builder
+│   │   │   │   └── ExportReports.tsx        # Export functionality
+│   │   │   ├── 📂 redemption/               # Redemption Management Module
+│   │   │   │   ├── RedemptionOverview.tsx   # Tổng quan redemptions
+│   │   │   │   ├── RedemptionList.tsx       # Danh sách redemptions
+│   │   │   │   ├── FraudDetection.tsx       # Fraud detection dashboard
+│   │   │   │   ├── POSIntegration.tsx       # POS integration status
+│   │   │   │   └── RedemptionAnalytics.tsx  # Redemption analytics
+│   │   │   ├── 📂 notifications/            # Notifications Module
+│   │   │   │   ├── NotificationCenter.tsx   # Notification center
+│   │   │   │   ├── SendNotification.tsx     # Send notification form
+│   │   │   │   ├── NotificationTemplates.tsx # Template management
+│   │   │   │   ├── DeliveryReports.tsx      # Delivery status reports
+│   │   │   │   └── NotificationHistory.tsx  # Notification history
+│   │   │   ├── 📂 system-settings/          # System Settings Module
+│   │   │   │   ├── GeneralSettings.tsx      # General system settings
+│   │   │   │   ├── APIConfiguration.tsx     # API configuration
+│   │   │   │   ├── IntegrationSettings.tsx  # External integration settings
+│   │   │   │   ├── SecuritySettings.tsx     # Security configuration
+│   │   │   │   └── AuditLogs.tsx            # System audit logs
+│   │   │   └── 📂 shared/                   # Shared UI Components
+│   │   │       ├── LoadingSpinner.tsx       # Loading states
+│   │   │       ├── ErrorBoundary.tsx        # Error handling
+│   │   │       ├── ConfirmDialog.tsx        # Confirmation dialogs
+│   │   │       ├── DataTable.tsx            # Reusable data table
+│   │   │       ├── FileUpload.tsx           # File upload component
+│   │   │       ├── DateRangePicker.tsx      # Date range picker
+│   │   │       ├── SearchBox.tsx            # Search input
+│   │   │       ├── StatusBadge.tsx          # Status indicators
+│   │   │       ├── ActionButton.tsx         # Action buttons
+│   │   │       └── EmptyState.tsx           # Empty state display
+│   │   │
+│   │   ├── 📂 pages/                        # Page Components
+│   │   │   ├── LoginPage.tsx                # Login page
+│   │   │   ├── DashboardPage.tsx            # Main dashboard - overview tất cả
+│   │   │   ├── UsersPage.tsx                # User management page
+│   │   │   ├── RolesPage.tsx                # Role management page
+│   │   │   ├── CampaignsPage.tsx            # Campaign management page
+│   │   │   ├── AnalyticsPage.tsx            # Analytics dashboard page
+│   │   │   ├── RedemptionPage.tsx           # Redemption monitoring page
+│   │   │   ├── NotificationsPage.tsx        # Notifications management page
+│   │   │   ├── SettingsPage.tsx             # System settings page
+│   │   │   ├── ProfilePage.tsx              # User profile page
+│   │   │   └── NotFoundPage.tsx             # 404 error page
+│   │   │
+│   │   ├── 📂 hooks/                        # Custom React Hooks
+│   │   │   ├── useAuth.ts                   # Authentication hook
+│   │   │   ├── useUsers.ts                  # User management hook
+│   │   │   ├── useRoles.ts                  # Role management hook
+│   │   │   ├── useCampaigns.ts              # Campaign management hook
+│   │   │   ├── useAnalytics.ts              # Analytics data hook
+│   │   │   ├── useNotifications.ts          # Notifications hook
+│   │   │   ├── usePermissions.ts            # Permission checking hook
+│   │   │   ├── useLocalStorage.ts           # Local storage hook
+│   │   │   └── useDebounce.ts               # Debounce hook
+│   │   │
+│   │   ├── 📂 services/                     # API Services
+│   │   │   ├── api.service.ts               # Base API service với axios
+│   │   │   ├── auth.service.ts              # Authentication API calls
+│   │   │   ├── user.service.ts              # User management API calls
+│   │   │   ├── role.service.ts              # Role management API calls
+│   │   │   ├── campaign.service.ts          # Campaign API calls
+│   │   │   ├── analytics.service.ts         # Analytics API calls
+│   │   │   ├── redemption.service.ts        # Redemption API calls
+│   │   │   ├── notification.service.ts      # Notification API calls
+│   │   │   └── websocket.service.ts         # WebSocket connections
+│   │   │
+│   │   ├── 📂 store/                        # Redux Store
+│   │   │   ├── store.ts                     # Main Redux store configuration
+│   │   │   ├── 📂 slices/                   # Redux slices
+│   │   │   │   ├── authSlice.ts             # Authentication state
+│   │   │   │   ├── userSlice.ts             # User management state
+│   │   │   │   ├── roleSlice.ts             # Role management state
+│   │   │   │   ├── campaignSlice.ts         # Campaign state
+│   │   │   │   ├── analyticsSlice.ts        # Analytics state
+│   │   │   │   ├── redemptionSlice.ts       # Redemption state
+│   │   │   │   ├── notificationSlice.ts     # Notification state
+│   │   │   │   ├── navigationSlice.ts       # Navigation state
+│   │   │   │   └── uiSlice.ts               # UI state (loading, modals, etc.)
+│   │   │   └── 📂 middleware/               # Redux middleware
+│   │   │       ├── authMiddleware.ts        # Auth token handling
+│   │   │       └── errorMiddleware.ts       # Error handling
+│   │   │
+│   │   ├── 📂 utils/                        # Utility Functions
+│   │   │   ├── constants.ts                 # App constants
+│   │   │   ├── validators.ts                # Form validation functions
+│   │   │   ├── formatters.ts                # Data formatting functions
+│   │   │   ├── permissions.ts               # Permission checking utilities
+│   │   │   ├── routes.ts                    # Route definitions
+│   │   │   ├── storage.ts                   # LocalStorage utilities
+│   │   │   ├── dates.ts                     # Date utilities
+│   │   │   └── exporters.ts                 # Data export utilities
+│   │   │
+│   │   ├── 📂 styles/                       # Styling
+│   │   │   ├── globals.css                  # Global styles
+│   │   │   ├── components.css               # Component-specific styles
+│   │   │   ├── layout.css                   # Layout styles
+│   │   │   └── themes/                      # Theme configurations
+│   │   │       ├── light.css                # Light theme
+│   │   │       └── dark.css                 # Dark theme
+│   │   │
+│   │   └── 📂 types/                        # TypeScript Types
+│   │       ├── auth.types.ts                # Authentication types
+│   │       ├── user.types.ts                # User management types
+│   │       ├── campaign.types.ts            # Campaign types
+│   │       ├── analytics.types.ts           # Analytics types
+│   │       ├── api.types.ts                 # API response types
+│   │       └── common.types.ts              # Common shared types
+│   │
+│   ├── 📂 public/                           # Static Assets
+│   │   ├── favicon.ico                      
+│   │   ├── logo.png                         
+│   │   └── icons/                           # Icon assets
+│   │
+│   ├── 📂 tests/                            # Frontend Testing
+│   │   ├── 📂 components/                   # Component tests
+│   │   ├── 📂 hooks/                        # Hook tests
+│   │   ├── 📂 services/                     # Service tests
+│   │   ├── 📂 utils/                        # Utility tests
+│   │   └── 📂 e2e/                          # End-to-end tests
+│   │
+│   ├── package.json                         
+│   ├── tsconfig.json                        
+│   ├── tailwind.config.js                   # Tailwind CSS configuration
+│   ├── vite.config.ts                       # Vite configuration
+│   └── .env.example                         # Environment variables template
 │
-├── 📂 tests/                               # Testing
-│   ├── 📂 unit/                            
-│   │   ├── 📂 domain/                      
-│   │   ├── 📂 application/                 
-│   │   ├── 📂 infrastructure/              
-│   │   └── 📂 presentation/                
-│   ├── 📂 integration/                     
-│   │   ├── auth.integration.test.ts       
-│   │   ├── user.integration.test.ts       
-│   │   └── gdpr.integration.test.ts       
-│   ├── 📂 e2e/                            
-│   │   ├── auth-flow.e2e.test.ts         
-│   │   ├── user-management.e2e.test.ts   
-│   │   └── role-assignment.e2e.test.ts   
-│   └── 📂 fixtures/                        
-│       ├── users.fixture.ts               
-│       ├── roles.fixture.ts               
-│       └── sessions.fixture.ts            
+├── 📂 database/                             # Database Scripts
+│   ├── 📂 migrations/                       
+│   ├── 📂 seeds/                            
+│   └── 📂 backups/                          
 │
-├── 📂 database/                            # Database Scripts
-│   ├── 📂 migrations/                      
-│   ├── 📂 seeds/                           
-│   └── 📂 backups/                         
+├── 📂 deployment/                           # Deployment Configuration
+│   ├── 📂 docker/                           
+│   │   ├── Dockerfile.backend               # Backend container
+│   │   ├── Dockerfile.frontend              # Frontend container
+│   │   ├── docker-compose.yml               # Full stack composition
+│   │   └── docker-compose.dev.yml           # Development environment
+│   ├── 📂 kubernetes/                       
+│   │   ├── 📂 backend/                      # Backend K8s manifests
+│   │   ├── 📂 frontend/                     # Frontend K8s manifests
+│   │   └── 📂 shared/                       # Shared resources
+│   └── 📂 helm/                             
+│       ├── Chart.yaml                       
+│       ├── values.yaml                      
+│       └── 📂 templates/                    
 │
-├── 📂 deployment/                          # Deployment Configuration
-│   ├── 📂 docker/                          
-│   │   ├── Dockerfile                     
-│   │   ├── docker-compose.yml             
-│   │   └── docker-compose.dev.yml         
-│   ├── 📂 kubernetes/                      
-│   │   ├── 📂 base/                        
-│   │   ├── 📂 dev/                         
-│   │   └── 📂 prod/                        
-│   └── 📂 helm/                            
-│       ├── Chart.yaml                     
-│       ├── values.yaml                    
-│       └── 📂 templates/                   
+├── 📂 docs/                                 # Documentation
+│   ├── SETUP.md                             # Setup guide
+│   ├── API.md                               # API documentation
+│   ├── FRONTEND.md                          # Frontend guide
+│   ├── DEPLOYMENT.md                        # Deployment guide
+│   ├── USER-MANUAL.md                       # User manual
+│   └── 📂 diagrams/                         
+│       ├── unified-portal-architecture.png  
+│       ├── navigation-flow.png              
+│       └── user-flow-diagram.png            
 │
-├── 📂 docs/                                # Documentation
-│   ├── API.md                             # API Documentation
-│   ├── SETUP.md                           # Setup Guide
-│   ├── ARCHITECTURE.md                    # Architecture Overview
-│   ├── DEPLOYMENT.md                      # Deployment Guide
-│   ├── TROUBLESHOOTING.md                 # Common Issues
-│   └── 📂 diagrams/                        
-│       ├── architecture-diagram.png       
-│       ├── database-erd.png               
-│       └── auth-flow-diagram.png          
+├── 📂 scripts/                              # Automation Scripts
+│   ├── setup-dev.sh                        # Development setup
+│   ├── build-all.sh                        # Build backend + frontend
+│   ├── deploy-staging.sh                    # Staging deployment
+│   └── backup-data.sh                       # Data backup
 │
-├── 📂 scripts/                             # Automation Scripts
-│   ├── setup-dev.sh                      # Development Setup
-│   ├── run-tests.sh                      # Test Execution
-│   ├── build-deploy.sh                   # Build & Deploy
-│   └── backup-db.sh                      # Database Backup
-│
-├── .env.example                           # Environment Variables Template
-├── .gitignore                             
-├── package.json                           
-├── tsconfig.json                          
-├── jest.config.js                         
-├── docker-compose.yml                     
-└── README.md                              
+├── .env.example                             # Environment variables template
+├── .gitignore                               
+├── package.json                             # Root package.json
+├── docker-compose.yml                       # Full stack development
+└── README.md                                
 ```
 
 ---
@@ -243,541 +352,416 @@ identity-authentication-service/
 
 ### **1. SETUP & CHUẨN BỊ DỰ ÁN** ⚙️
 
-#### **1.1 Khởi tạo dự án cơ bản**
-- [ ] **Tạo repository và cấu trúc thư mục**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06.2.1 Layered Architecture  
-  - *Mô tả*: Thiết lập Clean Architecture với 4 layers (Domain, Application, Infrastructure, Presentation)
-  - *Ý nghĩa*: Đảm bảo separation of concerns và maintainability
+#### **1.1 Khởi tạo dự án monorepo**
+- [ ] **Tạo repository và cấu trúc monorepo**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part06.2.1 Layered Architecture + Part10.3.1 Admin Portal UI
+  - *Mô tả*: Thiết lập monorepo với backend (Clean Architecture) và frontend (Unified Portal)
+  - *Ý nghĩa*: Single repository cho complete Identity + Portal solution, easier maintenance
 
-- [ ] **Cấu hình TypeScript và dependencies**
+- [ ] **Cấu hình workspace và shared dependencies**
   - *Tham chiếu*: SRS-Grok-V2.md - Part02.8 Technical Requirements
-  - *Mô tả*: Setup Node.js 18+, TypeScript 5+, các dependencies cần thiết
-  - *Ý nghĩa*: Thiết lập foundation cho strong typing và modern JavaScript features
+  - *Mô tả*: Setup workspace với shared TypeScript configs, linting, shared types
+  - *Ý nghĩa*: Consistent development experience across backend/frontend, code reuse
 
-- [ ] **Setup Docker và Docker Compose**
+- [ ] **Setup Docker multi-stage builds**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14 Deployment Architecture  
-  - *Mô tả*: Containerization cho development và production environment
-  - *Ý nghĩa*: Đảm bảo consistency across environments và easy deployment
+  - *Mô tả*: Multi-stage Dockerfile cho backend + frontend với optimization
+  - *Ý nghĩa*: Efficient production containers với separate backend/frontend serving
 
 #### **1.2 Database Setup**
-- [ ] **Thiết lập PostgreSQL container**
+- [ ] **Thiết lập PostgreSQL cho user data**
   - *Tham chiếu*: SRS-Grok-V2.md - Part07.1 Data Model Overview
-  - *Mô tả*: PostgreSQL 15+ container với volume persistence
-  - *Ý nghĩa*: Central database cho Identity service với ACID properties
+  - *Mô tả*: PostgreSQL 15+ container với user management schema
+  - *Ý nghĩa*: ACID compliance cho sensitive user data và RBAC information
 
-- [ ] **Thiết lập Redis container**  
+- [ ] **Thiết lập Redis cho sessions và cache**  
   - *Tham chiếu*: SRS-Grok-V2.md - Part07.2.5 Session Management
-  - *Mô tả*: Redis 7+ cho session storage và OTP caching
-  - *Ý nghĩa*: Fast in-memory storage cho temporary data như sessions và OTP codes
+  - *Mô tả*: Redis 7+ cho JWT sessions, OTP codes, portal cache
+  - *Ý nghĩa*: High-performance session management và UI state caching
 
-### **2. DOMAIN LAYER IMPLEMENTATION** 🏗️
+### **2. BACKEND IMPLEMENTATION** 🏗️
 
-#### **2.1 Domain Entities**
-- [ ] **Implement User Entity**
+#### **2.1 Domain Layer Implementation**
+- [ ] **Implement User Entity với business rules**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.4 User Management (FR-004)
-  - *Mô tả*: Core User entity với business rules và validation
-  - *Ý nghĩa*: Encapsulate user business logic, ensure data integrity và business rule enforcement
+  - *Mô tả*: Core User entity với validation, status management, audit trail
+  - *Ý nghĩa*: Encapsulate user business logic, ensure data integrity cho portal users
 
-- [ ] **Implement Role Entity** 
+- [ ] **Implement Role Entity với hierarchy**
   - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration  
-  - *Mô tả*: Role entity cho RBAC system với 6 roles hierarchy
-  - *Ý nghĩa*: Define role structure cho authorization system
+  - *Mô tả*: Role entity với 6-level hierarchy (Platform Admin → Customer Guest)
+  - *Ý nghĩa*: Support complex portal navigation permissions
 
-- [ ] **Implement Permission Entity**
+- [ ] **Implement Permission Entity với granular control**
   - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: Granular permission system cho fine-grained access control  
-  - *Ý nghĩa*: Enable flexible permission assignment và role composition
+  - *Mô tả*: Fine-grained permissions cho portal modules (User Mgmt, Campaign, Analytics, etc.)
+  - *Ý nghĩa*: Flexible portal access control, feature-level permissions
 
-- [ ] **Implement Session Entity**
+- [ ] **Implement Session Entity với portal context**
   - *Tham chiếu*: SRS-Grok-V2.md - Part07.2.5 Session Management
-  - *Mô tả*: Session tracking với JWT token management
-  - *Ý nghĩa*: Manage user sessions, token lifecycle và security
+  - *Mô tả*: Session tracking với portal preferences, navigation state
+  - *Ý nghĩa*: Enhanced portal UX với session persistence
 
 - [ ] **Implement OTPCode Entity**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.5 OTP Verification (FR-005)
-  - *Mô tả*: OTP generation, validation và expiration logic
-  - *Ý nghĩa*: Secure two-factor authentication implementation
+  - *Mô tả*: OTP system cho secure portal login, sensitive operations
+  - *Ý nghĩa*: Two-factor security cho admin portal access
 
-#### **2.2 Value Objects**
-- [ ] **Implement Email Value Object**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.4 User Management
-  - *Mô tả*: Email validation, normalization và domain rules
-  - *Ý nghĩa*: Ensure email format correctness và business rules
-
-- [ ] **Implement Phone Value Object**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.5 OTP Verification  
-  - *Mô tả*: International phone number validation và formatting
-  - *Ý nghĩa*: Standardize phone number handling cho SMS OTP
-
-- [ ] **Implement Password Value Object**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: Password strength validation, hashing requirements
-  - *Ý nghĩa*: Enforce password policy và security standards
-
-#### **2.3 Repository Interfaces** 
-- [ ] **Define IUserRepository interface**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06B.2.1.1 IAuthService
-  - *Mô tả*: User CRUD operations interface với business methods
-  - *Ý nghĩa*: Abstract data access để maintain dependency inversion
-
-- [ ] **Define IRoleRepository interface**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06B.2.1.1 IAuthService  
-  - *Mô tả*: Role management operations interface
-  - *Ý nghĩa*: Separate role management concerns từ implementation details
-
-- [ ] **Define ISessionRepository interface**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.2.5 Session Management
-  - *Mô tả*: Session storage và retrieval operations
-  - *Ý nghĩa*: Abstract session management để support multiple storage backends
-
-- [ ] **Define IOTPRepository interface**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.5 OTP Verification
-  - *Mô tả*: OTP storage, validation và cleanup operations  
-  - *Ý nghĩa*: Manage OTP lifecycle independently của storage mechanism
-
-#### **2.4 Domain Services**
-- [ ] **Implement AuthenticationDomainService**
+#### **2.2 Application Layer Implementation**
+- [ ] **Implement Authentication Use Cases**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.3 User Authentication (FR-003)
-  - *Mô tả*: Core authentication logic, password verification, account lockout
-  - *Ý nghĩa*: Centralize authentication business rules và security policies
+  - *Mô tả*: Login, Logout, Token Refresh, OTP Verification cho portal
+  - *Ý nghĩa*: Complete authentication flow supporting portal SSO
 
-- [ ] **Implement PasswordHashingService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: Secure password hashing với bcrypt, salt generation
-  - *Ý nghĩa*: Consistent password security implementation
-
-- [ ] **Implement OTPGenerationService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.5 OTP Verification
-  - *Mô tả*: Secure OTP generation, expiration management
-  - *Ý nghĩa*: Standardize OTP generation cho security consistency
-
-### **3. APPLICATION LAYER IMPLEMENTATION** 💼
-
-#### **3.1 Authentication Use Cases**
-- [ ] **Implement LoginUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.3 User Authentication (FR-003)
-  - *Mô tả*: Handle user login flow, credential validation, JWT generation
-  - *Ý nghĩa*: Orchestrate authentication process với proper error handling
-
-- [ ] **Implement LogoutUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.3 User Authentication  
-  - *Mô tả*: Session invalidation, token blacklisting
-  - *Ý nghĩa*: Secure logout process để prevent session hijacking
-
-- [ ] **Implement RefreshTokenUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.2.5 Session Management
-  - *Mô tả*: JWT refresh mechanism, security validation
-  - *Ý nghĩa*: Maintain user sessions securely without frequent re-authentication
-
-- [ ] **Implement VerifyOTPUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.5 OTP Verification (FR-005)
-  - *Mô tả*: OTP validation, account activation, two-factor authentication  
-  - *Ý nghĩa*: Complete authentication flow với additional security layer
-
-#### **3.2 User Management Use Cases**
-- [ ] **Implement CreateUserUseCase**
+- [ ] **Implement User Management Use Cases**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.4 User Management (FR-004)
-  - *Mô tả*: User registration, validation, role assignment
-  - *Ý nghĩa*: Handle complete user onboarding process
+  - *Mô tả*: CRUD operations, bulk operations, import/export cho portal UI
+  - *Ý nghĩa*: Backend support cho comprehensive user management portal
 
-- [ ] **Implement UpdateUserUseCase**  
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.4 User Management
-  - *Mô tả*: User profile updates, permission checks, audit logging
-  - *Ý nghĩa*: Secure user data modification với proper authorization
-
-- [ ] **Implement DeleteUserUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.9 Compliance Requirements
-  - *Mô tả*: Soft delete implementation, GDPR compliance
-  - *Ý nghĩa*: Handle user deletion safely với data retention policies
-
-- [ ] **Implement GetUserUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.4 User Management
-  - *Mô tả*: User data retrieval với permission filtering
-  - *Ý nghĩa*: Secure data access với appropriate authorization checks
-
-#### **3.3 Role Management Use Cases**
-- [ ] **Implement AssignRoleUseCase**
+- [ ] **Implement Role Management Use Cases**
   - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
-  - *Mô tả*: Role assignment với validation, audit trail
-  - *Ý nghĩa*: Manage user permissions dynamically
+  - *Mô tả*: Role assignment, permission matrix, hierarchical management
+  - *Ý nghĩa*: Support sophisticated RBAC portal interface
 
-- [ ] **Implement RevokeRoleUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration  
-  - *Mô tả*: Role removal, permission cleanup, session invalidation
-  - *Ý nghĩa*: Secure permission revocation process
-
-- [ ] **Implement GetUserRolesUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: Role query với permission details
-  - *Ý nghĩa*: Provide role information cho authorization decisions
-
-#### **3.4 GDPR Compliance Use Cases**
-- [ ] **Implement ExportUserDataUseCase**
+- [ ] **Implement GDPR Compliance Use Cases**
   - *Tham chiếu*: SRS-Grok-V2.md - Part05.9 Compliance Requirements  
-  - *Mô tả*: Complete user data export for GDPR Article 20
-  - *Ý nghĩa*: Legal compliance với data portability requirements
+  - *Mô tả*: Data export, deletion với audit trail cho compliance portal
+  - *Ý nghĩa*: Legal compliance features accessible through portal UI
 
-- [ ] **Implement DeleteUserDataUseCase**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.9 Compliance Requirements
-  - *Mô tả*: Complete data erasure for GDPR Article 17 "Right to be forgotten"
-  - *Ý nghĩa*: Legal compliance với data deletion requirements
-
-#### **3.5 DTOs Definition**
-- [ ] **Define LoginDTO**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08.1.1 Authentication APIs
-  - *Mô tả*: Login request structure với validation rules
-  - *Ý nghĩa*: Type-safe API contracts cho authentication
-
-- [ ] **Define RegisterDTO**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08.1.2 User Management APIs
-  - *Mô tả*: User registration data structure
-  - *Ý nghĩa*: Standardize user creation input format
-
-- [ ] **Define UserDTO, RoleDTO, OTPDTO**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08 API Design  
-  - *Mô tả*: API response structures với proper serialization
-  - *Ý nghĩa*: Consistent API response format
-
-### **4. INFRASTRUCTURE LAYER IMPLEMENTATION** 🔧
-
-#### **4.1 Database Implementation**
-- [ ] **Create database migrations**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.2 Database Schema
-  - *Mô tả*: SQL scripts cho users, roles, permissions, sessions, otp_codes tables
-  - *Ý nghĩa*: Version-controlled database schema evolution
-
-- [ ] **Implement Repository classes**
+#### **2.3 Infrastructure Layer Implementation**
+- [ ] **Implement Repository classes với optimization**
   - *Tham chiếu*: SRS-Grok-V2.md - Part06.2.1 Layered Architecture
-  - *Mô tả*: Concrete implementations của domain repository interfaces
-  - *Ý nghĩa*: Data access layer implementation với proper error handling
+  - *Mô tả*: Optimized repositories với pagination, filtering cho portal lists
+  - *Ý nghĩa*: High-performance data access cho portal UI components
 
-- [ ] **Create database seeds**
-  - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
-  - *Mô tả*: Default roles và permissions seed data  
-  - *Ý nghĩa*: Initialize system với required RBAC configuration
-
-#### **4.2 External Services Integration**
-- [ ] **Implement TwilioService**
+- [ ] **Implement External Services (Twilio, Email)**
   - *Tham chiếu*: SRS-Grok-V2.md - Part09.1.1 Twilio Integration
-  - *Mô tả*: SMS OTP delivery service integration
-  - *Ý nghĩa*: Enable SMS-based two-factor authentication
+  - *Mô tả*: SMS OTP, Email notifications có thể configure through portal
+  - *Ý nghĩa*: External service management accessible via portal settings
 
-- [ ] **Implement EmailService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.10 Notification System (FR-010)
-  - *Mô tả*: Email notification service cho account verification
-  - *Ý nghĩa*: Support email-based user verification và notifications
-
-- [ ] **Implement RedisService**  
-  - *Tham chiếu*: SRS-Grok-V2.md - Part07.2.5 Session Management
-  - *Mô tả*: Cache service cho sessions và temporary data
-  - *Ý nghĩa*: High-performance session storage và caching
-
-#### **4.3 Security Implementation**
-- [ ] **Implement JWTService**
+- [ ] **Implement Security Services**
   - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: JWT token generation, validation, refresh logic
-  - *Ý nghĩa*: Stateless authentication mechanism implementation
+  - *Mô tả*: JWT, Password hashing, Rate limiting cho portal security
+  - *Ý nghĩa*: Comprehensive security cho admin portal access
 
-- [ ] **Implement PasswordHashService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: Bcrypt password hashing với salt
-  - *Ý nghĩa*: Secure password storage implementation
-
-- [ ] **Implement RateLimitingService**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.1 Performance Requirements (NFR-001)
-  - *Mô tả*: API rate limiting để prevent abuse
-  - *Ý nghĩa*: Protect against brute force attacks và API abuse
-
-### **5. PRESENTATION LAYER IMPLEMENTATION** 🎯
-
-#### **5.1 Controllers Implementation**
-- [ ] **Implement AuthController**
+#### **2.4 Presentation Layer (API) Implementation**
+- [ ] **Implement Authentication Controllers**
   - *Tham chiếu*: SRS-Grok-V2.md - Part08.1.1 Authentication APIs  
-  - *Mô tả*: Login, logout, refresh token, OTP verification endpoints
-  - *Ý nghĩa*: HTTP interface cho authentication operations
+  - *Mô tả*: REST APIs cho portal login, logout, token management
+  - *Ý nghĩa*: API endpoints supporting portal authentication flows
 
-- [ ] **Implement UserController**
+- [ ] **Implement User Management Controllers**
   - *Tham chiếu*: SRS-Grok-V2.md - Part08.1.2 User Management APIs
-  - *Mô tả*: User CRUD operations, profile management endpoints
-  - *Ý nghĩa*: HTTP interface cho user management operations
+  - *Mô tả*: REST APIs với pagination, search, filtering cho portal UI
+  - *Ý nghĩa*: Complete API support cho portal user management features
 
-- [ ] **Implement RoleController**
+- [ ] **Implement Role Management Controllers**
   - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
-  - *Mô tả*: Role assignment, permission management endpoints  
-  - *Ý nghĩa*: HTTP interface cho RBAC operations
+  - *Mô tả*: APIs cho role matrix, permission management trong portal
+  - *Ý nghĩa*: Backend support cho sophisticated RBAC portal interface
 
-- [ ] **Implement GDPRController**
+- [ ] **Implement GDPR Controllers**
   - *Tham chiếu*: SRS-Grok-V2.md - Part05.9 Compliance Requirements
-  - *Mô tả*: Data export, deletion endpoints cho GDPR compliance
-  - *Ý nghĩa*: Legal compliance API endpoints
+  - *Mô tả*: APIs cho data export, deletion requests từ portal
+  - *Ý nghĩa*: Legal compliance functionality accessible via portal
 
-#### **5.2 Middleware Implementation**
-- [ ] **Implement AuthMiddleware**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: JWT token validation, user context injection
-  - *Ý nghĩa*: Secure API access control
+### **3. FRONTEND IMPLEMENTATION - UNIFIED PORTAL** 🖥️
 
-- [ ] **Implement RoleMiddleware**
-  - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
-  - *Mô tả*: RBAC authorization checks
-  - *Ý nghĩa*: Fine-grained permission control
-
-- [ ] **Implement ValidationMiddleware**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements  
-  - *Mô tả*: Input validation, sanitization
-  - *Ý nghĩa*: Prevent malicious input và ensure data quality
-
-- [ ] **Implement RateLimitMiddleware**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.1 Performance Requirements
-  - *Mô tả*: Request rate limiting per user/IP
-  - *Ý nghĩa*: API protection against abuse
-
-#### **5.3 API Routes Definition**
-- [ ] **Define authentication routes**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08.1.1 Authentication APIs
-  - *Mô tả*: POST /auth/login, /auth/logout, /auth/refresh, /auth/verify-otp
-  - *Ý nghĩa*: RESTful API structure cho authentication
-
-- [ ] **Define user management routes**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08.1.2 User Management APIs  
-  - *Mô tả*: CRUD routes cho user operations
-  - *Ý nghĩa*: RESTful API structure cho user management
-
-- [ ] **Define role management routes**
-  - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
-  - *Mô tả*: Role assignment, permission query routes
-  - *Ý nghĩa*: RESTful API structure cho RBAC
-
-- [ ] **Define GDPR compliance routes** 
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.9 Compliance Requirements
-  - *Mô tả*: Data export, deletion request routes
-  - *Ý nghĩa*: Legal compliance API endpoints
-
-### **6. ADMIN PORTAL IMPLEMENTATION** 🖥️
-
-#### **6.1 React Components Setup**
-- [ ] **Setup React TypeScript project**
+#### **3.1 Core Portal Infrastructure**
+- [ ] **Setup React TypeScript với modern tooling**
   - *Tham chiếu*: SRS-Grok-V2.md - Part10.3.1 Admin Portal UI
-  - *Mô tả*: React 18+, TypeScript, Material-UI/Tailwind setup
-  - *Ý nghĩa*: Modern frontend framework cho responsive admin interface
+  - *Mô tả*: React 18+, TypeScript, Vite, Tailwind CSS, modern dev tools
+  - *Ý nghĩa*: High-performance portal với excellent developer experience
 
-- [ ] **Implement authentication components**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part10.3.1 Admin Portal - Authentication
-  - *Mô tả*: LoginForm, OTPVerification, LogoutButton components
-  - *Ý nghĩa*: User-friendly authentication interface
+- [ ] **Implement Main Layout System**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part10.8.6 Navigation
+  - *Mô tả*: Responsive layout với sidebar, topbar, breadcrumbs, mobile support
+  - *Ý nghĩa*: Consistent portal structure supporting all admin modules
 
-#### **6.2 User Management Interface**
-- [ ] **Implement UserList component**
+- [ ] **Setup Navigation System**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part10.8.6 Navigation + Access_Control_Tree_Grok.md
+  - *Mô tả*: Role-based navigation, dynamic menu, breadcrumbs, mobile-friendly
+  - *Ý nghĩa*: Intelligent navigation adapting to user permissions
+
+- [ ] **Implement Authentication Flow**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.3 User Authentication (FR-003)
+  - *Mô tả*: Login page, OTP verification, password reset, session management
+  - *Ý nghĩa*: Secure portal access với user-friendly authentication
+
+#### **3.2 User Management Module**
+- [ ] **Implement UserList Component**
   - *Tham chiếu*: SRS-Grok-V2.md - Part10.3.1 Admin Portal - User Management
-  - *Mô tả*: Paginated user list với search, filter capabilities
-  - *Ý nghĩa*: Efficient user browsing và management interface
+  - *Mô tả*: Advanced data table với pagination, search, filtering, sorting
+  - *Ý nghĩa*: Efficient browsing cho large user datasets
 
-- [ ] **Implement UserForm component**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part10.3.1 Admin Portal - User Management  
-  - *Mô tả*: User creation/editing form với validation
-  - *Ý nghĩa*: Data entry interface cho user management
+- [ ] **Implement UserForm Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.4 User Management  
+  - *Mô tả*: Comprehensive form với validation, role selection, profile management
+  - *Ý nghĩa*: Complete user creation/editing interface
 
-- [ ] **Implement UserDetails component**
+- [ ] **Implement UserDetails Component**
   - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.4 User Management
-  - *Mô tả*: Detailed user view với activity history, role assignments
-  - *Ý nghĩa*: Comprehensive user information display
+  - *Mô tả*: Detailed user view với activity history, role assignments, audit trail
+  - *Ý nghĩa*: 360-degree user information display
 
-#### **6.3 Role Management Interface**
-- [ ] **Implement RoleList component**
-  - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
-  - *Mô tả*: Role listing với permissions preview
-  - *Ý nghĩa*: Role management overview interface
+- [ ] **Implement Bulk Operations**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.1.4 User Management
+  - *Mô tả*: Bulk edit, delete, role assignment, import/export functionality
+  - *Ý nghĩa*: Efficient mass user management operations
 
-- [ ] **Implement PermissionMatrix component**
+#### **3.3 Role & Permission Management Module**
+- [ ] **Implement RoleList Component**
   - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
-  - *Mô tả*: Interactive permission assignment matrix
+  - *Mô tả*: Role hierarchy display với permission previews
+  - *Ý nghĩa*: Clear role structure visualization
+
+- [ ] **Implement PermissionMatrix Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
+  - *Mô tả*: Interactive matrix cho granular permission assignment
   - *Ý nghĩa*: Visual permission management tool
 
-#### **6.4 State Management**
-- [ ] **Setup Redux Toolkit**
+- [ ] **Implement RoleAssignment Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Access_Control_Tree_Grok.md Integration
+  - *Mô tả*: Drag-and-drop role assignment với validation
+  - *Ý nghĩa*: Intuitive role management interface
+
+#### **3.4 Campaign Management Integration**
+- [ ] **Implement CampaignOverview Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.1 Campaign Management (FR-001)
+  - *Mô tả*: Campaign metrics dashboard, quick actions, status overview
+  - *Ý nghĩa*: Integrated campaign management trong unified portal
+
+- [ ] **Implement QRCodeGenerator Integration**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - QR Integration
+  - *Mô tả*: QR generation tool integrated trong portal với UTM tracking
+  - *Ý nghĩa*: Seamless QR management workflow
+
+- [ ] **Implement TemplateGallery Integration**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.6 Ads Format Management - Template System
+  - *Mô tả*: Template browser và selector integrated trong campaign workflow
+  - *Ý nghĩa*: Unified creative asset management
+
+#### **3.5 Analytics Dashboard Integration**
+- [ ] **Implement DashboardOverview Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics (FR-008)
+  - *Mô tả*: Main dashboard với key metrics từ tất cả services
+  - *Ý nghĩa*: Central command center cho admin portal
+
+- [ ] **Implement RealTimeMetrics Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics
+  - *Mô tả*: Live metrics display với auto-refresh, alerts
+  - *Ý nghĩa*: Real-time system monitoring trong portal
+
+- [ ] **Implement CustomReportBuilder Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.14 Advanced Reporting (FR-014)
+  - *Mô tả*: Drag-and-drop report builder với export options
+  - *Ý nghĩa*: Self-service analytics trong portal
+
+#### **3.6 Redemption Management Integration**
+- [ ] **Implement RedemptionOverview Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.7 Barcode Redemption (FR-007)
+  - *Mô tả*: Redemption monitoring dashboard với real-time updates
+  - *Ý nghĩa*: Integrated redemption tracking trong portal
+
+- [ ] **Implement FraudDetection Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.11 Fraud Detection (FR-011)
+  - *Mô tả*: Fraud alerts, ML scoring display, investigation tools
+  - *Ý nghĩa*: Security monitoring integrated trong admin portal
+
+#### **3.7 Notifications Management Integration**
+- [ ] **Implement NotificationCenter Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.10 Notification System (FR-010)
+  - *Mô tả*: Unified notification center với real-time updates
+  - *Ý nghĩa*: Central communication hub trong portal
+
+- [ ] **Implement SendNotification Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.10 Notification System
+  - *Mô tả*: Multi-channel notification sender (SMS, Email, Push)
+  - *Ý nghĩa*: Integrated communication tools
+
+#### **3.8 System Settings Module**
+- [ ] **Implement GeneralSettings Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part02.8 Technical Requirements
+  - *Mô tả*: System configuration, feature toggles, maintenance mode
+  - *Ý nghĩa*: Centralized system administration
+
+- [ ] **Implement APIConfiguration Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08 API Design
+  - *Mô tả*: API rate limits, key management, endpoint configuration
+  - *Ý nghĩa*: API management integrated trong portal
+
+- [ ] **Implement AuditLogs Component**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part05.6 Auditability Requirements
+  - *Mô tả*: Searchable audit trail với filtering, export
+  - *Ý nghĩa*: Compliance monitoring tools
+
+#### **3.9 State Management & Services**
+- [ ] **Setup Redux Toolkit với RTK Query**
   - *Tham chiếu*: SRS-Grok-V2.md - Part10.3.1 Admin Portal Architecture
-  - *Mô tả*: Global state management cho authentication, user data
-  - *Ý nghĩa*: Predictable state management cho complex UI interactions
+  - *Mô tả*: Global state management với API caching, real-time updates
+  - *Ý nghĩa*: Efficient data management cho complex multi-module portal
 
-- [ ] **Implement auth slice**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part10.3.1 Admin Portal - Authentication
-  - *Mô tả*: Authentication state management
-  - *Ý nghĩa*: Centralized authentication state
+- [ ] **Implement Unified API Services**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part08 API Design
+  - *Mô tả*: API gateway integration, error handling, authentication
+  - *Ý nghĩa*: Consistent API communication across all portal modules
 
-- [ ] **Implement user slice**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part10.3.1 Admin Portal - User Management
-  - *Mô tả*: User data state management
-  - *Ý nghĩa*: Efficient user data caching và updates
+- [ ] **Implement WebSocket Integration**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics
+  - *Mô tả*: Real-time updates cho notifications, analytics, fraud alerts
+  - *Ý nghĩa*: Live portal experience với instant updates
 
-### **7. TESTING IMPLEMENTATION** 🧪
+### **4. TESTING IMPLEMENTATION** 🧪
 
-#### **7.1 Unit Testing**
-- [ ] **Write domain entity tests**
+#### **4.1 Backend Testing**
+- [ ] **Write comprehensive unit tests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.2.1 Unit Testing Framework
-  - *Mô tả*: Test business logic, validation rules trong entities
-  - *Ý nghĩa*: Ensure domain logic correctness
+  - *Mô tả*: Domain entities, use cases, repositories với >90% coverage
+  - *Ý nghĩa*: Ensure backend reliability cho portal functionality
 
-- [ ] **Write use case tests**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.2.1 Unit Testing Framework  
-  - *Mô tả*: Test application logic với mocked dependencies
-  - *Ý nghĩa*: Verify use case behavior isolation
-
-- [ ] **Write repository tests**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.3.2 Database Testing
-  - *Mô tả*: Test data access logic với in-memory database
-  - *Ý nghĩa*: Ensure data persistence correctness
-
-#### **7.2 Integration Testing**
 - [ ] **Write API integration tests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.3.1 API Testing
-  - *Mô tả*: Test complete API workflows với real database
-  - *Ý nghĩa*: Verify end-to-end API functionality
+  - *Mô tả*: Complete API workflows, authentication, RBAC
+  - *Ý nghĩa*: Verify backend services supporting portal
 
-- [ ] **Write external service integration tests**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.3.3 External Integration Testing
-  - *Mô tả*: Test Twilio, email service integrations
-  - *Ý nghĩa*: Verify external service communication
+#### **4.2 Frontend Testing**
+- [ ] **Write component unit tests**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part13.2.1 Unit Testing Framework
+  - *Mô tả*: Individual component testing với React Testing Library
+  - *Ý nghĩa*: Ensure portal UI component reliability
 
-#### **7.3 End-to-End Testing**
-- [ ] **Write authentication flow tests**
+- [ ] **Write integration tests**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part13.3.1 API Testing
+  - *Mô tả*: Portal workflows, API integration, state management
+  - *Ý nghĩa*: Verify complete portal functionality
+
+#### **4.3 End-to-End Testing**
+- [ ] **Write portal workflow tests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.4.1 End-to-End Testing
-  - *Mô tả*: Complete login/logout/OTP verification flows
-  - *Ý nghĩa*: Verify complete user authentication experience
+  - *Mô tả*: Complete admin workflows từ login đến task completion
+  - *Ý nghĩa*: Verify end-to-end portal user experience
 
-- [ ] **Write user management flow tests**
+- [ ] **Write cross-module integration tests**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.4.1 End-to-End Testing
-  - *Mô tả*: User creation, role assignment, permission checking flows
-  - *Ý nghĩa*: Verify complete user management workflows
+  - *Mô tả*: User management → Campaign creation → Analytics viewing flows
+  - *Ý nghĩa*: Verify seamless portal module integration
 
-### **8. DEPLOYMENT & DEVOPS** 🚀
+### **5. DEPLOYMENT & DEVOPS** 🚀
 
-#### **8.1 Containerization**
-- [ ] **Create Dockerfile**
+#### **5.1 Containerization**
+- [ ] **Create multi-stage Dockerfiles**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14.2 Container Architecture
-  - *Mô tả*: Multi-stage build cho production optimization
-  - *Ý nghĩa*: Consistent deployment artifact
+  - *Mô tả*: Optimized containers cho backend service và frontend portal
+  - *Ý nghĩa*: Efficient deployment artifacts cho production
 
-- [ ] **Create Docker Compose**
+- [ ] **Create Docker Compose development stack**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14.2 Container Architecture
-  - *Mô tả*: Local development stack với PostgreSQL, Redis
-  - *Ý nghĩa*: Easy local development setup
+  - *Mô tả*: Complete development environment với databases, services
+  - *Ý nghĩa*: Easy local development setup cho full stack
 
-#### **8.2 Kubernetes Deployment**
-- [ ] **Create Kubernetes manifests**
+#### **5.2 Kubernetes Deployment**
+- [ ] **Create K8s manifests cho backend/frontend**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14.3 Kubernetes Configuration
-  - *Mô tả*: Deployment, Service, ConfigMap, Secret resources
-  - *Ý nghĩa*: Production-ready orchestration
+  - *Mô tả*: Separate deployments với shared ConfigMaps, Secrets
+  - *Ý nghĩa*: Production-ready orchestration với scaling capabilities
 
-- [ ] **Setup Helm charts**
+- [ ] **Setup Ingress cho unified domain**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14.3 Kubernetes Configuration
-  - *Mô tả*: Parameterized deployment templates
-  - *Ý nghĩa*: Environment-specific deployment management
+  - *Mô tả*: Single domain routing `/api/*` → backend, `/*` → frontend
+  - *Ý nghĩa*: Seamless user experience với unified URL structure
 
-#### **8.3 CI/CD Pipeline**
-- [ ] **Setup GitHub Actions**
+#### **5.3 CI/CD Pipeline**
+- [ ] **Setup GitHub Actions cho monorepo**
   - *Tham chiếu*: SRS-Grok-V2.md - Part15.1 CI/CD Pipeline
-  - *Mô tả*: Automated testing, building, deployment pipeline
-  - *Ý nghĩa*: Automated delivery process
+  - *Mô tả*: Parallel builds, testing, deployment cho backend + frontend
+  - *Ý nghĩa*: Efficient automated delivery cho complete solution
 
-- [ ] **Configure automated testing**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.5.1 Test Automation Framework
-  - *Mô tả*: Unit, integration, E2E test execution trong CI
-  - *Ý nghĩa*: Quality assurance automation
+### **6. MONITORING & OBSERVABILITY** 📊
 
-### **9. MONITORING & OBSERVABILITY** 📊
-
-#### **9.1 Application Monitoring**
-- [ ] **Setup health check endpoints**
+#### **6.1 Backend Monitoring**
+- [ ] **Setup API monitoring**
   - *Tham chiếu*: SRS-Grok-V2.md - Part15.3.1 Health Monitoring
-  - *Mô tả*: /health, /ready endpoints cho Kubernetes probes
-  - *Ý nghĩa*: Service health visibility
+  - *Mô tả*: Health checks, metrics collection, error tracking
+  - *Ý nghĩa*: Backend reliability monitoring
 
-- [ ] **Implement logging**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part15.3.2 Logging Strategy
-  - *Mô tả*: Structured logging với correlation IDs
-  - *Ý nghĩa*: Debugging và audit trail support
+#### **6.2 Frontend Monitoring**
+- [ ] **Setup portal performance monitoring**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part15.3.1 Health Monitoring
+  - *Mô tả*: Core Web Vitals, user experience metrics, error tracking
+  - *Ý nghĩa*: Portal UX optimization insights
 
-- [ ] **Setup metrics collection**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part15.3.3 Metrics Collection
-  - *Mô tả*: Prometheus metrics cho performance monitoring
-  - *Ý nghĩa*: Performance visibility và alerting
+- [ ] **Implement user analytics**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.8 Real Time Analytics
+  - *Mô tả*: Portal usage patterns, feature adoption, user behavior
+  - *Ý nghĩa*: Portal improvement insights
 
-#### **9.2 Security Monitoring**
-- [ ] **Implement audit logging**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.6 Auditability Requirements
-  - *Mô tả*: Authentication events, permission changes logging
-  - *Ý nghĩa*: Security compliance và incident investigation
+### **7. DOCUMENTATION & DELIVERY** 📚
 
-- [ ] **Setup security alerts**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part05.3 Security Requirements
-  - *Mô tả*: Failed login attempts, suspicious activity alerts
-  - *Ý nghĩa*: Proactive security incident detection
-
-### **10. DOCUMENTATION & DELIVERY** 📚
-
-#### **10.1 Technical Documentation**
-- [ ] **Create API documentation**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part08 API Design
-  - *Mô tả*: OpenAPI/Swagger specifications với examples
-  - *Ý nghĩa*: Developer-friendly API reference
-
-- [ ] **Write architecture documentation**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part06 System Architecture
-  - *Mô tả*: System overview, component interactions, design decisions
-  - *Ý nghĩa*: Maintainability và knowledge transfer
-
-- [ ] **Create deployment guide**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part14 Deployment Architecture
-  - *Mô tả*: Step-by-step deployment instructions
-  - *Ý nghĩa*: Operational readiness
-
-#### **10.2 User Documentation**
-- [ ] **Write admin portal user guide**
+#### **7.1 Technical Documentation**
+- [ ] **Create portal user manual**
   - *Tham chiếu*: SRS-Grok-V2.md - Part10.3.1 Admin Portal
-  - *Mô tả*: User management workflows, role assignment procedures
-  - *Ý nghĩa*: End-user adoption support
+  - *Mô tả*: Complete guide cho tất cả portal features, role-specific instructions
+  - *Ý nghĩa*: User adoption support cho unified portal
 
-- [ ] **Create troubleshooting guide**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part15.4 Troubleshooting
-  - *Mô tả*: Common issues, solutions, debugging steps
-  - *Ý nghĩa*: Operational efficiency
+- [ ] **Write developer documentation**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part06 System Architecture
+  - *Mô tả*: Architecture overview, API docs, development setup
+  - *Ý nghĩa*: Developer onboarding và maintenance support
 
-#### **10.3 Project Delivery**
-- [ ] **Final integration testing**
-  - *Tham chiếu*: SRS-Grok-V2.md - Part13.4 End-to-End Testing
-  - *Mô tả*: Complete system testing với all components
-  - *Ý nghĩa*: Delivery quality assurance
-
-- [ ] **Performance validation**
+#### **7.2 Project Delivery**
+- [ ] **Performance validation cho full stack**
   - *Tham chiếu*: SRS-Grok-V2.md - Part12.2.1 Load Testing Scenarios
-  - *Mô tả*: Load testing để verify NFR compliance
-  - *Ý nghĩa*: Performance requirements verification
+  - *Mô tả*: Load testing cho backend APIs và frontend portal performance
+  - *Ý nghĩa*: Complete solution performance verification
 
-- [ ] **Security audit**
+- [ ] **Security audit cho portal**
   - *Tham chiếu*: SRS-Grok-V2.md - Part13.5.3 Security Testing
-  - *Mô tả*: Penetration testing, vulnerability assessment
-  - *Ý nghĩa*: Security requirements verification
+  - *Mô tả*: Penetration testing, authentication security, RBAC validation
+  - *Ý nghĩa*: Portal security assurance
 
-- [ ] **Production deployment**
+- [ ] **Production deployment và go-live**
   - *Tham chiếu*: SRS-Grok-V2.md - Part14.1 Deployment Overview
-  - *Mô tả*: Production environment setup và go-live
-  - *Ý nghĩa*: System availability cho end users
+  - *Mô tả*: Production environment setup với monitoring, backup
+  - *Ý nghĩa*: Complete solution availability cho end users
 
 ---
 
 ## 🎯 Kết Luận
 
-**Tổng số checkpoints**: 89 tasks  
-**Estimated timeline**: 6-8 tuần cho 1 team (3-4 developers)  
-**SRS coverage**: 100% cho Identity & Authentication domain  
+**Tổng số checkpoints**: 132 tasks  
+**Estimated timeline**: 8-10 tuần cho 1 team (4-5 developers)  
+**SRS coverage**: 100% cho Identity domain + Complete Unified Portal  
 
 **Deliverables chính**:
-- ✅ Complete Identity & Authentication Service với Clean Architecture
-- ✅ Admin Portal cho user management  
-- ✅ Full RBAC system với 6 roles
-- ✅ GDPR compliant user data management
-- ✅ Production-ready deployment configuration
-- ✅ Comprehensive testing suite
-- ✅ Complete documentation package
+- ✅ **Complete Identity & Authentication Service** với Clean Architecture
+- ✅ **Unified Admin Portal** tích hợp tất cả modules
+- ✅ **Full RBAC system** với 6 roles và granular permissions
+- ✅ **Role-based Portal Navigation** adapting to user permissions
+- ✅ **Real-time Portal Features** với WebSocket integration
+- ✅ **GDPR compliant** user data management
+- ✅ **Mobile-responsive** portal design
+- ✅ **Production-ready** deployment configuration
+- ✅ **Comprehensive testing** suite cho full stack
+- ✅ **Complete documentation** package
 
-**Ready for independent development! 🚀**
+**Key Portal Features**:
+- 🏠 **Unified Dashboard**: Single-point access cho tất cả admin functions
+- 👥 **Integrated User Management**: Complete RBAC với visual permission matrix
+- 🎯 **Campaign Management Integration**: Seamless workflow từ user → campaign → analytics
+- 📊 **Real-time Analytics**: Live metrics và notifications trong portal
+- 🔔 **Notification Center**: Unified communication hub
+- ⚙️ **System Administration**: Complete configuration management
+- 📱 **Mobile-first Design**: Responsive portal cho mọi device
+
+**Portal Navigation Structure**:
+```bash
+🏠 Dashboard (Overview tất cả services)
+├── 👥 Users & Roles (Identity Service)
+├── 🎯 Campaigns (Campaign Service)  
+├── 📊 Analytics (Analytics Service)
+├── 🛍️ Redemptions (Redemption Service)
+├── 🔔 Notifications (Notification Service)
+└── ⚙️ Settings (System Configuration)
+```
+
+**Ready for unified development! Single portal, multiple services, seamless experience! 🚀**
