@@ -1,7 +1,3 @@
-Đúng rồi! 😂 **KISS principle** - Keep It Simple, Stupid!
-
-Một **TECH PRO** nhìn vào SRS + mapping table là biết phải làm gì rồi, cần gì phải **micro-manage**!
-
 ## 🎯 **SINGLE MASTER PROMPT:**
 
 ```
