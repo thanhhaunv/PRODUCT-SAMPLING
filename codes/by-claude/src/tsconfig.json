@@ -1,0 +1,152 @@
+{
+  "compilerOptions": {
+    // ==============================================================================
+    // IDENTITY & AUTH UNIFIED PORTAL - ROOT TYPESCRIPT CONFIGURATION
+    // Tham chiếu: SRS-Grok-V2.md - Part02.8 Technical Requirements
+    // EMSA-v1.0 Compliant TypeScript Configuration
+    // ==============================================================================
+
+    // Language and Environment
+    "target": "ES2020",                          // Target ES2020 for modern Node.js support
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],    // Include DOM types for frontend compatibility
+    "module": "commonjs",                        // CommonJS for Node.js compatibility
+    "moduleResolution": "node",                  // Node.js-style module resolution
+    "esModuleInterop": true,                     // Enable interoperability between CommonJS and ES modules
+    "allowSyntheticDefaultImports": true,       // Allow default imports from modules with no default export
+    "resolveJsonModule": true,                   // Allow importing JSON files
+    "isolatedModules": true,                     // Ensure each file can be safely transpiled
+
+    // Type Checking Strictness
+    "strict": true,                              // Enable all strict type checking options
+    "noImplicitAny": true,                       // Raise error on expressions and declarations with implied 'any' type
+    "strictNullChecks": true,                    // Enable strict null checks
+    "strictFunctionTypes": true,                 // Enable strict checking of function types
+    "strictBindCallApply": true,                 // Enable strict 'bind', 'call', and 'apply' methods
+    "strictPropertyInitialization": true,       // Enable strict checking of property initialization
+    "noImplicitReturns": true,                   // Report error when not all code paths return a value
+    "noFallthroughCasesInSwitch": true,         // Report errors for fallthrough cases in switch statements
+    "noUncheckedIndexedAccess": true,           // Add 'undefined' to type when accessing with index signature
+    "noImplicitOverride": true,                  // Ensure overriding members are marked with override modifier
+
+    // Module Resolution
+    "baseUrl": ".",                              // Base directory for resolving non-relative modules
+    "paths": {
+      "@shared/*": ["shared/src/*"],             // Shared utilities and types
+      "@backend/*": ["backend/src/*"],           // Backend source code
+      "@frontend/*": ["frontend/src/*"],         // Frontend source code
+      "@types/*": ["shared/types/*"]             // Shared type definitions
+    },
+
+    // Emit Configuration
+    "declaration": true,                         // Generate corresponding '.d.ts' file
+    "declarationMap": true,                      // Generate sourcemap for '.d.ts' files
+    "sourceMap": true,                           // Generate corresponding '.map' file
+    "outDir": "./dist",                          // Redirect output structure to the directory
+    "removeComments": false,                     // Keep comments for better debugging
+    "noEmitOnError": true,                       // Do not emit outputs if any errors were reported
+    "preserveConstEnums": true,                  // Do not erase const enum declarations
+
+    // Interop Constraints
+    "forceConsistentCasingInFileNames": true,   // Disallow inconsistently-cased references
+    "skipLibCheck": true,                        // Skip type checking of declaration files (faster builds)
+    "allowJs": false,                            // Do not allow JavaScript files (TypeScript only)
+    "checkJs": false,                            // Do not check JavaScript files
+
+    // Advanced Options
+    "incremental": true,                         // Enable incremental compilation
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",   // Specify file to store incremental compilation information
+    "composite": true,                           // Enable project references for monorepo
+
+    // Decorators (for NestJS compatibility)
+    "experimentalDecorators": true,              // Enable experimental support for decorators
+    "emitDecoratorMetadata": true,               // Enable experimental support for decorator metadata
+
+    // Additional Checks
+    "noUnusedLocals": true,                      // Report errors on unused locals
+    "noUnusedParameters": true,                  // Report errors on unused parameters
+    "exactOptionalPropertyTypes": true,         // Enable strict checking of optional properties
+    "noPropertyAccessFromIndexSignature": false, // Allow property access from index signatures
+
+    // Output Formatting
+    "pretty": true,                              // Enable color and formatting in TypeScript's output
+    "listEmittedFiles": false,                   // Print names of generated files
+    "listFiles": false,                          // Print names of files part of the compilation
+
+    // Project Structure
+    "rootDir": ".",                              // Specify the root directory of input files
+    "typeRoots": [
+      "./node_modules/@types",                   // Default type roots
+      "./shared/types",                          // Shared types directory
+      "./@types"                                 // Custom type definitions
+    ],
+    "types": [
+      "node",                                    // Node.js types
+      "jest"                                     // Jest testing types
+    ]
+  },
+
+  // Include patterns for TypeScript compilation
+  "include": [
+    "backend/src/**/*",                          // Backend source files
+    "frontend/src/**/*",                         // Frontend source files
+    "shared/src/**/*",                           // Shared source files
+    "shared/types/**/*",                         // Shared type definitions
+    "**/*.d.ts"                                  // All declaration files
+  ],
+
+  // Exclude patterns from TypeScript compilation
+  "exclude": [
+    "node_modules",                              // Dependencies
+    "**/node_modules",                           // Nested dependencies
+    "dist",                                      // Build outputs
+    "**/dist",                                   // Nested build outputs
+    "build",                                     // Alternative build directory
+    "**/build",                                  // Nested build directories
+    "coverage",                                  // Test coverage reports
+    "**/coverage",                               // Nested coverage reports
+    "**/*.spec.ts",                              // Test files (handled separately)
+    "**/*.test.ts",                              // Test files (handled separately)
+    "**/*.e2e.ts",                               // E2E test files
+    "cypress",                                   // Cypress test files
+    "scripts",                                   // Build/deployment scripts
+    "deployment",                                // Deployment configurations
+    "docs",                                      // Documentation files
+    ".git",                                      // Git directory
+    ".github",                                   // GitHub workflows
+    "*.config.js",                               // Configuration files
+    "*.config.ts"                                // TypeScript configuration files
+  ],
+
+  // Project references for monorepo structure
+  "references": [
+    {
+      "path": "./shared"                         // Shared library project
+    },
+    {
+      "path": "./backend"                        // Backend service project
+    },
+    {
+      "path": "./frontend"                       // Frontend application project
+    }
+  ],
+
+  // TypeScript compiler options for watch mode
+  "watchOptions": {
+    "watchFile": "useFsEvents",                  // Use filesystem events for watching
+    "watchDirectory": "useFsEvents",             // Use filesystem events for directory watching
+    "fallbackPolling": "dynamicPriority",       // Fallback polling strategy
+    "synchronousWatchDirectory": true,          // Synchronous directory watching
+    "excludeDirectories": [
+      "**/node_modules",                         // Exclude dependencies from watching
+      "**/dist",                                 // Exclude build outputs from watching
+      "**/coverage"                              // Exclude coverage reports from watching
+    ]
+  },
+
+  // Build options
+  "buildOptions": {
+    "dry": false,                                // Actually emit files
+    "force": false,                              // Don't force rebuild
+    "verbose": false                             // Don't show verbose output
+  }
+}
