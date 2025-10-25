@@ -1,0 +1,432 @@
+# ==============================================================================
+# IDENTITY & AUTH UNIFIED PORTAL - .GITIGNORE
+# Tham chiếu: SRS-Grok-V2.md - Part06B.6.1 Folder Structure
+# Purpose: Comprehensive gitignore for monorepo with backend + frontend
+# ==============================================================================
+
+# ==============================================================================
+# ROOT LEVEL IGNORES
+# ==============================================================================
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+.env.test
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Package manager locks (keep package-lock.json for consistency)
+# yarn.lock
+# package-lock.json
+
+# Build outputs
+dist/
+build/
+out/
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output/
+
+# Temporary directories
+temp/
+tmp/
+.tmp/
+
+# ==============================================================================
+# BACKEND SPECIFIC IGNORES
+# ==============================================================================
+
+# NestJS build outputs
+backend/dist/
+backend/build/
+
+# TypeScript build info
+backend/*.tsbuildinfo
+
+# Prisma generated files
+backend/prisma/generated/
+backend/node_modules/.prisma/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backend environment
+backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.staging
+backend/.env.production
+backend/.env.test
+
+# Backend logs
+backend/logs/
+backend/*.log
+
+# Backend test coverage
+backend/coverage/
+backend/.nyc_output/
+
+# Backend temporary files
+backend/temp/
+backend/tmp/
+
+# JWT keys (if stored locally)
+backend/keys/
+*.pem
+*.key
+
+# Upload directories
+backend/uploads/
+backend/files/
+
+# ==============================================================================
+# FRONTEND SPECIFIC IGNORES
+# ==============================================================================
+
+# React/Vite build outputs
+frontend/dist/
+frontend/build/
+
+# Vite specific
+frontend/.vite/
+
+# Frontend environment
+frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.staging
+frontend/.env.production
+frontend/.env.test
+
+# Frontend test coverage
+frontend/coverage/
+
+# Storybook build
+frontend/storybook-static/
+
+# Frontend temporary files
+frontend/temp/
+frontend/tmp/
+
+# ESLint cache
+frontend/.eslintcache
+
+# TypeScript build info
+frontend/*.tsbuildinfo
+
+# ==============================================================================
+# SHARED LIBRARY IGNORES
+# ==============================================================================
+
+# Shared build outputs
+shared/dist/
+shared/build/
+shared/lib/
+
+# Shared test coverage
+shared/coverage/
+
+# ==============================================================================
+# DEPLOYMENT & INFRASTRUCTURE IGNORES
+# ==============================================================================
+
+# Docker
+.dockerignore
+*Dockerfile*.swp
+
+# Kubernetes secrets
+deployment/kubernetes/secrets/
+*.secret.yaml
+
+# Helm generated files
+deployment/helm/charts/
+deployment/helm/*.tgz
+
+# Terraform (if used)
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+
+# Cloud provider credentials
+.aws/
+.gcp/
+.azure/
+
+# SSL certificates
+*.crt
+*.csr
+*.key
+*.pem
+ssl/
+certs/
+
+# ==============================================================================
+# DEVELOPMENT TOOLS IGNORES
+# ==============================================================================
+
+# Testing
+cypress/videos/
+cypress/screenshots/
+test-results/
+playwright-report/
+
+# Linting and formatting
+.eslintcache
+.prettierignore.backup
+
+# Husky
+.husky/_/
+
+# ==============================================================================
+# DOCUMENTATION IGNORES
+# ==============================================================================
+
+# Generated documentation
+docs/generated/
+docs/api-docs/
+docs/coverage/
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# ==============================================================================
+# MONITORING & ANALYTICS IGNORES
+# ==============================================================================
+
+# Application logs
+app.log
+error.log
+access.log
+combined.log
+
+# Performance monitoring
+lighthouse-report.html
+performance-report.json
+
+# ==============================================================================
+# SECURITY IGNORES
+# ==============================================================================
+
+# API keys and secrets
+secrets/
+.secrets/
+api-keys.json
+credentials.json
+
+# Security scan results
+security-report.json
+vulnerability-report.json
+
+# ==============================================================================
+# DATABASE IGNORES
+# ==============================================================================
+
+# Local database files
+*.db
+*.sqlite*
+data/
+database/
+
+# Database backups
+*.sql.gz
+*.dump
+backup/
+
+# Migration backup files
+migrations/backup/
+
+# ==============================================================================
+# CACHE AND OPTIMIZATION IGNORES
+# ==============================================================================
+
+# NPM cache
+.npm/
+
+# Yarn cache
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Next.js cache (if used)
+.next/
+
+# Nuxt.js cache (if used)
+.nuxt/
+
+# ==============================================================================
+# TESTING FRAMEWORK IGNORES
+# ==============================================================================
+
+# Jest
+jest-results.json
+
+# Cypress
+cypress/downloads/
+cypress/fixtures/generated/
+
+# Playwright
+test-results/
+playwright/.cache/
+
+# ==============================================================================
+# BUILD TOOLS IGNORES
+# ==============================================================================
+
+# Webpack
+.webpack/
+
+# Rollup
+.rollup.cache/
+
+# Parcel
+.parcel-cache/
+
+# ==============================================================================
+# PACKAGE MANAGER IGNORES
+# ==============================================================================
+
+# NPM
+npm-debug.log*
+.npm
+
+# Yarn
+yarn-error.log
+.yarn-integrity
+
+# PNPM
+.pnpm-debug.log*
+
+# ==============================================================================
+# MISCELLANEOUS IGNORES
+# ==============================================================================
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Optional REPL history
+.node_repl_history
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# FuseBox cache
+.fusebox/
+
+# ==============================================================================
+# PROJECT SPECIFIC IGNORES
+# ==============================================================================
+
+# Health check endpoints responses
+health-check.json
+status.json
+
+# Performance benchmarks
+benchmarks/
+performance/
+
+# Load testing results
+load-test-results/
+
+# API documentation generated files
+api-docs.html
+swagger-ui/
+
+# User uploaded files (in development)
+uploads/test/
+files/temp/
+
+# Local configuration overrides
+config.local.json
+settings.local.json
+
+# Development database seeds
+seeds/dev/
+seeds/test/
+
+# Custom scripts (that shouldn't be committed)
+scripts/local/
+scripts/dev/
+scripts/personal/
+
+# ==============================================================================
+# END OF .GITIGNORE
+# ==============================================================================
