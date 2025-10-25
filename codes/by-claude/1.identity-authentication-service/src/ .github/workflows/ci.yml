@@ -1,0 +1,588 @@
+# ==============================================================================
+# IDENTITY & AUTH UNIFIED PORTAL - CONTINUOUS INTEGRATION WORKFLOW
+# Tham chiếu: SRS-Grok-V2.md - Part15.1 CI/CD Pipeline
+# Purpose: Automated testing, linting, security scanning, and build verification
+# ==============================================================================
+
+name: 🔄 Continuous Integration
+
+# Trigger conditions
+on:
+  # Pull request events
+  pull_request:
+    branches: 
+      - main
+      - develop
+      - release/*
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - 'LICENSE'
+
+  # Push events
+  push:
+    branches: 
+      - main
+      - develop
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - 'LICENSE'
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      run_e2e_tests:
+        description: 'Run E2E tests'
+        required: false
+        default: 'false'
+        type: boolean
+      deploy_preview:
+        description: 'Deploy preview environment'
+        required: false
+        default: 'false'
+        type: boolean
+
+# Global environment variables
+env:
+  NODE_VERSION: '18.x'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  POSTGRES_VERSION: '15'
+  REDIS_VERSION: '7'
+
+# Ensure only one CI run per ref
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# ==============================================================================
+# JOBS CONFIGURATION
+# ==============================================================================
+
+jobs:
+  # ==============================================================================
+  # CHANGES DETECTION JOB
+  # ==============================================================================
+  changes:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      shared: ${{ steps.changes.outputs.shared }}
+      docker: ${{ steps.changes.outputs.docker }}
+      dependencies: ${{ steps.changes.outputs.dependencies }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'shared/**'
+            frontend:
+              - 'frontend/**'
+              - 'shared/**'
+            shared:
+              - 'shared/**'
+            docker:
+              - 'deployment/docker/**'
+              - 'docker-compose.yml'
+              - 'Dockerfile*'
+            dependencies:
+              - 'package*.json'
+              - '**/package*.json'
+              - 'yarn.lock'
+              - '**/yarn.lock'
+
+  # ==============================================================================
+  # SETUP AND VALIDATION JOB
+  # ==============================================================================
+  setup:
+    name: 🛠️ Setup & Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for better caching
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            */node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm run install:all
+
+      - name: Validate package.json files
+        run: |
+          echo "🔍 Validating package.json files..."
+          npm run --if-present validate:package
+          
+      - name: Check for security vulnerabilities
+        run: |
+          echo "🔒 Checking for security vulnerabilities..."
+          npm audit --audit-level=moderate || exit 1
+
+      - name: Verify workspace structure
+        run: |
+          echo "📁 Verifying workspace structure..."
+          ls -la
+          npm ls --depth=0 || true
+
+  # ==============================================================================
+  # LINTING AND CODE QUALITY JOB
+  # ==============================================================================
+  lint:
+    name: 🧹 Lint & Code Quality
+    runs-on: ubuntu-latest
+    needs: [setup, changes]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.shared == 'true'
+    strategy:
+      matrix:
+        workspace: [backend, frontend, shared]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Run ESLint for ${{ matrix.workspace }}
+        run: |
+          echo "🧹 Running ESLint for ${{ matrix.workspace }}..."
+          cd ${{ matrix.workspace }}
+          npm run lint
+
+      - name: Run Prettier check for ${{ matrix.workspace }}
+        run: |
+          echo "💅 Running Prettier check for ${{ matrix.workspace }}..."
+          cd ${{ matrix.workspace }}
+          npm run format:check
+
+      - name: Run TypeScript type checking for ${{ matrix.workspace }}
+        run: |
+          echo "🔍 Running TypeScript type checking for ${{ matrix.workspace }}..."
+          cd ${{ matrix.workspace }}
+          npm run type-check
+
+  # ==============================================================================
+  # BACKEND TESTING JOB
+  # ==============================================================================
+  test-backend:
+    name: 🧪 Backend Tests
+    runs-on: ubuntu-latest
+    needs: [setup, changes]
+    if: needs.changes.outputs.backend == 'true'
+    
+    # Service containers
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: identity_auth_test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Generate Prisma client
+        run: |
+          cd backend
+          npx prisma generate
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/identity_auth_test_db
+
+      - name: Run database migrations
+        run: |
+          cd backend
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/identity_auth_test_db
+
+      - name: Run unit tests
+        run: |
+          cd backend
+          npm run test:unit
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/identity_auth_test_db
+          REDIS_URL: redis://localhost:6380
+          JWT_SECRET: test-jwt-secret
+          JWT_REFRESH_SECRET: test-refresh-secret
+
+      - name: Run integration tests
+        run: |
+          cd backend
+          npm run test:integration
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/identity_auth_test_db
+          REDIS_URL: redis://localhost:6380
+          JWT_SECRET: test-jwt-secret
+          JWT_REFRESH_SECRET: test-refresh-secret
+
+      - name: Upload backend test coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+
+  # ==============================================================================
+  # FRONTEND TESTING JOB
+  # ==============================================================================
+  test-frontend:
+    name: 🎨 Frontend Tests
+    runs-on: ubuntu-latest
+    needs: [setup, changes]
+    if: needs.changes.outputs.frontend == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Run frontend unit tests
+        run: |
+          cd frontend
+          npm run test:unit
+        env:
+          NODE_ENV: test
+          VITE_API_URL: http://localhost:3001/api
+
+      - name: Run component tests
+        run: |
+          cd frontend
+          npm run test:components
+        env:
+          NODE_ENV: test
+
+      - name: Upload frontend test coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+
+  # ==============================================================================
+  # BUILD VERIFICATION JOB
+  # ==============================================================================
+  build:
+    name: 🏗️ Build Verification
+    runs-on: ubuntu-latest
+    needs: [setup, changes]
+    strategy:
+      matrix:
+        workspace: [backend, frontend]
+        include:
+          - workspace: backend
+            condition: needs.changes.outputs.backend == 'true'
+          - workspace: frontend
+            condition: needs.changes.outputs.frontend == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        if: matrix.condition
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        if: matrix.condition
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: matrix.condition
+        run: npm run install:all
+
+      - name: Build ${{ matrix.workspace }}
+        if: matrix.condition
+        run: |
+          echo "🏗️ Building ${{ matrix.workspace }}..."
+          cd ${{ matrix.workspace }}
+          npm run build
+
+      - name: Verify build artifacts
+        if: matrix.condition
+        run: |
+          echo "✅ Verifying build artifacts for ${{ matrix.workspace }}..."
+          cd ${{ matrix.workspace }}
+          ls -la dist/ || ls -la build/ || echo "No build directory found"
+
+  # ==============================================================================
+  # DOCKER BUILD JOB
+  # ==============================================================================
+  docker-build:
+    name: 🐳 Docker Build
+    runs-on: ubuntu-latest
+    needs: [setup, changes]
+    if: needs.changes.outputs.docker == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image for ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./deployment/docker/Dockerfile.${{ matrix.service }}
+          target: development
+          push: false
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ==============================================================================
+  # END-TO-END TESTING JOB
+  # ==============================================================================
+  e2e-tests:
+    name: 🎭 E2E Tests
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, build]
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event.inputs.run_e2e_tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Start services with Docker Compose
+        run: |
+          echo "🚀 Starting services for E2E tests..."
+          docker-compose up -d postgres redis
+          sleep 10
+
+      - name: Run database setup
+        run: |
+          cd backend
+          npm run db:migrate
+          npm run db:seed:test
+        env:
+          DATABASE_URL: postgresql://identity_user:identity_password@localhost:5432/identity_auth_db
+
+      - name: Start backend service
+        run: |
+          cd backend
+          npm run build
+          npm run start:test &
+          sleep 10
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://identity_user:identity_password@localhost:5432/identity_auth_db
+          REDIS_URL: redis://localhost:6379
+
+      - name: Build and start frontend
+        run: |
+          cd frontend
+          npm run build
+          npm run preview &
+          sleep 5
+        env:
+          VITE_API_URL: http://localhost:3001/api
+
+      - name: Run Cypress E2E tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: frontend
+          wait-on: 'http://localhost:3000, http://localhost:3001/health'
+          wait-on-timeout: 120
+          browser: chrome
+          headless: true
+          record: false
+
+      - name: Upload E2E test videos
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos
+
+      - name: Upload E2E test screenshots
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots
+
+      - name: Cleanup services
+        if: always()
+        run: docker-compose down -v
+
+  # ==============================================================================
+  # SECURITY SCANNING JOB
+  # ==============================================================================
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: [setup]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=moderate
+          cd backend && npm audit --audit-level=moderate
+          cd ../frontend && npm audit --audit-level=moderate
+
+  # ==============================================================================
+  # DEPLOYMENT PREVIEW JOB
+  # ==============================================================================
+  deploy-preview:
+    name: 🚀 Deploy Preview
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, build, security]
+    if: github.event.inputs.deploy_preview == 'true' && github.event_name == 'workflow_dispatch'
+    environment:
+      name: preview
+      url: https://identity-auth-preview-${{ github.run_number }}.psp-platform.dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to preview environment
+        run: |
+          echo "🚀 Deploying to preview environment..."
+          echo "Preview URL: https://identity-auth-preview-${{ github.run_number }}.psp-platform.dev"
+          # Preview deployment logic here
+
+  # ==============================================================================
+  # NOTIFICATION JOB
+  # ==============================================================================
+  notify:
+    name: 📢 Notify Results
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, build, docker-build, security]
+    if: always() && (github.event_name == 'push' || github.event_name == 'pull_request')
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [[ "${{ needs.test-backend.result }}" == "failure" || "${{ needs.test-frontend.result }}" == "failure" || "${{ needs.build.result }}" == "failure" || "${{ needs.security.result }}" == "failure" ]]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          elif [[ "${{ needs.test-backend.result }}" == "success" && "${{ needs.test-frontend.result }}" == "success" && "${{ needs.build.result }}" == "success" && "${{ needs.security.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          else
+            echo "status=warning" >> $GITHUB_OUTPUT
+            echo "color=warning" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create summary
+        run: |
+          echo "## 🔄 CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Tests | ${{ needs.test-backend.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Tests | ${{ needs.test-frontend.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Build | ${{ needs.docker-build.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall Status**: ${{ steps.status.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+
+# ==============================================================================
+# WORKFLOW PERMISSIONS
+# ==============================================================================
+permissions:
+  contents: read
+  packages: read
+  security-events: write
+  pull-requests: write
+  actions: read
+  checks: write
