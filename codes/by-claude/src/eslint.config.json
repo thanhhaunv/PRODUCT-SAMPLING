@@ -1,0 +1,456 @@
+// ==============================================================================
+// IDENTITY & AUTH UNIFIED PORTAL - ESLINT CONFIGURATION
+// Tham chiếu: SRS-Grok-V2.md - Part06B.7.1 Code Comments + Part02.8 Technical Requirements
+// EMSA-v1.0 Compliant ESLint Configuration for Monorepo
+// ==============================================================================
+
+module.exports = {
+  // Root configuration - prevents ESLint from searching parent directories
+  root: true,
+
+  // Parser configuration for TypeScript
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true, // Enable JSX for React components
+    },
+    project: [
+      './tsconfig.json',
+      './backend/tsconfig.json',
+      './frontend/tsconfig.json',
+      './shared/tsconfig.json',
+    ],
+    tsconfigRootDir: __dirname,
+  },
+
+  // Global variables
+  env: {
+    browser: true, // Browser globals for frontend
+    node: true, // Node.js globals for backend
+    es6: true, // ES6 globals
+    jest: true, // Jest testing globals
+  },
+
+  // Plugin configuration
+  plugins: [
+    '@typescript-eslint', // TypeScript-specific rules
+    'import', // Import/export validation
+    'node', // Node.js specific rules
+    'prettier', // Prettier integration
+    'react', // React-specific rules
+    'react-hooks', // React hooks rules
+    'jsx-a11y', // Accessibility rules for JSX
+  ],
+
+  // Extended configurations
+  extends: [
+    'eslint:recommended', // ESLint recommended rules
+    '@typescript-eslint/recommended', // TypeScript recommended rules
+    '@typescript-eslint/recommended-requiring-type-checking', // Type-aware rules
+    'plugin:import/recommended', // Import plugin recommended rules
+    'plugin:import/typescript', // TypeScript import rules
+    'plugin:node/recommended', // Node.js recommended rules
+    'plugin:react/recommended', // React recommended rules
+    'plugin:react-hooks/recommended', // React hooks rules
+    'plugin:jsx-a11y/recommended', // Accessibility rules
+    'prettier', // Prettier config (must be last)
+  ],
+
+  // Global settings
+  settings: {
+    react: {
+      version: 'detect', // Automatically detect React version
+    },
+    'import/resolver': {
+      typescript: {
+        alwaysTryTypes: true,
+        project: [
+          './tsconfig.json',
+          './backend/tsconfig.json',
+          './frontend/tsconfig.json',
+          './shared/tsconfig.json',
+        ],
+      },
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        moduleDirectory: ['node_modules', 'src/'],
+      },
+    },
+    'import/parsers': {
+      '@typescript-eslint/parser': ['.ts', '.tsx'],
+    },
+  },
+
+  // Rule configuration
+  rules: {
+    // ==============================================================================
+    // TYPESCRIPT RULES
+    // ==============================================================================
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      },
+    ],
+    '@typescript-eslint/explicit-function-return-type': [
+      'warn',
+      {
+        allowExpressions: true,
+        allowTypedFunctionExpressions: true,
+        allowHigherOrderFunctions: true,
+      },
+    ],
+    '@typescript-eslint/explicit-module-boundary-types': 'warn',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-inferrable-types': 'off',
+    '@typescript-eslint/prefer-const': 'error',
+    '@typescript-eslint/no-var-requires': 'error',
+    '@typescript-eslint/ban-ts-comment': [
+      'error',
+      {
+        'ts-expect-error': 'allow-with-description',
+        'ts-ignore': 'allow-with-description',
+        'ts-nocheck': 'allow-with-description',
+        'ts-check': false,
+      },
+    ],
+    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+    '@typescript-eslint/consistent-type-imports': [
+      'error',
+      {
+        prefer: 'type-imports',
+        disallowTypeAnnotations: false,
+      },
+    ],
+    '@typescript-eslint/no-floating-promises': 'error',
+    '@typescript-eslint/await-thenable': 'error',
+    '@typescript-eslint/require-await': 'error',
+    '@typescript-eslint/prefer-nullish-coalescing': 'error',
+    '@typescript-eslint/prefer-optional-chain': 'error',
+    '@typescript-eslint/switch-exhaustiveness-check': 'error',
+
+    // ==============================================================================
+    // IMPORT/EXPORT RULES
+    // ==============================================================================
+    'import/order': [
+      'error',
+      {
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'parent',
+          'sibling',
+          'index',
+          'object',
+          'type',
+        ],
+        'newlines-between': 'always',
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true,
+        },
+        pathGroups: [
+          {
+            pattern: '@/**',
+            group: 'internal',
+            position: 'before',
+          },
+          {
+            pattern: '@shared/**',
+            group: 'internal',
+            position: 'before',
+          },
+          {
+            pattern: '@backend/**',
+            group: 'internal',
+            position: 'before',
+          },
+          {
+            pattern: '@frontend/**',
+            group: 'internal',
+            position: 'before',
+          },
+        ],
+        pathGroupsExcludedImportTypes: ['builtin'],
+      },
+    ],
+    'import/no-unresolved': 'error',
+    'import/no-cycle': 'error',
+    'import/no-self-import': 'error',
+    'import/no-useless-path-segments': 'error',
+    'import/prefer-default-export': 'off',
+    'import/no-default-export': 'off',
+    'import/named': 'error',
+    'import/namespace': 'error',
+    'import/default': 'error',
+    'import/export': 'error',
+
+    // ==============================================================================
+    // NODE.JS RULES (Backend specific)
+    // ==============================================================================
+    'node/no-unsupported-features/es-syntax': 'off', // TypeScript handles this
+    'node/no-missing-import': 'off', // TypeScript handles this
+    'node/no-extraneous-import': 'off', // TypeScript handles this
+    'node/no-unpublished-import': 'off', // Allow dev dependencies
+    'node/shebang': 'off', // Not needed for our use case
+    'node/no-process-env': 'warn', // Encourage using config files
+    'node/prefer-global/buffer': ['error', 'always'],
+    'node/prefer-global/console': ['error', 'always'],
+    'node/prefer-global/process': ['error', 'always'],
+    'node/prefer-global/url-search-params': ['error', 'always'],
+    'node/prefer-global/url': ['error', 'always'],
+    'node/prefer-promises/dns': 'error',
+    'node/prefer-promises/fs': 'error',
+
+    // ==============================================================================
+    // REACT RULES (Frontend specific)
+    // ==============================================================================
+    'react/react-in-jsx-scope': 'off', // Not needed with React 17+
+    'react/prop-types': 'off', // TypeScript handles this
+    'react/display-name': 'off', // Not necessary with TypeScript
+    'react/jsx-uses-react': 'off', // Not needed with React 17+
+    'react/jsx-uses-vars': 'error',
+    'react/jsx-key': 'error',
+    'react/jsx-no-duplicate-props': 'error',
+    'react/jsx-no-undef': 'error',
+    'react/jsx-pascal-case': 'error',
+    'react/no-children-prop': 'error',
+    'react/no-danger-with-children': 'error',
+    'react/no-deprecated': 'error',
+    'react/no-direct-mutation-state': 'error',
+    'react/no-find-dom-node': 'error',
+    'react/no-is-mounted': 'error',
+    'react/no-render-return-value': 'error',
+    'react/no-string-refs': 'error',
+    'react/no-unescaped-entities': 'error',
+    'react/no-unknown-property': 'error',
+    'react/no-unsafe': 'error',
+    'react/require-render-return': 'error',
+
+    // ==============================================================================
+    // REACT HOOKS RULES
+    // ==============================================================================
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+
+    // ==============================================================================
+    // ACCESSIBILITY RULES
+    // ==============================================================================
+    'jsx-a11y/alt-text': 'error',
+    'jsx-a11y/anchor-has-content': 'error',
+    'jsx-a11y/anchor-is-valid': 'error',
+    'jsx-a11y/aria-activedescendant-has-tabindex': 'error',
+    'jsx-a11y/aria-props': 'error',
+    'jsx-a11y/aria-proptypes': 'error',
+    'jsx-a11y/aria-role': 'error',
+    'jsx-a11y/aria-unsupported-elements': 'error',
+    'jsx-a11y/click-events-have-key-events': 'warn',
+    'jsx-a11y/heading-has-content': 'error',
+    'jsx-a11y/html-has-lang': 'error',
+    'jsx-a11y/img-redundant-alt': 'error',
+    'jsx-a11y/interactive-supports-focus': 'warn',
+    'jsx-a11y/label-has-associated-control': 'error',
+    'jsx-a11y/mouse-events-have-key-events': 'warn',
+    'jsx-a11y/no-access-key': 'error',
+    'jsx-a11y/no-autofocus': 'warn',
+    'jsx-a11y/no-distracting-elements': 'error',
+    'jsx-a11y/no-redundant-roles': 'error',
+    'jsx-a11y/role-has-required-aria-props': 'error',
+    'jsx-a11y/role-supports-aria-props': 'error',
+    'jsx-a11y/scope': 'error',
+    'jsx-a11y/tabindex-no-positive': 'error',
+
+    // ==============================================================================
+    // GENERAL RULES
+    // ==============================================================================
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-debugger': 'error',
+    'no-alert': 'error',
+    'no-eval': 'error',
+    'no-implied-eval': 'error',
+    'no-new-func': 'error',
+    'no-script-url': 'error',
+    'no-lone-blocks': 'error',
+    'no-loop-func': 'error',
+    'no-multi-spaces': 'error',
+    'no-new': 'error',
+    'no-new-wrappers': 'error',
+    'no-octal': 'error',
+    'no-octal-escape': 'error',
+    'no-param-reassign': ['error', { props: false }],
+    'no-proto': 'error',
+    'no-redeclare': 'error',
+    'no-return-assign': 'error',
+    'no-return-await': 'error',
+    'no-self-assign': 'error',
+    'no-self-compare': 'error',
+    'no-sequences': 'error',
+    'no-throw-literal': 'error',
+    'no-unmodified-loop-condition': 'error',
+    'no-unused-expressions': 'error',
+    'no-useless-call': 'error',
+    'no-useless-catch': 'error',
+    'no-useless-concat': 'error',
+    'no-useless-escape': 'error',
+    'no-useless-return': 'error',
+    'no-void': 'error',
+    'no-warning-comments': 'warn',
+    'no-with': 'error',
+    'prefer-const': 'error',
+    'prefer-arrow-callback': 'error',
+    'prefer-rest-params': 'error',
+    'prefer-spread': 'error',
+    'prefer-template': 'error',
+    'radix': 'error',
+    'require-await': 'off', // TypeScript version is enabled
+    'vars-on-top': 'error',
+    'wrap-iife': 'error',
+    'yoda': 'error',
+
+    // ==============================================================================
+    // PRETTIER INTEGRATION
+    // ==============================================================================
+    'prettier/prettier': [
+      'error',
+      {
+        endOfLine: 'auto', // Handle different OS line endings
+      },
+    ],
+  },
+
+  // Override rules for specific file patterns
+  overrides: [
+    // ==============================================================================
+    // BACKEND-SPECIFIC OVERRIDES
+    // ==============================================================================
+    {
+      files: ['backend/**/*.ts'],
+      env: {
+        node: true,
+        browser: false,
+      },
+      rules: {
+        'node/no-process-env': 'off', // Allow process.env in backend
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            argsIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
+          },
+        ],
+        'import/no-nodejs-modules': 'off',
+      },
+    },
+
+    // ==============================================================================
+    // FRONTEND-SPECIFIC OVERRIDES
+    // ==============================================================================
+    {
+      files: ['frontend/**/*.{ts,tsx}'],
+      env: {
+        browser: true,
+        node: false,
+      },
+      rules: {
+        'node/no-unsupported-features/es-syntax': 'off',
+        'node/no-missing-import': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'off', // React components don't need explicit return types
+        'react/prop-types': 'off', // TypeScript handles prop validation
+      },
+    },
+
+    // ==============================================================================
+    // TEST FILE OVERRIDES
+    // ==============================================================================
+    {
+      files: ['**/*.{test,spec}.{js,ts,tsx}', '**/__tests__/**/*.{js,ts,tsx}'],
+      env: {
+        jest: true,
+      },
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off', // Allow any in tests
+        '@typescript-eslint/explicit-function-return-type': 'off', // Don't require return types in tests
+        'no-console': 'off', // Allow console in tests
+        '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in tests
+        '@typescript-eslint/no-object-literal-type-assertion': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        'import/no-extraneous-dependencies': 'off', // Allow dev dependencies in tests
+      },
+    },
+
+    // ==============================================================================
+    // CONFIGURATION FILE OVERRIDES
+    // ==============================================================================
+    {
+      files: ['*.config.{js,ts}', '.*rc.{js,ts}', '*.js'],
+      env: {
+        node: true,
+      },
+      rules: {
+        '@typescript-eslint/no-var-requires': 'off', // Allow require in config files
+        'import/no-commonjs': 'off',
+        'node/no-unpublished-require': 'off',
+      },
+    },
+
+    // ==============================================================================
+    // CYPRESS E2E TEST OVERRIDES
+    // ==============================================================================
+    {
+      files: ['cypress/**/*.{js,ts}', '**/*.cy.{js,ts}'],
+      env: {
+        'cypress/globals': true,
+      },
+      extends: ['plugin:cypress/recommended'],
+      rules: {
+        '@typescript-eslint/no-namespace': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        'cypress/no-unnecessary-waiting': 'warn',
+        'cypress/assertion-before-screenshot': 'warn',
+        'cypress/no-force': 'warn',
+        'cypress/no-async-tests': 'error',
+      },
+    },
+
+    // ==============================================================================
+    // SHARED LIBRARY OVERRIDES
+    // ==============================================================================
+    {
+      files: ['shared/**/*.ts'],
+      rules: {
+        '@typescript-eslint/explicit-function-return-type': 'error', // Require explicit return types in shared code
+        '@typescript-eslint/explicit-module-boundary-types': 'error',
+        'import/prefer-default-export': 'off',
+        'import/no-default-export': 'error', // Prefer named exports in shared code
+      },
+    },
+  ],
+
+  // Ignore patterns
+  ignorePatterns: [
+    'node_modules/',
+    'dist/',
+    'build/',
+    'coverage/',
+    '*.min.js',
+    '*.bundle.js',
+    'public/',
+    '.next/',
+    '.nuxt/',
+    '.cache/',
+    'storybook-static/',
+    'generated/',
+    'prisma/generated/',
+    '*.config.js',
+    '*.config.ts',
+    '.eslintrc.js',
+    'deployment/',
+    'scripts/',
+    '*.d.ts',
+  ],
+};
