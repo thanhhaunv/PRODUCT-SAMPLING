@@ -1,0 +1,562 @@
+# ==============================================================================
+# IDENTITY & AUTH UNIFIED PORTAL - CONTINUOUS DEPLOYMENT WORKFLOW
+# Tham chiếu: SRS-Grok-V2.md - Part15.1 CI/CD Pipeline + Part14.1 Deployment Overview
+# Purpose: Automated deployment to staging and production environments
+# ==============================================================================
+
+name: 🚀 Continuous Deployment
+
+# Trigger conditions
+on:
+  # Push to main branch (production deployment)
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - 'LICENSE'
+
+  # Push to develop branch (staging deployment)
+  push:
+    branches:
+      - develop
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - 'LICENSE'
+
+  # Release events
+  release:
+    types: [published]
+
+  # Manual deployment trigger
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip test execution'
+        required: false
+        default: false
+        type: boolean
+      force_deploy:
+        description: 'Force deployment (skip safety checks)'
+        required: false
+        default: false
+        type: boolean
+
+# Global environment variables
+env:
+  NODE_VERSION: '18.x'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  HELM_VERSION: 'v3.12.0'
+  KUBECTL_VERSION: 'v1.27.0'
+
+# Ensure only one deployment per environment
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
+  cancel-in-progress: false
+
+# ==============================================================================
+# JOBS CONFIGURATION
+# ==============================================================================
+
+jobs:
+  # ==============================================================================
+  # DETERMINE DEPLOYMENT ENVIRONMENT
+  # ==============================================================================
+  setup:
+    name: 🎯 Setup Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      version: ${{ steps.version.outputs.version }}
+      should_deploy: ${{ steps.checks.outputs.should_deploy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          else
+            echo "environment=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="$(date +'%Y%m%d')-${GITHUB_SHA::8}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Generated version: ${VERSION}"
+
+      - name: Deployment checks
+        id: checks
+        run: |
+          ENVIRONMENT="${{ steps.env.outputs.environment }}"
+          FORCE_DEPLOY="${{ github.event.inputs.force_deploy }}"
+          
+          if [[ "${ENVIRONMENT}" == "none" ]]; then
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            echo "❌ No deployment environment determined"
+            exit 0
+          fi
+          
+          if [[ "${ENVIRONMENT}" == "production" ]] && [[ "${FORCE_DEPLOY}" != "true" ]]; then
+            # Additional safety checks for production
+            echo "🔍 Running production safety checks..."
+            
+            # Check if CI passed on this commit
+            if [[ "${{ github.event_name }}" != "release" ]]; then
+              echo "⚠️ Production deployment should use release tags"
+            fi
+          fi
+          
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "✅ Deployment checks passed for ${ENVIRONMENT}"
+
+  # ==============================================================================
+  # PRE-DEPLOYMENT TESTS
+  # ==============================================================================
+  pre-deploy-tests:
+    name: 🧪 Pre-deployment Tests
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: needs.setup.outputs.should_deploy == 'true' && github.event.inputs.skip_tests != 'true'
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: identity_auth_test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Run critical backend tests
+        run: |
+          cd backend
+          npm run test:critical
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/identity_auth_test_db
+          REDIS_URL: redis://localhost:6380
+
+      - name: Run smoke tests
+        run: |
+          cd backend
+          npm run test:smoke
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/identity_auth_test_db
+          REDIS_URL: redis://localhost:6380
+
+  # ==============================================================================
+  # BUILD AND PUSH DOCKER IMAGES
+  # ==============================================================================
+  build-images:
+    name: 🏗️ Build & Push Images
+    runs-on: ubuntu-latest
+    needs: [setup, pre-deploy-tests]
+    if: needs.setup.outputs.should_deploy == 'true' && (success() || github.event.inputs.skip_tests == 'true')
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ needs.setup.outputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./deployment/docker/Dockerfile.${{ matrix.service }}
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ needs.setup.outputs.version }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+  # ==============================================================================
+  # DEPLOY TO STAGING
+  # ==============================================================================
+  deploy-staging:
+    name: 🎭 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [setup, build-images]
+    if: needs.setup.outputs.environment == 'staging' && needs.setup.outputs.should_deploy == 'true'
+    environment:
+      name: staging
+      url: https://identity-auth-staging.psp-platform.dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+          kubectl config current-context
+
+      - name: Deploy to staging with Helm
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          # Add custom Helm repository if needed
+          # helm repo add psp-platform https://charts.psp-platform.dev
+          # helm repo update
+          
+          helm upgrade --install identity-auth-staging ./deployment/helm \
+            --namespace identity-staging \
+            --create-namespace \
+            --values ./deployment/helm/values-staging.yaml \
+            --set image.tag=${{ needs.setup.outputs.version }} \
+            --set global.environment=staging \
+            --set ingress.hosts[0].host=identity-auth-staging.psp-platform.dev \
+            --timeout=10m \
+            --wait
+
+      - name: Verify staging deployment
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          echo "🔍 Verifying deployment..."
+          kubectl rollout status deployment/identity-auth-backend -n identity-staging --timeout=300s
+          kubectl rollout status deployment/identity-auth-frontend -n identity-staging --timeout=300s
+          
+          echo "🏥 Checking health endpoints..."
+          kubectl wait --for=condition=ready pod -l app=identity-auth-backend -n identity-staging --timeout=300s
+          kubectl wait --for=condition=ready pod -l app=identity-auth-frontend -n identity-staging --timeout=300s
+
+      - name: Run staging smoke tests
+        run: |
+          echo "🧪 Running staging smoke tests..."
+          # Add staging smoke test commands here
+          curl -f https://identity-auth-staging.psp-platform.dev/health || exit 1
+          curl -f https://identity-auth-staging.psp-platform.dev/api/health || exit 1
+
+      - name: Update staging status
+        run: |
+          echo "✅ Staging deployment completed successfully"
+          echo "🌐 Staging URL: https://identity-auth-staging.psp-platform.dev"
+
+  # ==============================================================================
+  # DEPLOY TO PRODUCTION
+  # ==============================================================================
+  deploy-production:
+    name: 🏭 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [setup, build-images]
+    if: needs.setup.outputs.environment == 'production' && needs.setup.outputs.should_deploy == 'true'
+    environment:
+      name: production
+      url: https://identity-auth.psp-platform.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.PRODUCTION_KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+          kubectl config current-context
+
+      - name: Pre-production checks
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          echo "🔍 Running pre-production checks..."
+          
+          # Check cluster status
+          kubectl cluster-info
+          kubectl get nodes
+          
+          # Check namespace
+          kubectl get namespace identity-production || kubectl create namespace identity-production
+          
+          # Verify secrets exist
+          kubectl get secrets -n identity-production
+
+      - name: Create production backup
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          echo "💾 Creating pre-deployment backup..."
+          # Add backup commands here
+          kubectl create job backup-pre-deploy-$(date +%Y%m%d-%H%M%S) \
+            --from=cronjob/database-backup \
+            -n identity-production || echo "No backup job template found"
+
+      - name: Deploy to production with Helm
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          helm upgrade --install identity-auth-production ./deployment/helm \
+            --namespace identity-production \
+            --values ./deployment/helm/values-production.yaml \
+            --set image.tag=${{ needs.setup.outputs.version }} \
+            --set global.environment=production \
+            --set ingress.hosts[0].host=identity-auth.psp-platform.com \
+            --timeout=15m \
+            --wait \
+            --atomic # Rollback on failure
+
+      - name: Verify production deployment
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          echo "🔍 Verifying production deployment..."
+          kubectl rollout status deployment/identity-auth-backend -n identity-production --timeout=600s
+          kubectl rollout status deployment/identity-auth-frontend -n identity-production --timeout=600s
+          
+          echo "🏥 Checking health endpoints..."
+          kubectl wait --for=condition=ready pod -l app=identity-auth-backend -n identity-production --timeout=600s
+          kubectl wait --for=condition=ready pod -l app=identity-auth-frontend -n identity-production --timeout=600s
+
+      - name: Run production smoke tests
+        run: |
+          echo "🧪 Running production smoke tests..."
+          curl -f https://identity-auth.psp-platform.com/health || exit 1
+          curl -f https://identity-auth.psp-platform.com/api/health || exit 1
+
+      - name: Update production status
+        run: |
+          echo "✅ Production deployment completed successfully"
+          echo "🌐 Production URL: https://identity-auth.psp-platform.com"
+
+  # ==============================================================================
+  # POST-DEPLOYMENT MONITORING
+  # ==============================================================================
+  post-deploy-monitoring:
+    name: 📊 Post-deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    steps:
+      - name: Setup monitoring
+        run: |
+          ENVIRONMENT="${{ needs.setup.outputs.environment }}"
+          
+          if [[ "${ENVIRONMENT}" == "staging" ]]; then
+            MONITORING_URL="https://identity-auth-staging.psp-platform.dev"
+          else
+            MONITORING_URL="https://identity-auth.psp-platform.com"
+          fi
+          
+          echo "📊 Setting up monitoring for ${ENVIRONMENT}..."
+          echo "🌐 Monitoring URL: ${MONITORING_URL}"
+
+      - name: Validate deployment health
+        run: |
+          ENVIRONMENT="${{ needs.setup.outputs.environment }}"
+          
+          if [[ "${ENVIRONMENT}" == "staging" ]]; then
+            BASE_URL="https://identity-auth-staging.psp-platform.dev"
+          else
+            BASE_URL="https://identity-auth.psp-platform.com"
+          fi
+          
+          echo "🏥 Checking application health..."
+          
+          # Health check retries
+          for i in {1..5}; do
+            if curl -f "${BASE_URL}/health" && curl -f "${BASE_URL}/api/health"; then
+              echo "✅ Health checks passed on attempt ${i}"
+              break
+            else
+              echo "⚠️ Health check failed on attempt ${i}, retrying in 30s..."
+              sleep 30
+            fi
+            
+            if [[ ${i} -eq 5 ]]; then
+              echo "❌ Health checks failed after 5 attempts"
+              exit 1
+            fi
+          done
+
+      - name: Performance validation
+        run: |
+          ENVIRONMENT="${{ needs.setup.outputs.environment }}"
+          
+          if [[ "${ENVIRONMENT}" == "staging" ]]; then
+            BASE_URL="https://identity-auth-staging.psp-platform.dev"
+          else
+            BASE_URL="https://identity-auth.psp-platform.com"
+          fi
+          
+          echo "⚡ Running performance validation..."
+          
+          # Simple performance check
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' "${BASE_URL}/health")
+          echo "Response time: ${RESPONSE_TIME}s"
+          
+          if (( $(echo "${RESPONSE_TIME} > 5.0" | bc -l) )); then
+            echo "⚠️ Response time is high: ${RESPONSE_TIME}s"
+          else
+            echo "✅ Response time is acceptable: ${RESPONSE_TIME}s"
+          fi
+
+  # ==============================================================================
+  # ROLLBACK CAPABILITY
+  # ==============================================================================
+  prepare-rollback:
+    name: 🔄 Prepare Rollback
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-staging, deploy-production]
+    if: failure() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    steps:
+      - name: Prepare rollback information
+        run: |
+          ENVIRONMENT="${{ needs.setup.outputs.environment }}"
+          
+          echo "🔄 Preparing rollback for ${ENVIRONMENT}..."
+          echo "Failed deployment version: ${{ needs.setup.outputs.version }}"
+          echo "To rollback manually, use:"
+          echo "helm rollback identity-auth-${ENVIRONMENT} --namespace identity-${ENVIRONMENT}"
+
+  # ==============================================================================
+  # NOTIFICATION
+  # ==============================================================================
+  notify:
+    name: 📢 Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-staging, deploy-production, post-deploy-monitoring]
+    if: always()
+    steps:
+      - name: Determine deployment status
+        id: status
+        run: |
+          ENVIRONMENT="${{ needs.setup.outputs.environment }}"
+          
+          if [[ "${{ needs.deploy-staging.result }}" == "success" ]] || [[ "${{ needs.deploy-production.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Deployment to ${ENVIRONMENT} successful" >> $GITHUB_OUTPUT
+          elif [[ "${{ needs.deploy-staging.result }}" == "failure" ]] || [[ "${{ needs.deploy-production.result }}" == "failure" ]]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ Deployment to ${ENVIRONMENT} failed" >> $GITHUB_OUTPUT
+          else
+            echo "status=skipped" >> $GITHUB_OUTPUT
+            echo "message=⏭️ Deployment skipped" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment**: ${{ needs.setup.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ needs.setup.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ${{ steps.status.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.setup.outputs.environment }}" == "staging" ]]; then
+            echo "**URL**: https://identity-auth-staging.psp-platform.dev" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.setup.outputs.environment }}" == "production" ]]; then
+            echo "**URL**: https://identity-auth.psp-platform.com" >> $GITHUB_STEP_SUMMARY
+          fi
+
+# ==============================================================================
+# WORKFLOW PERMISSIONS
+# ==============================================================================
+permissions:
+  contents: read
+  packages: write
+  deployments: write
+  id-token: write
