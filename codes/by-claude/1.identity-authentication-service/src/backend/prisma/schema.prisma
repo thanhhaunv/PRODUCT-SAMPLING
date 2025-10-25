@@ -1,0 +1,362 @@
+// ================================================================
+// PRISMA SCHEMA - Identity & Authentication Portal
+// ================================================================
+// Purpose: Complete database schema for multi-tenant identity management
+// Reference: SRS-Grok-V2.md - Part07.1 Data Model Overview
+//           Part07.3.2 Identity Service Tables
+//           Access_Control_Tree_Grok.md - RBAC Structure
+// Version: 1.0.0
+// ================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================================================
+// TENANT MANAGEMENT
+// ================================================================
+// Multi-tenancy support for brand/organization isolation
+
+model Tenant {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  apiKey      String   @unique @map("api_key")
+  
+  // Metadata
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  
+  // GDPR Compliance
+  consentGdpr Boolean  @default(false) @map("consent_gdpr")
+  
+  // Relations
+  users       User[]
+  roles       Role[]
+  
+  @@map("tenants")
+  @@index([slug])
+  @@index([isActive])
+}
+
+// ================================================================
+// USER MANAGEMENT
+// ================================================================
+// Core user entity for authentication and profile management
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  
+  // Profile Information
+  firstName     String?   @map("first_name")
+  lastName      String?   @map("last_name")
+  phoneNumber   String?   @map("phone_number")
+  avatarUrl     String?   @map("avatar_url")
+  
+  // Status & Security
+  isActive      Boolean   @default(true) @map("is_active")
+  isVerified    Boolean   @default(false) @map("is_verified")
+  isLocked      Boolean   @default(false) @map("is_locked")
+  failedLoginAttempts Int @default(0) @map("failed_login_attempts")
+  lastLoginAt   DateTime? @map("last_login_at")
+  lastLoginIp   String?   @map("last_login_ip")
+  
+  // 2FA
+  twoFactorEnabled Boolean @default(false) @map("two_factor_enabled")
+  twoFactorSecret  String? @map("two_factor_secret")
+  
+  // Tenant Association
+  tenantId      String    @map("tenant_id")
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  
+  // GDPR Compliance
+  consentGdpr   Boolean   @default(false) @map("consent_gdpr")
+  consentMarketing Boolean @default(false) @map("consent_marketing")
+  
+  // Relations
+  userRoles     UserRole[]
+  sessions      Session[]
+  otpCodes      OTPCode[]
+  auditLogs     AuditLog[]
+  
+  @@map("users")
+  @@index([email])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+// ================================================================
+// ROLE-BASED ACCESS CONTROL (RBAC)
+// ================================================================
+// Hierarchical role and permission management system
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "ADMIN", "CAMPAIGN_MANAGER"
+  displayName String   @map("display_name")
+  description String?
+  
+  // Hierarchy Support
+  level       Int      @default(0) // 0=highest (SUPER_ADMIN), 5=lowest (VIEWER)
+  parentRoleId String? @map("parent_role_id")
+  parentRole  Role?    @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+  childRoles  Role[]   @relation("RoleHierarchy")
+  
+  // Tenant Association
+  tenantId    String?  @map("tenant_id") // NULL = system-wide role
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Status
+  isActive    Boolean  @default(true) @map("is_active")
+  isSystem    Boolean  @default(false) @map("is_system") // System roles cannot be deleted
+  
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  userRoles   UserRole[]
+  rolePermissions RolePermission[]
+  
+  @@unique([name, tenantId])
+  @@map("roles")
+  @@index([tenantId])
+  @@index([level])
+  @@index([isActive])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  resource    String   // e.g., "campaigns", "users", "reports"
+  action      String   // e.g., "create", "read", "update", "delete"
+  scope       String   @default("own") // "all", "own", "team"
+  description String?
+  
+  // System Permission Flag
+  isSystem    Boolean  @default(false) @map("is_system")
+  
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  rolePermissions RolePermission[]
+  
+  @@unique([resource, action, scope])
+  @@map("permissions")
+  @@index([resource])
+  @@index([action])
+}
+
+// Junction table for many-to-many Role-Permission relationship
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String     @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String     @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  // Optional Constraints
+  conditions   Json?      // Additional conditions for permission (e.g., time-based, IP-based)
+  
+  createdAt    DateTime   @default(now()) @map("created_at")
+  
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+// Junction table for many-to-many User-Role relationship
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId    String   @map("role_id")
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  // Time-based role assignment
+  validFrom DateTime? @map("valid_from")
+  validTo   DateTime? @map("valid_to")
+  
+  // Metadata
+  assignedBy String?  @map("assigned_by") // User ID who assigned this role
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@unique([userId, roleId])
+  @@map("user_roles")
+  @@index([userId])
+  @@index([roleId])
+  @@index([validFrom, validTo])
+}
+
+// ================================================================
+// SESSION MANAGEMENT
+// ================================================================
+// JWT session tracking and management (backed by Redis for performance)
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Session Data
+  token        String   @unique
+  refreshToken String?  @unique @map("refresh_token")
+  deviceInfo   Json?    @map("device_info") // Browser, OS, Device type
+  ipAddress    String   @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  
+  // Session Lifecycle
+  isActive     Boolean  @default(true) @map("is_active")
+  expiresAt    DateTime @map("expires_at")
+  lastActivityAt DateTime @default(now()) @map("last_activity_at")
+  
+  // Timestamps
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  @@map("sessions")
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([isActive])
+}
+
+// ================================================================
+// OTP & 2FA MANAGEMENT
+// ================================================================
+// One-Time Password codes for authentication and verification
+
+model OTPCode {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // OTP Data
+  code      String
+  type      String   // "EMAIL_VERIFICATION", "PASSWORD_RESET", "TWO_FACTOR", "PHONE_VERIFICATION"
+  purpose   String?  // Additional context
+  
+  // Security
+  attempts  Int      @default(0)
+  maxAttempts Int    @default(3) @map("max_attempts")
+  
+  // Lifecycle
+  isUsed    Boolean  @default(false) @map("is_used")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("otp_codes")
+  @@index([userId])
+  @@index([code])
+  @@index([type])
+  @@index([expiresAt])
+  @@index([isUsed])
+}
+
+// ================================================================
+// AUDIT LOG
+// ================================================================
+// Comprehensive audit trail for security and compliance
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Event Information
+  action      String   // e.g., "USER_LOGIN", "PASSWORD_CHANGE", "ROLE_ASSIGNED"
+  resource    String   // e.g., "user", "role", "campaign"
+  resourceId  String?  @map("resource_id")
+  
+  // Context
+  ipAddress   String   @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  changes     Json?    // Before/after state for updates
+  metadata    Json?    // Additional context
+  
+  // Result
+  status      String   // "SUCCESS", "FAILURE", "PENDING"
+  errorMessage String? @map("error_message")
+  
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+  @@index([status])
+}
+
+// ================================================================
+// PASSWORD RESET TOKENS
+// ================================================================
+// Secure password reset mechanism
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  
+  // Security
+  isUsed    Boolean  @default(false) @map("is_used")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("password_reset_tokens")
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([isUsed])
+}
+
+// ================================================================
+// EMAIL VERIFICATION TOKENS
+// ================================================================
+// Email verification during registration
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  
+  // Security
+  isUsed    Boolean  @default(false) @map("is_used")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("email_verification_tokens")
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([isUsed])
+}
