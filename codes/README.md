@@ -92,52 +92,21 @@ identity-service/
 ├── src/
 │   ├── domain/
 │   │   ├── entities/
-│   │   │   ├── User.ts              # Core user entity
-│   │   │   ├── Role.ts              # RBAC roles (6 types)
-│   │   │   ├── Permission.ts        # Granular permissions
-│   │   │   ├── Session.ts           # JWT session management
-│   │   │   └── OTPCode.ts           # Two-factor authentication
 │   │   ├── value-objects/
-│   │   │   ├── Email.ts             # Email validation
-│   │   │   ├── Phone.ts             # Phone number formatting
-│   │   │   └── Password.ts          # Password security
 │   │   └── services/
-│   │       ├── AuthDomainService.ts # Authentication logic
-│   │       └── OTPDomainService.ts  # OTP generation/validation
 │   ├── application/
 │   │   ├── use-cases/
 │   │   │   ├── authentication/
-│   │   │   │   ├── LoginUseCase.ts
-│   │   │   │   ├── RegisterUseCase.ts
-│   │   │   │   └── LogoutUseCase.ts
 │   │   │   ├── user-management/
-│   │   │   │   ├── CreateUserUseCase.ts
-│   │   │   │   ├── UpdateUserUseCase.ts
-│   │   │   │   ├── DeleteUserUseCase.ts
-│   │   │   │   └── GetUserUseCase.ts
 │   │   │   └── otp/
-│   │   │       ├── SendOTPUseCase.ts
-│   │   │       └── VerifyOTPUseCase.ts
 │   │   └── dto/
-│   │       ├── LoginDTO.ts
-│   │       ├── RegisterDTO.ts
-│   │       └── UserDTO.ts
 │   ├── infrastructure/
 │   │   ├── persistence/
-│   │   │   ├── PostgreSQLUserRepository.ts
-│   │   │   ├── PostgreSQLRoleRepository.ts
 │   │   │   └── models/             # Prisma models
 │   │   └── external-services/
-│   │       ├── TwilioOTPService.ts # SMS OTP
-│   │       └── JWTTokenService.ts  # Token management
 │   └── presentation/
 │       ├── controllers/
-│       │   ├── AuthController.ts
-│       │   ├── UserController.ts
-│       │   └── OTPController.ts
 │       └── middleware/
-│           ├── AuthMiddleware.ts
-│           └── RBACMiddleware.ts
 ├── database/
 │   └── prisma/
 │       └── schema.prisma           # Identity DB only
@@ -164,47 +133,19 @@ campaign-service/
 ├── src/
 │   ├── domain/
 │   │   ├── entities/
-│   │   │   ├── Campaign.ts          # Campaign lifecycle
-│   │   │   ├── QRCode.ts            # QR code generation
-│   │   │   ├── Barcode.ts           # Barcode management
-│   │   │   ├── BarcodePool.ts       # Pool management
-│   │   │   ├── AdsFormat.ts         # Ads templates
-│   │   │   └── UTMParameter.ts      # Tracking parameters
 │   │   └── services/
-│   │       ├── QRGenerationService.ts
-│   │       ├── UTMTrackingService.ts
-│   │       ├── AdsFormatService.ts
-│   │       └── CampaignLifecycleService.ts
 │   ├── application/
 │   │   ├── use-cases/
 │   │   │   ├── campaign/
-│   │   │   │   ├── CreateCampaignUseCase.ts
-│   │   │   │   ├── PublishCampaignUseCase.ts
-│   │   │   │   ├── PauseCampaignUseCase.ts
-│   │   │   │   └── AnalyzeCampaignUseCase.ts
 │   │   │   ├── barcode/
-│   │   │   │   ├── GenerateBarcodesUseCase.ts
-│   │   │   │   ├── ImportBarcodesUseCase.ts
-│   │   │   │   └── TrackBarcodeUseCase.ts
 │   │   │   └── ads-format/
-│   │   │       ├── CreateAdsFormatUseCase.ts
-│   │   │       └── GenerateAssetsUseCase.ts
 │   │   └── dto/
-│   │       ├── CampaignDTO.ts
-│   │       ├── BarcodeDTO.ts
-│   │       └── AdsFormatDTO.ts
 │   ├── infrastructure/
 │   │   ├── persistence/
-│   │   │   ├── MongoDBCampaignRepository.ts
 │   │   │   └── schemas/            # MongoDB schemas
 │   │   └── external-services/
-│   │       ├── S3FileStorageService.ts
-│   │       └── QRCodeGeneratorService.ts
 │   └── presentation/
 │       └── controllers/
-│           ├── CampaignController.ts
-│           ├── BarcodeController.ts
-│           └── AdsFormatController.ts
 ├── database/
 │   └── mongodb/
 │       └── schemas/               # Campaign DB only
@@ -224,31 +165,15 @@ redemption-service/
 ├── src/
 │   ├── domain/
 │   │   ├── entities/
-│   │   │   ├── Redemption.ts        # Redemption transaction
-│   │   │   ├── RedemptionItem.ts    # Item details
-│   │   │   ├── Transaction.ts       # Transaction record
-│   │   │   └── DeviceInfo.ts        # Device tracking
 │   │   └── services/
-│   │       ├── RedemptionValidationService.ts
-│   │       ├── OfflineRedemptionService.ts
-│   │       └── TransactionService.ts
 │   ├── application/
 │   │   ├── use-cases/
-│   │   │   ├── ProcessRedemptionUseCase.ts
-│   │   │   ├── ValidateQRUseCase.ts
-│   │   │   ├── OfflineRedemptionUseCase.ts
-│   │   │   └── GetRedemptionHistoryUseCase.ts
 │   │   └── dto/
-│   │       ├── RedemptionDTO.ts
-│   │       └── TransactionDTO.ts
 │   ├── infrastructure/
 │   │   ├── persistence/
-│   │   │   └── PostgreSQLRedemptionRepository.ts
 │   │   └── external-services/
-│   │       └── ScanditSDKService.ts # QR scanning
 │   └── presentation/
 │       └── controllers/
-│           └── RedemptionController.ts
 ├── database/
 │   └── prisma/
 │       └── schema.prisma           # Redemption DB only
@@ -271,55 +196,19 @@ analytics-service/
 ├── src/
 │   ├── domain/
 │   │   ├── entities/
-│   │   │   ├── AnalyticsEvent.ts    # Event tracking
-│   │   │   ├── Metric.ts            # KPI metrics
-│   │   │   ├── ABTest.ts            # A/B test definition
-│   │   │   ├── TestVariant.ts       # Test variants
-│   │   │   ├── Recommendation.ts    # ML recommendations
-│   │   │   ├── Report.ts            # Custom reports
-│   │   │   └── Dashboard.ts         # Real-time dashboards
 │   │   └── services/
-│   │       ├── MetricsCalculationService.ts
-│   │       ├── ABTestingService.ts
-│   │       ├── RecommendationEngine.ts
-│   │       ├── ReportGenerationService.ts
-│   │       └── RealTimeAnalyticsService.ts
 │   ├── application/
 │   │   ├── use-cases/
 │   │   │   ├── analytics/
-│   │   │   │   ├── TrackEventUseCase.ts
-│   │   │   │   ├── CalculateMetricsUseCase.ts
-│   │   │   │   └── GenerateDashboardUseCase.ts
 │   │   │   ├── ab-testing/
-│   │   │   │   ├── CreateABTestUseCase.ts
-│   │   │   │   ├── AssignVariantUseCase.ts
-│   │   │   │   └── AnalyzeTestResultsUseCase.ts
 │   │   │   ├── recommendation/
-│   │   │   │   ├── GenerateRecommendationsUseCase.ts
-│   │   │   │   └── TrainModelUseCase.ts
 │   │   │   └── reporting/
-│   │   │       ├── CreateReportUseCase.ts
-│   │   │       ├── ScheduleReportUseCase.ts
-│   │   │       └── ExportReportUseCase.ts
 │   │   └── dto/
-│   │       ├── EventDTO.ts
-│   │       ├── ABTestDTO.ts
-│   │       ├── RecommendationDTO.ts
-│   │       └── ReportDTO.ts
 │   ├── infrastructure/
 │   │   ├── persistence/
-│   │   │   ├── ClickHouseEventRepository.ts
-│   │   │   ├── Neo4jRecommendationRepository.ts
-│   │   │   └── PostgreSQLABTestRepository.ts
 │   │   └── external-services/
-│   │       ├── MLModelService.ts
-│   │       └── DataPipelineService.ts
 │   └── presentation/
 │       └── controllers/
-│           ├── AnalyticsController.ts
-│           ├── ABTestController.ts
-│           ├── RecommendationController.ts
-│           └── ReportController.ts
 ├── databases/
 │   ├── clickhouse/
 │   │   └── schemas.sql             # Analytics events
@@ -344,35 +233,15 @@ fraud-service/
 ├── src/
 │   ├── domain/
 │   │   ├── entities/
-│   │   │   ├── FraudScore.ts        # ML fraud scoring
-│   │   │   ├── FraudRule.ts         # Business rules
-│   │   │   ├── DeviceFingerprint.ts # Device tracking
-│   │   │   ├── RiskProfile.ts       # User risk assessment
-│   │   │   └── SecurityAlert.ts     # Real-time alerts
 │   │   └── services/
-│   │       ├── FraudDetectionService.ts
-│   │       ├── MLScoringService.ts
-│   │       ├── RulesEngineService.ts
-│   │       └── DeviceFingerprintService.ts
 │   ├── application/
 │   │   ├── use-cases/
-│   │   │   ├── CheckFraudUseCase.ts
-│   │   │   ├── CalculateRiskScoreUseCase.ts
-│   │   │   ├── UpdateFraudRulesUseCase.ts
-│   │   │   └── GenerateSecurityReportUseCase.ts
 │   │   └── dto/
-│   │       ├── FraudCheckDTO.ts
-│   │       └── RiskScoreDTO.ts
 │   ├── infrastructure/
 │   │   ├── persistence/
-│   │   │   ├── PostgreSQLFraudRepository.ts
-│   │   │   └── MongoDBMLModelRepository.ts
 │   │   └── external-services/
-│   │       ├── MLModelAPIService.ts
-│   │       └── SecurityAnalyticsService.ts
 │   └── presentation/
 │       └── controllers/
-│           └── FraudController.ts
 ├── databases/
 │   ├── postgresql/
 │   │   └── prisma/schema.prisma    # Fraud records
@@ -395,42 +264,17 @@ integration-service/
 ├── src/
 │   ├── domain/
 │   │   ├── entities/
-│   │   │   ├── Notification.ts      # Multi-channel notifications
-│   │   │   ├── NotificationTemplate.ts
-│   │   │   ├── CRMContact.ts        # CRM synchronization
-│   │   │   ├── CRMCampaign.ts       # Campaign sync
-│   │   │   └── IntegrationLog.ts    # Audit trail
 │   │   └── services/
-│   │       ├── NotificationRoutingService.ts
-│   │       ├── CRMSyncService.ts
-│   │       ├── TemplateEngineService.ts
-│   │       └── IntegrationOrchestratorService.ts
 │   ├── application/
 │   │   ├── use-cases/
 │   │   │   ├── notification/
-│   │   │   │   ├── SendNotificationUseCase.ts
-│   │   │   │   ├── ScheduleNotificationUseCase.ts
-│   │   │   │   └── TrackNotificationUseCase.ts
 │   │   │   └── crm/
-│   │   │       ├── SyncContactUseCase.ts
-│   │   │       ├── SyncCampaignUseCase.ts
-│   │   │       └── ImportCRMDataUseCase.ts
 │   │   └── dto/
-│   │       ├── NotificationDTO.ts
-│   │       └── CRMSyncDTO.ts
 │   ├── infrastructure/
 │   │   ├── persistence/
-│   │   │   └── PostgreSQLIntegrationRepository.ts
 │   │   └── external-services/
-│   │       ├── TwilioSMSService.ts
-│   │       ├── SendGridEmailService.ts
-│   │       ├── FCMPushService.ts
-│   │       ├── HubSpotCRMService.ts
-│   │       └── SalesforceCRMService.ts
 │   └── presentation/
 │       └── controllers/
-│           ├── NotificationController.ts
-│           └── CRMController.ts
 ├── database/
 │   └── prisma/
 │       └── schema.prisma           # Integration logs
@@ -452,31 +296,11 @@ portal-service/
 ├── src/
 │   ├── components/
 │   │   ├── layout/
-│   │   │   ├── Header.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   └── Footer.tsx
 │   │   ├── ui/
-│   │   │   ├── Button.tsx
-│   │   │   ├── Input.tsx
-│   │   │   ├── Table.tsx
-│   │   │   └── Chart.tsx
 │   │   ├── admin/
-│   │   │   ├── UserManagement.tsx
-│   │   │   ├── SystemSettings.tsx
-│   │   │   └── SecurityDashboard.tsx
 │   │   ├── brand/
-│   │   │   ├── CampaignDashboard.tsx
-│   │   │   ├── CampaignCreator.tsx
-│   │   │   ├── QRGenerator.tsx
-│   │   │   └── Analytics.tsx
 │   │   ├── pos/
-│   │   │   ├── Scanner.tsx
-│   │   │   ├── RedemptionFlow.tsx
-│   │   │   └── OfflineMode.tsx
 │   │   └── user/
-│   │       ├── ProfileDashboard.tsx
-│   │       ├── RedemptionHistory.tsx
-│   │       └── Recommendations.tsx
 │   ├── pages/
 │   │   ├── AdminPortal/
 │   │   ├── BrandPortal/
@@ -484,26 +308,9 @@ portal-service/
 │   │   └── UserPortal/
 │   ├── store/
 │   │   ├── slices/
-│   │   │   ├── authSlice.ts
-│   │   │   ├── campaignSlice.ts
-│   │   │   ├── redemptionSlice.ts
-│   │   │   └── analyticsSlice.ts
 │   │   └── api/
-│   │       ├── identityApi.ts      # API client cho identity service
-│   │       ├── campaignApi.ts      # API client cho campaign service
-│   │       ├── redemptionApi.ts    # API client cho redemption service
-│   │       ├── analyticsApi.ts     # API client cho analytics service
-│   │       ├── fraudApi.ts         # API client cho fraud service
-│   │       └── integrationApi.ts   # API client cho integration service
 │   ├── hooks/
-│   │   ├── useAuth.ts
-│   │   ├── useCampaign.ts
-│   │   ├── useRealTime.ts
-│   │   └── usePermissions.ts
 │   └── utils/
-│       ├── apiClient.ts
-│       ├── websocket.ts
-│       └── permissions.ts
 ├── public/
 │   ├── manifest.json              # PWA manifest
 │   └── sw.js                      # Service worker
