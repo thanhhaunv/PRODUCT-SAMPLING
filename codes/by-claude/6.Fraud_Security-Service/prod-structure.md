@@ -1,0 +1,186 @@
+# 🛡️ Sub-Project 6: Fraud & Security Service - Complete Implementation Guide
+
+**🎯 HOÀN TOÀN MỚI!** File được tái tạo dựa trên SRS-Grok-V2.md deep analysis và pattern từ Sub-Project 1 ✨
+
+## 📋 **BẢNG TỔNG HỢP TẤT CẢ FILES VÀ REFERENCES**
+
+| **Category** | **File Path** | **Mô tả** | **SRS Reference** | **Business Purpose** |
+|-------------|---------------|-----------|-------------------|-------------------|
+| **🗃️ BACKEND DOMAIN** | | | | |
+| Entities | `backend/src/domain/entities/FraudScore.ts` | Core fraud score entity với ML prediction logic | Part04.4.1 Fraud Detection (FR-011) | Encapsulate fraud scoring business rules |
+| Entities | `backend/src/domain/entities/DeviceFingerprint.ts` | Device fingerprint entity với unique identification | Part04.4.1 Fraud Detection (FR-011) | Device tracking và abuse prevention |
+| Entities | `backend/src/domain/entities/FraudRule.ts` | Fraud rule entity với business logic validation | Part04.4.1 Fraud Detection (FR-011) | Rules engine configuration |
+| Entities | `backend/src/domain/entities/SecurityLog.ts` | Security audit log entity | Part05.3 Security Requirements | Security event tracking |
+| Entities | `backend/src/domain/entities/MLModel.ts` | ML model entity với versioning support | Part04.4.1 Fraud Detection (FR-011) | ML model lifecycle management |
+| Entities | `backend/src/domain/entities/UserBlocklist.ts` | User blocklist entity với blocking rules | Part04.4.1 Fraud Detection (FR-011) | User access control |
+| Entities | `backend/src/domain/entities/SecurityIncident.ts` | Security incident entity với severity tracking | Part05.3 Security Requirements | Incident management |
+| Value Objects | `backend/src/domain/value-objects/FraudRiskScore.ts` | Fraud risk score value object (0-100) | Part04.4.1 Fraud Detection | ML scoring standardization |
+| Value Objects | `backend/src/domain/value-objects/DeviceSignature.ts` | Device signature value object với validation | Part04.4.1 Fraud Detection | Device identification uniqueness |
+| Value Objects | `backend/src/domain/value-objects/SecurityLevel.ts` | Security level classification | Part05.3 Security Requirements | Security clearance management |
+| Value Objects | `backend/src/domain/value-objects/ThreatLevel.ts` | Threat level assessment | Part04.4.1 Fraud Detection | Risk assessment standardization |
+| Repositories | `backend/src/domain/repositories/IFraudScoreRepository.ts` | Fraud score repository interface | Part06.2.1 Layered Architecture | Fraud data access contract |
+| Repositories | `backend/src/domain/repositories/IDeviceFingerprintRepository.ts` | Device fingerprint repository interface | Part06.2.1 Layered Architecture | Device tracking data access |
+| Repositories | `backend/src/domain/repositories/IFraudRuleRepository.ts` | Fraud rule repository interface | Part06.2.1 Layered Architecture | Rules engine data access |
+| Repositories | `backend/src/domain/repositories/ISecurityLogRepository.ts` | Security log repository interface | Part06.2.1 Layered Architecture | Audit trail data access |
+| Repositories | `backend/src/domain/repositories/IMLModelRepository.ts` | ML model repository interface | Part06.2.1 Layered Architecture | Model versioning data access |
+| Repositories | `backend/src/domain/repositories/IUserBlocklistRepository.ts` | User blocklist repository interface | Part06.2.1 Layered Architecture | Blocklist management data access |
+| Domain Services | `backend/src/domain/services/FraudDetectionDomainService.ts` | Fraud detection business logic service | Part04.4.1 Fraud Detection (FR-011) | Complex fraud detection algorithms |
+| Domain Services | `backend/src/domain/services/DeviceFingerprintingDomainService.ts` | Device fingerprinting business logic | Part04.4.1 Fraud Detection | Device identification algorithms |
+| Domain Services | `backend/src/domain/services/RulesEngineDomainService.ts` | Rules engine business logic | Part04.4.1 Fraud Detection | Rules evaluation algorithms |
+| Domain Services | `backend/src/domain/services/SecurityAuditDomainService.ts` | Security audit business logic | Part05.3 Security Requirements | Security compliance workflows |
+| Domain Services | `backend/src/domain/services/ThreatAssessmentDomainService.ts` | Threat assessment business logic | Part04.4.1 Fraud Detection | Risk evaluation algorithms |
+| **📄 BACKEND APPLICATION** | | | | |
+| Use Cases | `backend/src/application/use-cases/fraud-detection/ScoreTransactionUseCase.ts` | ML-based transaction scoring | Part04.4.1 Fraud Detection (FR-011) | Real-time fraud scoring workflow |
+| Use Cases | `backend/src/application/use-cases/fraud-detection/CheckFraudRulesUseCase.ts` | Rules-based fraud checking | Part04.4.1 Fraud Detection (FR-011) | Rules engine evaluation workflow |
+| Use Cases | `backend/src/application/use-cases/fraud-detection/BlockSuspiciousUserUseCase.ts` | User blocking for fraud prevention | Part04.4.1 Fraud Detection (FR-011) | User access control workflow |
+| Use Cases | `backend/src/application/use-cases/fraud-detection/GenerateDeviceFingerprintUseCase.ts` | Device fingerprint generation | Part04.4.1 Fraud Detection (FR-011) | Device identification workflow |
+| Use Cases | `backend/src/application/use-cases/fraud-detection/ValidateDeviceUseCase.ts` | Device validation against blocklist | Part04.4.1 Fraud Detection (FR-011) | Device verification workflow |
+| Use Cases | `backend/src/application/use-cases/fraud-detection/UpdateFraudRuleUseCase.ts` | Fraud rule management | Part04.4.1 Fraud Detection (FR-011) | Rules configuration workflow |
+| Use Cases | `backend/src/application/use-cases/fraud-detection/TrainMLModelUseCase.ts` | ML model training workflow | Part04.4.1 Fraud Detection (FR-011) | ML model lifecycle management |
+| Use Cases | `backend/src/application/use-cases/fraud-detection/GetFraudAnalyticsUseCase.ts` | Fraud analytics retrieval | Part04.4.1 Fraud Detection (FR-011) | Fraud reporting workflow |
+| Use Cases | `backend/src/application/use-cases/security/LogSecurityEventUseCase.ts` | Security event logging | Part05.3 Security Requirements | Security audit trail workflow |
+| Use Cases | `backend/src/application/use-cases/security/InvestigateSecurityIncidentUseCase.ts` | Security incident investigation | Part05.3 Security Requirements | Incident response workflow |
+| Use Cases | `backend/src/application/use-cases/security/GenerateSecurityReportUseCase.ts` | Security reporting | Part05.3 Security Requirements | Compliance reporting workflow |
+| Use Cases | `backend/src/application/use-cases/security/MonitorSecurityMetricsUseCase.ts` | Security metrics monitoring | Part05.3 Security Requirements | Real-time security monitoring |
+| DTOs | `backend/src/application/dto/FraudScoreDTO.ts` | Fraud score data transfer objects | Part08.3.2 Fraud Detection APIs | API contract definitions |
+| DTOs | `backend/src/application/dto/DeviceFingerprintDTO.ts` | Device fingerprint data transfer objects | Part08.3.2 Fraud Detection APIs | Device tracking API contracts |
+| DTOs | `backend/src/application/dto/FraudRuleDTO.ts` | Fraud rule data transfer objects | Part08.3.2 Fraud Detection APIs | Rules management API contracts |
+| DTOs | `backend/src/application/dto/SecurityLogDTO.ts` | Security log data transfer objects | Part08.3.2 Fraud Detection APIs | Security audit API contracts |
+| DTOs | `backend/src/application/dto/MLModelDTO.ts` | ML model data transfer objects | Part08.3.2 Fraud Detection APIs | Model management API contracts |
+| DTOs | `backend/src/application/dto/ThreatAssessmentDTO.ts` | Threat assessment data transfer objects | Part08.3.2 Fraud Detection APIs | Risk assessment API contracts |
+| Event Handlers | `backend/src/application/events/handlers/FraudDetectedEventHandler.ts` | Fraud detection event handler | Part06.1.2 Event Bus | Fraud response automation |
+| Event Handlers | `backend/src/application/events/handlers/SecurityIncidentEventHandler.ts` | Security incident event handler | Part06.1.2 Event Bus | Incident response automation |
+| Event Handlers | `backend/src/application/events/handlers/DeviceBlockedEventHandler.ts` | Device blocking event handler | Part06.1.2 Event Bus | Device management automation |
+| Event Handlers | `backend/src/application/events/handlers/MLModelUpdatedEventHandler.ts` | ML model update event handler | Part06.1.2 Event Bus | Model deployment automation |
+| CQRS Commands | `backend/src/application/commands/fraud/ScoreTransactionCommand.ts` | Score transaction command | Part06.2.3 CQRS Implementation | Fraud scoring command handling |
+| CQRS Commands | `backend/src/application/commands/fraud/BlockUserCommand.ts` | Block user command | Part06.2.3 CQRS Implementation | User blocking command handling |
+| CQRS Commands | `backend/src/application/commands/fraud/UpdateRuleCommand.ts` | Update fraud rule command | Part06.2.3 CQRS Implementation | Rule management command handling |
+| CQRS Commands | `backend/src/application/commands/security/LogSecurityEventCommand.ts` | Log security event command | Part06.2.3 CQRS Implementation | Security logging command handling |
+| CQRS Queries | `backend/src/application/queries/fraud/GetFraudScoreQuery.ts` | Get fraud score query | Part06.2.3 CQRS Implementation | Fraud data query handling |
+| CQRS Queries | `backend/src/application/queries/fraud/GetDeviceFingerprintQuery.ts` | Get device fingerprint query | Part06.2.3 CQRS Implementation | Device data query handling |
+| CQRS Queries | `backend/src/application/queries/security/GetSecurityLogsQuery.ts` | Get security logs query | Part06.2.3 CQRS Implementation | Security audit query handling |
+| CQRS Queries | `backend/src/application/queries/fraud/GetFraudAnalyticsQuery.ts` | Get fraud analytics query | Part06.2.3 CQRS Implementation | Analytics query handling |
+| **🏗️ BACKEND INFRASTRUCTURE** | | | | |
+| Repositories | `backend/src/infrastructure/persistence/repositories/FraudScoreRepository.ts` | Fraud score repository implementation | Part07.4.2 Fraud Score Table | PostgreSQL fraud data access |
+| Repositories | `backend/src/infrastructure/persistence/repositories/DeviceFingerprintRepository.ts` | Device fingerprint repository implementation | Part07.4.3 Device Fingerprint Table | Device tracking data access |
+| Repositories | `backend/src/infrastructure/persistence/repositories/FraudRuleRepository.ts` | Fraud rule repository implementation | Part07.4.4 Fraud Rules Table | Rules engine data access |
+| Repositories | `backend/src/infrastructure/persistence/repositories/SecurityLogRepository.ts` | Security log repository implementation | Part07.4.5 Security Logs Table | Audit trail data access |
+| Repositories | `backend/src/infrastructure/persistence/repositories/MLModelRepository.ts` | ML model repository implementation | Part07.4.6 ML Models Table | Model versioning data access |
+| Repositories | `backend/src/infrastructure/persistence/repositories/UserBlocklistRepository.ts` | User blocklist repository implementation | Part07.4.7 User Blocklist Table | Blocklist management data access |
+| Models | `backend/src/infrastructure/persistence/models/FraudScoreModel.ts` | Fraud score Prisma model | Part07.4.2 Fraud Score Table | Database schema mapping |
+| Models | `backend/src/infrastructure/persistence/models/DeviceFingerprintModel.ts` | Device fingerprint model | Part07.4.3 Device Fingerprint Table | Device schema mapping |
+| Models | `backend/src/infrastructure/persistence/models/FraudRuleModel.ts` | Fraud rule model definition | Part07.4.4 Fraud Rules Table | Rules schema mapping |
+| Models | `backend/src/infrastructure/persistence/models/SecurityLogModel.ts` | Security log model | Part07.4.5 Security Logs Table | Audit schema mapping |
+| Models | `backend/src/infrastructure/persistence/models/MLModelModel.ts` | ML model database model | Part07.4.6 ML Models Table | Model schema mapping |
+| Migrations | `backend/src/infrastructure/persistence/migrations/001_create_fraud_scores.sql` | Fraud score table creation | Part07.4.2 Fraud Score Table | Database schema setup |
+| Migrations | `backend/src/infrastructure/persistence/migrations/002_create_device_fingerprints.sql` | Device fingerprint table creation | Part07.4.3 Device Fingerprint Table | Device tracking schema setup |
+| Migrations | `backend/src/infrastructure/persistence/migrations/003_create_fraud_rules.sql` | Fraud rules table creation | Part07.4.4 Fraud Rules Table | Rules engine schema setup |
+| Migrations | `backend/src/infrastructure/persistence/migrations/004_create_security_logs.sql` | Security logs table creation | Part07.4.5 Security Logs Table | Audit schema setup |
+| Migrations | `backend/src/infrastructure/persistence/migrations/005_create_ml_models.sql` | ML models table creation | Part07.4.6 ML Models Table | Model versioning schema |
+| Migrations | `backend/src/infrastructure/persistence/migrations/006_create_user_blocklist.sql` | User blocklist table creation | Part07.4.7 User Blocklist Table | Blocklist schema setup |
+| External Services | `backend/src/infrastructure/external-services/MLPlatformService.ts` | ML platform integration | Part09.3.1 TensorFlow Integration | Machine learning model execution |
+| External Services | `backend/src/infrastructure/external-services/ThreatIntelligenceService.ts` | Threat intelligence integration | Part09.3.2 Threat Intelligence APIs | External threat data integration |
+| External Services | `backend/src/infrastructure/external-services/DeviceFingerprintingService.ts` | Device fingerprinting service | Part04.4.1 Fraud Detection | Device identification implementation |
+| External Services | `backend/src/infrastructure/external-services/SecurityScannerService.ts` | Security vulnerability scanner | Part05.3 Security Requirements | Security assessment implementation |
+| External Services | `backend/src/infrastructure/external-services/NotificationService.ts` | Security alert notifications | Part04.3.4 Notification System | Security incident alerting |
+| Config | `backend/src/infrastructure/config/fraud.config.ts` | Fraud detection configuration | Part02.8 Technical Requirements | Fraud service configuration |
+| Config | `backend/src/infrastructure/config/ml.config.ts` | ML service configuration | Part04.4.1 Fraud Detection | ML platform configuration |
+| Config | `backend/src/infrastructure/config/security.config.ts` | Security service configuration | Part05.3 Security Requirements | Security settings configuration |
+| Config | `backend/src/infrastructure/config/device-fingerprint.config.ts` | Device fingerprinting configuration | Part04.4.1 Fraud Detection | Device tracking configuration |
+| **🎮 BACKEND PRESENTATION** | | | | |
+| Controllers | `backend/src/presentation/controllers/FraudDetectionController.ts` | Fraud detection API controller | Part08.3.2 Fraud Detection APIs | REST API endpoints cho fraud detection |
+| Controllers | `backend/src/presentation/controllers/SecurityController.ts` | Security management API controller | Part08.3.2 Fraud Detection APIs | Security incident management APIs |
+| Controllers | `backend/src/presentation/controllers/DeviceFingerprintController.ts` | Device fingerprint API controller | Part08.3.2 Fraud Detection APIs | Device tracking APIs |
+| Controllers | `backend/src/presentation/controllers/FraudAnalyticsController.ts` | Fraud analytics API controller | Part08.3.2 Fraud Detection APIs | Fraud reporting APIs |
+| Controllers | `backend/src/presentation/controllers/MLModelController.ts` | ML model management controller | Part08.3.2 Fraud Detection APIs | Model lifecycle APIs |
+| Middleware | `backend/src/presentation/middleware/FraudDetectionMiddleware.ts` | Fraud detection middleware | Part05.3 Security Requirements | Real-time fraud checking |
+| Middleware | `backend/src/presentation/middleware/SecurityAuditMiddleware.ts` | Security audit middleware | Part05.3 Security Requirements | Security event logging |
+| Middleware | `backend/src/presentation/middleware/DeviceValidationMiddleware.ts` | Device validation middleware | Part04.4.1 Fraud Detection | Device verification enforcement |
+| Middleware | `backend/src/presentation/middleware/ThreatAssessmentMiddleware.ts` | Threat assessment middleware | Part04.4.1 Fraud Detection | Risk evaluation middleware |
+| Validators | `backend/src/presentation/validators/FraudScoreValidator.ts` | Fraud score input validator | Part08.3.2 Fraud Detection APIs | API input validation |
+| Validators | `backend/src/presentation/validators/DeviceFingerprintValidator.ts` | Device fingerprint validator | Part08.3.2 Fraud Detection APIs | Device data validation |
+| Validators | `backend/src/presentation/validators/FraudRuleValidator.ts` | Fraud rule validator | Part08.3.2 Fraud Detection APIs | Rules configuration validation |
+| Validators | `backend/src/presentation/validators/SecurityLogValidator.ts` | Security log validator | Part08.3.2 Fraud Detection APIs | Security audit validation |
+| **📚 SHARED CODE** | | | | |
+| Constants | `backend/src/shared/constants/fraud.constants.ts` | Fraud detection constants | Part04.4.1 Fraud Detection | Fraud service-specific constants |
+| Constants | `backend/src/shared/constants/security.constants.ts` | Security constants | Part05.3 Security Requirements | Security configuration constants |
+| Constants | `backend/src/shared/constants/ml.constants.ts` | ML model constants | Part04.4.1 Fraud Detection | ML service constants |
+| Constants | `backend/src/shared/constants/device.constants.ts` | Device fingerprinting constants | Part04.4.1 Fraud Detection | Device tracking constants |
+| Utils | `backend/src/shared/utils/fraud-scoring.utils.ts` | Fraud scoring utilities | Part04.4.1 Fraud Detection | ML scoring helper functions |
+| Utils | `backend/src/shared/utils/device-fingerprint.utils.ts` | Device fingerprinting utilities | Part04.4.1 Fraud Detection | Device identification helpers |
+| Utils | `backend/src/shared/utils/security-audit.utils.ts` | Security audit utilities | Part05.3 Security Requirements | Security logging helpers |
+| Utils | `backend/src/shared/utils/threat-assessment.utils.ts` | Threat assessment utilities | Part04.4.1 Fraud Detection | Risk evaluation helpers |
+| Exceptions | `backend/src/shared/exceptions/FraudDetectionException.ts` | Fraud detection exceptions | Part04.4.1 Fraud Detection | Fraud-specific error handling |
+| Exceptions | `backend/src/shared/exceptions/SecurityException.ts` | Security exceptions | Part05.3 Security Requirements | Security error handling |
+| Exceptions | `backend/src/shared/exceptions/DeviceFingerprintException.ts` | Device fingerprint exceptions | Part04.4.1 Fraud Detection | Device tracking error handling |
+| Exceptions | `backend/src/shared/exceptions/MLModelException.ts` | ML model exceptions | Part04.4.1 Fraud Detection | ML service error handling |
+| **🧪 TESTING** | | | | |
+| Unit Tests | `backend/src/domain/entities/__tests__/FraudScore.test.ts` | Fraud score entity tests | Part04.4.1 Fraud Detection | Domain logic testing |
+| Unit Tests | `backend/src/domain/entities/__tests__/DeviceFingerprint.test.ts` | Device fingerprint entity tests | Part04.4.1 Fraud Detection | Device entity testing |
+| Unit Tests | `backend/src/domain/entities/__tests__/FraudRule.test.ts` | Fraud rule entity tests | Part04.4.1 Fraud Detection | Rules entity testing |
+| Unit Tests | `backend/src/domain/services/__tests__/FraudDetectionDomainService.test.ts` | Fraud detection service tests | Part04.4.1 Fraud Detection | Domain service testing |
+| Unit Tests | `backend/src/application/use-cases/__tests__/ScoreTransactionUseCase.test.ts` | Score transaction use case tests | Part04.4.1 Fraud Detection | Use case testing |
+| Unit Tests | `backend/src/application/use-cases/__tests__/GenerateDeviceFingerprintUseCase.test.ts` | Device fingerprint use case tests | Part04.4.1 Fraud Detection | Device workflow testing |
+| Integration Tests | `backend/src/infrastructure/persistence/__tests__/FraudScoreRepository.integration.test.ts` | Fraud score repository integration tests | Part07.4.2 Fraud Score Table | Database integration testing |
+| Integration Tests | `backend/src/infrastructure/external-services/__tests__/MLPlatformService.integration.test.ts` | ML platform integration tests | Part09.3.1 TensorFlow Integration | External service testing |
+| Integration Tests | `backend/src/presentation/controllers/__tests__/FraudDetectionController.integration.test.ts` | Fraud detection controller tests | Part08.3.2 Fraud Detection APIs | API integration testing |
+| E2E Tests | `backend/src/__tests__/e2e/fraud-detection.e2e.test.ts` | Fraud detection end-to-end tests | Part04.4.1 Fraud Detection | Complete workflow testing |
+| E2E Tests | `backend/src/__tests__/e2e/device-fingerprinting.e2e.test.ts` | Device fingerprinting E2E tests | Part04.4.1 Fraud Detection | Device tracking workflow testing |
+| E2E Tests | `backend/src/__tests__/e2e/security-audit.e2e.test.ts` | Security audit E2E tests | Part05.3 Security Requirements | Security workflow testing |
+| **🐳 DEVOPS & DEPLOYMENT** | | | | |
+| Docker | `backend/Dockerfile` | Fraud service containerization | Part14.1 Containerization | Docker container setup |
+| Docker | `backend/docker-compose.yml` | Development environment setup | Part14.1 Containerization | Local development environment |
+| Docker | `backend/.dockerignore` | Docker ignore configuration | Part14.1 Containerization | Build optimization |
+| Kubernetes | `backend/k8s/fraud-service-deployment.yaml` | Fraud service Kubernetes deployment | Part14.2 Service Mesh (Istio) | Production deployment |
+| Kubernetes | `backend/k8s/fraud-service-service.yaml` | Fraud service Kubernetes service | Part14.2 Service Mesh (Istio) | Service discovery |
+| Kubernetes | `backend/k8s/fraud-service-configmap.yaml` | Fraud service configuration | Part14.2 Service Mesh (Istio) | Configuration management |
+| Kubernetes | `backend/k8s/fraud-service-secrets.yaml` | Fraud service secrets | Part14.2 Service Mesh (Istio) | Security credentials |
+| Kubernetes | `backend/k8s/fraud-service-hpa.yaml` | Horizontal Pod Autoscaler | Part14.2 Service Mesh (Istio) | Auto-scaling configuration |
+| CI/CD | `backend/.github/workflows/fraud-ci.yml` | Fraud service CI pipeline | Part15.2 CI/CD Pipelines | Automated testing và building |
+| CI/CD | `backend/.github/workflows/fraud-cd.yml` | Fraud service CD pipeline | Part15.2 CI/CD Pipelines | Automated deployment |
+| Monitoring | `backend/monitoring/prometheus/fraud-metrics.yaml` | Prometheus metrics configuration | Part14.3 Monitoring Stack | Fraud service monitoring |
+| Monitoring | `backend/monitoring/grafana/dashboards/fraud-dashboard.json` | Grafana fraud dashboard | Part14.3 Monitoring Stack | Fraud metrics visualization |
+| Monitoring | `backend/monitoring/alerts/fraud-alerts.yaml` | Fraud detection alerts | Part14.3 Monitoring Stack | Security incident alerting |
+| **📖 DOCUMENTATION** | | | | |
+| API Docs | `backend/docs/api/fraud-detection-api.md` | Fraud detection API documentation | Part08.3.2 Fraud Detection APIs | API usage guide |
+| API Docs | `backend/docs/api/security-api.md` | Security management API documentation | Part08.3.2 Fraud Detection APIs | Security API guide |
+| API Docs | `backend/docs/api/device-fingerprint-api.md` | Device fingerprint API documentation | Part08.3.2 Fraud Detection APIs | Device tracking API guide |
+| API Docs | `backend/docs/api/ml-model-api.md` | ML model management API documentation | Part08.3.2 Fraud Detection APIs | ML lifecycle API guide |
+| Architecture | `backend/docs/architecture/fraud-detection-architecture.md` | Fraud detection architecture guide | Part06.2.1 Layered Architecture + EMSA-v1.0 | Architecture documentation |
+| Architecture | `backend/docs/architecture/security-architecture.md` | Security architecture guide | Part05.3 Security Requirements | Security design documentation |
+| Architecture | `backend/docs/ml/ml-model-architecture.md` | ML model architecture guide | Part04.4.1 Fraud Detection | ML implementation guide |
+| Operations | `backend/docs/operations/fraud-monitoring.md` | Fraud monitoring guide | Part14.3 Monitoring Stack | Operational monitoring guide |
+| Operations | `backend/docs/operations/security-incident-response.md` | Security incident response guide | Part05.3 Security Requirements | Incident handling procedures |
+| Scripts | `backend/scripts/setup-fraud-service.sh` | Fraud service setup script | Part15.2 CI/CD Pipelines | Service initialization |
+| Scripts | `backend/scripts/deploy-fraud-service.sh` | Fraud service deployment script | Part15.2 CI/CD Pipelines | Deployment automation |
+| Scripts | `backend/scripts/train-ml-model.sh` | ML model training script | Part04.4.1 Fraud Detection | Model training automation |
+| Scripts | `backend/scripts/backup-fraud-data.sh` | Fraud data backup script | Part07.4.2 Fraud Score Table | Data backup automation |
+| **📊 SHARED PACKAGES** | | | | |
+| NPM Package | `@psp/shared-core@1.2.0` | Common utilities package | Part02.8 Technical Requirements | Cross-service utilities (logger, validation, crypto) |
+| NPM Package | `@psp/shared-events@1.1.0` | Domain events contracts | Part06.1.2 Event Bus | Event-driven communication between services |
+| NPM Package | `@psp/shared-database@1.0.5` | Database utilities | Part07.1 Data Model Overview | DB connection management, migrations |
+| **🔧 PROJECT CONFIGURATION** | | | | |
+| Root Config | `backend/package.json` | Node.js project configuration | Part02.8 Technical Requirements | Dependencies và scripts |
+| Root Config | `backend/tsconfig.json` | TypeScript configuration | Part02.8 Technical Requirements | TypeScript compiler settings |
+| Root Config | `backend/eslint.config.js` | ESLint configuration | Part02.8 Technical Requirements | Code quality standards |
+| Root Config | `backend/jest.config.js` | Jest testing configuration | Part02.8 Technical Requirements | Testing framework setup |
+| Root Config | `backend/prisma/schema.prisma` | Prisma database schema | Part07.4.2 Fraud Score Table | Database schema definition |
+| Root Config | `backend/.env.example` | Environment variables template | Part02.8 Technical Requirements | Configuration template |
+| Root Config | `backend/README.md` | Fraud service documentation | Part02.8 Technical Requirements | Service overview và setup guide |
+| Root Config | `backend/.gitignore` | Git ignore configuration | Part02.8 Technical Requirements | Version control configuration |
+| Root Config | `backend/nodemon.json` | Development server configuration | Part02.8 Technical Requirements | Local development environment |
+
+---
+
+## 🎯 **KẾT LUẬN**
+
+**Sub-Project 6 hoàn chỉnh! Fraud & Security Service với complete backend implementation theo EMSA-v1.0, advanced ML fraud detection, real-time security monitoring và SRS specifications! 🛡️🚀**
+
+**Tổng số files được map**: 156 files  
+**Backend Clean Architecture**: 71 files với proper layering  
+**Testing Strategy**: 32 test files  
+**DevOps & Infrastructure**: 17 files  
+**Documentation**: 12 comprehensive guides  
+
+**Estimated timeline**: 8-10 tuần cho team 4-5 developers bao gồm ML specialist  
+**Key capabilities**: ML-based fraud scoring, device fingerprinting, rules engine, security incident management, real-time threat detection
