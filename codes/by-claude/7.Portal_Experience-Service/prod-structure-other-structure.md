@@ -594,6 +594,13 @@ psp-unified-portal/
   - *File tạo*: `src/utils/errorTracking.ts`, `performanceMonitoring.ts`, `userAnalytics.ts`
   - *Ý nghĩa*: Production monitoring và user behavior insights
 
+#### **8.4 Additional PWA Features**
+- [ ] **Enhance PWA with Scandit SDK**
+  - *Tham chiếu*: SRS-Grok-V2.md - Part04.2.7 Barcode Redemption
+  - *Mô tả*: Integrate Scandit cho QR scanning ở POS portal
+  - *File tạo*: `frontend/src/portals/pos/components/ScanditScanner.tsx`
+  - *Ý nghĩa*: Mobile-friendly QR redemption
+    
 ---
 
 ## 🎯 **KẾT LUẬN**
