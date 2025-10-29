@@ -38,144 +38,34 @@ Tìm tất cả files có Category:
 
 ## 🗂️ **CRITICAL SETUP FILES - PHASE 0**
 
-### **🔥 Priority 1: Project Foundation (Day 1-2)**
-```bash
-# Project Root Configuration
-├── package.json                          # Node.js project setup + dependencies
-├── tsconfig.json                         # TypeScript strict configuration
-├── .eslintrc.js                         # ESLint rules for team consistency
-├── .prettierrc                          # Prettier formatting rules
-├── jest.config.js                       # Jest testing configuration
-├── .gitignore                           # Git ignore patterns
-├── .env.example                         # Environment variables template
-├── .dockerignore                        # Docker ignore patterns
-└── README.md                            # Project setup documentation
+### **DEV-0** – Project Setup (25 files)
 
-# Workspace Setup
-├── .vscode/
-│   ├── settings.json                    # VSCode workspace settings
-│   ├── launch.json                      # Debug configurations
-│   └── extensions.json                  # Recommended extensions
-```
-
-### **🔥 Priority 2: Shared Core Library (Day 2-3) - BLOCKS DEV-1**
-```bash
-# backend/src/shared/core/ - CRITICAL cho DEV-1
-├── Result.ts                            # Error handling pattern
-├── AggregateRoot.ts                     # Domain entity base class
-├── DomainEvent.ts                       # Domain event base interface
-├── Entity.ts                           # Entity base class
-├── ValueObject.ts                       # Value object base class
-├── UniqueEntityId.ts                    # Entity ID implementation
-├── Guard.ts                            # Input validation utilities
-├── Logger.ts                           # Logging interface & implementation
-├── Either.ts                           # Functional error handling
-└── AppError.ts                         # Application error types
-
-# SRS References for each:
-# Result.ts → Part05.8 Error Handling
-# AggregateRoot.ts → Part06.2.1 Layered Architecture
-# DomainEvent.ts → Part06.1.2 Event Bus
-```
-
-### **🔥 Priority 3: Shared Types & Constants (Day 3-4)**
-```bash
-# backend/src/shared/types/
-├── CommonTypes.ts                       # Common type definitions
-├── ErrorTypes.ts                        # Error type definitions
-├── EventTypes.ts                        # Event type definitions
-├── ApiTypes.ts                         # API request/response types
-└── DatabaseTypes.ts                    # Database-related types
-
-# backend/src/shared/constants/
-├── ErrorMessages.ts                     # Standardized error messages
-├── ValidationRules.ts                   # Validation constants
-├── SystemConstants.ts                   # System-wide constants
-├── HttpStatusCodes.ts                   # HTTP status codes
-└── EventNames.ts                        # Domain event names
-
-# backend/src/shared/utils/
-├── DateUtils.ts                        # Date manipulation utilities
-├── StringUtils.ts                      # String processing utilities
-├── ValidationUtils.ts                  # Common validation functions
-└── CryptoUtils.ts                      # Cryptographic utilities
-```
-
-### **🔥 Priority 4: Database Infrastructure (Day 4-5)**
-```bash
-# backend/prisma/
-├── schema.prisma                        # Complete database schema
-├── migrations/                          # Database migration files
-├── seed.ts                             # Database seeding script
-└── seed-data/                          # Seed data files
-    ├── users.json
-    ├── roles.json
-    └── permissions.json
-
-# Database Scripts
-├── scripts/
-│   ├── db-reset.sh                     # Database reset script
-│   ├── db-migrate.sh                   # Migration script
-│   ├── db-seed.sh                      # Seeding script
-│   └── db-backup.sh                    # Backup script
-
-# SRS Reference: Part07.2 Identity Database Design
-```
-
-### **🔥 Priority 5: Testing Infrastructure (Day 5-6)**
-```bash
-# backend/tests/
-├── setup.ts                           # Jest test environment setup
-├── teardown.ts                        # Test cleanup
-├── jest.config.js                     # Test configuration
-└── globalSetup.ts                     # Global test setup
-
-# Mock Infrastructure
-├── tests/mocks/
-│   ├── MockUserRepository.ts          # Repository mocks
-│   ├── MockEmailService.ts            # Email service mock
-│   ├── MockSMSService.ts              # SMS service mock
-│   ├── MockEventBus.ts                # Event bus mock
-│   └── MockDatabase.ts                # Database mock
-
-# Test Utilities
-├── tests/utils/
-│   ├── TestDataFactory.ts             # Test data generation
-│   ├── DatabaseTestUtils.ts           # Database test helpers
-│   ├── ApiTestUtils.ts                # API testing utilities
-│   └── MockFactory.ts                 # Mock creation utilities
-
-# SRS Reference: Part13.2 Unit Testing Framework
-```
-
-### **🔥 Priority 6: DevOps Foundation (Day 6-7)**
-```bash
-# Container Configuration
-├── Dockerfile                          # Multi-stage Docker build
-├── docker-compose.yml                  # Local development environment
-├── docker-compose.test.yml             # Testing environment
-├── docker-compose.prod.yml             # Production-like environment
-└── .dockerignore                       # Docker ignore patterns
-
-# CI/CD Pipeline
-├── .github/workflows/
-│   ├── ci.yml                          # Continuous Integration
-│   ├── test.yml                        # Automated testing
-│   ├── build.yml                       # Build validation
-│   └── deploy.yml                      # Deployment pipeline
-
-# Kubernetes Setup (Foundation)
-├── k8s/
-│   ├── namespace.yaml                  # Kubernetes namespace
-│   ├── configmap.yaml                  # Configuration mapping
-│   ├── secrets.yaml                    # Secrets template
-│   └── service-account.yaml            # Service account
-
-# SRS References: 
-# Part14.1 Container Orchestration
-# Part15.2 CI/CD Pipelines
-```
-
+| File | Mô tả |
+|------|------|
+| `package.json` | Add 3 shared packages + NestJS, Prisma, Jest |
+| `tsconfig.json` | Strict mode |
+| `jest.config.js` | Coverage 80% |
+| `eslint.config.js` | EMSA rules |
+| `.prettierrc` | Format |
+| `.gitignore`, `.dockerignore` | |
+| `.env.example` | `DATABASE_URL`, `JWT_SECRET`, `TWILIO_SID` |
+| `README.md` | Full setup guide |
+| `Dockerfile` | Multi-stage build |
+| `docker-compose.yml` | PostgreSQL + Redis |
+| `prisma/schema.prisma` | Initial models |
+| `prisma/migrations/0001_init/` | Migration |
+| `scripts/setup-identity-service.sh` | `prisma generate` |
+| `scripts/migrate-database.sh` | |
+| `scripts/backup-identity-data.sh` | |
+| `k8s/identity-deployment.yaml` | |
+| `k8s/identity-service.yaml` | |
+| `k8s/identity-configmap.yaml` | |
+| `k8s/identity-secrets.yaml` | |
+| `.github/workflows/identity-ci.yml` | Test + Build |
+| `.github/workflows/identity-cd.yml` | Deploy |
+| `monitoring/prometheus/identity-metrics.yaml` | |
+| `monitoring/grafana/dashboards/identity-dashboard.json` | |
+| `tests/setup.ts`, `tests/teardown.ts` | Jest setup |
 ---
 
 ## 🏗️ **IMPLEMENTATION EXAMPLES**
