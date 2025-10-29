@@ -1,0 +1,82 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Type Checking - STRICT SETTINGS */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+
+    /* Modules */
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["backend/src/*"],
+      "@domain/*": ["backend/src/domain/*"],
+      "@application/*": ["backend/src/application/*"],
+      "@infrastructure/*": ["backend/src/infrastructure/*"],
+      "@presentation/*": ["backend/src/presentation/*"],
+      "@shared/*": ["backend/src/shared/*"],
+      "@tests/*": ["backend/tests/*"],
+      "@psp/shared-core": ["shared/packages/core/src"],
+      "@psp/shared-events": ["shared/packages/events/src"],
+      "@psp/shared-database": ["shared/packages/database/src"]
+    },
+    "resolveJsonModule": true,
+
+    /* Emit */
+    "outDir": "./dist",
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+
+    /* Interop Constraints */
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": false,
+
+    /* Skip Type Checking */
+    "skipLibCheck": true
+  },
+  "include": [
+    "backend/src/**/*",
+    "backend/tests/**/*",
+    "shared/packages/*/src/**/*",
+    "shared/packages/*/tests/**/*",
+    "*.config.ts",
+    "*.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "*.js",
+    "backend/dist",
+    "backend/build",
+    "shared/packages/*/dist",
+    "shared/packages/*/build"
+  ],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"],
+    "experimentalSpecifierResolution": "node"
+  }
+}
