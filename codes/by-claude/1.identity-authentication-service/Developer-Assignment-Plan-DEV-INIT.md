@@ -1,4 +1,4 @@
-```markdown
+
 # DEV-INIT: Shared Libraries Engineer  
 **Prompt – Phase -1 (Week -1)**  
 **BLOCKING DEPENDENCY FOR DEV-0 & ALL 7 MICROSERVICES**
