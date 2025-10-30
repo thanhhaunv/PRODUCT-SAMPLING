@@ -5,6 +5,7 @@
 **Role**: DEV-3 - App Use Cases (Auth + OTP) Specialist
 **Timeline**: Phase 2 (Week 2-3) - Application Layer
 **Critical**: Bạn là blocking dependency cho DEV-6
+```
 ---
 ## 📚 **TÀI LIỆU ĐẶC TẢ DỰ ÁN**
 ### **1. ĐỌC TÀI LIỆU SRS**
