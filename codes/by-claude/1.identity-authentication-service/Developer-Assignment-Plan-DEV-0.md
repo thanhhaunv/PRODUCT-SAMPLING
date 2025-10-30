@@ -5,7 +5,10 @@
 **Role**: DEV-0 - Project Setup & Foundation Specialist
 **Timeline**: Phase 0 (Week 0-1) - MUST COMPLETE BEFORE ALL OTHER DEVELOPERS
 **Critical**: Bạn là blocking dependency cho tất cả 9 developers còn lại
+```
+
 ---
+
 ## 📚 **TÀI LIỆU ĐẶC TẢ DỰ ÁN**
 ### **1. ĐỌC TÀI LIỆU SRS**
 ```bash
