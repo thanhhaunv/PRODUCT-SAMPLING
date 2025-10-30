@@ -1,11 +1,11 @@
 # PROMPT_DEV_0.md
-```markdown
+
 # 🤖 PROMPT CHO DEV-0: PROJECT SETUP & FOUNDATION SPECIALIST
 ## 📋 **YOUR ASSIGNMENT**
 **Role**: DEV-0 - Project Setup & Foundation Specialist
 **Timeline**: Phase 0 (Week 0-1) - MUST COMPLETE BEFORE ALL OTHER DEVELOPERS
 **Critical**: Bạn là blocking dependency cho tất cả 9 developers còn lại
-```
+
 
 ---
 
