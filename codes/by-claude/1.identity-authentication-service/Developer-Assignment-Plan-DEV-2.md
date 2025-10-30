@@ -5,6 +5,7 @@
 **Role**: DEV-2 - Domain Value Objects & Services Specialist
 **Timeline**: Phase 1 (Week 1-2) - Foundation Layer
 **Critical**: Bạn là blocking dependency cho DEV-3, DEV-4, DEV-5
+```
 ---
 ## 📚 **TÀI LIỆU ĐẶC TẢ DỰ ÁN**
 ### **1. ĐỌC TÀI LIỆU SRS**
